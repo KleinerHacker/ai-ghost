@@ -74,7 +74,7 @@ jobs:
         run: ./gradlew build packageDist -PreleaseVersion="${{ github.ref_name }}" --stacktrace
 
       - name: Upload distribution
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: distribution-${{ matrix.os }}
           path: app/ui/build/distributions/ghost-ui-*.zip
