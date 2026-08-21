@@ -1,4 +1,4 @@
-module org.pcsoft.app.aighost.app {
+module org.pcsoft.app.aighost.ui {
     requires javafx.controls;
     requires javafx.fxml;
     requires kotlin.stdlib;

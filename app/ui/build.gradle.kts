@@ -1,12 +1,12 @@
 plugins {
     application
-    id("org.javamodularity.moduleplugin")
-    id("org.openjfx.javafxplugin")
-    id("org.beryx.jlink")
+    id("org.javamodularity.moduleplugin") version "1.8.15"
+    id("org.openjfx.javafxplugin") version "0.1.0"
+    id("org.beryx.jlink") version "4.1.1"
 }
 
 application {
-    mainModule.set("org.pcsoft.app.aighost.app")
+    mainModule.set("org.pcsoft.app.aighost.ui")
     mainClass.set("org.pcsoft.app.aighost.app.LauncherKt")
 }
 
