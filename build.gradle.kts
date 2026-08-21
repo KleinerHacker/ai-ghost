@@ -1,53 +1,39 @@
 plugins {
-    java
-    application
-    id("org.jetbrains.kotlin.jvm") version "2.3.0"
-    id("org.javamodularity.moduleplugin") version "1.8.15"
-    id("org.openjfx.javafxplugin") version "0.1.0"
-    id("org.beryx.jlink") version "4.1.1"
-}
-
-group = "org.pcsoft.app.ai-ghost"
-version = "1.0-SNAPSHOT"
-
-repositories {
-    mavenCentral()
+    id("org.jetbrains.kotlin.jvm") version "2.3.0" apply false
+    id("org.javamodularity.moduleplugin") version "1.8.15" apply false
+    id("org.openjfx.javafxplugin") version "0.1.0" apply false
+    id("org.beryx.jlink") version "4.1.1" apply false
 }
 
 val junitVersion = "5.12.1"
 
+allprojects {
+    group = "org.pcsoft.app.aighost"
+    version = "1.0-SNAPSHOT"
 
-tasks.withType<JavaCompile> {
-    options.encoding = "UTF-8"
+    repositories {
+        mavenCentral()
+    }
 }
 
-application {
-    mainModule.set("org.pcsoft.app.aighost.app")
-    mainClass.set("org.pcsoft.app.aighost.app.LauncherKt")
-}
-kotlin {
-    jvmToolchain(25)
-}
+subprojects {
+    apply(plugin = "java")
+    apply(plugin = "org.jetbrains.kotlin.jvm")
 
-javafx {
-    version = "25.0.1"
-    modules = listOf("javafx.controls", "javafx.fxml")
-}
+    extensions.configure<org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension> {
+        jvmToolchain(25)
+    }
 
-dependencies {
-    implementation("org.controlsfx:controlsfx:11.2.1")
-    testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
-}
+    dependencies {
+        "testImplementation"("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
+        "testRuntimeOnly"("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
+    }
 
-tasks.withType<Test> {
-    useJUnitPlatform()
-}
+    tasks.withType<JavaCompile> {
+        options.encoding = "UTF-8"
+    }
 
-jlink {
-    imageZip.set(layout.buildDirectory.file("/distributions/app-${javafx.platform.classifier}.zip"))
-    options.set(listOf("--strip-debug", "--compress", "zip-6", "--no-header-files", "--no-man-pages"))
-    launcher {
-        name = "app"
+    tasks.withType<Test> {
+        useJUnitPlatform()
     }
 }

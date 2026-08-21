@@ -1,1 +1,3 @@
-rootProject.name = "app"
+rootProject.name = "ai-ghost"
+
+include(":app:ui")
