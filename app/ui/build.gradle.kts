@@ -17,7 +17,7 @@ javafx {
 }
 
 dependencies {
-    implementation("org.controlsfx:controlsfx:11.2.1")
+    implementation("org.controlsfx:controlsfx:11.2.4")
 }
 
 jlink {
