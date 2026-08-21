@@ -163,7 +163,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Download distributions
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           pattern: distribution-*
           path: dist
