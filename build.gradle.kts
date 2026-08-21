@@ -9,7 +9,7 @@ plugins {
     id("app.cash.licensee") version "1.14.1" apply false
 }
 
-val junitVersion = "5.12.1"
+val junitVersion = "6.1.3"
 
 // The UI module shipping the distribution; the licence report and the API docs are taken from it.
 val uiProject = ":app:ai-ghost-ui"
