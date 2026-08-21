@@ -2,7 +2,7 @@
 name: icon-creator
 description: Create icons for Java FX UI for multiple use cases. If you need a new icon use this agent.
 
-model: opus
+model: Sonnet
 effort: low
 
 tools:
