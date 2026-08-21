@@ -1,6 +1,7 @@
 # Global Rules
 
 * NEVER EVER save memories!!!
+* You MUST use embedded Reda and Write Action!
 
 ## Concurrency
 

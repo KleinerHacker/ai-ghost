@@ -41,3 +41,5 @@ bin/
 ### Generated documentation ###
 docs/docs/dokka
 docs/docs/licences
+
+.claude/plans/

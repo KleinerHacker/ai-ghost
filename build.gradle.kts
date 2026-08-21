@@ -40,7 +40,10 @@ subprojects {
 
     dependencies {
         "testImplementation"("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
+        "testImplementation"("org.junit.jupiter:junit-jupiter-params:${junitVersion}")
         "testRuntimeOnly"("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")
+        // Since JUnit 6 the platform launcher is no longer contributed automatically.
+        "testRuntimeOnly"("org.junit.platform:junit-platform-launcher")
     }
 
     // Every module writes its licence report into the root build dir, so the MkDocs tasks find one place.

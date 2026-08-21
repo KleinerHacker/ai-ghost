@@ -25,5 +25,6 @@ that carries the start scripts and every required JAR.
 
 ## Where to go next
 
+* [Menu and shortcuts](menu.md) - every menu entry and its keyboard shortcut
 * [API Docs](dokka/html/index.html) - the generated Dokka API documentation
 * [Licences](licences/index.html) - the dependency licence report

@@ -16,9 +16,35 @@ javafx {
     modules = listOf("javafx.controls", "javafx.fxml")
 }
 
+val testFxVersion = "4.0.18"
+
 dependencies {
     implementation("org.controlsfx:controlsfx:11.2.4")
     implementation("de.saxsys:mvvmfx:1.8.0")
+
+    testImplementation("org.testfx:testfx-core:${testFxVersion}")
+    // TestFX still pulls the JUnit artifacts of its own generation, which collide with the platform used here.
+    testImplementation("org.testfx:testfx-junit5:${testFxVersion}") {
+        exclude(group = "org.junit.jupiter")
+        exclude(group = "org.junit.platform")
+    }
+    // Monocle provides the headless glass platform TestFX runs on, so no window is opened.
+    testImplementation("org.testfx:openjfx-monocle:21.0.2")
+}
+
+tasks.withType<Test> {
+    // Monocle reaches into internals of javafx.graphics, which the module path does not allow, and
+    // ResourceBundle.Control is unsupported inside a named module - so the tests run on the classpath.
+    extensions.getByType(org.javamodularity.moduleplugin.extensions.TestModuleOptions::class.java)
+        .runOnClasspath = true
+
+    // The UI tests must not open a window.
+    systemProperty("testfx.robot", "glass")
+    systemProperty("testfx.headless", "true")
+    systemProperty("glass.platform", "Monocle")
+    systemProperty("monocle.platform", "Headless")
+    systemProperty("prism.order", "sw")
+    systemProperty("java.awt.headless", "true")
 }
 
 jlink {

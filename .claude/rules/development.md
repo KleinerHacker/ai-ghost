@@ -47,7 +47,7 @@ name: development
 
 ## Testing
 
-* JUnit 5 test system MUST be used
+* JUnit test system MUST be used
 * For Java FX UI tests use TestFX framework
   * Must run in the background without an open UI
 * Every use case MUST be tested

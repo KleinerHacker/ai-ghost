@@ -1,4 +1,8 @@
-# ai-ghost
+# AI Ghost
+
+<p align="center">
+  <img src="docs/docs/assets/images/logo.png" alt="AI Ghost logo" width="320">
+</p>
 
 **AI Ghost writes your book for you.** At its core sits an AI agent - the *AI Ghost Writer* - that
 does the actual writing. You give it the idea, the direction and the feedback; it produces the prose.
@@ -35,8 +39,9 @@ beyond a JDK is needed.
 | Export of the finished manuscript                 | Planned     |
 | JavaFX desktop shell (`app/ai-ghost-ui`)          | Implemented |
 | ZIP distribution with start scripts and `libs`    | Implemented |
-| MVVM UI architecture (MVVM FX)                    | Planned     |
-| Internationalisation of the UI (English, German)  | Planned     |
+| MVVM UI architecture (MVVM FX)                    | Implemented |
+| Internationalisation of the UI (English, German)  | Implemented |
+| Menu bar with icons and keyboard shortcuts        | Implemented |
 | Dokka API documentation                           | Implemented |
 | Dependency licence report                         | Implemented |
 | MkDocs documentation site (versioned via mike)    | Implemented |

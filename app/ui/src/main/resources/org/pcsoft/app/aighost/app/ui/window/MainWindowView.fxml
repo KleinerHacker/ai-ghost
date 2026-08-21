@@ -1,9 +1,190 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.scene.layout.AnchorPane?>
-<AnchorPane xmlns="http://javafx.com/javafx"
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+<?import org.pcsoft.app.aighost.app.*?>
+<BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="org.pcsoft.app.aighost.app.ui.window.MainWindowView"
-            prefHeight="600.0" prefWidth="800.0">
+            prefHeight="600.0" prefWidth="800.0" fx:id="pnlRoot">
 
-</AnchorPane>
+    <top>
+        <VBox>
+            <MenuBar>
+                <Menu text="%menu.file">
+                    <Menu text="%menu.file.new">
+                        <MenuItem text="%menu.file.new.project"/>
+                        <SeparatorMenuItem/>
+                        <MenuItem text="%menu.file.new.epilog" accelerator="Shortcut+Alt+E">
+                            <graphic>
+                                <AiGhostIcons fx:factory="menuEpilog"/>
+                            </graphic>
+                        </MenuItem>
+                        <MenuItem text="%menu.file.new.prolog" accelerator="Shortcut+Alt+P">
+                            <graphic>
+                                <AiGhostIcons fx:factory="menuProlog"/>
+                            </graphic>
+                        </MenuItem>
+                        <MenuItem text="%menu.file.new.chapter" accelerator="Shortcut+Alt+C">
+                            <graphic>
+                                <AiGhostIcons fx:factory="menuChapter"/>
+                            </graphic>
+                        </MenuItem>
+                        <MenuItem text="%menu.file.new.blurb" accelerator="Shortcut+Alt+K">
+                            <graphic>
+                                <AiGhostIcons fx:factory="menuBlurb"/>
+                            </graphic>
+                        </MenuItem>
+                    </Menu>
+                    <MenuItem text="%menu.file.open" accelerator="Shortcut+O">
+                        <graphic>
+                            <AiGhostIcons fx:factory="menuOpen"/>
+                        </graphic>
+                    </MenuItem>
+                    <Menu fx:id="mnuOpenRecent" text="%menu.file.openRecent"/>
+                    <SeparatorMenuItem/>
+                    <MenuItem text="%menu.file.save" accelerator="Shortcut+S">
+                        <graphic>
+                            <AiGhostIcons fx:factory="menuSave"/>
+                        </graphic>
+                    </MenuItem>
+                    <MenuItem text="%menu.file.saveAs" accelerator="Shortcut+Shift+S">
+                        <graphic>
+                            <AiGhostIcons fx:factory="menuSaveAs"/>
+                        </graphic>
+                    </MenuItem>
+                    <SeparatorMenuItem/>
+                    <MenuItem text="%menu.file.preferences">
+                        <graphic>
+                            <AiGhostIcons fx:factory="menuPreferences"/>
+                        </graphic>
+                    </MenuItem>
+                    <MenuItem text="%menu.file.projectSettings">
+                        <graphic>
+                            <AiGhostIcons fx:factory="menuProjectSettings"/>
+                        </graphic>
+                    </MenuItem>
+                    <SeparatorMenuItem/>
+                    <MenuItem text="%menu.file.exit" accelerator="Alt+F4" onAction="#actionExit"/>
+                </Menu>
+                <Menu text="%menu.publish">
+                    <Menu text="%menu.publish.export">
+                        <graphic>
+                            <AiGhostIcons fx:factory="menuExport"/>
+                        </graphic>
+                        <MenuItem text="%menu.publish.export.pdf"/>
+                    </Menu>
+                </Menu>
+                <Menu text="%menu.help">
+                    <MenuItem text="%menu.help.online" accelerator="F1" onAction="#actionHelpOnline">
+                        <graphic>
+                            <AiGhostIcons fx:factory="menuHelpOnline"/>
+                        </graphic>
+                    </MenuItem>
+                    <SeparatorMenuItem/>
+                    <MenuItem text="%menu.help.about"/>
+                </Menu>
+            </MenuBar>
+            <ToolBar>
+                <Button>
+                    <graphic>
+                        <AiGhostIcons fx:factory="menuEpilog"/>
+                    </graphic>
+                    <tooltip>
+                        <Tooltip text="%menu.file.new.epilog"/>
+                    </tooltip>
+                </Button>
+                <Button>
+                    <graphic>
+                        <AiGhostIcons fx:factory="menuProlog"/>
+                    </graphic>
+                    <tooltip>
+                        <Tooltip text="%menu.file.new.prolog"/>
+                    </tooltip>
+                </Button>
+                <Button>
+                    <graphic>
+                        <AiGhostIcons fx:factory="menuChapter"/>
+                    </graphic>
+                    <tooltip>
+                        <Tooltip text="%menu.file.new.chapter"/>
+                    </tooltip>
+                </Button>
+                <Button>
+                    <graphic>
+                        <AiGhostIcons fx:factory="menuBlurb"/>
+                    </graphic>
+                    <tooltip>
+                        <Tooltip text="%menu.file.new.blurb"/>
+                    </tooltip>
+                </Button>
+                <Separator/>
+                <Button>
+                    <graphic>
+                        <AiGhostIcons fx:factory="menuOpen"/>
+                    </graphic>
+                    <tooltip>
+                        <Tooltip text="%menu.file.open"/>
+                    </tooltip>
+                </Button>
+                <Separator/>
+                <Button>
+                    <graphic>
+                        <AiGhostIcons fx:factory="menuSave"/>
+                    </graphic>
+                    <tooltip>
+                        <Tooltip text="%menu.file.save"/>
+                    </tooltip>
+                </Button>
+                <Button>
+                    <graphic>
+                        <AiGhostIcons fx:factory="menuSaveAs"/>
+                    </graphic>
+                    <tooltip>
+                        <Tooltip text="%menu.file.saveAs"/>
+                    </tooltip>
+                </Button>
+                <Separator/>
+                <Button>
+                    <graphic>
+                        <AiGhostIcons fx:factory="menuPreferences"/>
+                    </graphic>
+                    <tooltip>
+                        <Tooltip text="%menu.file.preferences"/>
+                    </tooltip>
+                </Button>
+                <Button>
+                    <graphic>
+                        <AiGhostIcons fx:factory="menuProjectSettings"/>
+                    </graphic>
+                    <tooltip>
+                        <Tooltip text="%menu.file.projectSettings"/>
+                    </tooltip>
+                </Button>
+                <Separator/>
+                <MenuButton>
+                    <graphic>
+                        <AiGhostIcons fx:factory="menuExport"/>
+                    </graphic>
+                    <tooltip>
+                        <Tooltip text="%menu.publish.export"/>
+                    </tooltip>
+                    <items>
+                        <MenuItem text="%menu.publish.export.pdf"/>
+                    </items>
+                </MenuButton>
+                <Separator/>
+                <Button onAction="#actionHelpOnline">
+                    <graphic>
+                        <AiGhostIcons fx:factory="menuHelpOnline"/>
+                    </graphic>
+                    <tooltip>
+                        <Tooltip text="%menu.help.online"/>
+                    </tooltip>
+                </Button>
+            </ToolBar>
+        </VBox>
+    </top>
+
+</BorderPane>
