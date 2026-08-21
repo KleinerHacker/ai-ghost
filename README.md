@@ -42,6 +42,7 @@ beyond a JDK is needed.
 | MVVM UI architecture (MVVM FX)                    | Implemented |
 | Internationalisation of the UI (English, German)  | Implemented |
 | Menu bar with icons and keyboard shortcuts        | Implemented |
+| Product design shared with logo and documentation | Implemented |
 | Dokka API documentation                           | Implemented |
 | Dependency licence report                         | Implemented |
 | MkDocs documentation site (versioned via mike)    | Implemented |

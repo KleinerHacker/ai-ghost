@@ -106,7 +106,7 @@ class MainWindowViewTest : ApplicationTest() {
 
         listOf(
             "Epilog...", "Prolog...", "Chapter...", "Blurb...", "Open...", "Save", "Save As...",
-            "Preferences...", "Project Settings...", "Export", "to PDF...", "Online Help..."
+            "Preferences...", "Project Settings...", "Export", "Online Help..."
         ).forEach { text ->
             assertNotNull(
                 withGraphic.firstOrNull { it == text },

@@ -23,6 +23,13 @@ The book project holds the outline, all chapters and the context material the ag
 application itself is a JavaFX desktop UI written in Kotlin, shipped as a self-contained ZIP archive
 that carries the start scripts and every required JAR.
 
+## Look and feel
+
+The application ships one global light design: indigo accents and deep navy text on softly indigo
+tinted paper surfaces, with rounded controls and gentle shadows - the same colours and shapes as the
+AI Ghost logo and this documentation site. Nothing needs to be configured, the design is applied to
+every window.
+
 ## Where to go next
 
 * [Menu and shortcuts](menu.md) - every menu entry and its keyboard shortcut

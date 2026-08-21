@@ -8,6 +8,8 @@
   `Ctrl+Alt+E/P/C/K` for epilog, prolog, chapter and blurb, and `F1` for the online help
 * User interface is translated; it follows the system language and ships English and German
 * Application window carries the AI Ghost icon in every size the window manager asks for
+* User interface uses the AI Ghost design: a light theme with indigo accents, deep navy text and
+  softly rounded controls, matching the logo and the documentation site
 
 * Application is shipped as a ZIP archive containing `ghost-ui.sh`, `ghost-ui.bat` and a `libs` folder
   with all required JARs

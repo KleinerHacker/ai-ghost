@@ -93,8 +93,8 @@ class AiGhostIconsTest {
      * Use case: an icon put into a menu is scaled to the menu icon size while keeping its ratio.
      */
     @Test
-    fun toImageViewScalesToMenuIconSize() {
-        val view = AiGhostIcons.save.toImageView()
+    fun menuGraphicScalesToMenuIconSize() {
+        val view = AiGhostIcons.menuSave()
 
         assertEquals(AiGhostIcons.MENU_ICON_SIZE, view.fitWidth)
         assertEquals(AiGhostIcons.MENU_ICON_SIZE, view.fitHeight)

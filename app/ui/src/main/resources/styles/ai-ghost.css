@@ -1,0 +1,258 @@
+/*
+ * AI Ghost application theme.
+ *
+ * The palette is taken from the MkDocs theme (docs/docs/stylesheets/extra.css, light scheme) and
+ * from the logo (docs/docs/assets/images/logo.png): indigo primary, deep navy ink and softly
+ * indigo tinted paper surfaces. It is a light theme throughout - navy is used for text and outlines
+ * only, never as a surface. The shapes follow the logo as well - soft, rounded, no hard edges.
+ */
+
+.root {
+    /* MkDocs primary / accent colours */
+    -ghost-primary: #3f51b5;
+    -ghost-primary-light: #6573c3;
+    -ghost-primary-dark: #2c387e;
+    -ghost-accent: #7986cb;
+
+    /*
+     * Logo colours. The theme is a light theme throughout: deep navy is ink only, never a surface,
+     * and no surface is pure white - the paper tones carry a slight indigo tint.
+     */
+    -ghost-ink: #1e2a4a;
+    -ghost-ink-soft: #4a5878;
+    -ghost-surface: #e5eaf6;
+    -ghost-surface-bar: #dce3f3;
+    -ghost-surface-raised: #edf0fa;
+    -ghost-surface-input: #f7f9fd;
+    -ghost-glow: #8fd8f5;
+
+    /* Derived tints used for hover and pressed states */
+    -ghost-tint-hover: rgba(63, 81, 181, 0.12);
+    -ghost-tint-pressed: rgba(63, 81, 181, 0.22);
+    -ghost-tint-line: rgba(30, 42, 74, 0.12);
+
+    /*
+     * Shape: 8px radius for controls, 10px for popups. JavaFX resolves looked-up variables to plain
+     * numbers, which the size based properties cannot consume, so the radii are written literally.
+     */
+
+    /* Modena base variables, so unstyled controls already follow the palette */
+    -fx-base: -ghost-surface;
+    -fx-background: -ghost-surface;
+    -fx-control-inner-background: -ghost-surface-input;
+    -fx-control-inner-background-alt: -ghost-surface-raised;
+    -fx-accent: -ghost-primary;
+    -fx-default-button: -ghost-accent;
+    -fx-focus-color: -ghost-accent;
+    -fx-faint-focus-color: rgba(121, 134, 203, 0.35);
+    -fx-selection-bar: -ghost-primary;
+    -fx-selection-bar-non-focused: -ghost-surface-bar;
+    -fx-text-background-color: -ghost-ink;
+
+    -fx-font-family: "Segoe UI", "Noto Sans", "Helvetica Neue", sans-serif;
+    -fx-font-size: 13px;
+    -fx-background-color: -ghost-surface;
+}
+
+/* ---------------------------------------------------------------- text ---- */
+
+.label,
+.text {
+    -fx-text-fill: -ghost-ink;
+}
+
+/* ------------------------------------------------------------- menu bar ---- */
+
+.menu-bar {
+    -fx-background-color: -ghost-surface-bar;
+    -fx-border-color: transparent transparent -ghost-primary transparent;
+    -fx-border-width: 0 0 2px 0;
+    -fx-padding: 2px 6px 2px 6px;
+}
+
+.menu-bar > .container > .menu-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 8px;
+    -fx-padding: 4px 10px 4px 10px;
+}
+
+.menu-bar > .container > .menu-button > .label {
+    -fx-text-fill: -ghost-ink;
+}
+
+.menu-bar > .container > .menu-button:hover,
+.menu-bar > .container > .menu-button:showing {
+    -fx-background-color: -ghost-tint-hover;
+}
+
+.menu-bar > .container > .menu-button:showing > .label {
+    -fx-text-fill: -ghost-primary-dark;
+}
+
+/* --------------------------------------------------------- context menu ---- */
+
+.context-menu {
+    -fx-background-color: -ghost-surface-input;
+    -fx-background-radius: 10px;
+    -fx-border-color: -ghost-tint-line;
+    -fx-border-radius: 10px;
+    -fx-padding: 6px 4px 6px 4px;
+    -fx-effect: dropshadow(gaussian, rgba(30, 42, 74, 0.22), 14, 0.0, 0, 4);
+}
+
+.menu-item {
+    -fx-background-radius: 8px;
+    -fx-padding: 5px 12px 5px 10px;
+}
+
+.menu-item > .label {
+    -fx-text-fill: -ghost-ink;
+}
+
+.menu-item:focused,
+.menu-item:hover {
+    -fx-background-color: -ghost-tint-hover;
+}
+
+.menu-item:focused > .label,
+.menu-item:hover > .label {
+    -fx-text-fill: -ghost-primary-dark;
+}
+
+.menu-item .accelerator-text {
+    -fx-fill: -ghost-ink-soft;
+}
+
+.context-menu .separator:horizontal .line {
+    -fx-border-color: -ghost-tint-line transparent transparent transparent;
+    -fx-border-width: 1px 0 0 0;
+}
+
+/* -------------------------------------------------------------- toolbar ---- */
+
+.tool-bar {
+    -fx-background-color: -ghost-surface-raised;
+    -fx-background-radius: 0 0 10px 10px;
+    -fx-border-color: transparent transparent -ghost-tint-line transparent;
+    -fx-border-width: 0 0 1px 0;
+    -fx-padding: 6px 10px 6px 10px;
+    -fx-spacing: 4px;
+    -fx-effect: dropshadow(gaussian, rgba(30, 42, 74, 0.10), 8, 0.0, 0, 2);
+}
+
+.tool-bar .separator:vertical .line {
+    -fx-border-color: transparent -ghost-tint-line transparent transparent;
+    -fx-border-width: 0 1px 0 0;
+}
+
+/* -------------------------------------------------------------- buttons ---- */
+
+.button,
+.toggle-button,
+.menu-button,
+.split-menu-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 8px;
+    /* The focus border is always present, just invisible, so focusing never moves the control. */
+    -fx-border-color: transparent;
+    -fx-border-width: 2px;
+    -fx-border-radius: 8px;
+    -fx-text-fill: -ghost-ink;
+    -fx-padding: 3px 8px 3px 8px;
+}
+
+.button:hover,
+.toggle-button:hover,
+.menu-button:hover,
+.split-menu-button:hover {
+    -fx-background-color: -ghost-tint-hover;
+}
+
+.button:armed,
+.toggle-button:selected,
+.menu-button:showing,
+.split-menu-button:showing {
+    -fx-background-color: -ghost-tint-pressed;
+}
+
+.button:focused,
+.toggle-button:focused,
+.menu-button:focused,
+.split-menu-button:focused {
+    -fx-border-color: -ghost-accent;
+}
+
+.button:default {
+    -fx-background-color: -ghost-primary;
+    -fx-text-fill: -ghost-surface-input;
+}
+
+.button:default:hover {
+    -fx-background-color: -ghost-primary-light;
+}
+
+.menu-button > .arrow-button > .arrow,
+.split-menu-button > .arrow-button > .arrow {
+    -fx-background-color: -ghost-ink;
+}
+
+/* ------------------------------------------------------------- tooltips ---- */
+
+.tooltip {
+    -fx-background-color: -ghost-surface-input;
+    -fx-background-radius: 8px;
+    -fx-border-color: -ghost-tint-line;
+    -fx-border-radius: 8px;
+    -fx-text-fill: -ghost-ink;
+    -fx-padding: 5px 10px 5px 10px;
+    -fx-font-size: 12px;
+    -fx-effect: dropshadow(gaussian, rgba(30, 42, 74, 0.20), 10, 0.0, 0, 3);
+}
+
+/* ----------------------------------------------------------- text input ---- */
+
+.text-input {
+    -fx-background-color: -ghost-surface-input;
+    -fx-background-radius: 8px;
+    /* Same border width in every state - focusing only recolours it, the layout stays put. */
+    -fx-border-color: -ghost-tint-line;
+    -fx-border-width: 2px;
+    -fx-border-radius: 8px;
+    -fx-text-fill: -ghost-ink;
+    -fx-prompt-text-fill: -ghost-ink-soft;
+    -fx-padding: 3px 6px 3px 6px;
+}
+
+.text-input:focused {
+    -fx-border-color: -ghost-accent;
+}
+
+/* ----------------------------------------------------------- scroll bar ---- */
+
+.scroll-bar {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar > .thumb {
+    -fx-background-color: -ghost-accent;
+    -fx-background-radius: 8px;
+}
+
+.scroll-bar > .thumb:hover {
+    -fx-background-color: -ghost-primary;
+}
+
+.scroll-bar > .increment-button,
+.scroll-bar > .decrement-button {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar > .increment-button > .increment-arrow,
+.scroll-bar > .decrement-button > .decrement-arrow {
+    -fx-background-color: -ghost-accent;
+}
+
+.scroll-pane,
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}

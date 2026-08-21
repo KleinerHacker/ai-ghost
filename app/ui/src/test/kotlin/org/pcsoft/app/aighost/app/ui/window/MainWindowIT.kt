@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.app.AiGhostIcons
+import org.pcsoft.app.aighost.app.AiGhostTheme
 import org.pcsoft.app.aighost.app.Messages
 import org.testfx.framework.junit5.ApplicationTest
 import java.util.Locale
@@ -47,5 +48,14 @@ class MainWindowIT : ApplicationTest() {
 
         assertEquals(listOf("Datei", "Veröffentlichen", "Hilfe"), menuBar.menus.map { it.text })
         assertTrue(window.isShowing)
+    }
+
+    /**
+     * Use case: the main window is decorated with the global application theme, so its controls are
+     * rendered in the colours and shapes of the product design.
+     */
+    @Test
+    fun windowUsesTheApplicationTheme() {
+        assertEquals(listOf(AiGhostTheme.stylesheet), window.scene.stylesheets.toList())
     }
 }

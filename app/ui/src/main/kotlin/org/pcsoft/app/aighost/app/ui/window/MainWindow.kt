@@ -4,6 +4,7 @@ import de.saxsys.mvvmfx.FluentViewLoader
 import javafx.scene.Scene
 import javafx.stage.Stage
 import org.pcsoft.app.aighost.app.AiGhostIcons
+import org.pcsoft.app.aighost.app.AiGhostTheme
 import org.pcsoft.app.aighost.app.Messages
 
 /**
@@ -15,7 +16,7 @@ class MainWindow : Stage() {
         icons.setAll(AiGhostIcons.application)
 
         FluentViewLoader.fxmlView(MainWindowView::class.java).load().apply {
-            scene = Scene(view)
+            scene = Scene(view).also(AiGhostTheme::apply)
         }
     }
 }

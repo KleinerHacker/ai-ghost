@@ -186,10 +186,12 @@ object AiGhostIcons {
 /**
  * Wraps this image into an [ImageView] scaled to a square of the given edge length.
  *
+ * Implementation detail of [AiGhostIcons]: consumers use its `menu*` factory methods instead.
+ *
  * @param size edge length in pixels, defaults to [AiGhostIcons.MENU_ICON_SIZE]
  * @return a new image view showing this image
  */
-fun Image.toImageView(size: Double = AiGhostIcons.MENU_ICON_SIZE): ImageView =
+private fun Image.toImageView(size: Double = AiGhostIcons.MENU_ICON_SIZE): ImageView =
     ImageView(this).apply {
         fitWidth = size
         fitHeight = size

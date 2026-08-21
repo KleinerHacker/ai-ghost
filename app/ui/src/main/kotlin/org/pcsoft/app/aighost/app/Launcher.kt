@@ -10,6 +10,7 @@ import org.pcsoft.app.aighost.app.ui.window.MainWindow
  */
 class AiGhostApplication : Application() {
     override fun start(stage: Stage) {
+        AiGhostTheme.install()
         MainWindow().show()
     }
 }
