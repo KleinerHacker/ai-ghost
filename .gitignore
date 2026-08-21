@@ -38,3 +38,6 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+### Generated documentation ###
+docs/docs/dokka
+docs/docs/licences

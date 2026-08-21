@@ -22,6 +22,7 @@ name: documentation
 ## MkDocs
 
 * MkDocs MUST be integrated under `docs`
+* MKDocs contain only user information to interact with the public interface of the application
 * Structure:
     * `docs/mkdocs.yml` - Root file
     * `docs/docs` - *.MD files

@@ -1,5 +1,7 @@
 # Global Rules
 
+* NEVER EVER save memories!!!
+
 ## Concurrency
 
 * Concurrent or long-running processes (e.g. `build`, `test`, `verifyPlugin`, `koverXmlReport`)
