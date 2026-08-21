@@ -18,6 +18,7 @@ javafx {
 
 dependencies {
     implementation("org.controlsfx:controlsfx:11.2.1")
+    implementation("de.saxsys:mvvmfx:1.8.0")
 }
 
 jlink {

@@ -57,12 +57,25 @@ subprojects {
             "Apache-2.0",
             // ControlsFX
             "BSD-2-Clause",
+            // SLF4J
+            "MIT",
         ).forEach(::allow)
 
         // JavaFX publishes GPL-2.0 with Classpath Exception, but only as a URL - it carries no SPDX id
         // in its POM, so it has to be allowed by that URL.
         allowUrl("https://openjdk.java.net/legal/gplv2+ce.html") {
             because("GPL-2.0 with Classpath Exception")
+        }
+
+        // typetools names Apache-2.0 only as a plain http URL in its POM, without an SPDX id.
+        allowUrl("http://apache.org/licenses/LICENSE-2.0") {
+            because("Apache-2.0")
+        }
+
+        // MvvmFX's doc-annotations carries the MIT URL wrapped in quotes in its POM, so no SPDX id
+        // is derived from it and it has to be allowed by that exact URL.
+        allowUrl("'http://opensource.org/licenses/mit-license'") {
+            because("MIT")
         }
     }
 
