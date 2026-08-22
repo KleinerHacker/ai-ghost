@@ -246,6 +246,62 @@
     -fx-border-color: -ghost-accent;
 }
 
+/* ------------------------------------------------------------ tree view ---- */
+
+/*
+ * The project tree sits on the content surface of the tab pane, so it carries no surface of its own
+ * and is separated from the content only by its rounded outline.
+ */
+.tree-view {
+    -fx-background-color: -ghost-surface-input;
+    -fx-background-radius: 8px;
+    /* Same border width in every state - focusing only recolours it, the layout stays put. */
+    -fx-border-color: -ghost-tint-line;
+    -fx-border-width: 2px;
+    -fx-border-radius: 8px;
+    -fx-padding: 4px;
+}
+
+.tree-view:focused {
+    -fx-border-color: -ghost-accent;
+}
+
+.tree-view > .virtual-flow > .clipped-container > .sheet > .tree-cell {
+    -fx-background-color: transparent;
+    -fx-background-radius: 8px;
+    -fx-text-fill: -ghost-ink;
+    -fx-padding: 3px 8px 3px 4px;
+}
+
+.tree-view > .virtual-flow > .clipped-container > .sheet > .tree-cell:hover {
+    -fx-background-color: -ghost-tint-hover;
+}
+
+.tree-view > .virtual-flow > .clipped-container > .sheet > .tree-cell:selected {
+    -fx-background-color: -ghost-primary;
+    -fx-text-fill: -ghost-surface-input;
+}
+
+.tree-view > .virtual-flow > .clipped-container > .sheet > .tree-cell:selected:hover {
+    -fx-background-color: -ghost-primary-dark;
+}
+
+.tree-view > .virtual-flow > .clipped-container > .sheet > .tree-cell:disabled {
+    -fx-opacity: 0.5;
+}
+
+.tree-view > .virtual-flow > .clipped-container > .sheet > .tree-cell > .tree-disclosure-node > .arrow {
+    -fx-background-color: -ghost-ink-soft;
+}
+
+.tree-view > .virtual-flow > .clipped-container > .sheet > .tree-cell:hover > .tree-disclosure-node > .arrow {
+    -fx-background-color: -ghost-primary;
+}
+
+.tree-view > .virtual-flow > .clipped-container > .sheet > .tree-cell:selected > .tree-disclosure-node > .arrow {
+    -fx-background-color: -ghost-surface-input;
+}
+
 /* ----------------------------------------------------------- scroll bar ---- */
 
 .scroll-bar {

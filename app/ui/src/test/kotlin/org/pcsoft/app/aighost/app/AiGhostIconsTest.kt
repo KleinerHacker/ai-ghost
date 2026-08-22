@@ -73,6 +73,33 @@ class AiGhostIconsTest {
             arrayOf("menuExport", AiGhostIcons.menuExport()),
             arrayOf("menuHelpOnline", AiGhostIcons.menuHelpOnline()),
         )
+
+        /**
+         * Supplies every tree graphic factory of [AiGhostIcons] together with its method name, so a
+         * failure names the factory that did not deliver a usable image view.
+         *
+         * @return pairs of method name and image view
+         */
+        @JvmStatic
+        fun treeGraphics(): List<Array<Any>> = listOf(
+            arrayOf("treeProlog", AiGhostIcons.treeProlog()),
+            arrayOf("treeChapter", AiGhostIcons.treeChapter()),
+            arrayOf("treeEpilog", AiGhostIcons.treeEpilog()),
+            arrayOf("treeBlurb", AiGhostIcons.treeBlurb()),
+        )
+    }
+
+    /**
+     * Use case: the project tree attaches an icon to every fixed node, so each tree factory must
+     * deliver a fresh image view scaled to the tree icon size.
+     */
+    @ParameterizedTest(name = "tree graphic {0}")
+    @MethodSource("treeGraphics")
+    fun treeGraphicIsScaledImageView(name: String, view: ImageView) {
+        assertFalse(view.image.isError, "graphic $name could not be loaded")
+        assertEquals(AiGhostIcons.TREE_ICON_SIZE, view.fitWidth, "graphic $name has the wrong width")
+        assertEquals(AiGhostIcons.TREE_ICON_SIZE, view.fitHeight, "graphic $name has the wrong height")
+        assertTrue(view.isPreserveRatio, "graphic $name does not keep its ratio")
     }
 
     /**

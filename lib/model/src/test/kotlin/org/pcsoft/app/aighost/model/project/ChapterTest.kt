@@ -17,6 +17,8 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import com.fasterxml.jackson.databind.exc.MismatchedInputException
 
 /**
  * Developer tests for [Chapter].
@@ -26,29 +28,55 @@ class ChapterTest {
     private val mapper: ObjectMapper = ObjectMapper().registerKotlinModule()
 
     /**
-     * Use case: the user creates a chapter and only names it, so the chapter starts without appendix
-     * lines and without text instead of forcing content up front.
+     * Use case: the user creates a chapter and only names and titles it, so the chapter starts
+     * without appendix lines and without text instead of forcing content up front.
      */
     @Test
     fun defaultsToEmptyAppendixAndText() {
-        val chapter = Chapter("Prologue")
+        val chapter = Chapter("prologue", "Prologue")
 
         assertEquals(emptyList<String>(), chapter.titleAppendix)
         assertEquals(emptyList<String>(), chapter.paragraph)
     }
 
     /**
-     * Use case: a chapter is written to disk, so heading, appendix lines and paragraphs appear in the
-     * JSON under the stable property names the file format promises.
+     * Use case: the project tree lists chapters that are not written yet, so a chapter offers its
+     * name beside the heading it is printed with.
      */
     @Test
-    fun serialisesTitleAppendixAndParagraphs() {
-        val chapter = Chapter("Prologue", listOf("A beginning"), listOf("Once upon a time."))
+    fun keepsNameAndTitleApart() {
+        val chapter = Chapter("draft-01", "Prologue")
+
+        assertEquals("draft-01", chapter.name)
+        assertEquals("Prologue", chapter.title)
+    }
+
+    /**
+     * Use case: a chapter is used wherever written text is rendered, so it can be handed over as a
+     * [BookPart] like the prolog and the epilog.
+     */
+    @Test
+    fun isABookPart() {
+        val part: BookPart = Chapter("draft-01", "Prologue", listOf("A beginning"), listOf("Text."))
+
+        assertEquals("Prologue", part.title)
+        assertEquals(listOf("A beginning"), part.titleAppendix)
+        assertEquals(listOf("Text."), part.paragraph)
+    }
+
+    /**
+     * Use case: a chapter is written to disk, so name, heading, appendix lines and paragraphs appear
+     * in the JSON under the stable property names the file format promises.
+     */
+    @Test
+    fun serialisesNameTitleAppendixAndParagraphs() {
+        val chapter = Chapter("prologue", "Prologue", listOf("A beginning"), listOf("Once upon a time."))
 
         val json = mapper.writeValueAsString(chapter)
 
         assertEquals(
-            """{"title":"Prologue","titleAppendix":["A beginning"],"paragraph":["Once upon a time."]}""",
+            """{"name":"prologue","title":"Prologue","titleAppendix":["A beginning"],""" +
+                """"paragraph":["Once upon a time."]}""",
             json
         )
     }
@@ -60,6 +88,7 @@ class ChapterTest {
     @Test
     fun roundTripsParagraphsInOrder() {
         val chapter = Chapter(
+            "chapter-01",
             "Chapter 1",
             listOf("The first step", "and the second"),
             listOf("First paragraph.", "Second paragraph.", "Third paragraph.")
@@ -75,14 +104,23 @@ class ChapterTest {
     }
 
     /**
-     * Use case: a chapter file holds only the title, so it is read back as an outlined chapter
+     * Use case: a chapter file holds only name and title, so it is read back as an outlined chapter
      * instead of failing.
      */
     @Test
-    fun readsDocumentWithTitleOnly() {
-        val chapter: Chapter = mapper.readValue("""{"title":"Prologue"}""")
+    fun readsDocumentWithNameAndTitleOnly() {
+        val chapter: Chapter = mapper.readValue("""{"name":"prologue","title":"Prologue"}""")
 
-        assertEquals(Chapter("Prologue"), chapter)
+        assertEquals(Chapter("prologue", "Prologue"), chapter)
+    }
+
+    /**
+     * Use case: a chapter file misses the mandatory name, so opening it fails instead of producing a
+     * chapter the project tree cannot label.
+     */
+    @Test
+    fun rejectsDocumentWithoutName() {
+        assertThrows<MismatchedInputException> { mapper.readValue<Chapter>("""{"title":"Prologue"}""") }
     }
 
     /**
@@ -91,8 +129,9 @@ class ChapterTest {
      */
     @Test
     fun ignoresUnknownProperties() {
-        val chapter: Chapter = mapper.readValue("""{"title":"Prologue","summary":"short"}""")
+        val chapter: Chapter =
+            mapper.readValue("""{"name":"prologue","title":"Prologue","summary":"short"}""")
 
-        assertEquals(Chapter("Prologue"), chapter)
+        assertEquals(Chapter("prologue", "Prologue"), chapter)
     }
 }

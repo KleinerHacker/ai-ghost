@@ -45,6 +45,7 @@ lives in the library `lib/ai-ghost-model`, which serialises it to JSON via Jacks
 | Internationalisation of the UI (English, German)  | Implemented |
 | Menu bar with icons and keyboard shortcuts        | Implemented |
 | Editor and preview tabs of the main window        | Implemented |
+| Project tree with prolog, chapters, epilog, blurb | Implemented |
 | Product design shared with logo and documentation | Implemented |
 | Shipped `Ghost Writer` type face                  | Implemented |
 | Dokka API documentation                           | Implemented |

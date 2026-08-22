@@ -17,6 +17,10 @@
   softly rounded controls, matching the logo and the documentation site
 * Main window shows the `Editor` and `Preview` tabs in the AI Ghost design: rounded tab headers on
   the window surface, separated from the content by an indigo accent line
+* `Editor` tab shows the open project as a tree: `Prolog`, `Chapter`, `Epilog` and `Blurb` sit below
+  the project, each with its icon, and every chapter is listed by its name below `Chapter`
+* Book project carries a prolog, an epilog and a blurb beside its chapters; each of them is optional
+  and stays absent until it is created
 
 * Application is shipped as a ZIP archive containing `ghost-ui.sh`, `ghost-ui.bat` and a `libs` folder
   with all required JARs

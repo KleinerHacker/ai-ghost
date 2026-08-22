@@ -15,21 +15,17 @@ package org.pcsoft.app.aighost.model.project
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
 /**
- * A single chapter of a [Book].
+ * The prolog of a [Book], printed before the first chapter.
  *
- * A chapter is the smallest unit the user writes in: it carries its heading and the written text,
- * split into paragraphs. The text may be empty while the chapter is only outlined. Unlike the other
- * parts of a book a chapter carries a [name] as well, because the user works with many of them and
- * needs to tell them apart before their headings are written.
+ * A book has at most one prolog, and only if the user created it, so [Book.prolog] stays empty until
+ * then.
  *
- * @property name Name of the chapter as shown in the project tree.
- * @property title Heading of the chapter as printed in the manuscript.
+ * @property title Heading of the prolog.
  * @property titleAppendix Further heading lines shown below the title, empty by default.
- * @property paragraph Paragraphs of the chapter in their order, empty by default.
+ * @property paragraph Paragraphs of the prolog in their order, empty by default.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class Chapter(
-    val name: String,
+data class Prolog(
     override val title: String,
     override val titleAppendix: List<String> = listOf(),
 

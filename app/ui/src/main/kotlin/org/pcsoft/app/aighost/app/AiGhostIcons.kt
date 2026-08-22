@@ -29,6 +29,9 @@ object AiGhostIcons {
     /** Edge length in pixels the menu icons are stored in. */
     const val MENU_ICON_STORED_SIZE: Int = 32
 
+    /** Default edge length in pixels used when an icon is rendered into a tree node. */
+    const val TREE_ICON_SIZE: Double = 16.0
+
     /** Edge lengths in pixels for which the application icon is available. */
     val APPLICATION_ICON_SIZES: List<Int> = listOf(16, 24, 32, 48, 64, 128, 256, 512)
 
@@ -177,6 +180,38 @@ object AiGhostIcons {
      */
     @JvmStatic
     fun menuHelpOnline(): ImageView = helpOnline.toImageView()
+
+    /**
+     * Creates the tree graphic for the prolog, scaled to [TREE_ICON_SIZE].
+     *
+     * @return a new image view showing [prolog]
+     */
+    @JvmStatic
+    fun treeProlog(): ImageView = prolog.toImageView(TREE_ICON_SIZE)
+
+    /**
+     * Creates the tree graphic for a chapter, scaled to [TREE_ICON_SIZE].
+     *
+     * @return a new image view showing [chapter]
+     */
+    @JvmStatic
+    fun treeChapter(): ImageView = chapter.toImageView(TREE_ICON_SIZE)
+
+    /**
+     * Creates the tree graphic for the epilog, scaled to [TREE_ICON_SIZE].
+     *
+     * @return a new image view showing [epilog]
+     */
+    @JvmStatic
+    fun treeEpilog(): ImageView = epilog.toImageView(TREE_ICON_SIZE)
+
+    /**
+     * Creates the tree graphic for the blurb, scaled to [TREE_ICON_SIZE].
+     *
+     * @return a new image view showing [blurb]
+     */
+    @JvmStatic
+    fun treeBlurb(): ImageView = blurb.toImageView(TREE_ICON_SIZE)
 
     /**
      * Loads an icon from the `icons` resource folder, which names its files `<name>@<size>.png`.
