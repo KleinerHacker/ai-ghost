@@ -4,6 +4,8 @@
 
 * User interface uses its own type face `Ghost Writer`, a rounded geometric sans matching the logo;
   it ships with the application, so the text looks the same on every platform
+* User interface text is slightly larger and rendered with grey scale smoothing, which suits the
+  even stroke weight of the new type face
 
 * Main window menu bar with the menus `File`, `Publish` and `Help`
 * Menu entries carry icons, and the frequently used ones carry their usual keyboard shortcut:

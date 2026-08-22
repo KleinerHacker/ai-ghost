@@ -14,6 +14,7 @@ from pathlib import Path
 
 from fontTools.fontBuilder import FontBuilder
 from fontTools.pens.ttGlyphPen import TTGlyphPen
+from fontTools.ttLib import newTable
 
 import strokes
 from glyphs import CHARACTERS, SKELETONS, TABULAR_GLYPHS
@@ -135,6 +136,20 @@ def _notdef():
     return pen.glyph()
 
 
+def _gasp():
+    """Return the table asking every rasteriser for grid fitting and grey scale.
+
+    The font carries no hinting instructions. Without this table a rasteriser is
+    free to fall back to plain black and white rendering at small sizes, which
+    makes the thin monolinear stems look ragged.
+    """
+    table = newTable("gasp")
+    table.version = 1
+    # 0x000F: grid fit and grey scale anti aliasing, for every size up to the maximum.
+    table.gaspRange = {0xFFFF: 0x000F}
+    return table
+
+
 def _feature_text(available):
     """Return the feature file source holding the kerning pairs.
 
@@ -195,6 +210,9 @@ def build(output):
     )
     builder.setupPost()
     builder.addOpenTypeFeatures(_feature_text(set(glyph_order)))
+    builder.font["gasp"] = _gasp()
+    # Below this size the outlines are no longer legible, so no rasteriser should try.
+    builder.font["head"].lowestRecPPEM = 8
 
     output.parent.mkdir(parents=True, exist_ok=True)
     builder.save(str(output))
