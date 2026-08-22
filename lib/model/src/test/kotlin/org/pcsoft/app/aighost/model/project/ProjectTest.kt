@@ -56,7 +56,7 @@ class ProjectTest {
     }
 
     /**
-     * Use case: every text of the manuscript is styled separately, so each of the six styles keeps
+     * Use case: every text of the manuscript is styled separately, so each of the seven styles keeps
      * its own font and alignment across the round trip instead of collapsing into one.
      */
     @Test
@@ -64,6 +64,8 @@ class ProjectTest {
         val restored: Project = mapper.readValue(mapper.writeValueAsString(TestData.project()))
         val settings = restored.settings
 
+        assertEquals(16, settings.authorFont.font.size)
+        assertEquals(Alignment.CENTER, settings.authorFont.alignment)
         assertEquals(8, settings.copyrightFont.font.size)
         assertEquals(Alignment.CENTER, settings.titleFont.alignment)
         assertEquals(18, settings.titleAppendixFont.font.size)

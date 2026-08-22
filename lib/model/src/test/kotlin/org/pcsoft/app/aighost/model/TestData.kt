@@ -38,6 +38,7 @@ object TestData {
 
     /** Settings whose styles all differ, so a swapped property is caught by a round trip test. */
     fun settings(): Project.Settings = Project.Settings(
+        authorFont = style("Sans", 16, Alignment.CENTER),
         copyrightFont = style("Serif", 8),
         titleFont = style("Sans", 28, Alignment.CENTER),
         titleAppendixFont = style("Sans", 18, Alignment.CENTER),

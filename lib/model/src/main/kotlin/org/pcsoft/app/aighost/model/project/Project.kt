@@ -39,6 +39,7 @@ data class Project(
     /**
      * Typographic and page settings a [Project] is rendered with.
      *
+     * @property authorFont Style of the author name.
      * @property copyrightFont Style of the copyright notice.
      * @property titleFont Style of the book title.
      * @property titleAppendixFont Style of the further title lines.
@@ -51,6 +52,7 @@ data class Project(
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
     data class Settings(
+        val authorFont: StyleData,
         val copyrightFont: StyleData,
         val titleFont: StyleData,
         val titleAppendixFont: StyleData,

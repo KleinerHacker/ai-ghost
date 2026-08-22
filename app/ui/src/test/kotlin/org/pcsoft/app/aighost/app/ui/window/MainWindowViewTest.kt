@@ -103,10 +103,7 @@ class MainWindowViewTest : ApplicationTest() {
         assertEquals("Shortcut+S", accelerators["Save"])
         assertEquals("Shift+Shortcut+S", accelerators["Save As..."])
         assertEquals("F1", accelerators["Online Help..."])
-        assertEquals("Alt+Shortcut+E", accelerators["Epilog..."])
-        assertEquals("Alt+Shortcut+P", accelerators["Prolog..."])
         assertEquals("Alt+Shortcut+C", accelerators["Chapter..."])
-        assertEquals("Alt+Shortcut+K", accelerators["Blurb..."])
     }
 
     /**
@@ -117,7 +114,7 @@ class MainWindowViewTest : ApplicationTest() {
         val withGraphic = allItems().filter { it.graphic != null }.map { it.text }
 
         listOf(
-            "Epilog...", "Prolog...", "Chapter...", "Blurb...", "Open...", "Save", "Save As...",
+            "Chapter...", "Open...", "Save", "Save As...",
             "Preferences...", "Project Settings...", "Export", "Online Help..."
         ).forEach { text ->
             assertNotNull(

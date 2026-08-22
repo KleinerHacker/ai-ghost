@@ -10,10 +10,7 @@ where a shortcut is given, straight from the keyboard.
 | Entry                   | Shortcut           | What it does                                  |
 |-------------------------|--------------------|-----------------------------------------------|
 | New > Project...        | -                  | Creates a new book project                    |
-| New > Epilog...         | `Ctrl+Alt+E`       | Adds an epilog to the current project         |
-| New > Prolog...         | `Ctrl+Alt+P`       | Adds a prolog to the current project          |
 | New > Chapter...        | `Ctrl+Alt+C`       | Adds a chapter to the current project         |
-| New > Blurb...          | `Ctrl+Alt+K`       | Adds the blurb of the book                    |
 | Open...                 | `Ctrl+O`           | Opens an existing book project                |
 | Open recent project     | -                  | Lists the projects opened before               |
 | Save                    | `Ctrl+S`           | Saves the current project                     |

@@ -55,6 +55,7 @@ class ModelJsonTest {
               "author" : "Jane Doe",
               "copyright" : "(c) 2026 Jane Doe",
               "settings" : {
+                "authorFont" : { "font" : { "name" : "Sans", "size" : 16, "bold" : false, "italic" : false }, "alignment" : "CENTER" },
                 "copyrightFont" : { "font" : { "name" : "Serif", "size" : 8, "bold" : false, "italic" : false } },
                 "titleFont" : { "font" : { "name" : "Sans", "size" : 28, "bold" : true, "italic" : false }, "alignment" : "CENTER" },
                 "titleAppendixFont" : { "font" : { "name" : "Sans", "size" : 18, "bold" : false, "italic" : true }, "alignment" : "CENTER" },
@@ -105,15 +106,13 @@ class ModelJsonTest {
      */
     @Test
     fun escapesSpecialCharactersInChapterText() {
-        val project = TestData.project().let { project ->
-            project.copy(
-                book = Book(
-                    "Special\"Characters",
-                    listOf("A \\ backslash"),
-                    listOf(Chapter("Chapter\\1", paragraph = listOf("He said: \"Hello\"\nand left.\tEnd")))
-                )
+        val project = TestData.project().copy(
+            book = Book(
+                "Special\"Characters",
+                listOf("A \\ backslash"),
+                listOf(Chapter("Chapter\\1", paragraph = listOf("He said: \"Hello\"\nand left.\tEnd")))
             )
-        }
+        )
 
         val restored: Project = mapper.readValue(mapper.writeValueAsString(project))
 

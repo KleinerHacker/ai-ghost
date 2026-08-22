@@ -36,7 +36,6 @@ dependencies {
 
     implementation("org.controlsfx:controlsfx:11.2.4")
     implementation("de.saxsys:mvvmfx:1.8.0")
-    implementation("com.pixelduke:fxribbon:1.2.2")
 
     testImplementation("org.testfx:testfx-core:${testFxVersion}")
     // TestFX still pulls the JUnit artifacts of its own generation, which collide with the platform used here.
