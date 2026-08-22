@@ -437,3 +437,53 @@
 .tab-pane > .tab-header-area > .control-buttons-tab > .container > .tab-down-button > .arrow {
     -fx-background-color: -ghost-accent;
 }
+
+/* ------------------------------------------------------------ split pane ---- */
+
+/*
+ * The split pane only arranges what is put into it, so it carries no surface and no outline of its
+ * own and leaves the content surface it sits on visible.
+ */
+.split-pane {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.split-pane > .split-pane-divider {
+    -fx-background-color: -ghost-tint-line;
+    -fx-background-insets: 0;
+    -fx-padding: 0 3px 0 3px;
+}
+
+.split-pane > .split-pane-divider:hover {
+    -fx-background-color: -ghost-accent;
+}
+
+.split-pane > .split-pane-divider:pressed {
+    -fx-background-color: -ghost-primary;
+}
+
+.split-pane > .split-pane-divider:disabled {
+    -fx-opacity: 0.5;
+}
+
+/*
+ * Modena draws a grabber bar on top of the divider. The divider is a plain line here, so the
+ * grabber is hidden instead of being coloured.
+ */
+.split-pane > .split-pane-divider > .horizontal-grabber,
+.split-pane > .split-pane-divider > .vertical-grabber {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-shape: null;
+}
+
+/* ---------------------------------------------------------------- editor ---- */
+
+/*
+ * The placeholder of the editing area is not content the user works with, so it steps back from the
+ * ink used for real text.
+ */
+.editor-placeholder {
+    -fx-text-fill: -ghost-ink-soft;
+}

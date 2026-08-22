@@ -16,7 +16,7 @@
   ~ See the License for the specific language governing permissions and limitations.
   -->
 
-<?import org.pcsoft.app.aighost.app.ui.component.ProjectList?>
+<?import org.pcsoft.app.aighost.app.ui.component.Editor?>
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="org.pcsoft.app.aighost.app.ui.window.MainWindowView"
@@ -164,7 +164,7 @@
     <center>
         <TabPane>
             <Tab text="%tab.editor" closable="false">
-                <ProjectList/>
+                <Editor/>
             </Tab>
             <Tab text="%tab.preview" closable="false"/>
         </TabPane>

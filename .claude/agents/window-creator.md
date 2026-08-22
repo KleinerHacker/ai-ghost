@@ -1,6 +1,6 @@
 ---
-Name: Window Creator
-Description: Creates a new Java FX window that does not exist yet, based on the exploration results of the Window Explorer agent.
+name: window-creator
+description: Creates a new Java FX window that does not exist yet, based on the exploration results of the window-explore agent.
 
 model: opus
 effort: low

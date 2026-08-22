@@ -1,6 +1,6 @@
 ---
-Name: Window Explorer
-Description: Explores a typical Java FX window to gather design and architecture information.
+name: window-explore
+description: Explores a typical Java FX window to gather design and architecture information.
 
 model: opus
 effort: low

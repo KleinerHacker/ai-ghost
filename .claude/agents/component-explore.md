@@ -1,6 +1,6 @@
 ---
-Name: Component Explorer
-Description: Explores a typical Java FX component to gather design and architecture information.
+name: component-explore
+description: Explores a typical Java FX component to gather design and architecture information.
 
 model: opus
 effort: low

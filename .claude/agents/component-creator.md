@@ -1,6 +1,6 @@
 ---
-Name: Component Creator
-Description: Creates a new Java FX component that does not exist yet, based on the exploration results of the Component Explorer agent.
+name: component-creator
+description: Creates a new Java FX component that does not exist yet, based on the exploration results of the component-explore agent.
 
 model: opus
 effort: low
