@@ -1,5 +1,6 @@
 ---
-name: Java FX UI
+name: ui-styling
+description: Rules for the Java FX UI module app/ui - MVVM FX architecture pattern, I18N resource bundles and the global stylesheet/palette. Load before creating or changing anything under app/ui, any FXML, view model, message bundle or CSS.
 ---
 
 # Architecture Pattern
@@ -24,6 +25,7 @@ name: Java FX UI
 * MessageFormat placeholders (`{0}`, `{1}`, ...) MUST be kept identical to the base bundle, including
   the doubled apostrophes of `''{0}''`
 * Adding another language MUST be confirmed with the user first
+
 # Styling
 
 * The global stylesheet `app/ui/src/main/resources/styles/ai-ghost.css` is the ONLY source of the

@@ -47,14 +47,4 @@ name: development
 
 ## Testing
 
-* JUnit test system MUST be used
-* For Java FX UI tests use TestFX framework
-  * Must run in the background without an open UI
-* Every use case MUST be tested
-* Code coverage should reach 100%
-* The package structure of the production code is to be mirrored
-* Tests are to be split into two categories
-    * **Developer tests** - Simple unit tests covering individual pieces of functionality
-      * All Test Classes without suffix of "IT"
-    * **Integration tests** - Tests covering complete features or aiming at performance
-      * Identified by Class Name ending with "IT"
+* Details are in the `testing` skill, which MUST be loaded before a test class is created or changed

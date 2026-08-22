@@ -1,7 +1,16 @@
 # Global Rules
 
 * NEVER EVER save memories!!!
-* You MUST use embedded Reda and Write Action!
+* You MUST use embedded Read and Write Action!
+
+## Skills
+
+* The following skills carry binding rules and MUST be loaded in the named situation:
+  * `ui-styling` - before ANY change under `app/ui` (Kotlin, FXML, message bundles, CSS)
+  * `icons` - before an icon is drawn, moved, renamed, registered or referenced
+  * `testing` - before a test class is created or changed
+  * `project-docs` - after EVERY change, to check README, MkDocs, KDoc and CHANGELOG.md
+  * `ci-pipeline` - before a workflow file under `.github` is created or changed
 
 ## Concurrency
 

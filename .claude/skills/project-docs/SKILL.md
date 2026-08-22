@@ -1,5 +1,6 @@
 ---
-name: documentation
+name: project-docs
+description: Rules for KDoc, README, MkDocs under docs and CHANGELOG.md. Load after any production change to check and adjust the documentation, and before writing or editing README, MkDocs pages or the changelog.
 ---
 
 # Documentation
