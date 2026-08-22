@@ -43,3 +43,6 @@ docs/docs/dokka
 docs/docs/licences
 
 .claude/plans/
+
+# Python byte code of the font generator
+__pycache__/

@@ -49,7 +49,9 @@
     -fx-selection-bar-non-focused: -ghost-surface-bar;
     -fx-text-background-color: -ghost-ink;
 
-    -fx-font-family: "Segoe UI", "Noto Sans", "Helvetica Neue", sans-serif;
+    /* Ghost Writer is shipped with the application and registered by AiGhostTheme.install(); the
+       platform faces stay behind it as a fallback for the rare characters it does not carry. */
+    -fx-font-family: "Ghost Writer", "Segoe UI", "Noto Sans", "Helvetica Neue", sans-serif;
     -fx-font-size: 13px;
     -fx-background-color: -ghost-surface;
 }

@@ -10,6 +10,8 @@
   * `fx-component-lifecycle` - before a view registers or deregisters anything global (listener,
     subscription, timer) or `showingBinding` is touched
   * `icons` - before an icon is drawn, moved, renamed, registered or referenced
+  * `font` - before a glyph of the shipped type face is drawn or changed, before a character is
+    added to it, and before the font file is referenced
   * `testing` - before a test class is created or changed
   * `project-docs` - after EVERY change, to check README, MkDocs, KDoc and CHANGELOG.md
   * `ci-pipeline` - before a workflow file under `.github` is created or changed

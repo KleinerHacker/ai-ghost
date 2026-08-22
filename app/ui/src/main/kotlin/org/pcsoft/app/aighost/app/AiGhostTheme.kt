@@ -30,10 +30,12 @@ object AiGhostTheme {
      * Installs the base look the application theme builds upon.
      *
      * Modena is set explicitly so that the appearance does not change with the platform default; the
-     * theme itself only overrides what it needs on top of it.
+     * theme itself only overrides what it needs on top of it. The shipped type faces are registered
+     * in the same step, so [AiGhostFonts.FAMILY] is available wherever a font family is expected.
      */
     fun install() {
         Application.setUserAgentStylesheet(Application.STYLESHEET_MODENA)
+        AiGhostFonts.install()
     }
 
     /**

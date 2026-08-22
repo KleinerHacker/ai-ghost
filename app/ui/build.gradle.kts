@@ -50,6 +50,50 @@ tasks.withType<Test> {
     systemProperty("java.awt.headless", "true")
 }
 
+// The Ghost Writer font is drawn by the vector generator in `tools/font`. The generated file is also
+// checked in, so a machine without Python still builds: the task then keeps the committed font.
+val fontGeneratorDir = rootProject.layout.projectDirectory.dir("tools/font")
+val fontFile = layout.projectDirectory.file("src/main/resources/fonts/GhostWriter-Regular.ttf")
+
+val generateFont = tasks.register("generateFont") {
+    group = "build"
+    description = "Generates the Ghost Writer TrueType font from the vector generator in tools/font"
+
+    inputs.dir(fontGeneratorDir).withPropertyName("generator")
+    outputs.file(fontFile).withPropertyName("font")
+
+    val generatorDir = fontGeneratorDir.asFile
+    val target = fontFile.asFile
+
+    doLast {
+        val interpreter = listOf("python", "python3").firstOrNull { candidate ->
+            runCatching {
+                ProcessBuilder(candidate, "-c", "import fontTools")
+                    .redirectErrorStream(true)
+                    .start()
+                    .waitFor() == 0
+            }.getOrDefault(false)
+        }
+
+        if (interpreter == null) {
+            logger.lifecycle("Font generation skipped: no Python with fontTools found, keeping the committed font")
+            return@doLast
+        }
+
+        val process = ProcessBuilder(interpreter, "build_font.py", target.absolutePath)
+            .directory(generatorDir)
+            .redirectErrorStream(true)
+            .start()
+        val output = process.inputStream.bufferedReader().readText()
+        check(process.waitFor() == 0) { "Font generation failed:\n$output" }
+        logger.lifecycle(output.trim())
+    }
+}
+
+tasks.named("processResources") {
+    dependsOn(generateFont)
+}
+
 jlink {
     imageZip.set(layout.buildDirectory.file("/distributions/ghost-ui-image-${javafx.platform.classifier}.zip"))
     options.set(listOf("--strip-debug", "--compress", "zip-6", "--no-header-files", "--no-man-pages"))

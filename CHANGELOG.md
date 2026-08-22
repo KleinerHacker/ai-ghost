@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+* User interface uses its own type face `Ghost Writer`, a rounded geometric sans matching the logo;
+  it ships with the application, so the text looks the same on every platform
+
 * Main window menu bar with the menus `File`, `Publish` and `Help`
 * Menu entries carry icons, and the frequently used ones carry their usual keyboard shortcut:
   `Ctrl+O` to open a project, `Ctrl+S` to save, `Ctrl+Shift+S` to save under a new name,
