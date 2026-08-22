@@ -48,6 +48,7 @@ lives in the library `lib/ai-ghost-model`, which serialises it to JSON via Jacks
 | Project tree with prolog, chapters, epilog, blurb | Implemented |
 | Editor split into project tree and editing area   | Implemented |
 | Product design shared with logo and documentation | Implemented |
+| Light and dark appearance, chosen in the preferences | Implemented |
 | Shipped `Ghost Writer` type face                  | Implemented |
 | Dokka API documentation                           | Implemented |
 | Dependency licence report                         | Implemented |

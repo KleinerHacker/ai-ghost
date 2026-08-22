@@ -106,7 +106,7 @@ class MainWindowIT : ApplicationTest() {
      */
     @Test
     fun windowUsesTheApplicationTheme() {
-        assertEquals(listOf(AiGhostTheme.stylesheet), window.scene.stylesheets.toList())
+        assertEquals(AiGhostTheme.stylesheets, window.scene.stylesheets.toList())
     }
 
     /**

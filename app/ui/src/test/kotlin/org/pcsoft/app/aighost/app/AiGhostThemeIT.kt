@@ -106,14 +106,16 @@ class AiGhostThemeIT : ApplicationTest() {
     }
 
     /**
-     * Use case: the shipped stylesheet is syntactically valid, so the whole file is understood by
-     * the JavaFX CSS parser instead of being dropped rule by rule.
+     * Use case: every shipped stylesheet is syntactically valid, so each file is understood by the
+     * JavaFX CSS parser as a whole instead of being dropped rule by rule.
      */
     @Test
-    fun stylesheetParsesIntoRules() {
-        val stylesheet = CssParser().parse(URI(AiGhostTheme.stylesheet).toURL())
+    fun everyStylesheetParsesIntoRules() {
+        AiGhostTheme.stylesheets.forEach { stylesheet ->
+            val parsed = CssParser().parse(URI(stylesheet).toURL())
 
-        assertTrue(stylesheet.rules.isNotEmpty(), "Stylesheet contains no rules")
+            assertTrue(parsed.rules.isNotEmpty(), "Stylesheet contains no rules: $stylesheet")
+        }
     }
 
     /**
@@ -123,6 +125,35 @@ class AiGhostThemeIT : ApplicationTest() {
      */
     @Test
     fun applyingTheThemeLogsNoCssProblem() {
+        renderEveryControl()
+
+        assertTrue(cssProblems().isEmpty(), "CSS problems reported: ${cssProblems()}")
+    }
+
+    /**
+     * Use case: the dark colour scheme carries every variable the theme reads, so switching the
+     * scheme renders the same controls without a single unresolved value.
+     */
+    @Test
+    fun applyingTheDarkColorSchemeLogsNoCssProblem() {
+        val original = AiGhostTheme.colorScheme
+        try {
+            AiGhostTheme.colorScheme = AiGhostColorScheme.DARK
+            interact {
+                stage.scene.stylesheets.clear()
+                AiGhostTheme.apply(stage.scene)
+            }
+
+            renderEveryControl()
+
+            assertTrue(cssProblems().isEmpty(), "CSS problems reported: ${cssProblems()}")
+        } finally {
+            AiGhostTheme.colorScheme = original
+        }
+    }
+
+    /** Renders every styled control once, popups included, so all rules are evaluated. */
+    private fun renderEveryControl() {
         interact {
             contextMenu.show(stage)
             button.tooltip.show(stage)
@@ -132,14 +163,13 @@ class AiGhostThemeIT : ApplicationTest() {
             button.tooltip.hide()
             contextMenu.hide()
         }
+    }
 
-        val problems = synchronized(records) {
-            records
-                .filter { it.level.intValue() >= Level.WARNING.intValue() }
-                .map { "${it.loggerName}: ${it.message}" }
-                .filter { it.contains("ai-ghost.css") || it.contains("-fx-") }
-        }
-
-        assertTrue(problems.isEmpty(), "CSS problems reported: $problems")
+    /** Warnings the platform logged about a stylesheet or a single declaration. */
+    private fun cssProblems(): List<String> = synchronized(records) {
+        records
+            .filter { it.level.intValue() >= Level.WARNING.intValue() }
+            .map { "${it.loggerName}: ${it.message}" }
+            .filter { it.contains(".css") || it.contains("-fx-") }
     }
 }

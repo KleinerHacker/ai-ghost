@@ -15,6 +15,11 @@
 * Application window carries the AI Ghost icon in every size the window manager asks for
 * User interface uses the AI Ghost design: a light theme with indigo accents, deep navy text and
   softly rounded controls, matching the logo and the documentation site
+* User interface comes in a light and a dark appearance; the dark one carries the same indigo
+  accents on deep navy surfaces
+* Appearance follows the `themeMode` setting of the preferences - `LIGHT`, `DARK` or `SYSTEM`, which
+  follows the operating system; the setting is read while starting, so a change takes effect after a
+  restart
 * Main window shows the `Editor` and `Preview` tabs in the AI Ghost design: rounded tab headers on
   the window surface, separated from the content by an indigo accent line
 * `Editor` tab is split into the project tree on the left and the editing area on the right,
