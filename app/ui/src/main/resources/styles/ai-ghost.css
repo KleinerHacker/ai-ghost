@@ -256,3 +256,109 @@
 .scroll-pane > .viewport {
     -fx-background-color: transparent;
 }
+
+/* ------------------------------------------------------------- tab pane ---- */
+
+/*
+ * The tab pane sits directly below the tool bar, so it carries no bar of its own: the header area
+ * stays transparent on the window surface and only a single accent line separates the tabs from
+ * the content, mirroring the accent line of the menu bar.
+ */
+.tab-pane {
+    -fx-background-color: transparent;
+    -fx-tab-min-height: 30px;
+    -fx-padding: 6px 0 0 0;
+}
+
+.tab-pane > .tab-header-area > .tab-header-background {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent transparent -ghost-primary transparent;
+    -fx-border-width: 0 0 2px 0;
+}
+
+.tab-pane > .tab-header-area {
+    -fx-padding: 0 8px 0 8px;
+}
+
+/*
+ * The headers region is lifted by the width of the accent line below it, so the lower edge of a tab
+ * ends on top of the line instead of running across it.
+ */
+.tab-pane > .tab-header-area > .headers-region {
+    -fx-padding: 0 0 2px 0;
+}
+
+/*
+ * Tabs carry no focus ring; the transparent border exists in every state with the same width, so a
+ * tab never changes its geometry when it is selected, hovered or focused.
+ */
+.tab-pane > .tab-header-area > .headers-region > .tab {
+    -fx-background-color: -ghost-surface-bar;
+    -fx-background-radius: 8px 8px 0 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 2px;
+    -fx-border-radius: 8px 8px 0 0;
+    -fx-padding: 5px 16px 5px 16px;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab > .tab-container > .tab-label {
+    -fx-text-fill: -ghost-ink-soft;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab:hover {
+    -fx-background-color: -ghost-tint-hover;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab:selected {
+    -fx-background-color: -ghost-surface-input;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab:selected > .tab-container > .tab-label {
+    -fx-text-fill: -ghost-primary-dark;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab:disabled {
+    -fx-opacity: 0.5;
+}
+
+/*
+ * Modena draws its own focus halo behind the tab through orientation specific selectors such as
+ * ".tab:top:selected .focus-indicator", which are more specific than a plain child selector. The
+ * indicator is therefore hidden completely instead of only clearing its border colour.
+ */
+.tab-pane > .tab-header-area > .headers-region > .tab:top:selected .focus-indicator,
+.tab-pane > .tab-header-area > .headers-region > .tab:bottom:selected .focus-indicator,
+.tab-pane > .tab-header-area > .headers-region > .tab:left:selected .focus-indicator,
+.tab-pane > .tab-header-area > .headers-region > .tab:right:selected .focus-indicator,
+.tab-pane > .tab-header-area > .headers-region > .tab .focus-indicator {
+    -fx-border-color: transparent;
+    -fx-opacity: 0;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab > .tab-container > .tab-close-button {
+    -fx-background-color: -ghost-ink-soft;
+}
+
+.tab-pane > .tab-header-area > .headers-region > .tab > .tab-container > .tab-close-button:hover {
+    -fx-background-color: -ghost-primary;
+}
+
+.tab-pane > .tab-content-area {
+    -fx-background-color: -ghost-surface-input;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 10px;
+}
+
+.tab-pane > .tab-header-area > .control-buttons-tab > .container > .tab-down-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 8px;
+}
+
+.tab-pane > .tab-header-area > .control-buttons-tab > .container > .tab-down-button:hover {
+    -fx-background-color: -ghost-tint-hover;
+}
+
+.tab-pane > .tab-header-area > .control-buttons-tab > .container > .tab-down-button > .arrow {
+    -fx-background-color: -ghost-accent;
+}

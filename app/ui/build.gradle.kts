@@ -19,6 +19,9 @@ javafx {
 val testFxVersion = "4.0.18"
 
 dependencies {
+    implementation(project(":lib:ai-ghost-model"))
+    implementation("io.arrow-kt:arrow-core:2.1.2")
+
     implementation("org.controlsfx:controlsfx:11.2.4")
     implementation("de.saxsys:mvvmfx:1.8.0")
 

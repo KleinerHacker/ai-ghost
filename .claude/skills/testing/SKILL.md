@@ -12,8 +12,14 @@ description: Rules for writing tests - JUnit, TestFX for headless Java FX UI tes
 * Code coverage should reach 100%
 * The package structure of the production code is to be mirrored
 * EVERY test method is to be documented with a detailed KDoc describing the use case
+* ALL test data MUST be written in ENGLISH
+    * This covers sample texts, names, JSON fixtures and expected values
+    * Exception: a test that verifies a specific language or locale on purpose
 * Tests are to be split into two categories
     * **Developer tests** - Simple unit tests covering individual pieces of functionality
       * All Test Classes without suffix of "IT"
     * **Integration tests** - Tests covering complete features or aiming at performance
       * Identified by Class Name ending with "IT"
+      * ONLY allowed in application modules under `app`
+      * FORBIDDEN in library modules under `lib` - a library carries developer tests only
+        * A test spanning several library classes stays a developer test without the "IT" suffix

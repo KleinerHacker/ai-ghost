@@ -1,8 +1,10 @@
 package org.pcsoft.app.aighost.app.ui.window
 
 import de.saxsys.mvvmfx.MvvmFX
+import javafx.scene.control.Menu
 import javafx.scene.control.MenuBar
 import javafx.stage.Stage
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -10,7 +12,11 @@ import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.app.AiGhostIcons
 import org.pcsoft.app.aighost.app.AiGhostTheme
 import org.pcsoft.app.aighost.app.Messages
+import org.pcsoft.app.aighost.model.PreferencesStorage
+import org.pcsoft.app.aighost.model.pref.RecentOpened
 import org.testfx.framework.junit5.ApplicationTest
+import org.testfx.util.WaitForAsyncUtils
+import java.io.File
 import java.util.Locale
 import java.util.ResourceBundle
 
@@ -21,11 +27,43 @@ class MainWindowIT : ApplicationTest() {
 
     private lateinit var window: MainWindow
 
+    // The preferences of the developer running the build must not be touched, so the changes are
+    // written to a file of their own. The listeners of the storage are global, so the window is
+    // notified all the same.
+    private val preferencesFile: File =
+        File.createTempFile("ai-ghost-preferences", ".json").apply { deleteOnExit() }
+
     override fun start(stage: Stage) {
         MvvmFX.setGlobalResourceBundle(ResourceBundle.getBundle(Messages.BUNDLE_NAME, Locale.GERMAN))
 
         window = MainWindow()
         window.show()
+    }
+
+    @AfterEach
+    fun releaseWindow() {
+        // Hiding deregisters the preferences listener again, so a test never leaves one behind.
+        interact { window.hide() }
+        preferencesFile.delete()
+    }
+
+    /** Texts of the entries the "open recent" menu currently offers. */
+    private fun openRecentEntries(): List<String> {
+        val menuBar = window.scene.root.lookup(".menu-bar") as MenuBar
+        val fileMenu = menuBar.menus.first()
+        val openRecent = fileMenu.items
+            .filterIsInstance<Menu>()
+            .first { it.text == "Zuletzt geöffnete Projekte" }
+
+        return openRecent.items.map { it.text }
+    }
+
+    /** Stores [paths] as the recently opened files and waits until the UI processed the change. */
+    private fun storeRecentlyOpened(vararg paths: String) {
+        PreferencesStorage.update(preferencesFile) {
+            it.copy(recentOpened = RecentOpened(entries = paths.toList()))
+        }
+        WaitForAsyncUtils.waitForFxEvents()
     }
 
     /**
@@ -57,5 +95,55 @@ class MainWindowIT : ApplicationTest() {
     @Test
     fun windowUsesTheApplicationTheme() {
         assertEquals(listOf(AiGhostTheme.stylesheet), window.scene.stylesheets.toList())
+    }
+
+    /**
+     * Use case: while the window is shown, a project opened elsewhere in the application appears in
+     * the "open recent" menu without the window having to be reopened.
+     */
+    @Test
+    fun openRecentFollowsThePreferencesWhileTheWindowIsShown() {
+        storeRecentlyOpened("/books/first-novel.ghost")
+        assertEquals(listOf("first-novel.ghost"), openRecentEntries())
+
+        storeRecentlyOpened("/books/second-novel.ghost", "/books/first-novel.ghost")
+        assertEquals(listOf("second-novel.ghost", "first-novel.ghost"), openRecentEntries())
+    }
+
+    /**
+     * Use case: a window that is not shown any more stops following the preferences, so a hidden
+     * window keeps no listener alive; reopening it picks the changes up again.
+     */
+    @Test
+    fun openRecentIgnoresThePreferencesWhileTheWindowIsHidden() {
+        storeRecentlyOpened("/books/first-novel.ghost")
+        assertEquals(listOf("first-novel.ghost"), openRecentEntries())
+
+        interact { window.hide() }
+        storeRecentlyOpened("/books/second-novel.ghost")
+        assertEquals(listOf("first-novel.ghost"), openRecentEntries())
+
+        interact { window.show() }
+        storeRecentlyOpened("/books/third-novel.ghost")
+        assertEquals(listOf("third-novel.ghost"), openRecentEntries())
+    }
+
+    /**
+     * Use case: the window follows the preferences per component, not per window - a content that is
+     * hidden while the window stays open stops following as well, so no listener is kept alive for a
+     * component nobody sees.
+     */
+    @Test
+    fun openRecentIgnoresThePreferencesWhileTheContentIsHidden() {
+        storeRecentlyOpened("/books/first-novel.ghost")
+        assertEquals(listOf("first-novel.ghost"), openRecentEntries())
+
+        interact { window.scene.root.isVisible = false }
+        storeRecentlyOpened("/books/second-novel.ghost")
+        assertEquals(listOf("first-novel.ghost"), openRecentEntries())
+
+        interact { window.scene.root.isVisible = true }
+        storeRecentlyOpened("/books/third-novel.ghost")
+        assertEquals(listOf("third-novel.ghost"), openRecentEntries())
     }
 }

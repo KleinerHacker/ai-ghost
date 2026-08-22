@@ -26,7 +26,8 @@ chapter before the next one begins.
 The book project holds the outline, all chapters and the context material the agent relies on. The
 application itself is a JavaFX desktop UI written in Kotlin (`app/ai-ghost-ui`), distributed as a
 self-contained ZIP archive carrying the start scripts and every required JAR, so no installation
-beyond a JDK is needed.
+beyond a JDK is needed. The persisted data - the preferences and the book project with its chapters -
+lives in the library `lib/ai-ghost-model`, which serialises it to JSON via Jackson.
 
 ### State of implementation
 
@@ -38,10 +39,12 @@ beyond a JDK is needed.
 | Book project with outline and chapters            | Planned     |
 | Export of the finished manuscript                 | Planned     |
 | JavaFX desktop shell (`app/ai-ghost-ui`)          | Implemented |
+| JSON data model (`lib/ai-ghost-model`)            | Implemented |
 | ZIP distribution with start scripts and `libs`    | Implemented |
 | MVVM UI architecture (MVVM FX)                    | Implemented |
 | Internationalisation of the UI (English, German)  | Implemented |
 | Menu bar with icons and keyboard shortcuts        | Implemented |
+| Editor and preview tabs of the main window        | Implemented |
 | Product design shared with logo and documentation | Implemented |
 | Dokka API documentation                           | Implemented |
 | Dependency licence report                         | Implemented |

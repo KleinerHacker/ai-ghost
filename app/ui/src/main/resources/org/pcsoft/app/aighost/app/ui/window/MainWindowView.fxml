@@ -187,4 +187,11 @@
         </VBox>
     </top>
 
+    <center>
+        <TabPane>
+            <Tab text="%tab.editor" closable="false"/>
+            <Tab text="%tab.preview" closable="false"/>
+        </TabPane>
+    </center>
+
 </BorderPane>

@@ -7,6 +7,8 @@
 
 * The following skills carry binding rules and MUST be loaded in the named situation:
   * `ui-styling` - before ANY change under `app/ui` (Kotlin, FXML, message bundles, CSS)
+  * `fx-component-lifecycle` - before a view registers or deregisters anything global (listener,
+    subscription, timer) or `showingBinding` is touched
   * `icons` - before an icon is drawn, moved, renamed, registered or referenced
   * `testing` - before a test class is created or changed
   * `project-docs` - after EVERY change, to check README, MkDocs, KDoc and CHANGELOG.md

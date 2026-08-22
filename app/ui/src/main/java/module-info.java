@@ -6,6 +6,8 @@ module org.pcsoft.app.aighost.ui {
     requires org.controlsfx.controls;
     requires de.saxsys.mvvmfx;
 
+    requires org.pcsoft.app.aighost.model;
+
     opens org.pcsoft.app.aighost.app to javafx.fxml, de.saxsys.mvvmfx;
     opens org.pcsoft.app.aighost.app.ui.window to javafx.fxml, de.saxsys.mvvmfx;
 
