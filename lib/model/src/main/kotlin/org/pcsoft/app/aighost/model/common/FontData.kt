@@ -24,8 +24,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class FontData(
-    val name: String,
-    val size: Int,
-    val bold: Boolean,
-    val italic: Boolean
+    val name: String = "Arial",
+    val size: Int = 12,
+    val bold: Boolean = false,
+    val italic: Boolean = false
 )

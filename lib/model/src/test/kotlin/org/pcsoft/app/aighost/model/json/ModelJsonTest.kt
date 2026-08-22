@@ -16,7 +16,6 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.exc.InvalidFormatException
-import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -155,7 +154,7 @@ class ModelJsonTest {
      */
     @Test
     fun escapesSpecialCharactersInChapterText() {
-        val project = TestData.project().copy(
+        val project = TestData.project().apply {
             book = Book(
                 "Special\"Characters",
                 listOf("A \\ backslash"),
@@ -167,7 +166,7 @@ class ModelJsonTest {
                     )
                 )
             )
-        )
+        }
 
         val restored: Project = mapper.readValue(mapper.writeValueAsString(project))
 
@@ -180,8 +179,8 @@ class ModelJsonTest {
      */
     @Test
     fun keepsUnicodeText() {
-        val project = TestData.project().copy(
-            author = "Renée Müller",
+        val project = TestData.project().apply {
+            author = "Renée Müller"
             book = Book(
                 "Café Notes",
                 chapters = listOf(
@@ -189,7 +188,7 @@ class ModelJsonTest {
                 ),
                 blurb = Blurb(listOf("Crème de la crème – a novel."))
             )
-        )
+        }
 
         val restored: Project = mapper.readValue(mapper.writeValueAsString(project))
 
@@ -233,14 +232,18 @@ class ModelJsonTest {
     }
 
     /**
-     * Use case: a project file misses the mandatory name, so opening it fails instead of creating a
-     * project without an identity.
+     * Use case: a project file carries no name, so it is opened under the name a new project starts
+     * with instead of being rejected, and everything else is read as written.
      */
     @Test
-    fun rejectsProjectWithoutName() {
+    fun readsProjectWithoutNameAsDefault() {
         val json = mapper.writeValueAsString(TestData.project())
             .replaceFirst(""""name" : "My Novel",""", "")
 
-        assertThrows<MismatchedInputException> { mapper.readValue<Project>(json) }
+        val project: Project = mapper.readValue(json)
+
+        assertEquals("New Project", project.name)
+        assertEquals("Jane Doe", project.author)
+        assertEquals(TestData.book(), project.book)
     }
 }

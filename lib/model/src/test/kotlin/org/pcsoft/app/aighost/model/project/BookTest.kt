@@ -40,6 +40,15 @@ class BookTest {
     }
 
     /**
+     * Use case: a project is created before the user named the manuscript, so the book carries a
+     * placeholder title the user can overwrite instead of demanding one up front.
+     */
+    @Test
+    fun defaultsToPlaceholderTitle() {
+        assertEquals("My Book", Book().title)
+    }
+
+    /**
      * Use case: prolog, epilog and blurb are created on demand through the menu, so a fresh book
      * carries none of them instead of empty placeholders the user never asked for.
      */

@@ -12,10 +12,11 @@
 
 package org.pcsoft.app.aighost.model
 
-import arrow.core.getOrElse
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertInstanceOf
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.pcsoft.app.aighost.model.pref.Preferences
@@ -24,7 +25,7 @@ import org.pcsoft.app.aighost.model.pref.ThemeMode
 import java.io.File
 
 /**
- * Developer tests for [PreferencesStorage] and [PreferencesStorage.Error].
+ * Developer tests for the file handling of [PreferencesStorage] and for [PreferencesStorage.Error].
  */
 class PreferencesStorageTest {
 
@@ -33,16 +34,37 @@ class PreferencesStorageTest {
 
     private val file: File get() = File(directory, "preferences.json")
 
+    private lateinit var applicationFile: File
+
+    /**
+     * The storage is a singleton working on the file of the current user, so a test points it at a
+     * file of its own instead of at the preferences of whoever runs the build.
+     */
+    @BeforeEach
+    fun redirectStorage() {
+        applicationFile = PreferencesStorage.defaultFile
+        PreferencesStorage.defaultFile = file
+    }
+
+    /**
+     * The storage is a singleton, so the redirected file would survive into the next test and let it
+     * work on preferences that do not belong to it.
+     */
+    @AfterEach
+    fun restoreStorage() {
+        PreferencesStorage.defaultFile = applicationFile
+    }
+
     /**
      * Use case: the application starts on a fresh installation, so loading reports that nothing is
-     * stored yet instead of failing, and the caller can fall back to the defaults.
+     * stored yet instead of failing, and the defaults are in effect.
      */
     @Test
     fun reportsNotFoundWithoutStoredFile() {
-        val result = PreferencesStorage.load(file)
+        val result = PreferencesStorage.load()
 
         assertEquals(PreferencesStorage.Error.NotFound(file), result.leftOrNull())
-        assertEquals(Preferences(), result.getOrElse { Preferences() })
+        assertEquals(Preferences(), PreferencesStorage.current)
     }
 
     /**
@@ -52,8 +74,9 @@ class PreferencesStorageTest {
     @Test
     fun reportsNotAFileForDirectory() {
         val asDirectory = File(directory, "preferences.json").apply { mkdirs() }
+        PreferencesStorage.defaultFile = asDirectory
 
-        val result = PreferencesStorage.load(asDirectory)
+        val result = PreferencesStorage.load()
 
         assertEquals(PreferencesStorage.Error.NotAFile(asDirectory), result.leftOrNull())
     }
@@ -68,8 +91,10 @@ class PreferencesStorageTest {
         val asDirectory = File(directory, "config-directory").apply { mkdirs() }
         val missing = File(directory, "missing.json")
 
-        val onDirectory = PreferencesStorage.load(asDirectory).leftOrNull()
-        val onMissing = PreferencesStorage.load(missing).leftOrNull()
+        PreferencesStorage.defaultFile = asDirectory
+        val onDirectory = PreferencesStorage.load().leftOrNull()
+        PreferencesStorage.defaultFile = missing
+        val onMissing = PreferencesStorage.load().leftOrNull()
 
         assertInstanceOf(PreferencesStorage.Error.NotAFile::class.java, onDirectory)
         assertInstanceOf(PreferencesStorage.Error.NotFound::class.java, onMissing)
@@ -77,16 +102,30 @@ class PreferencesStorageTest {
 
     /**
      * Use case: an error is shown to the user, so every failure names the file it happened on and
-     * the caller does not have to remember which path it asked for.
+     * the caller does not have to remember which path the storage works on.
      */
     @Test
     fun everyErrorCarriesItsFile() {
         val asDirectory = File(directory, "config-directory").apply { mkdirs() }
         val broken = File(directory, "broken.json").apply { writeText("{ this is not json") }
 
-        assertEquals(file, PreferencesStorage.load(file).leftOrNull()?.file)
-        assertEquals(asDirectory, PreferencesStorage.load(asDirectory).leftOrNull()?.file)
-        assertEquals(broken, PreferencesStorage.load(broken).leftOrNull()?.file)
+        assertEquals(file, PreferencesStorage.load().leftOrNull()?.file)
+        PreferencesStorage.defaultFile = asDirectory
+        assertEquals(asDirectory, PreferencesStorage.load().leftOrNull()?.file)
+        PreferencesStorage.defaultFile = broken
+        assertEquals(broken, PreferencesStorage.load().leftOrNull()?.file)
+    }
+
+    /**
+     * Use case: the stored file cannot be read, so the defaults become the preferences in effect and
+     * the application works with settings all the same.
+     */
+    @Test
+    fun failedLoadPutsDefaultsInEffect() {
+        PreferencesStorage.current.themeMode = ThemeMode.DARK
+
+        assertTrue(PreferencesStorage.load().isLeft())
+        assertEquals(Preferences(), PreferencesStorage.current)
     }
 
     /**
@@ -96,8 +135,9 @@ class PreferencesStorageTest {
     @Test
     fun reportsNotAFileWhenSavingOntoDirectory() {
         val asDirectory = File(directory, "preferences.json").apply { mkdirs() }
+        PreferencesStorage.defaultFile = asDirectory
 
-        val result = PreferencesStorage.save(Preferences(), asDirectory)
+        val result = PreferencesStorage.save()
 
         assertEquals(PreferencesStorage.Error.NotAFile(asDirectory), result.leftOrNull())
         assertTrue(asDirectory.isDirectory)
@@ -109,13 +149,17 @@ class PreferencesStorageTest {
      */
     @Test
     fun roundTripsPreferences() {
-        val preferences = Preferences(
-            recentOpened = RecentOpened(max = 3).add("a.json").add("b.json"),
-            themeMode = ThemeMode.DARK
-        )
+        PreferencesStorage.current.recentOpened = RecentOpened(max = 3).add("a.json").add("b.json")
+        PreferencesStorage.current.themeMode = ThemeMode.DARK
 
-        assertTrue(PreferencesStorage.save(preferences, file).isRight())
-        assertEquals(preferences, PreferencesStorage.load(file).getOrNull())
+        assertTrue(PreferencesStorage.save().isRight())
+        assertTrue(PreferencesStorage.load().isRight())
+
+        assertEquals(
+            RecentOpened(max = 3, entries = listOf("b.json", "a.json")),
+            PreferencesStorage.current.recentOpened
+        )
+        assertEquals(ThemeMode.DARK, PreferencesStorage.current.themeMode)
     }
 
     /**
@@ -125,8 +169,9 @@ class PreferencesStorageTest {
     @Test
     fun createsMissingParentDirectory() {
         val nested = File(directory, "config/nested/preferences.json")
+        PreferencesStorage.defaultFile = nested
 
-        assertTrue(PreferencesStorage.save(Preferences(), nested).isRight())
+        assertTrue(PreferencesStorage.save().isRight())
         assertTrue(nested.isFile)
     }
 
@@ -136,7 +181,8 @@ class PreferencesStorageTest {
      */
     @Test
     fun writesIndentedJson() {
-        PreferencesStorage.save(Preferences(themeMode = ThemeMode.LIGHT), file)
+        PreferencesStorage.current.themeMode = ThemeMode.LIGHT
+        PreferencesStorage.save()
 
         val content = file.readText()
 
@@ -150,10 +196,13 @@ class PreferencesStorageTest {
      */
     @Test
     fun overwritesPreviousFileWithoutLeavingTemporaries() {
-        PreferencesStorage.save(Preferences(themeMode = ThemeMode.LIGHT), file)
-        PreferencesStorage.save(Preferences(themeMode = ThemeMode.DARK), file)
+        PreferencesStorage.current.themeMode = ThemeMode.LIGHT
+        PreferencesStorage.save()
+        PreferencesStorage.current.themeMode = ThemeMode.DARK
+        PreferencesStorage.save()
 
-        assertEquals(ThemeMode.DARK, PreferencesStorage.load(file).getOrNull()?.themeMode)
+        assertTrue(PreferencesStorage.load().isRight())
+        assertEquals(ThemeMode.DARK, PreferencesStorage.current.themeMode)
         assertEquals(listOf("preferences.json"), directory.list()?.sorted())
     }
 
@@ -165,7 +214,7 @@ class PreferencesStorageTest {
     fun reportsMalformedFileAsError() {
         file.writeText("{ this is not json")
 
-        val error = PreferencesStorage.load(file).leftOrNull()
+        val error = PreferencesStorage.load().leftOrNull()
 
         val malformed = assertInstanceOf(PreferencesStorage.Error.Malformed::class.java, error)
         assertEquals(file, malformed.file)
@@ -173,13 +222,13 @@ class PreferencesStorageTest {
 
     /**
      * Use case: the file holds valid JSON that is not a preferences document, so loading reports it
-     * as malformed rather than returning half filled preferences.
+     * as malformed rather than putting half filled preferences in effect.
      */
     @Test
     fun reportsWrongDocumentAsError() {
         file.writeText("""{"themeMode":"NEON"}""")
 
-        val error = PreferencesStorage.load(file).leftOrNull()
+        val error = PreferencesStorage.load().leftOrNull()
 
         assertInstanceOf(PreferencesStorage.Error.Malformed::class.java, error)
     }
@@ -192,20 +241,20 @@ class PreferencesStorageTest {
     fun readsPartialDocumentWithDefaults() {
         file.writeText("""{"themeMode":"LIGHT"}""")
 
-        val preferences = PreferencesStorage.load(file).getOrNull()
+        assertTrue(PreferencesStorage.load().isRight())
 
-        assertEquals(ThemeMode.LIGHT, preferences?.themeMode)
-        assertEquals(RecentOpened(max = 10), preferences?.recentOpened)
+        assertEquals(ThemeMode.LIGHT, PreferencesStorage.current.themeMode)
+        assertEquals(RecentOpened(max = 10), PreferencesStorage.current.recentOpened)
     }
 
     /**
-     * Use case: no explicit file is passed, so both operations work on the file inside the user's
-     * home directory that the application ships with.
+     * Use case: the application is started without anything redirecting the storage, so it works on
+     * the file inside the user's home directory that the application ships with.
      */
     @Test
     fun defaultFileLivesInUserHome() {
         val home = File(System.getProperty("user.home"))
 
-        assertEquals(File(home, ".ai-ghost/preferences.json"), PreferencesStorage.defaultFile)
+        assertEquals(File(home, ".ai-ghost/preferences.json"), applicationFile)
     }
 }

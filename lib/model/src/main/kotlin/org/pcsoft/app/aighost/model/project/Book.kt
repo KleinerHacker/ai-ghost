@@ -31,7 +31,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Book(
-    val title: String,
+    val title: String = "My Book",
     val titleAppendix: List<String> = listOf(),
 
     val prolog: Prolog? = null,

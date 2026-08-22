@@ -20,6 +20,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.app.AiGhostIcons
 import org.pcsoft.app.aighost.app.AiGhostTheme
@@ -28,7 +29,6 @@ import org.pcsoft.app.aighost.model.PreferencesStorage
 import org.pcsoft.app.aighost.model.pref.RecentOpened
 import org.testfx.framework.junit5.ApplicationTest
 import org.testfx.util.WaitForAsyncUtils
-import java.io.File
 import java.util.Locale
 import java.util.ResourceBundle
 
@@ -39,11 +39,15 @@ class MainWindowIT : ApplicationTest() {
 
     private lateinit var window: MainWindow
 
-    // The preferences of the developer running the build must not be touched, so the changes are
-    // written to a file of their own. The listeners of the storage are global, so the window is
-    // notified all the same.
-    private val preferencesFile: File =
-        File.createTempFile("ai-ghost-preferences", ".json").apply { deleteOnExit() }
+    // The storage is a singleton holding the preferences of the current user, so the recent files a
+    // test sets are put back afterwards. Nothing is written to disk, because only an explicit save
+    // touches the file of the developer running the build.
+    private var storedRecentOpened: RecentOpened = RecentOpened()
+
+    @BeforeEach
+    fun keepRecentOpened() {
+        storedRecentOpened = PreferencesStorage.current.recentOpened
+    }
 
     override fun start(stage: Stage) {
         MvvmFX.setGlobalResourceBundle(ResourceBundle.getBundle(Messages.BUNDLE_NAME, Locale.GERMAN))
@@ -56,7 +60,8 @@ class MainWindowIT : ApplicationTest() {
     fun releaseWindow() {
         // Hiding deregisters the preferences listener again, so a test never leaves one behind.
         interact { window.hide() }
-        preferencesFile.delete()
+
+        PreferencesStorage.current.recentOpened = storedRecentOpened
     }
 
     /** Texts of the entries the "open recent" menu currently offers. */
@@ -72,9 +77,7 @@ class MainWindowIT : ApplicationTest() {
 
     /** Stores [paths] as the recently opened files and waits until the UI processed the change. */
     private fun storeRecentlyOpened(vararg paths: String) {
-        PreferencesStorage.update(preferencesFile) {
-            it.copy(recentOpened = RecentOpened(entries = paths.toList()))
-        }
+        PreferencesStorage.current.recentOpened = RecentOpened(entries = paths.toList())
         WaitForAsyncUtils.waitForFxEvents()
     }
 

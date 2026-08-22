@@ -13,13 +13,12 @@
 package org.pcsoft.app.aighost.model.project
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.pcsoft.app.aighost.model.common.Alignment
+import org.pcsoft.app.aighost.model.common.StyleData
 import org.pcsoft.app.aighost.model.TestData
 
 /**
@@ -102,13 +101,45 @@ class ProjectTest {
     }
 
     /**
-     * Use case: a project file misses the mandatory manuscript, so opening it fails instead of
-     * creating a project without a book.
+     * Use case: a project file holds the publishing data only, so it is opened with an empty
+     * manuscript and the default settings instead of being rejected.
      */
     @Test
-    fun rejectsProjectWithoutBook() {
-        assertThrows<MismatchedInputException> {
-            mapper.readValue<Project>("""{"name":"My Novel","author":"Jane Doe","copyright":""}""")
-        }
+    fun readsProjectWithoutBookAsDefault() {
+        val project: Project = mapper.readValue("""{"name":"My Novel","author":"Jane Doe","copyright":""}""")
+
+        assertEquals(Book(), project.book)
+        assertEquals(Project.Settings(), project.settings)
+        assertEquals("My Novel", project.name)
+    }
+
+    /**
+     * Use case: the user creates a project through the menu, so it starts as a named but empty
+     * project the user can write into right away instead of asking for every property up front.
+     */
+    @Test
+    fun defaultsToEmptyProject() {
+        val project = Project()
+
+        assertEquals("New Project", project.name)
+        assertEquals("", project.author)
+        assertEquals("", project.copyright)
+        assertEquals(Book(), project.book)
+        assertEquals(Project.Settings(), project.settings)
+    }
+
+    /**
+     * Use case: a fresh project is rendered before the user touched the settings, so every style
+     * carries the default font and the page flags start on the layout the application ships with.
+     */
+    @Test
+    fun defaultsToPlainSettings() {
+        val settings = Project.Settings()
+
+        assertEquals(StyleData(), settings.authorFont)
+        assertEquals(StyleData(), settings.textFont)
+        assertEquals(false, settings.copyrightPage)
+        assertEquals(true, settings.startWithEmptyPage)
+        assertEquals(true, settings.endWithEmptyPage)
     }
 }

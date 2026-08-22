@@ -164,7 +164,7 @@
     <center>
         <TabPane>
             <Tab text="%tab.editor" closable="false">
-                <Editor/>
+                <Editor fx:id="editor"/>
             </Tab>
             <Tab text="%tab.preview" closable="false"/>
         </TabPane>

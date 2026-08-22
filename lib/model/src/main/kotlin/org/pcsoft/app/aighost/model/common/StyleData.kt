@@ -22,6 +22,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class StyleData(
-    val font: FontData,
+    val font: FontData = FontData(),
     val alignment: Alignment = Alignment.LEFT
 )
