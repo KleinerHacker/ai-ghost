@@ -28,24 +28,9 @@
                     <Menu text="%menu.file.new">
                         <MenuItem text="%menu.file.new.project"/>
                         <SeparatorMenuItem/>
-                        <MenuItem text="%menu.file.new.epilog" accelerator="Shortcut+Alt+E">
-                            <graphic>
-                                <AiGhostIcons fx:factory="menuEpilog"/>
-                            </graphic>
-                        </MenuItem>
-                        <MenuItem text="%menu.file.new.prolog" accelerator="Shortcut+Alt+P">
-                            <graphic>
-                                <AiGhostIcons fx:factory="menuProlog"/>
-                            </graphic>
-                        </MenuItem>
                         <MenuItem text="%menu.file.new.chapter" accelerator="Shortcut+Alt+C">
                             <graphic>
                                 <AiGhostIcons fx:factory="menuChapter"/>
-                            </graphic>
-                        </MenuItem>
-                        <MenuItem text="%menu.file.new.blurb" accelerator="Shortcut+Alt+K">
-                            <graphic>
-                                <AiGhostIcons fx:factory="menuBlurb"/>
                             </graphic>
                         </MenuItem>
                     </Menu>
@@ -101,34 +86,10 @@
             <ToolBar>
                 <Button>
                     <graphic>
-                        <AiGhostIcons fx:factory="menuEpilog"/>
-                    </graphic>
-                    <tooltip>
-                        <Tooltip text="%menu.file.new.epilog"/>
-                    </tooltip>
-                </Button>
-                <Button>
-                    <graphic>
-                        <AiGhostIcons fx:factory="menuProlog"/>
-                    </graphic>
-                    <tooltip>
-                        <Tooltip text="%menu.file.new.prolog"/>
-                    </tooltip>
-                </Button>
-                <Button>
-                    <graphic>
                         <AiGhostIcons fx:factory="menuChapter"/>
                     </graphic>
                     <tooltip>
                         <Tooltip text="%menu.file.new.chapter"/>
-                    </tooltip>
-                </Button>
-                <Button>
-                    <graphic>
-                        <AiGhostIcons fx:factory="menuBlurb"/>
-                    </graphic>
-                    <tooltip>
-                        <Tooltip text="%menu.file.new.blurb"/>
                     </tooltip>
                 </Button>
                 <Separator/>
