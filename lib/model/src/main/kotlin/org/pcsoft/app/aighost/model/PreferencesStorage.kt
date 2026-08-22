@@ -13,127 +13,120 @@
 package org.pcsoft.app.aighost.model
 
 import arrow.core.Either
-import arrow.core.getOrElse
 import arrow.core.left
 import arrow.core.right
 import com.fasterxml.jackson.core.JacksonException
-import com.fasterxml.jackson.databind.SerializationFeature
-import com.fasterxml.jackson.databind.json.JsonMapper
-import com.fasterxml.jackson.module.kotlin.kotlinModule
 import org.pcsoft.app.aighost.model.pref.Preferences
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
-import java.util.concurrent.CopyOnWriteArrayList
 
 /**
- * Reads and writes the [Preferences] of the current user as a JSON file.
+ * Keeps the [Preferences] of the current user and backs them by a JSON file.
+ *
+ * The preferences are a field of the storage: [current] hands out the one instance the application
+ * works on, read from [defaultFile] on the first access. A file changed from outside while the
+ * application runs takes effect on the next start or on an explicit [load].
+ *
+ * Settings are changed on that instance, which reports every change to its own listeners - the
+ * storage itself notifies nobody. A change is only written when [save] is called, so the file
+ * follows the preferences instead of the preferences following the file.
  *
  * The file lives in the user's home directory and is written with indentation, so it can be edited
- * by hand. Neither operation throws for an expected failure: both return an [Either] carrying an
- * [Error] on the left, so a caller can start with defaults when nothing is stored yet.
- *
- * Beside the plain [load] and [save] the storage keeps the preferences it last read or wrote. That
- * state is reached through [current] and changed through [update], which writes the new preferences
- * and notifies every registered [Listener] afterwards. Parts of the application that have to follow
- * a setting register a listener instead of polling the file.
- *
- * All functions take the file as an optional parameter, defaulting to [defaultFile].
+ * by hand. Nothing throws for an expected failure: [load] and [save] return an [Either] carrying an
+ * [Error] on the left, so a caller can tell the user about a file that cannot be read or written
+ * without having to handle the preferences itself - a failure to read leaves the defaults in effect.
  */
 object PreferencesStorage {
 
     private const val FILE_NAME = ".ai-ghost/preferences.json"
 
-    /** The file the preferences are read from and written to unless another one is passed in. */
-    val defaultFile: File = File(System.getProperty("user.home"), FILE_NAME)
-
-    private val mapper = JsonMapper.builder()
-        .addModule(kotlinModule())
-        .enable(SerializationFeature.INDENT_OUTPUT)
-        .build()
-
-    private val listeners = CopyOnWriteArrayList<Listener>()
-
-    private var cachedFile: File? = null
-    private var cached: Preferences? = null
-
-    /** The preferences currently in effect, read from [defaultFile] on first access. */
-    val current: Preferences get() = current(defaultFile)
-
     /**
-     * Returns the preferences currently in effect for [file].
+     * The file the preferences are read from and written to.
      *
-     * The file is read on the first access and kept afterwards, so repeated reads do not touch the
-     * disk again. A file that is missing or cannot be read yields the defaults, because a failure to
-     * read is not a reason to leave the application without settings.
+     * Points into the user's home directory and can only be redirected from within this module, so
+     * the application always works on the preferences of the current user. Redirecting it drops the
+     * values read so far, so the next access reads the new file into [current].
      */
-    fun current(file: File = defaultFile): Preferences {
-        val known = cached
-        if (known != null && cachedFile == file) {
-            return known
+    var defaultFile: File = File(System.getProperty("user.home"), FILE_NAME)
+        internal set(value) {
+            field = value
+            loaded = false
         }
 
-        return load(file).getOrElse { Preferences() }.also {
-            cached = it
-            cachedFile = file
-        }
-    }
+    private val preferences = Preferences()
+
+    private var loaded = false
 
     /**
-     * Applies [transform] to the preferences currently in effect and stores the result.
+     * The preferences the application works on.
      *
-     * Returns the preferences that are in effect afterwards. Every registered [Listener] is notified
-     * once the new preferences are written, and only when [transform] actually changed something -
-     * a transform that returns equal preferences neither writes nor notifies. If writing fails, the
-     * kept state stays untouched and no listener is called.
+     * Always the same instance, so a listener registered on it stays registered across a [load].
+     * [defaultFile] is read on the first access and the values are kept, so neither a repeated
+     * access nor a file changed from outside touches the disk again. A file that is missing or
+     * cannot be read leaves the defaults in place, because a failure to read is not a reason to
+     * leave the application without settings.
      */
-    fun update(file: File = defaultFile, transform: (Preferences) -> Preferences): Either<Error, Preferences> {
-        val old = current(file)
-        val new = transform(old)
+    val current: Preferences
+        get() {
+            if (!loaded) {
+                load()
+            }
 
-        if (new == old) {
-            return old.right()
+            return preferences
         }
-
-        return save(new, file).map {
-            cached = new
-            cachedFile = file
-            listeners.forEach { it.onChanged(old, new) }
-            new
-        }
-    }
 
     /**
-     * Registers [listener] to be notified about every change made through [update].
+     * Reads [defaultFile] again and writes its content into [current].
      *
-     * A listener is called on the thread that called [update], after the preferences were written.
-     * Registering the same listener twice makes it be called twice.
-     */
-    fun addListener(listener: Listener) {
-        listeners.add(listener)
-    }
-
-    /** Removes [listener] again; a listener that is not registered is ignored. */
-    fun removeListener(listener: Listener) {
-        listeners.remove(listener)
-    }
-
-    /**
-     * Reads the preferences from [file].
+     * The instance is kept, so every listener registered on it survives and is notified about each
+     * property the file changed. A failure puts the defaults in place, so the application is never
+     * without settings.
      *
      * Returns [Error.NotFound] when nothing is stored yet, [Error.NotAFile] when the path exists but
      * is not a regular file, [Error.Malformed] when the content is not the expected JSON document,
      * and [Error.Unreadable] when the file cannot be read at all.
      */
-    fun load(file: File = defaultFile): Either<Error, Preferences> {
+    fun load(): Either<Error, Unit> {
+        loaded = true
+
+        return read()
+            .onRight { apply(it) }
+            .onLeft { apply(Preferences()) }
+            .map { }
+    }
+
+    /**
+     * Writes the preferences of [current] to [defaultFile], creating the parent directories if they
+     * do not exist yet.
+     *
+     * The document is written to a temporary file next to the target and moved into place
+     * afterwards, so a crash during the write leaves the previous preferences intact instead of a
+     * half written file.
+     *
+     * Returns [Error.NotAFile] when the path exists but is not a regular file, so an existing
+     * directory is never replaced, and [Error.Unreadable] when the file cannot be written.
+     */
+    fun save(): Either<Error, Unit> = write(current)
+
+    /** Takes the values of [read] over into the instance the application works on. */
+    private fun apply(read: Preferences) {
+        preferences.recentOpened = read.recentOpened
+        preferences.themeMode = read.themeMode
+    }
+
+    /** Reads [defaultFile] into preferences of its own, without touching [current]. */
+    private fun read(): Either<Error, Preferences> {
+        val file = defaultFile
+
         if (!file.exists())
             return Error.NotFound(file).left()
         if (!file.isFile)
             return Error.NotAFile(file).left()
 
         return try {
-            mapper.readValue(file, Preferences::class.java).right()
+            StorageMapper.mapper.readValue(file, Preferences::class.java).right()
         } catch (e: JacksonException) {
             Error.Malformed(file, e).left()
         } catch (e: IOException) {
@@ -141,18 +134,10 @@ object PreferencesStorage {
         }
     }
 
-    /**
-     * Writes [preferences] to [file], creating the parent directories if they do not exist yet.
-     *
-     * The document is written to a temporary file next to the target and moved into place
-     * afterwards, so a crash during the write leaves the previous preferences intact instead of a
-     * half written file.
-     *
-     * Returns [Error.NotAFile] when the path exists but is not a regular file, so an existing
-     * directory is never replaced, and [Error.Unreadable] when the file cannot be written. Writing
-     * directly does not notify any [Listener]; use [update] for a change the application follows.
-     */
-    fun save(preferences: Preferences, file: File = defaultFile): Either<Error, Unit> {
+    /** Writes [preferences] to [defaultFile]. */
+    private fun write(preferences: Preferences): Either<Error, Unit> {
+        val file = defaultFile
+
         if (file.exists() && !file.isFile)
             return Error.NotAFile(file).left()
 
@@ -161,7 +146,7 @@ object PreferencesStorage {
 
             val temporary = File.createTempFile(file.name, ".tmp", file.parentFile)
             try {
-                mapper.writeValue(temporary, preferences)
+                StorageMapper.mapper.writeValue(temporary, preferences)
                 Files.move(
                     temporary.toPath(),
                     file.toPath(),
@@ -177,25 +162,13 @@ object PreferencesStorage {
         }
     }
 
-    /** Notified whenever [update] changed the preferences. */
-    fun interface Listener {
-
-        /**
-         * Called after the preferences were changed and written.
-         *
-         * @param old The preferences that were in effect before the change.
-         * @param new The preferences that are in effect now.
-         */
-        fun onChanged(old: Preferences, new: Preferences)
-    }
-
     /**
      * Reason why reading or writing the preferences failed.
      *
      * The storage never throws for these cases, it returns them as the left side of an [Either], so
      * a caller has to decide what to do: [NotFound] is the normal state of a fresh installation and
-     * is usually answered with defaults, while [NotAFile], [Unreadable] and [Malformed] point at
-     * something the user should be told about.
+     * is usually answered with the defaults that stay in effect, while [NotAFile], [Unreadable] and
+     * [Malformed] point at something the user should be told about.
      *
      * @property file The file the failing operation worked on.
      */

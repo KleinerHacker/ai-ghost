@@ -60,5 +60,8 @@ plugins:
 nav:
   - Home: index.md
   - Menu and shortcuts: menu.md
+  - Editor: editor.md
+  - Project tree: project-tree.md
+  - Appearance: theme.md
   - API Docs: dokka/html/index.html
   - Licences: licences/index.html

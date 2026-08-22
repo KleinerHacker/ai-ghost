@@ -22,6 +22,7 @@ import javafx.scene.control.Menu
 import javafx.scene.control.MenuItem
 import javafx.scene.layout.BorderPane
 import org.pcsoft.app.aighost.app.AiGhostIcons
+import org.pcsoft.app.aighost.app.ui.component.Editor
 import org.pcsoft.app.aighost.app.ui.showingBinding
 import java.net.URL
 import java.util.ResourceBundle
@@ -37,6 +38,8 @@ class MainWindowView : FxmlView<MainWindowViewModel>, Initializable {
     private lateinit var pnlRoot: BorderPane
     @FXML
     private lateinit var mnuOpenRecent: Menu
+    @FXML
+    private lateinit var editor: Editor
 
     @InjectViewModel
     private lateinit var viewModel: MainWindowViewModel
@@ -56,6 +59,8 @@ class MainWindowView : FxmlView<MainWindowViewModel>, Initializable {
                 MenuItem(it.name)
             })
         }
+
+        editor.project.bind(viewModel.project)
     }
 
     @FXML

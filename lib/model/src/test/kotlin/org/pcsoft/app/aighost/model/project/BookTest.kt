@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.model.TestData
 
@@ -39,18 +40,41 @@ class BookTest {
     }
 
     /**
+     * Use case: a project is created before the user named the manuscript, so the book carries a
+     * placeholder title the user can overwrite instead of demanding one up front.
+     */
+    @Test
+    fun defaultsToPlaceholderTitle() {
+        assertEquals("My Book", Book().title)
+    }
+
+    /**
+     * Use case: prolog, epilog and blurb are created on demand through the menu, so a fresh book
+     * carries none of them instead of empty placeholders the user never asked for.
+     */
+    @Test
+    fun defaultsToNoPrologEpilogAndBlurb() {
+        val book = Book("My Novel")
+
+        assertNull(book.prolog)
+        assertNull(book.epilog)
+        assertNull(book.blurb)
+    }
+
+    /**
      * Use case: a book is written to disk, so title, appendix lines and chapters appear in the JSON
      * under the stable property names the file format promises.
      */
     @Test
     fun serialisesTitleAppendixAndChapters() {
-        val book = Book("My Novel", listOf("A Story"), listOf(Chapter("Prologue")))
+        val book = Book("My Novel", listOf("A Story"), chapters = listOf(Chapter("prologue", "Prologue")))
 
         val json = mapper.writeValueAsString(book)
 
         assertEquals(
-            """{"title":"My Novel","titleAppendix":["A Story"],""" +
-                """"chapters":[{"title":"Prologue","titleAppendix":[],"paragraph":[]}]}""",
+            """{"title":"My Novel","titleAppendix":["A Story"],"prolog":null,""" +
+                """"chapters":[{"name":"prologue","title":"Prologue","titleAppendix":[],"paragraph":[]}],""" +
+                """"epilog":null,"blurb":null}""",
             json
         )
     }
@@ -66,7 +90,22 @@ class BookTest {
         val restored: Book = mapper.readValue(mapper.writeValueAsString(book))
 
         assertEquals(book, restored)
-        assertEquals(listOf("Prologue", "Epilogue"), restored.chapters.map(Chapter::title))
+        assertEquals(listOf("first", "second"), restored.chapters.map(Chapter::name))
+    }
+
+    /**
+     * Use case: a book with prolog, epilog and blurb is stored and opened again, so all three parts
+     * come back with their content instead of being dropped.
+     */
+    @Test
+    fun roundTripsPrologEpilogAndBlurb() {
+        val book = TestData.book()
+
+        val restored: Book = mapper.readValue(mapper.writeValueAsString(book))
+
+        assertEquals(TestData.prolog(), restored.prolog)
+        assertEquals(TestData.epilog(), restored.epilog)
+        assertEquals(TestData.blurb(), restored.blurb)
     }
 
     /**

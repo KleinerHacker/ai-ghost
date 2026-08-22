@@ -15,9 +15,12 @@ package org.pcsoft.app.aighost.model
 import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.FontData
 import org.pcsoft.app.aighost.model.common.StyleData
+import org.pcsoft.app.aighost.model.project.Blurb
 import org.pcsoft.app.aighost.model.project.Book
 import org.pcsoft.app.aighost.model.project.Chapter
+import org.pcsoft.app.aighost.model.project.Epilog
 import org.pcsoft.app.aighost.model.project.Project
+import org.pcsoft.app.aighost.model.project.Prolog
 
 /**
  * Fully populated model instances shared by the tests of this module.
@@ -50,14 +53,36 @@ object TestData {
         endWithEmptyPage = false
     )
 
-    /** A book with two chapters, the second one still without text. */
+    /** A prolog with an appendix line and text, so a dropped property shows up in a round trip. */
+    fun prolog(): Prolog = Prolog(
+        title = "Before It All",
+        titleAppendix = listOf("A word up front"),
+        paragraph = listOf("Long before the story started.")
+    )
+
+    /** An epilog with an appendix line and text, so a dropped property shows up in a round trip. */
+    fun epilog(): Epilog = Epilog(
+        title = "After It All",
+        titleAppendix = listOf("A last word"),
+        paragraph = listOf("And that was that.")
+    )
+
+    /** A blurb with two paragraphs, so a lost order shows up in a round trip. */
+    fun blurb(): Blurb = Blurb(
+        paragraph = listOf("A gripping tale of two chapters.", "You will not put it down.")
+    )
+
+    /** A book with prolog, epilog, blurb and two chapters, the second one still without text. */
     fun book(): Book = Book(
         title = "My Novel",
         titleAppendix = listOf("A Story in Two Parts"),
+        prolog = prolog(),
         chapters = listOf(
-            Chapter("Prologue", listOf("How it started"), listOf("Once upon a time.", "And then.")),
-            Chapter("Epilogue")
-        )
+            Chapter("first", "The First Part", listOf("How it started"), listOf("Once upon a time.", "And then.")),
+            Chapter("second", "The Second Part")
+        ),
+        epilog = epilog(),
+        blurb = blurb()
     )
 
     /** A complete project, the root object a JSON document holds. */

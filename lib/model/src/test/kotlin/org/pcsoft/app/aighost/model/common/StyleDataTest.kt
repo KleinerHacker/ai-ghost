@@ -13,12 +13,10 @@
 package org.pcsoft.app.aighost.model.common
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 
@@ -98,13 +96,29 @@ class StyleDataTest {
     }
 
     /**
-     * Use case: a style file misses the mandatory font, so reading it fails instead of producing a
-     * style that cannot be rendered.
+     * Use case: a style file names the alignment only, so it is read with the default font instead of
+     * being rejected, and the text stays renderable.
      */
     @Test
-    fun rejectsStyleWithoutFont() {
-        assertThrows<MismatchedInputException> {
-            mapper.readValue<StyleData>("""{"alignment":"LEFT"}""")
-        }
+    fun readsStyleWithoutFontAsDefault() {
+        val style: StyleData = mapper.readValue("""{"alignment":"LEFT"}""")
+
+        assertEquals(FontData(), style.font)
+        assertEquals(Alignment.LEFT, style.alignment)
+    }
+
+    /**
+     * Use case: a style is created without any argument, so the text is drawn in the plain default
+     * face the application ships with rather than in an undefined one.
+     */
+    @Test
+    fun defaultsToPlainFont() {
+        val font = FontData()
+
+        assertEquals("Arial", font.name)
+        assertEquals(12, font.size)
+        assertEquals(false, font.bold)
+        assertEquals(false, font.italic)
+        assertEquals(FontData(), StyleData().font)
     }
 }
