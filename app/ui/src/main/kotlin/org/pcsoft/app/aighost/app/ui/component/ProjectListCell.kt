@@ -12,9 +12,11 @@
 
 package org.pcsoft.app.aighost.app.ui.component
 
+import javafx.scene.control.ContextMenu
+import javafx.scene.control.MenuItem
 import javafx.scene.control.TreeCell
 import org.pcsoft.app.aighost.app.AiGhostIcons
-import java.util.ResourceBundle
+import java.util.*
 
 /**
  * Renders one [ProjectListItem] inside the project tree of [ProjectList].
@@ -53,6 +55,22 @@ internal class ProjectListCell(private val messages: ResourceBundle) : TreeCell<
             is ProjectListItem.ChapterItem -> AiGhostIcons.treeChapter()
             is ProjectListItem.EpilogItem -> AiGhostIcons.treeEpilog()
             is ProjectListItem.BlurbItem -> AiGhostIcons.treeBlurb()
+        }
+
+        contextMenu = when (item) {
+            is ProjectListItem.Root -> null
+            is ProjectListItem.PrologItem -> null
+            is ProjectListItem.Chapters -> ContextMenu(
+                MenuItem(messages.getString("projectList.menu.addChapter"), AiGhostIcons.treeChapter())
+            )
+
+            is ProjectListItem.ChapterItem -> ContextMenu(
+                MenuItem(messages.getString("projectList.menu.addChapter"), AiGhostIcons.treeChapter()),
+                MenuItem(messages.getString("projectList.menu.deleteChapter"))
+            )
+
+            is ProjectListItem.EpilogItem -> null
+            is ProjectListItem.BlurbItem -> null
         }
     }
 }
