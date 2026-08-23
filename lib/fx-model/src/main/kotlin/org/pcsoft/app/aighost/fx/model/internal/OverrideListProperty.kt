@@ -102,6 +102,25 @@ internal class OverrideListProperty<T>(
     }
 
     /**
+     * Takes over the entries the wrapped field carries now and reports them to everyone listening to
+     * this property.
+     *
+     * The parent property calls this after the model object behind it was exchanged: the field then
+     * belongs to another object and carries other entries, which nothing else would notice - a
+     * control bound to this property would keep showing the entries of the previous object. The
+     * change is not reported back to the parent property, which is the one announcing it already.
+     *
+     * A bound property keeps the entries of its binding and is left alone.
+     */
+    internal fun refresh() {
+        if (isBound) return
+
+        // Reading aligns the observed list with the model object and lets the base class report the
+        // content change to its own listeners.
+        get()
+    }
+
+    /**
      * Reads the value through the base class. It marks itself invalid on every change and only
      * becomes valid again - and only then observes the content of its list again - when it is read,
      * so a change is only reported once the property has been validated.
