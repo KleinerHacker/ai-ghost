@@ -28,5 +28,6 @@ fi
 exec "$JAVA_CMD" \
   --module-path "$APP_HOME/libs" \
   --add-modules ALL-MODULE-PATH \
+  --enable-native-access=javafx.graphics \
   --module org.pcsoft.app.aighost.ui/org.pcsoft.app.aighost.app.LauncherKt \
   "$@"

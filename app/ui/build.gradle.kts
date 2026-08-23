@@ -21,6 +21,10 @@ application {
     mainModule.set("org.pcsoft.app.aighost.ui")
     mainClass.set("org.pcsoft.app.aighost.app.LauncherKt")
     applicationName = "ghost-ui"
+
+    // JavaFX loads its native graphics library through System::load. Since JDK 24 that is a restricted
+    // call and the JVM warns about it unless the calling module is granted native access up front.
+    applicationDefaultJvmArgs = listOf("--enable-native-access=javafx.graphics")
 }
 
 javafx {

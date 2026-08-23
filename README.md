@@ -119,6 +119,17 @@ Build the documentation locally:
 ./gradlew buildDocs   # build it strictly, acts as a generation test
 ```
 
+## AI transparency notice
+
+Parts of the source code, the tests and the documentation of this project were generated with the
+help of AI coding assistants. Every generated contribution is reviewed, adapted and accepted by a
+human maintainer before it enters the repository; the maintainers remain responsible for the
+published code.
+
+This notice is published in the spirit of the transparency requirements of the European Union's
+Artificial Intelligence Act (Regulation (EU) 2024/1689), so that users and contributors know how the
+project is produced.
+
 ## Licence
 
 See [LICENSE](LICENSE).
