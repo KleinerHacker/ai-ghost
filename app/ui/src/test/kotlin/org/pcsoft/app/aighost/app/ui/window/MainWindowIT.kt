@@ -105,7 +105,7 @@ class MainWindowIT : ApplicationTest() {
      */
     @Test
     fun windowStartsWithTitleAndApplicationIcon() {
-        assertEquals("AI Ghost", window.title)
+        assertEquals("AI Ghost - New Project", window.title)
         assertEquals(AiGhostIcons.APPLICATION_ICON_SIZES.size, window.icons.size)
         window.icons.forEach { assertFalse(it.isError) }
     }

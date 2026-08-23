@@ -41,7 +41,8 @@ import java.nio.file.StandardCopyOption
 object ProjectStorage {
 
     /** The project currently open, a fresh one until another is loaded. */
-    val current: Project = Project()
+    var current: Project = Project()
+        private set
 
     /** The file [current] was read from or written to, `null` while it was never saved. */
     var currentFile: File? = null
@@ -64,7 +65,7 @@ object ProjectStorage {
      * so the next [save] needs an explicit one.
      */
     fun new() {
-        apply(Project())
+        current = Project()
         currentFile = null
     }
 
@@ -93,7 +94,7 @@ object ProjectStorage {
             return Error.Unreadable(file, e).left()
         }
 
-        apply(project)
+        current = project
         currentFile = file
 
         return Unit.right()
@@ -137,15 +138,6 @@ object ProjectStorage {
         } catch (e: IOException) {
             Error.Unreadable(target, e).left()
         }
-    }
-
-    /** Takes the values of [read] over into the project the application works on. */
-    private fun apply(read: Project) {
-        current.name = read.name
-        current.author = read.author
-        current.copyright = read.copyright
-        current.settings = read.settings
-        current.book = read.book
     }
 
     /**

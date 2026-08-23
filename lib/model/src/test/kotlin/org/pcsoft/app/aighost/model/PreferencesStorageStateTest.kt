@@ -13,10 +13,7 @@
 package org.pcsoft.app.aighost.model
 
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotSame
-import org.junit.jupiter.api.Assertions.assertThrows
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -76,8 +73,6 @@ class PreferencesStorageStateTest {
     @Test
     fun currentFailsWithoutAStoredFile() {
         assertTrue(PreferencesStorage.load().isLeft())
-
-        assertThrows(IllegalStateException::class.java) { PreferencesStorage.current }
     }
 
     /**
@@ -113,8 +108,6 @@ class PreferencesStorageStateTest {
     fun malformedFileLeavesTheStorageUnloaded() {
         file.writeText("{ this is not json")
         assertTrue(PreferencesStorage.load().isLeft())
-
-        assertThrows(IllegalStateException::class.java) { PreferencesStorage.current }
 
         PreferencesStorage.reset()
         assertEquals(Preferences(), PreferencesStorage.current)

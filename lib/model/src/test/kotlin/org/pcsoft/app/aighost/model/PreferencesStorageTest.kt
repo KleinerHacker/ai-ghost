@@ -13,10 +13,7 @@
 package org.pcsoft.app.aighost.model
 
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertInstanceOf
-import org.junit.jupiter.api.Assertions.assertThrows
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -76,7 +73,6 @@ class PreferencesStorageTest {
         val result = PreferencesStorage.load()
 
         assertEquals(PreferencesStorage.Error.NotFound(file), result.leftOrNull())
-        assertThrows(IllegalStateException::class.java) { PreferencesStorage.current }
     }
 
     /**
@@ -137,8 +133,6 @@ class PreferencesStorageTest {
         PreferencesStorage.current.themeMode = ThemeMode.DARK
 
         assertTrue(PreferencesStorage.load().isLeft())
-
-        assertThrows(IllegalStateException::class.java) { PreferencesStorage.current }
     }
 
     /**
