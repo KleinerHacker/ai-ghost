@@ -16,11 +16,9 @@ import de.saxsys.mvvmfx.ViewModel
 import javafx.beans.property.ListProperty
 import javafx.beans.property.ObjectProperty
 import javafx.beans.property.SimpleListProperty
-import javafx.beans.property.SimpleObjectProperty
 import javafx.collections.FXCollections
 import org.pcsoft.app.aighost.fx.model.FXProjectStorage
 import org.pcsoft.app.aighost.model.PreferencesStorage
-import org.pcsoft.app.aighost.model.ProjectStorage
 import org.pcsoft.app.aighost.model.project.Project
 import java.io.File
 
