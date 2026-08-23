@@ -163,4 +163,57 @@ class OverrideLongPropertyTest {
 
         assertEquals(2, firedEvents)
     }
+
+    /**
+     * Use case: the model object behind the parent property is exchanged - another project file was
+     * loaded for instance - so the wrapped field belongs to another object afterwards and the parent
+     * property lets this property take over the value of that object. Everyone listening here is told
+     * about it, so a control bound to this property stops showing the value of the previous object.
+     */
+    @Test
+    fun takesOverPojoValueOnRefresh() {
+        val observed = mutableListOf<Number>()
+        property.addListener { _, _, newValue -> observed.add(newValue) }
+
+        pojo.size = 42L
+        property.refresh()
+
+        assertEquals(listOf<Number>(42L), observed)
+        assertEquals(42L, property.get())
+    }
+
+    /**
+     * Use case: the parent property announces the exchanged model object itself, so the alignment of
+     * this property must not travel back to it - otherwise the same exchange would be reported once
+     * more for every single field of the object.
+     */
+    @Test
+    fun keepsParentQuietOnRefresh() {
+        pojo.size = 42L
+
+        property.refresh()
+
+        assertEquals(0, firedEvents)
+    }
+
+    /**
+     * Use case: the property is bound to a control while the model object behind the parent property
+     * is exchanged, so the binding stays the source of the value: the alignment leaves the property
+     * untouched and the next value of the binding still reaches the POJO.
+     */
+    @Test
+    fun keepsBoundValueOnRefresh() {
+        val source = SimpleLongProperty(5L)
+        property.bind(source)
+        firedEvents = 0
+
+        property.refresh()
+
+        assertEquals(5L, pojo.size)
+        assertEquals(0, firedEvents)
+
+        source.set(8L)
+
+        assertEquals(8L, pojo.size)
+    }
 }

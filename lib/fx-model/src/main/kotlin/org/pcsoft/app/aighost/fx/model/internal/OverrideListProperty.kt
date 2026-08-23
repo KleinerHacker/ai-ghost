@@ -22,10 +22,13 @@ import javafx.collections.ObservableList
  * Reads are answered from [getter], writes are handed to [setter] - no matter whether they replace
  * the whole list, change its content or come from a binding - and [fireEvent] lets the parent
  * property report the change of its nested field as its own change.
+ *
+ * A list property of an object that is not there at all - a prolog a book does not carry - answers
+ * with an empty list, so [getter] may return `null`, and drops what is written to it.
  */
 internal class OverrideListProperty<T>(
     private val setter: (List<T>) -> Unit,
-    private val getter: () -> List<T>,
+    private val getter: () -> List<T>?,
     private val fireEvent: () -> Unit
 ) : SimpleListProperty<T>() {
 
@@ -48,7 +51,7 @@ internal class OverrideListProperty<T>(
 
     override fun get(): ObservableList<T> {
         val list = super.get()
-        val currentValue = getter()
+        val currentValue = getter() ?: emptyList()
         if (list != currentValue) {
             // The model object was changed past the property, so the observed list follows it.
             syncing = true

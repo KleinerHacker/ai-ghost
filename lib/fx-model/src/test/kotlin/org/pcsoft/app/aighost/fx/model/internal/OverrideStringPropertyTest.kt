@@ -164,4 +164,57 @@ class OverrideStringPropertyTest {
 
         assertEquals(2, firedEvents)
     }
+
+    /**
+     * Use case: the model object behind the parent property is exchanged - another project file was
+     * loaded for instance - so the wrapped field belongs to another object afterwards and the parent
+     * property lets this property take over the text of that object. Everyone listening here is told
+     * about it, so a text field bound to this property stops showing the text of the previous object.
+     */
+    @Test
+    fun takesOverPojoValueOnRefresh() {
+        val observed = mutableListOf<String?>()
+        property.addListener { _, _, newValue -> observed.add(newValue) }
+
+        pojo.title = "Refreshed chapter"
+        property.refresh()
+
+        assertEquals(listOf("Refreshed chapter"), observed)
+        assertEquals("Refreshed chapter", property.get())
+    }
+
+    /**
+     * Use case: the parent property announces the exchanged model object itself, so the alignment of
+     * this property must not travel back to it - otherwise the same exchange would be reported once
+     * more for every single field of the object.
+     */
+    @Test
+    fun keepsParentQuietOnRefresh() {
+        pojo.title = "Refreshed chapter"
+
+        property.refresh()
+
+        assertEquals(0, firedEvents)
+    }
+
+    /**
+     * Use case: the property is bound to a text field while the model object behind the parent
+     * property is exchanged, so the binding stays the source of the value: the alignment leaves the
+     * property untouched and the next value of the binding still reaches the POJO.
+     */
+    @Test
+    fun keepsBoundValueOnRefresh() {
+        val source = SimpleStringProperty("Chapter one")
+        property.bind(source)
+        firedEvents = 0
+
+        property.refresh()
+
+        assertEquals("Chapter one", pojo.title)
+        assertEquals(0, firedEvents)
+
+        source.set("Chapter two")
+
+        assertEquals("Chapter two", pojo.title)
+    }
 }

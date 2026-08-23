@@ -1,6 +1,6 @@
 ---
 name: fx-model
-description: Mirroring rule between the plain model POJOs in lib/model (ai-ghost-model) and their Java FX property models in lib/fx-model (ai-ghost-fx-model) - package mirroring, nested change propagation, mandatory tests and the usage in app/ui. Load before a POJO under lib/model is added, renamed, removed or changed in its fields, and before an FX property model is created or changed.
+description: Mirroring rule between the plain model POJOs in lib/model (ai-ghost-model) and their Java FX property models in lib/fx-model (ai-ghost-fx-model) - package mirroring, nested change propagation, mandatory tests and the usage in app/ui. Load before a POJO under lib/model is added, renamed, removed or changed in its fields, before an FX property model is created or changed, and whenever a POJO in lib/model has no counterpart in lib/fx-model yet.
 ---
 
 # FX Model

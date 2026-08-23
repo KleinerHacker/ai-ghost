@@ -257,4 +257,53 @@ class OverrideListPropertyTest {
 
         assertEquals(listOf("a.json"), added)
     }
+
+    /**
+     * Use case: the list belongs to an object the model does not carry at all - the paragraphs of a
+     * prolog a book was never given - so the getter answers with nothing and the property delivers an
+     * empty list instead of failing, which lets a list view be built before the object exists.
+     */
+    @Test
+    fun readsAbsentListAsEmptyList() {
+        val absent = OverrideListProperty<String>({ }, { null }, { firedEvents++ })
+
+        assertEquals(emptyList<String>(), absent.get())
+        assertEquals(emptyList<String>(), absent.value)
+        assertEquals(0, firedEvents)
+    }
+
+    /**
+     * Use case: the object carrying the list is removed while a list view is bound to the property -
+     * the user deleted the prolog of the book - so the next read delivers no entries any more instead
+     * of the entries of the object that is gone.
+     */
+    @Test
+    fun readsRemovedListAsEmptyList() {
+        var entries: List<String>? = listOf("a.json")
+        val optional = OverrideListProperty<String>({ entries = it }, { entries }, { })
+        assertEquals(listOf("a.json"), optional.get())
+
+        entries = null
+
+        assertEquals(emptyList<String>(), optional.get())
+    }
+
+    /**
+     * Use case: the parent property exchanges the model object for one that carries no list at all,
+     * so the alignment empties the property and does not report that emptying back to the parent,
+     * which is the one announcing the exchange already.
+     */
+    @Test
+    fun emptiesPropertyOnRefreshOfAbsentList() {
+        var entries: List<String>? = listOf("a.json")
+        val optional = OverrideListProperty<String>({ entries = it }, { entries }, { firedEvents++ })
+        optional.get()
+        firedEvents = 0
+
+        entries = null
+        optional.refresh()
+
+        assertEquals(emptyList<String>(), optional.get())
+        assertEquals(0, firedEvents)
+    }
 }

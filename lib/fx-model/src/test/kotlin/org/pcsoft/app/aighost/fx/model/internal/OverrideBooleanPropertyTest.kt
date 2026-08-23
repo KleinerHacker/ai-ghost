@@ -165,4 +165,57 @@ class OverrideBooleanPropertyTest {
 
         assertEquals(2, firedEvents)
     }
+
+    /**
+     * Use case: the model object behind the parent property is exchanged - another project file was
+     * loaded for instance - so the wrapped field belongs to another object afterwards and the parent
+     * property lets this property take over the flag of that object. Everyone listening here is told
+     * about it, so a check box bound to this property stops showing the flag of the previous object.
+     */
+    @Test
+    fun takesOverPojoValueOnRefresh() {
+        val observed = mutableListOf<Boolean>()
+        property.addListener { _, _, newValue -> observed.add(newValue) }
+
+        pojo.enabled = true
+        property.refresh()
+
+        assertEquals(listOf(true), observed)
+        assertTrue(property.get())
+    }
+
+    /**
+     * Use case: the parent property announces the exchanged model object itself, so the alignment of
+     * this property must not travel back to it - otherwise the same exchange would be reported once
+     * more for every single field of the object.
+     */
+    @Test
+    fun keepsParentQuietOnRefresh() {
+        pojo.enabled = true
+
+        property.refresh()
+
+        assertEquals(0, firedEvents)
+    }
+
+    /**
+     * Use case: the property is bound to a check box while the model object behind the parent
+     * property is exchanged, so the binding stays the source of the value: the alignment leaves the
+     * property untouched and the next value of the binding still reaches the POJO.
+     */
+    @Test
+    fun keepsBoundValueOnRefresh() {
+        val source = SimpleBooleanProperty(true)
+        property.bind(source)
+        firedEvents = 0
+
+        property.refresh()
+
+        assertTrue(pojo.enabled)
+        assertEquals(0, firedEvents)
+
+        source.set(false)
+
+        assertFalse(pojo.enabled)
+    }
 }

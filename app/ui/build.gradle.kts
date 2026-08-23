@@ -62,14 +62,16 @@ tasks.withType<Test> {
     systemProperty("java.awt.headless", "true")
 }
 
-// The Ghost Writer font is drawn by the vector generator in `tools/font`. The generated file is also
-// checked in, so a machine without Python still builds: the task then keeps the committed font.
+// The Ghost Writer font is drawn by the vector generator in `tools/font`. The generated file is
+// checked in and is what every build ships, so the generator is only run when somebody asks for it:
+// the task hangs on no other task and has to be called on purpose after the generator was changed.
 val fontGeneratorDir = rootProject.layout.projectDirectory.dir("tools/font")
 val fontFile = layout.projectDirectory.file("src/main/resources/fonts/GhostWriter-Regular.ttf")
 
-val generateFont = tasks.register("generateFont") {
-    group = "build"
-    description = "Generates the Ghost Writer TrueType font from the vector generator in tools/font"
+tasks.register("generateFont") {
+    group = "font"
+    description = "Regenerates the checked in Ghost Writer TrueType font from the vector generator " +
+            "in tools/font. Needs Python with fontTools and is never run by another task."
 
     inputs.dir(fontGeneratorDir).withPropertyName("generator")
     outputs.file(fontFile).withPropertyName("font")
@@ -87,9 +89,10 @@ val generateFont = tasks.register("generateFont") {
             }.getOrDefault(false)
         }
 
-        if (interpreter == null) {
-            logger.lifecycle("Font generation skipped: no Python with fontTools found, keeping the committed font")
-            return@doLast
+        // The task is only started on purpose, so doing nothing would leave the caller with an
+        // unchanged font and no idea why.
+        checkNotNull(interpreter) {
+            "Font generation needs Python with fontTools, see tools/font/requirements.txt"
         }
 
         val process = ProcessBuilder(interpreter, "build_font.py", target.absolutePath)
@@ -100,10 +103,6 @@ val generateFont = tasks.register("generateFont") {
         check(process.waitFor() == 0) { "Font generation failed:\n$output" }
         logger.lifecycle(output.trim())
     }
-}
-
-tasks.named("processResources") {
-    dependsOn(generateFont)
 }
 
 jlink {

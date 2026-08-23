@@ -20,12 +20,19 @@ import javafx.beans.property.SimpleBooleanProperty
  * Reads are answered from [getter], writes are handed to [setter] - no matter whether they come from
  * application code or from a binding - and [fireEvent] lets the parent property report the change of
  * its nested field as its own change.
+ *
+ * A field property of an object that is not there at all - a prolog a book does not carry - answers
+ * with `false` and drops what is written to it.
  */
 internal class OverrideBooleanProperty(
     private val setter: (Boolean) -> Unit,
     private val getter: () -> Boolean,
     private val fireEvent: () -> Unit
 ) : SimpleBooleanProperty() {
+
+    // Guards the model object and the parent property while the property takes over a value the model
+    // object already carries, so such an alignment is not reported back as a change of its own.
+    private var refreshing = false
 
     override fun get(): Boolean = getter()
 
@@ -38,6 +45,7 @@ internal class OverrideBooleanProperty(
         // model object is written here as well and not only from invalidated().
         setter(newValue)
         super.set(newValue)
+        validate()
     }
 
     override fun setValue(v: Boolean?) = set(v ?: false)
@@ -47,12 +55,49 @@ internal class OverrideBooleanProperty(
      * the single point where a bound value reaches the model object.
      */
     override fun invalidated() {
+        if (refreshing) return
+
         setter(super.get())
     }
 
     override fun fireValueChangedEvent() {
         super.fireValueChangedEvent()
-        fireEvent()
+
+        if (!refreshing) {
+            fireEvent()
+        }
+    }
+
+    /**
+     * Takes over the value the wrapped field carries now and reports it to everyone listening to this
+     * property.
+     *
+     * The parent property calls this after the model object behind it was exchanged: the field then
+     * belongs to another object and its value is a different one, which nothing else would notice -
+     * a control bound to this property would keep showing the value of the previous object. The
+     * change is not reported back to the parent property, which is the one announcing it already.
+     *
+     * A bound property keeps the value of its binding and is left alone.
+     */
+    internal fun refresh() {
+        if (isBound) return
+
+        refreshing = true
+        try {
+            super.set(getter())
+        } finally {
+            refreshing = false
+        }
+        validate()
+    }
+
+    /**
+     * Reads the value through the base class. It marks itself invalid on every change and only
+     * becomes valid again - and only then reports a further change - when it is read, which the
+     * overridden [get] does not do because it answers from the model object.
+     */
+    private fun validate() {
+        super.get()
     }
 
 }

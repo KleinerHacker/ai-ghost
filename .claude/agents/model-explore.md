@@ -1,6 +1,6 @@
 ---
 name: model-explore
-description: Explores the reference packages of the model and the FX model to gather the pattern for new model POJOs and their FX properties.
+description: Explores the reference packages of the model and the FX model to gather the pattern for new model POJOs and their FX properties. MUST be used as the first step whenever a POJO in lib/model has no counterpart in lib/fx-model, before a missing <Name>Property is created and before an existing FX model follows a changed POJO.
 
 model: opus
 effort: low

@@ -163,4 +163,57 @@ class OverrideDoublePropertyTest {
 
         assertEquals(2, firedEvents)
     }
+
+    /**
+     * Use case: the model object behind the parent property is exchanged - another project file was
+     * loaded for instance - so the wrapped field belongs to another object afterwards and the parent
+     * property lets this property take over the value of that object. Everyone listening here is told
+     * about it, so a control bound to this property stops showing the value of the previous object.
+     */
+    @Test
+    fun takesOverPojoValueOnRefresh() {
+        val observed = mutableListOf<Number>()
+        property.addListener { _, _, newValue -> observed.add(newValue) }
+
+        pojo.ratio = 42.5
+        property.refresh()
+
+        assertEquals(listOf<Number>(42.5), observed)
+        assertEquals(42.5, property.get())
+    }
+
+    /**
+     * Use case: the parent property announces the exchanged model object itself, so the alignment of
+     * this property must not travel back to it - otherwise the same exchange would be reported once
+     * more for every single field of the object.
+     */
+    @Test
+    fun keepsParentQuietOnRefresh() {
+        pojo.ratio = 42.5
+
+        property.refresh()
+
+        assertEquals(0, firedEvents)
+    }
+
+    /**
+     * Use case: the property is bound to a control while the model object behind the parent property
+     * is exchanged, so the binding stays the source of the value: the alignment leaves the property
+     * untouched and the next value of the binding still reaches the POJO.
+     */
+    @Test
+    fun keepsBoundValueOnRefresh() {
+        val source = SimpleDoubleProperty(5.25)
+        property.bind(source)
+        firedEvents = 0
+
+        property.refresh()
+
+        assertEquals(5.25, pojo.ratio)
+        assertEquals(0, firedEvents)
+
+        source.set(8.75)
+
+        assertEquals(8.75, pojo.ratio)
+    }
 }
