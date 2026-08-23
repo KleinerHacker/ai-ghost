@@ -6,4 +6,8 @@ module org.pcsoft.app.aighost.fx.model {
 
     // The observable wrappers expose the plain model types, so consumers need them as well.
     requires transitive org.pcsoft.app.aighost.model;
+
+    // The storage entry point and the property models it hands out are the public surface.
+    exports org.pcsoft.app.aighost.fx.model;
+    exports org.pcsoft.app.aighost.fx.model.pref;
 }

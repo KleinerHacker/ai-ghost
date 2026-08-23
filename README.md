@@ -50,6 +50,7 @@ lives in the library `lib/ai-ghost-model`, which serialises it to JSON via Jacks
 | Product design shared with logo and documentation | Implemented |
 | Light and dark appearance, chosen in the preferences | Implemented |
 | Shipped `Ghost Writer` type face                  | Implemented |
+| Logging to console and to a rolled over log file  | Implemented |
 | Dokka API documentation                           | Implemented |
 | Dependency licence report                         | Implemented |
 | MkDocs documentation site (versioned via mike)    | Implemented |

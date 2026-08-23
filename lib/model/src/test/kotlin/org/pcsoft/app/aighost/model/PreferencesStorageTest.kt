@@ -15,11 +15,11 @@ package org.pcsoft.app.aighost.model
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertInstanceOf
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import org.pcsoft.app.aighost.model.pref.Preferences
 import org.pcsoft.app.aighost.model.pref.RecentOpened
 import org.pcsoft.app.aighost.model.pref.ThemeMode
 import java.io.File
@@ -39,11 +39,15 @@ class PreferencesStorageTest {
     /**
      * The storage is a singleton working on the file of the current user, so a test points it at a
      * file of its own instead of at the preferences of whoever runs the build.
+     *
+     * The temporary directory carries no file yet, so the load fails and the defaults are put in
+     * place the way the application answers a missing file.
      */
     @BeforeEach
     fun redirectStorage() {
         applicationFile = PreferencesStorage.defaultFile
         PreferencesStorage.defaultFile = file
+        establishPreferences()
     }
 
     /**
@@ -53,18 +57,26 @@ class PreferencesStorageTest {
     @AfterEach
     fun restoreStorage() {
         PreferencesStorage.defaultFile = applicationFile
+        establishPreferences()
+    }
+
+    /** Loads the preferences and answers a failure with the defaults, the way the application does. */
+    private fun establishPreferences() {
+        if (PreferencesStorage.load().isLeft()) {
+            PreferencesStorage.reset()
+        }
     }
 
     /**
      * Use case: the application starts on a fresh installation, so loading reports that nothing is
-     * stored yet instead of failing, and the defaults are in effect.
+     * stored yet instead of failing, and leaves the storage unloaded.
      */
     @Test
     fun reportsNotFoundWithoutStoredFile() {
         val result = PreferencesStorage.load()
 
         assertEquals(PreferencesStorage.Error.NotFound(file), result.leftOrNull())
-        assertEquals(Preferences(), PreferencesStorage.current)
+        assertThrows(IllegalStateException::class.java) { PreferencesStorage.current }
     }
 
     /**
@@ -117,15 +129,16 @@ class PreferencesStorageTest {
     }
 
     /**
-     * Use case: the stored file cannot be read, so the defaults become the preferences in effect and
-     * the application works with settings all the same.
+     * Use case: the stored file cannot be read, so the storage stays unloaded and the caller has to
+     * decide what happens to the file before any settings are handed out again.
      */
     @Test
-    fun failedLoadPutsDefaultsInEffect() {
+    fun failedLoadLeavesTheStorageUnloaded() {
         PreferencesStorage.current.themeMode = ThemeMode.DARK
 
         assertTrue(PreferencesStorage.load().isLeft())
-        assertEquals(Preferences(), PreferencesStorage.current)
+
+        assertThrows(IllegalStateException::class.java) { PreferencesStorage.current }
     }
 
     /**

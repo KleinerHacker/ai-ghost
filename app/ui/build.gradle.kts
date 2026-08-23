@@ -29,13 +29,23 @@ javafx {
 }
 
 val testFxVersion = "4.0.18"
+val log4jVersion = "2.25.2"
 
 dependencies {
     implementation(project(":lib:ai-ghost-model"))
+    implementation(project(":lib:ai-ghost-fx-model"))
+
     implementation("io.arrow-kt:arrow-core:2.1.2")
+    implementation("org.apache.commons:commons-lang3:3.19.0")
 
     implementation("org.controlsfx:controlsfx:11.2.4")
     implementation("de.saxsys:mvvmfx:1.8.0")
+
+    // The application logs against the SLF4J API only; Log4j 2 is the implementation behind it and
+    // is bound through the SLF4J provider, so no code ever touches a Log4j type.
+    implementation("org.slf4j:slf4j-api:2.0.17")
+    runtimeOnly("org.apache.logging.log4j:log4j-core:${log4jVersion}")
+    runtimeOnly("org.apache.logging.log4j:log4j-slf4j2-impl:${log4jVersion}")
 
     testImplementation("org.testfx:testfx-core:${testFxVersion}")
     // TestFX still pulls the JUnit artifacts of its own generation, which collide with the platform used here.

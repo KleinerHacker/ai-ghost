@@ -14,7 +14,8 @@ package org.pcsoft.app.aighost.model
 
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertSame
+import org.junit.jupiter.api.Assertions.assertNotSame
+import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -39,11 +40,16 @@ class PreferencesStorageStateTest {
     /**
      * The storage is a singleton working on the file of the current user, so a test points it at a
      * file of its own instead of at the preferences of whoever runs the build.
+     *
+     * The temporary directory carries no file yet, so the load fails and the defaults are put in
+     * place the way the application answers a missing file. A test needing another state loads or
+     * resets on its own.
      */
     @BeforeEach
     fun redirectStorage() {
         applicationFile = PreferencesStorage.defaultFile
         PreferencesStorage.defaultFile = file
+        establishPreferences()
     }
 
     /**
@@ -53,45 +59,73 @@ class PreferencesStorageStateTest {
     @AfterEach
     fun restoreStorage() {
         PreferencesStorage.defaultFile = applicationFile
+        establishPreferences()
+    }
+
+    /** Loads the preferences and answers a failure with the defaults, the way the application does. */
+    private fun establishPreferences() {
+        if (PreferencesStorage.load().isLeft()) {
+            PreferencesStorage.reset()
+        }
     }
 
     /**
-     * Use case: the application starts without a stored file, so the preferences in effect are the
-     * defaults instead of the caller having to handle a missing file.
+     * Use case: the application starts without a stored file, so nothing was established yet and
+     * reading the preferences fails instead of handing out settings nobody agreed on.
      */
     @Test
-    fun currentFallsBackToDefaults() {
+    fun currentFailsWithoutAStoredFile() {
+        assertTrue(PreferencesStorage.load().isLeft())
+
+        assertThrows(IllegalStateException::class.java) { PreferencesStorage.current }
+    }
+
+    /**
+     * Use case: the caller answered a failed read by resetting, so the defaults are the preferences
+     * in effect from then on.
+     */
+    @Test
+    fun resetPutsTheDefaultsInPlace() {
+        assertTrue(PreferencesStorage.load().isLeft())
+
+        PreferencesStorage.reset()
+
         assertEquals(Preferences(), PreferencesStorage.current)
     }
 
     /**
      * Use case: a stored file exists, so the preferences in effect are the ones the user configured
-     * earlier.
+     * earlier once loaded.
      */
     @Test
     fun currentReadsStoredFile() {
         file.writeText("""{"themeMode":"DARK"}""")
+        assertTrue(PreferencesStorage.load().isRight())
 
         assertEquals(ThemeMode.DARK, PreferencesStorage.current.themeMode)
     }
 
     /**
-     * Use case: a damaged file cannot be parsed, so the application still comes up with the defaults
-     * rather than without any settings.
+     * Use case: a damaged file cannot be parsed, so the storage stays unloaded and the caller has to
+     * decide what happens to the file before any settings are handed out.
      */
     @Test
-    fun currentFallsBackToDefaultsOnMalformedFile() {
+    fun malformedFileLeavesTheStorageUnloaded() {
         file.writeText("{ this is not json")
+        assertTrue(PreferencesStorage.load().isLeft())
 
+        assertThrows(IllegalStateException::class.java) { PreferencesStorage.current }
+
+        PreferencesStorage.reset()
         assertEquals(Preferences(), PreferencesStorage.current)
     }
 
     /**
      * Use case: the file is edited from outside while the application runs, so the preferences in
-     * effect stay the ones read at the start until the application is started again.
+     * effect stay in-memory until an explicit load is performed.
      */
     @Test
-    fun currentReadsTheFileOnlyOnce() {
+    fun currentDoesNotReadTheDiskAutomatically() {
         assertEquals(ThemeMode.SYSTEM, PreferencesStorage.current.themeMode)
 
         file.writeText("""{"themeMode":"DARK"}""")
@@ -100,23 +134,23 @@ class PreferencesStorageStateTest {
     }
 
     /**
-     * Use case: a part of the application holds the preferences, so it keeps working on them after
-     * the file was read again instead of using an instance nobody else knows.
+     * Use case: the file is read again while the application runs, so the document brings the
+     * preferences in effect as a new instance and whoever held the previous one asks again.
      */
     @Test
-    fun keepsTheSameInstanceAcrossReload() {
+    fun reloadPutsANewInstanceInPlace() {
         val before = PreferencesStorage.current
 
         file.writeText("""{"themeMode":"LIGHT"}""")
         assertTrue(PreferencesStorage.load().isRight())
 
-        assertSame(before, PreferencesStorage.current)
-        assertEquals(ThemeMode.LIGHT, before.themeMode)
+        assertNotSame(before, PreferencesStorage.current)
+        assertEquals(ThemeMode.LIGHT, PreferencesStorage.current.themeMode)
     }
 
     /**
      * Use case: the file is read again while the application runs, so every property the new
-     * document brought is in effect on the instance the application works on.
+     * document brought is in effect on the preferences the application works on.
      */
     @Test
     fun reloadAppliesEveryPropertyOfTheDocument() {
@@ -129,8 +163,7 @@ class PreferencesStorageStateTest {
     }
 
     /**
-     * Use case: the storage is pointed at another file, so the next access answers with the values
-     * of the new file.
+     * Use case: the storage is pointed at another file, so loading reads the values of the new file.
      */
     @Test
     fun redirectingTheFileReadsTheNewOne() {
@@ -139,6 +172,7 @@ class PreferencesStorageStateTest {
         val other = File(directory, "other-preferences.json")
         other.writeText("""{"themeMode":"LIGHT"}""")
         PreferencesStorage.defaultFile = other
+        assertTrue(PreferencesStorage.load().isRight())
 
         assertEquals(ThemeMode.LIGHT, PreferencesStorage.current.themeMode)
     }

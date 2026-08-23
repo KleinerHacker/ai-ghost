@@ -67,8 +67,7 @@ class PreferencesPropertyTest {
             recentOpened = RecentOpened(max = 10, entries = emptyList()),
             themeMode = ThemeMode.SYSTEM
         )
-        property = PreferencesProperty()
-        property.value = preferences
+        property = PreferencesProperty(preferences)
         recentOpenedProperty = property.recentOpenedProperty as RecentOpenedProperty
 
         rootView = SimpleStringProperty()

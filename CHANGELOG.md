@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+* Course of a session is written to the console and to a log file in `.ai-ghost/logs` of the home
+  directory; the file carries more detail than the console, is rolled over daily and at 10 MB, and
+  the last ten of the older files are kept compressed
+
+* Preferences that cannot be read are reported while starting: a missing file is replaced by the
+  defaults silently, a damaged or unreadable file is only reset after you confirm, and a folder in
+  place of the file is reported before the application closes; all of these dialogs follow the
+  language of the application and its appearance
+
 * User interface uses its own type face `Ghost Writer`, a rounded geometric sans matching the logo;
   it ships with the application, so the text looks the same on every platform
 * User interface text is slightly larger and rendered with grey scale smoothing, which suits the

@@ -21,6 +21,8 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
+import org.junit.jupiter.api.BeforeAll
+import org.pcsoft.app.aighost.model.PreferencesStorage
 import org.pcsoft.app.aighost.model.pref.ThemeMode
 import org.testfx.framework.junit5.ApplicationExtension
 
@@ -29,6 +31,18 @@ import org.testfx.framework.junit5.ApplicationExtension
  */
 @ExtendWith(ApplicationExtension::class)
 class AiGhostThemeTest {
+
+    companion object {
+        /**
+         * The storage hands out no preferences before they were established, and installing the
+         * theme reads the appearance the user selected, so a test starts from the defaults.
+         */
+        @JvmStatic
+        @BeforeAll
+        fun establishPreferences() {
+            PreferencesStorage.reset()
+        }
+    }
 
     private val originalColorScheme = AiGhostTheme.colorScheme
 

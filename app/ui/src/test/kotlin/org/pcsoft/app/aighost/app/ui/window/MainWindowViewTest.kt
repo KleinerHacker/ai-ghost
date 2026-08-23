@@ -26,6 +26,8 @@ import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.app.Messages
+import org.junit.jupiter.api.BeforeAll
+import org.pcsoft.app.aighost.model.PreferencesStorage
 import org.testfx.framework.junit5.ApplicationTest
 import java.util.Locale
 import java.util.ResourceBundle
@@ -34,6 +36,18 @@ import java.util.ResourceBundle
  * Developer tests for the menu bar of [MainWindowView].
  */
 class MainWindowViewTest : ApplicationTest() {
+
+    companion object {
+        /**
+         * The storage hands out no preferences before they were established, and the view reads
+         * them while it is built, so a test starts from the defaults.
+         */
+        @JvmStatic
+        @BeforeAll
+        fun establishPreferences() {
+            PreferencesStorage.reset()
+        }
+    }
 
     private lateinit var menuBar: MenuBar
 

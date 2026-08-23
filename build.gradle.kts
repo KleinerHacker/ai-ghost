@@ -92,6 +92,11 @@ subprojects {
         allowUrl("'http://opensource.org/licenses/mit-license'") {
             because("MIT")
         }
+
+        // SLF4J names MIT only by the URL of the licence text in its POM, without an SPDX id.
+        allowUrl("https://opensource.org/license/mit") {
+            because("MIT")
+        }
     }
 
     tasks.withType<JavaCompile> {

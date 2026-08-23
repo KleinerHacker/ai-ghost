@@ -33,9 +33,9 @@ import org.pcsoft.app.aighost.model.pref.ThemeMode
  * this property compares the old value with the new one and therefore only sees the exchange of the
  * whole preferences object; a binding built on this property is re-evaluated in both cases.
  */
-class PreferencesProperty : SimpleObjectProperty<Preferences>() {
+class PreferencesProperty(preferences: Preferences) : SimpleObjectProperty<Preferences>(preferences) {
 
-    private val overrideThemeMode = OverrideObjectProperty<ThemeMode>(
+    private val overrideThemeMode = OverrideObjectProperty(
         { value.themeMode = it },
         { value.themeMode },
         { fireValueChangedEvent() }
@@ -68,6 +68,13 @@ class PreferencesProperty : SimpleObjectProperty<Preferences>() {
         set(value) {
             recentOpenedProperty.value = value
         }
+
+    init {
+        // The constructor of the base class stores the object without announcing it, so the field
+        // properties have to take over its values here - otherwise they would only align on the
+        // first exchange and report the initial values as a change of their own.
+        invalidated()
+    }
 
     /**
      * Called whenever the preferences object itself is exchanged - a freshly loaded settings file for

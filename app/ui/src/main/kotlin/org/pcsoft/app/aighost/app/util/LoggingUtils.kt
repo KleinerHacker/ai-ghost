@@ -10,21 +10,9 @@
  * See the License for the specific language governing permissions and limitations.
  */
 
-package org.pcsoft.app.aighost.fx.model
+package org.pcsoft.app.aighost.app.util
 
-import arrow.core.Either
-import org.pcsoft.app.aighost.fx.model.pref.PreferencesProperty
-import org.pcsoft.app.aighost.model.PreferencesStorage
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
-object FXPreferencesStorage {
-
-    val current: PreferencesProperty
-        get() = PreferencesProperty(PreferencesStorage.current)
-
-    fun load() : Either<PreferencesStorage.Error, Unit> = PreferencesStorage.load()
-
-    fun reset() = PreferencesStorage.reset()
-
-    fun save() : Either<PreferencesStorage.Error, Unit> = PreferencesStorage.save()
-
-}
+internal inline fun <reified T> logger() : Logger = LoggerFactory.getLogger(T::class.java)
