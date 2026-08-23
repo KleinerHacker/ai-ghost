@@ -63,7 +63,6 @@ object PreferencesStorage {
      * do that for their bindings themselves.
      */
     var current: Preferences = Preferences()
-        get() = if (loaded) field else throw IllegalStateException("Preferences not loaded yet")
         private set
 
     /**

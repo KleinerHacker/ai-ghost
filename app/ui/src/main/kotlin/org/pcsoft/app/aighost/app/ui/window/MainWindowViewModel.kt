@@ -18,6 +18,7 @@ import javafx.beans.property.ObjectProperty
 import javafx.beans.property.SimpleListProperty
 import javafx.beans.property.SimpleObjectProperty
 import javafx.collections.FXCollections
+import org.pcsoft.app.aighost.fx.model.FXProjectStorage
 import org.pcsoft.app.aighost.model.PreferencesStorage
 import org.pcsoft.app.aighost.model.ProjectStorage
 import org.pcsoft.app.aighost.model.project.Project
@@ -33,7 +34,7 @@ class MainWindowViewModel : ViewModel {
 
     /** Files the user opened last, the most recent one first. */
     val openRecent: ListProperty<File> = SimpleListProperty(FXCollections.observableArrayList())
-    val project: ObjectProperty<Project> = SimpleObjectProperty(ProjectStorage.current)
+    val project: ObjectProperty<Project> = FXProjectStorage.current
 
     /** Takes the recently opened files of the preferences over into [openRecent]. */
     internal fun onShow() {
