@@ -60,10 +60,12 @@ description: Draw, extend and ship the Ghost Writer type face - the vector gener
 
 ## Building and Using the Font
 
-* The Gradle task `:app:ai-ghost-ui:generateFont` regenerates the font and runs before
-  `processResources`, so `build` always carries a font matching the generator
-  * On a machine without Python and fontTools the task logs a notice and keeps the committed font,
-    so the build never depends on a Python installation
+* The Gradle task `:app:ai-ghost-ui:generateFont` regenerates the font
+  * The task hangs on NO other task - `build` ships the committed font and never runs the generator,
+    so a build never depends on a Python installation
+  * After EVERY change to the generator the task MUST be called on purpose and the regenerated font
+    MUST be committed together with the change
+  * The task FAILS when no Python with fontTools is there, because it is only started on purpose
 * The font MUST be reached exclusively through the object class `AiGhostFonts` in the root package
   `org.pcsoft.app.aighost.app` of `app/ui`
   * The file name MUST NOT appear anywhere else; every consumer goes through `AiGhostFonts`

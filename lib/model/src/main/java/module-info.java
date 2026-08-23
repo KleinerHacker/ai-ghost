@@ -8,7 +8,7 @@ module org.pcsoft.app.aighost.model {
     requires transitive com.fasterxml.jackson.kotlin;
 
     // Arrow's Either appears in the signatures of the storage, so consumers need it as well.
-    requires transitive arrow.core;
+    // requires transitive arrow.core;
 
     exports org.pcsoft.app.aighost.model;
     exports org.pcsoft.app.aighost.model.common;

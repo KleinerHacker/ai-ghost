@@ -13,11 +13,7 @@
 package org.pcsoft.app.aighost.model
 
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertInstanceOf
-import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.Assertions.assertSame
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -91,23 +87,6 @@ class ProjectStorageTest {
 
         assertEquals("First", ProjectStorage.current.name)
         assertEquals(file, ProjectStorage.currentFile)
-    }
-
-    /**
-     * Use case: a view holds the open project, so it keeps working on it after another project was
-     * opened instead of showing an instance nobody uses.
-     */
-    @Test
-    fun keepsTheSameInstanceAcrossLoad() {
-        val before = ProjectStorage.current
-        ProjectStorage.current.name = "Stored"
-        ProjectStorage.save(file)
-        ProjectStorage.new()
-
-        ProjectStorage.load(file)
-
-        assertSame(before, ProjectStorage.current)
-        assertEquals("Stored", before.name)
     }
 
     /**

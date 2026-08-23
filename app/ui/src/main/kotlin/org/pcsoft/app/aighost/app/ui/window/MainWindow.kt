@@ -13,22 +13,31 @@
 package org.pcsoft.app.aighost.app.ui.window
 
 import de.saxsys.mvvmfx.FluentViewLoader
+import javafx.beans.binding.Bindings
 import javafx.scene.Scene
 import javafx.stage.Stage
 import org.pcsoft.app.aighost.app.AiGhostIcons
 import org.pcsoft.app.aighost.app.AiGhostTheme
-import org.pcsoft.app.aighost.app.Messages
 
 /**
  * The application main window.
  */
 class MainWindow : Stage() {
+    private val viewModel: MainWindowViewModel
+
     init {
-        title = Messages["window.main.title"]
         icons.setAll(AiGhostIcons.application)
 
         FluentViewLoader.fxmlView(MainWindowView::class.java).load().apply {
             scene = Scene(view).also(AiGhostTheme::apply)
+            this@MainWindow.viewModel = viewModel
         }
+
+        titleProperty().bind(
+            Bindings.concat(
+                "AI Ghost - ",
+                Bindings.selectString(viewModel.project, "name")
+            )
+        )
     }
 }

@@ -2,6 +2,8 @@ module org.pcsoft.app.aighost.ui {
     requires javafx.controls;
     requires javafx.fxml;
     requires kotlin.stdlib;
+    requires org.slf4j;
+    requires org.apache.commons.lang3;
 
     requires org.controlsfx.controls;
     requires de.saxsys.mvvmfx;

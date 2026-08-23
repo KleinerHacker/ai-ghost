@@ -41,11 +41,22 @@ import java.nio.file.StandardCopyOption
 object ProjectStorage {
 
     /** The project currently open, a fresh one until another is loaded. */
-    val current: Project = Project()
+    var current: Project = Project()
+        private set
 
     /** The file [current] was read from or written to, `null` while it was never saved. */
     var currentFile: File? = null
         private set
+
+    /**
+     * Indicates whether the current file has already been saved.
+     *
+     * This property returns `true` if there is an existing file associated with the current state,
+     * meaning the current state has already been saved to persistent storage. It returns `false`
+     * if no file is associated, implying the current state is unsaved or new.
+     */
+    val alreadySaved: Boolean
+        get() = currentFile != null
 
     /**
      * Closes the open project and starts a fresh one.
@@ -54,7 +65,7 @@ object ProjectStorage {
      * so the next [save] needs an explicit one.
      */
     fun new() {
-        apply(Project())
+        current = Project()
         currentFile = null
     }
 
@@ -83,7 +94,7 @@ object ProjectStorage {
             return Error.Unreadable(file, e).left()
         }
 
-        apply(project)
+        current = project
         currentFile = file
 
         return Unit.right()
@@ -127,15 +138,6 @@ object ProjectStorage {
         } catch (e: IOException) {
             Error.Unreadable(target, e).left()
         }
-    }
-
-    /** Takes the values of [read] over into the project the application works on. */
-    private fun apply(read: Project) {
-        current.name = read.name
-        current.author = read.author
-        current.copyright = read.copyright
-        current.settings = read.settings
-        current.book = read.book
     }
 
     /**

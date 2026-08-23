@@ -21,6 +21,10 @@ application {
     mainModule.set("org.pcsoft.app.aighost.ui")
     mainClass.set("org.pcsoft.app.aighost.app.LauncherKt")
     applicationName = "ghost-ui"
+
+    // JavaFX loads its native graphics library through System::load. Since JDK 24 that is a restricted
+    // call and the JVM warns about it unless the calling module is granted native access up front.
+    applicationDefaultJvmArgs = listOf("--enable-native-access=javafx.graphics")
 }
 
 javafx {
@@ -29,13 +33,23 @@ javafx {
 }
 
 val testFxVersion = "4.0.18"
+val log4jVersion = "2.25.2"
 
 dependencies {
     implementation(project(":lib:ai-ghost-model"))
+    implementation(project(":lib:ai-ghost-fx-model"))
+
     implementation("io.arrow-kt:arrow-core:2.1.2")
+    implementation("org.apache.commons:commons-lang3:3.19.0")
 
     implementation("org.controlsfx:controlsfx:11.2.4")
     implementation("de.saxsys:mvvmfx:1.8.0")
+
+    // The application logs against the SLF4J API only; Log4j 2 is the implementation behind it and
+    // is bound through the SLF4J provider, so no code ever touches a Log4j type.
+    implementation("org.slf4j:slf4j-api:2.0.17")
+    runtimeOnly("org.apache.logging.log4j:log4j-core:${log4jVersion}")
+    runtimeOnly("org.apache.logging.log4j:log4j-slf4j2-impl:${log4jVersion}")
 
     testImplementation("org.testfx:testfx-core:${testFxVersion}")
     // TestFX still pulls the JUnit artifacts of its own generation, which collide with the platform used here.
@@ -62,14 +76,16 @@ tasks.withType<Test> {
     systemProperty("java.awt.headless", "true")
 }
 
-// The Ghost Writer font is drawn by the vector generator in `tools/font`. The generated file is also
-// checked in, so a machine without Python still builds: the task then keeps the committed font.
+// The Ghost Writer font is drawn by the vector generator in `tools/font`. The generated file is
+// checked in and is what every build ships, so the generator is only run when somebody asks for it:
+// the task hangs on no other task and has to be called on purpose after the generator was changed.
 val fontGeneratorDir = rootProject.layout.projectDirectory.dir("tools/font")
 val fontFile = layout.projectDirectory.file("src/main/resources/fonts/GhostWriter-Regular.ttf")
 
-val generateFont = tasks.register("generateFont") {
-    group = "build"
-    description = "Generates the Ghost Writer TrueType font from the vector generator in tools/font"
+tasks.register("generateFont") {
+    group = "font"
+    description = "Regenerates the checked in Ghost Writer TrueType font from the vector generator " +
+            "in tools/font. Needs Python with fontTools and is never run by another task."
 
     inputs.dir(fontGeneratorDir).withPropertyName("generator")
     outputs.file(fontFile).withPropertyName("font")
@@ -87,9 +103,10 @@ val generateFont = tasks.register("generateFont") {
             }.getOrDefault(false)
         }
 
-        if (interpreter == null) {
-            logger.lifecycle("Font generation skipped: no Python with fontTools found, keeping the committed font")
-            return@doLast
+        // The task is only started on purpose, so doing nothing would leave the caller with an
+        // unchanged font and no idea why.
+        checkNotNull(interpreter) {
+            "Font generation needs Python with fontTools, see tools/font/requirements.txt"
         }
 
         val process = ProcessBuilder(interpreter, "build_font.py", target.absolutePath)
@@ -100,10 +117,6 @@ val generateFont = tasks.register("generateFont") {
         check(process.waitFor() == 0) { "Font generation failed:\n$output" }
         logger.lifecycle(output.trim())
     }
-}
-
-tasks.named("processResources") {
-    dependsOn(generateFont)
 }
 
 jlink {

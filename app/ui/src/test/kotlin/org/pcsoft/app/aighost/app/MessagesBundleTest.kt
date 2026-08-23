@@ -68,12 +68,4 @@ class MessagesBundleTest {
         assertEquals("Öffnen...", german.getProperty("menu.file.open"))
         assertEquals("Veröffentlichen", german.getProperty("menu.publish"))
     }
-
-    /**
-     * Use case: the bundle configured in [Messages] resolves, so the application finds its texts.
-     */
-    @Test
-    fun configuredBundleResolves() {
-        assertEquals("AI Ghost", Messages["window.main.title"])
-    }
 }

@@ -59,6 +59,7 @@ class MainWindowView : FxmlView<MainWindowViewModel>, Initializable {
                 MenuItem(it.name)
             })
         }
+        mnuOpenRecent.disableProperty().bind(viewModel.openRecentDisabled)
 
         editor.project.bind(viewModel.project)
     }

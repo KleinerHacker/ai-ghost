@@ -13,6 +13,6 @@ if defined JAVA_HOME (
   set JAVA_CMD=java
 )
 
-%JAVA_CMD% --module-path "%APP_HOME%libs" --add-modules ALL-MODULE-PATH --module org.pcsoft.app.aighost.ui/org.pcsoft.app.aighost.app.LauncherKt %*
+%JAVA_CMD% --module-path "%APP_HOME%libs" --add-modules ALL-MODULE-PATH --enable-native-access=javafx.graphics --module org.pcsoft.app.aighost.ui/org.pcsoft.app.aighost.app.LauncherKt %*
 
 endlocal

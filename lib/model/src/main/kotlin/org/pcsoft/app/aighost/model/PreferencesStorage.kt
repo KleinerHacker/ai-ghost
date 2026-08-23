@@ -26,8 +26,7 @@ import java.nio.file.StandardCopyOption
  * Keeps the [Preferences] of the current user and backs them by a JSON file.
  *
  * The preferences are a field of the storage: [current] hands out the one instance the application
- * works on, read from [defaultFile] on the first access. A file changed from outside while the
- * application runs takes effect on the next start or on an explicit [load].
+ * works on. A file changed from outside while the application runs takes effect on an explicit [load].
  *
  * Settings are changed on that instance, which is a plain mutable value object and reports nothing,
  * so whoever needs a setting reads it when it is needed. A change is only written when [save] is
@@ -41,59 +40,58 @@ import java.nio.file.StandardCopyOption
 object PreferencesStorage {
 
     private const val FILE_NAME = ".ai-ghost/preferences.json"
+    private var loaded = false
 
     /**
      * The file the preferences are read from and written to.
      *
      * Points into the user's home directory and can only be redirected from within this module, so
-     * the application always works on the preferences of the current user. Redirecting it drops the
-     * values read so far, so the next access reads the new file into [current].
+     * the application always works on the preferences of the current user.
      */
     var defaultFile: File = File(System.getProperty("user.home"), FILE_NAME)
-        internal set(value) {
-            field = value
-            loaded = false
-        }
-
-    private val preferences = Preferences()
-
-    private var loaded = false
+        internal set
 
     /**
      * The preferences the application works on.
      *
-     * Always the same instance, so whoever holds it keeps working on the values in effect across a
-     * [load]. [defaultFile] is read on the first access and the values are kept, so neither a
-     * repeated access nor a file changed from outside touches the disk again. A file that is missing
-     * or cannot be read leaves the defaults in place, because a failure to read is not a reason to
-     * leave the application without settings.
+     * Reading fails as long as no [load] succeeded and no [reset] was performed, so nobody works on
+     * settings that were never established. Whoever needs the preferences after a failed [load] has
+     * to decide first what should happen to the unreadable file and call [reset] afterwards.
+     *
+     * A successful [load] puts the preferences of the file in place as a new instance, so a holder
+     * of the previous one has to ask for [current] again. The property models of `ai-ghost-fx-model`
+     * do that for their bindings themselves.
      */
-    val current: Preferences
-        get() {
-            if (!loaded) {
-                load()
-            }
-
-            return preferences
-        }
+    var current: Preferences = Preferences()
+        private set
 
     /**
-     * Reads [defaultFile] again and writes its content into [current].
+     * Reads [defaultFile] and puts its content in place as [current].
      *
-     * The instance is kept, so everybody working on it sees the values the file brought. A failure
-     * puts the defaults in place, so the application is never without settings.
+     * A failure leaves the storage unloaded, so [current] keeps failing until the caller answered
+     * the failure - by [reset] for instance, which puts the defaults in place.
      *
      * Returns [Error.NotFound] when nothing is stored yet, [Error.NotAFile] when the path exists but
      * is not a regular file, [Error.Malformed] when the content is not the expected JSON document,
      * and [Error.Unreadable] when the file cannot be read at all.
      */
     fun load(): Either<Error, Unit> {
-        loaded = true
-
         return read()
-            .onRight { apply(it) }
-            .onLeft { apply(Preferences()) }
+            .onRight { current = it; loaded = true }
+            .onLeft { current = Preferences(); loaded = false }
             .map { }
+    }
+
+    /**
+     * Resets the current user preferences to their default values.
+     *
+     * This method initializes the current preferences to a new instance of the [Preferences] class,
+     * resetting all settings to their defaults as defined in the [Preferences] data class.
+     * It also marks the preferences as successfully loaded by setting the `loaded` flag to `true`.
+     */
+    fun reset() {
+        current = Preferences()
+        loaded = true
     }
 
     /**
@@ -108,12 +106,6 @@ object PreferencesStorage {
      * directory is never replaced, and [Error.Unreadable] when the file cannot be written.
      */
     fun save(): Either<Error, Unit> = write(current)
-
-    /** Takes the values of [read] over into the instance the application works on. */
-    private fun apply(read: Preferences) {
-        preferences.recentOpened = read.recentOpened
-        preferences.themeMode = read.themeMode
-    }
 
     /** Reads [defaultFile] into preferences of its own, without touching [current]. */
     private fun read(): Either<Error, Preferences> {
