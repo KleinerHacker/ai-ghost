@@ -118,8 +118,7 @@ class ProjectPropertyTest {
     @BeforeEach
     fun setUp() {
         project = newProject()
-        property = ProjectProperty()
-        property.value = project
+        property = ProjectProperty(project)
         settingsProperty = property.settingsProperty as SettingsProperty
         bookProperty = property.bookProperty as BookProperty
 

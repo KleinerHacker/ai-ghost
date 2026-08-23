@@ -16,15 +16,40 @@ import arrow.core.Either
 import org.pcsoft.app.aighost.fx.model.pref.PreferencesProperty
 import org.pcsoft.app.aighost.model.PreferencesStorage
 
+/**
+ * JavaFX wrapper for [PreferencesStorage] that provides the current preferences as a property
+ * and delegates load, save, and reset operations to the underlying storage while keeping the
+ * property synchronized.
+ */
 object FXPreferencesStorage {
+    /**
+     * Property holding the current preferences of the user and offering every field of that object
+     * as a property of its own. Automatically synchronized when preferences are loaded or reset.
+     */
+    val current: PreferencesProperty = PreferencesProperty(PreferencesStorage.current)
 
-    val current: PreferencesProperty
-        get() = PreferencesProperty(PreferencesStorage.current)
+    /**
+     * Loads the preferences from persistent storage and updates the [current] property with the
+     * loaded values.
+     *
+     * @return Either [PreferencesStorage.Error] if loading failed or [Unit] on success
+     */
+    fun load(): Either<PreferencesStorage.Error, Unit> = PreferencesStorage.load().onRight {
+        current.set(PreferencesStorage.current)
+    }
 
-    fun load() : Either<PreferencesStorage.Error, Unit> = PreferencesStorage.load()
+    /**
+     * Resets the preferences to their default values and updates the [current] property accordingly.
+     */
+    fun reset() = PreferencesStorage.reset().run { 
+        current.set(PreferencesStorage.current)
+    }
 
-    fun reset() = PreferencesStorage.reset()
-
-    fun save() : Either<PreferencesStorage.Error, Unit> = PreferencesStorage.save()
+    /**
+     * Saves the current preferences to persistent storage.
+     *
+     * @return Either [PreferencesStorage.Error] if saving failed or [Unit] on success
+     */
+    fun save(): Either<PreferencesStorage.Error, Unit> = PreferencesStorage.save()
 
 }

@@ -48,6 +48,16 @@ object ProjectStorage {
         private set
 
     /**
+     * Indicates whether the current file has already been saved.
+     *
+     * This property returns `true` if there is an existing file associated with the current state,
+     * meaning the current state has already been saved to persistent storage. It returns `false`
+     * if no file is associated, implying the current state is unsaved or new.
+     */
+    val alreadySaved: Boolean
+        get() = currentFile != null
+
+    /**
      * Closes the open project and starts a fresh one.
      *
      * The project keeps its identity and is set back to the defaults. The fresh project has no file,

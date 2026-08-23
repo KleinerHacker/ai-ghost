@@ -35,7 +35,7 @@ import org.pcsoft.app.aighost.model.project.Project
  * As long as no project sits behind this property every field property answers with a neutral value
  * and drops what is written to it, so a user interface may be built before a project is opened.
  */
-class ProjectProperty : SimpleObjectProperty<Project>() {
+class ProjectProperty(project: Project) : SimpleObjectProperty<Project>(project) {
 
     private val overrideName = org.pcsoft.app.aighost.fx.model.internal.OverrideStringProperty(
         { newValue -> value?.also { it.name = newValue ?: "" } },
@@ -123,6 +123,13 @@ class ProjectProperty : SimpleObjectProperty<Project>() {
         set(value) {
             overrideBook.set(value)
         }
+
+    init {
+        // The constructor of the base class stores the object without announcing it, so the field
+        // properties have to take over its values here - otherwise they would only align on the
+        // first exchange and report the initial values as a change of their own.
+        invalidated()
+    }
 
     /**
      * Called whenever the project object itself is exchanged - a freshly loaded project file for
