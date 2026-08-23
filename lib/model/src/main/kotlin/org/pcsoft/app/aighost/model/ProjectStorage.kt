@@ -31,8 +31,9 @@ import java.nio.file.StandardCopyOption
  * has something to show.
  *
  * The project is a field of the storage and always the same instance: [new] and [load] write into it
- * instead of replacing it, so a listener registered on the project keeps following it. The project
- * reports every change to its own listeners - the storage itself notifies nobody.
+ * instead of replacing it, so whoever holds the project keeps working on the open one. The project
+ * is a plain mutable value object and reports nothing, so a reader takes the values when it needs
+ * them.
  *
  * Neither operation throws for an expected failure: everything that can go wrong is returned as an
  * [Error] on the left side of an [Either], so the caller decides what the user is told.
@@ -49,9 +50,8 @@ object ProjectStorage {
     /**
      * Closes the open project and starts a fresh one.
      *
-     * The project keeps its identity and is set back to the defaults, so its listeners are told about
-     * every property that was not on default any more. The fresh project has no file, so the next
-     * [save] needs an explicit one.
+     * The project keeps its identity and is set back to the defaults. The fresh project has no file,
+     * so the next [save] needs an explicit one.
      */
     fun new() {
         apply(Project())
@@ -61,9 +61,9 @@ object ProjectStorage {
     /**
      * Reads the project from [file] and opens it.
      *
-     * On success the values of the document are written into [current], which tells its listeners
-     * about every property that changed, and [currentFile] points at [file]. A failure leaves the
-     * open project untouched, so a broken file never closes what the user is working on.
+     * On success the values of the document are written into [current] and [currentFile] points at
+     * [file]. A failure leaves the open project untouched, so a broken file never closes what the
+     * user is working on.
      *
      * Returns [Error.NotFound] when the file does not exist, [Error.NotAFile] when the path exists but
      * is not a regular file, [Error.Malformed] when the content is not the expected JSON document, and

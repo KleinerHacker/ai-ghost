@@ -25,5 +25,5 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Blurb(
-    val paragraph: List<String> = emptyList()
+    var paragraph: List<String> = emptyList()
 )

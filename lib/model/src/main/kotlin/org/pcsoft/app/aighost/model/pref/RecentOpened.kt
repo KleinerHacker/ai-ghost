@@ -21,9 +21,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
  * in the JSON document are ignored during deserialization to maintain forward compatibility when
  * new fields are added.
  *
- * The list is immutable: [add], [remove] and [clear] return a new instance instead of changing this
- * one, so preferences can be handed around without a copy being modified behind someone's back. The
- * most recently opened file is always the first entry.
+ * [add], [remove] and [clear] return a new instance instead of changing this one, so a list handed
+ * around is never modified behind someone's back. The most recently opened file is always the first
+ * entry.
  *
  * A file written by another version may carry more entries than [max] allows; the limit is applied
  * again as soon as [add] is called.
@@ -31,9 +31,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class RecentOpened(
     /** Maximum number of entries to keep in the recent files list. */
-    val max: Int = DEFAULT_MAX,
+    var max: Int = DEFAULT_MAX,
     /** List of file paths that were recently opened, limited to [max] entries. */
-    val entries: List<String> = emptyList()
+    var entries: List<String> = emptyList()
 ) {
 
     init {

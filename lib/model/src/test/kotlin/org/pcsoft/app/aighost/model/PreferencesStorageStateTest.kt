@@ -100,8 +100,8 @@ class PreferencesStorageStateTest {
     }
 
     /**
-     * Use case: a part of the application registered itself on the preferences, so it keeps
-     * following them after the file was read again instead of watching an instance nobody uses.
+     * Use case: a part of the application holds the preferences, so it keeps working on them after
+     * the file was read again instead of using an instance nobody else knows.
      */
     @Test
     fun keepsTheSameInstanceAcrossReload() {
@@ -115,26 +115,17 @@ class PreferencesStorageStateTest {
     }
 
     /**
-     * Use case: the settings a part of the application follows change while the file is read again,
-     * so its listener is told about every property the new document brought.
+     * Use case: the file is read again while the application runs, so every property the new
+     * document brought is in effect on the instance the application works on.
      */
     @Test
-    fun reloadNotifiesTheRegisteredListeners() {
-        val changed = mutableListOf<Preferences.Property>()
-        val listener = Preferences.Listener { _, property -> changed += property }
+    fun reloadAppliesEveryPropertyOfTheDocument() {
+        file.writeText("""{"themeMode":"DARK","recentOpened":{"max":10,"entries":["a.json"]}}""")
 
-        PreferencesStorage.current.addListener(listener)
-        try {
-            file.writeText("""{"themeMode":"DARK","recentOpened":{"max":10,"entries":["a.json"]}}""")
-            PreferencesStorage.load()
-        } finally {
-            PreferencesStorage.current.removeListener(listener)
-        }
+        assertTrue(PreferencesStorage.load().isRight())
 
-        assertEquals(
-            listOf(Preferences.Property.RECENT_OPENED, Preferences.Property.THEME_MODE),
-            changed
-        )
+        assertEquals(ThemeMode.DARK, PreferencesStorage.current.themeMode)
+        assertEquals(listOf("a.json"), PreferencesStorage.current.recentOpened.entries)
     }
 
     /**

@@ -23,7 +23,7 @@ package org.pcsoft.app.aighost.model.project
  * @property paragraph Paragraphs of the part in their order.
  */
 interface BookPart {
-    val title: String
-    val titleAppendix: List<String>
-    val paragraph: List<String>
+    var title: String
+    var titleAppendix: List<String>
+    var paragraph: List<String>
 }

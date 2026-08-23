@@ -29,9 +29,9 @@ import java.nio.file.StandardCopyOption
  * works on, read from [defaultFile] on the first access. A file changed from outside while the
  * application runs takes effect on the next start or on an explicit [load].
  *
- * Settings are changed on that instance, which reports every change to its own listeners - the
- * storage itself notifies nobody. A change is only written when [save] is called, so the file
- * follows the preferences instead of the preferences following the file.
+ * Settings are changed on that instance, which is a plain mutable value object and reports nothing,
+ * so whoever needs a setting reads it when it is needed. A change is only written when [save] is
+ * called, so the file follows the preferences instead of the preferences following the file.
  *
  * The file lives in the user's home directory and is written with indentation, so it can be edited
  * by hand. Nothing throws for an expected failure: [load] and [save] return an [Either] carrying an
@@ -62,10 +62,10 @@ object PreferencesStorage {
     /**
      * The preferences the application works on.
      *
-     * Always the same instance, so a listener registered on it stays registered across a [load].
-     * [defaultFile] is read on the first access and the values are kept, so neither a repeated
-     * access nor a file changed from outside touches the disk again. A file that is missing or
-     * cannot be read leaves the defaults in place, because a failure to read is not a reason to
+     * Always the same instance, so whoever holds it keeps working on the values in effect across a
+     * [load]. [defaultFile] is read on the first access and the values are kept, so neither a
+     * repeated access nor a file changed from outside touches the disk again. A file that is missing
+     * or cannot be read leaves the defaults in place, because a failure to read is not a reason to
      * leave the application without settings.
      */
     val current: Preferences
@@ -80,9 +80,8 @@ object PreferencesStorage {
     /**
      * Reads [defaultFile] again and writes its content into [current].
      *
-     * The instance is kept, so every listener registered on it survives and is notified about each
-     * property the file changed. A failure puts the defaults in place, so the application is never
-     * without settings.
+     * The instance is kept, so everybody working on it sees the values the file brought. A failure
+     * puts the defaults in place, so the application is never without settings.
      *
      * Returns [Error.NotFound] when nothing is stored yet, [Error.NotAFile] when the path exists but
      * is not a regular file, [Error.Malformed] when the content is not the expected JSON document,

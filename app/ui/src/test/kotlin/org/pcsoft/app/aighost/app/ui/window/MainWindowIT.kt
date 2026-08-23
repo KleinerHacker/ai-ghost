@@ -58,7 +58,6 @@ class MainWindowIT : ApplicationTest() {
 
     @AfterEach
     fun releaseWindow() {
-        // Hiding deregisters the preferences listener again, so a test never leaves one behind.
         interact { window.hide() }
 
         PreferencesStorage.current.recentOpened = storedRecentOpened
@@ -75,9 +74,15 @@ class MainWindowIT : ApplicationTest() {
         return openRecent.items.map { it.text }
     }
 
-    /** Stores [paths] as the recently opened files and waits until the UI processed the change. */
+    /** Stores [paths] as the recently opened files of the current user. */
     private fun storeRecentlyOpened(vararg paths: String) {
         PreferencesStorage.current.recentOpened = RecentOpened(entries = paths.toList())
+    }
+
+    /** Takes the window off screen and back on, so its content reads the preferences again. */
+    private fun showAgain() {
+        interact { window.hide() }
+        interact { window.show() }
         WaitForAsyncUtils.waitForFxEvents()
     }
 
@@ -113,44 +118,43 @@ class MainWindowIT : ApplicationTest() {
     }
 
     /**
-     * Use case: while the window is shown, a project opened elsewhere in the application appears in
-     * the "open recent" menu without the window having to be reopened.
+     * Use case: the user opened projects earlier, so the "open recent" menu offers them in the
+     * stored order as soon as the window is on screen.
      */
     @Test
-    fun openRecentFollowsThePreferencesWhileTheWindowIsShown() {
-        storeRecentlyOpened("/books/first-novel.ghost")
-        assertEquals(listOf("first-novel.ghost"), openRecentEntries())
-
+    fun openRecentShowsTheStoredFilesWhenTheWindowIsShown() {
         storeRecentlyOpened("/books/second-novel.ghost", "/books/first-novel.ghost")
+
+        showAgain()
+
         assertEquals(listOf("second-novel.ghost", "first-novel.ghost"), openRecentEntries())
     }
 
     /**
-     * Use case: a window that is not shown any more stops following the preferences, so a hidden
-     * window keeps no listener alive; reopening it picks the changes up again.
+     * Use case: a project was opened elsewhere in the application while the window was away, so
+     * bringing the window back on screen offers the new entry.
      */
     @Test
-    fun openRecentIgnoresThePreferencesWhileTheWindowIsHidden() {
+    fun openRecentIsRefreshedWhenTheWindowIsShownAgain() {
         storeRecentlyOpened("/books/first-novel.ghost")
+        showAgain()
         assertEquals(listOf("first-novel.ghost"), openRecentEntries())
 
-        interact { window.hide() }
         storeRecentlyOpened("/books/second-novel.ghost")
         assertEquals(listOf("first-novel.ghost"), openRecentEntries())
 
-        interact { window.show() }
-        storeRecentlyOpened("/books/third-novel.ghost")
-        assertEquals(listOf("third-novel.ghost"), openRecentEntries())
+        showAgain()
+        assertEquals(listOf("second-novel.ghost"), openRecentEntries())
     }
 
     /**
-     * Use case: the window follows the preferences per component, not per window - a content that is
-     * hidden while the window stays open stops following as well, so no listener is kept alive for a
-     * component nobody sees.
+     * Use case: the menu is filled per component, not per window - a content that was hidden while
+     * the window stayed open reads the preferences again as soon as it is visible.
      */
     @Test
-    fun openRecentIgnoresThePreferencesWhileTheContentIsHidden() {
+    fun openRecentIsRefreshedWhenTheContentBecomesVisibleAgain() {
         storeRecentlyOpened("/books/first-novel.ghost")
+        showAgain()
         assertEquals(listOf("first-novel.ghost"), openRecentEntries())
 
         interact { window.scene.root.isVisible = false }
@@ -158,7 +162,7 @@ class MainWindowIT : ApplicationTest() {
         assertEquals(listOf("first-novel.ghost"), openRecentEntries())
 
         interact { window.scene.root.isVisible = true }
-        storeRecentlyOpened("/books/third-novel.ghost")
-        assertEquals(listOf("third-novel.ghost"), openRecentEntries())
+        WaitForAsyncUtils.waitForFxEvents()
+        assertEquals(listOf("second-novel.ghost"), openRecentEntries())
     }
 }

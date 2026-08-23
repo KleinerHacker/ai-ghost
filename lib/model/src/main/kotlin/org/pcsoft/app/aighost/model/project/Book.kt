@@ -31,11 +31,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Book(
-    val title: String = "My Book",
-    val titleAppendix: List<String> = listOf(),
+    var title: String = "My Book",
+    var titleAppendix: List<String> = listOf(),
 
-    val prolog: Prolog? = null,
-    val chapters: List<Chapter> = emptyList(),
-    val epilog: Epilog? = null,
-    val blurb: Blurb? = null
+    var prolog: Prolog? = null,
+    var chapters: List<Chapter> = emptyList(),
+    var epilog: Epilog? = null,
+    var blurb: Blurb? = null
 )

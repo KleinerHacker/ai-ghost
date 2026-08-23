@@ -34,21 +34,15 @@ class ProjectStorageTest {
 
     private val file: File get() = File(directory, "project.json")
 
-    private val recorded = mutableListOf<Project.Property>()
-    private val listener = Project.Listener { _, property -> recorded += property }
-
     /** Starts every test with a fresh project, because the storage is shared by the whole process. */
     @BeforeEach
     fun reset() {
         ProjectStorage.new()
-        recorded.clear()
-        ProjectStorage.current.addListener(listener)
     }
 
-    /** Leaves the storage without the test listener and with a fresh project behind. */
+    /** Leaves a fresh project behind, because the storage is shared by the whole process. */
     @AfterEach
     fun cleanUp() {
-        ProjectStorage.current.removeListener(listener)
         ProjectStorage.new()
     }
 
@@ -100,8 +94,8 @@ class ProjectStorageTest {
     }
 
     /**
-     * Use case: a view follows the open project, so it keeps following it after another project was
-     * opened instead of watching an instance nobody uses.
+     * Use case: a view holds the open project, so it keeps working on it after another project was
+     * opened instead of showing an instance nobody uses.
      */
     @Test
     fun keepsTheSameInstanceAcrossLoad() {
@@ -146,45 +140,19 @@ class ProjectStorageTest {
     }
 
     /**
-     * Use case: an editing step ends up with the value the project already had, so no listener
-     * reports a change that did not happen.
+     * Use case: a view reads the open project, so every way of changing it - an edit, starting a new
+     * project and opening one - leaves the value in the same instance.
      */
     @Test
-    fun unchangedValueNotifiesNobody() {
-        ProjectStorage.current.name = ProjectStorage.current.name
-
-        assertTrue(recorded.isEmpty(), "expected no notification but was: $recorded")
-    }
-
-    /**
-     * Use case: views follow the open project, so they are told which property changed - through an
-     * edit, through starting a new project and through opening one.
-     */
-    @Test
-    fun notifiesListenerAboutEveryChange() {
+    fun everyChangeEndsUpInTheOpenProject() {
         ProjectStorage.current.name = "Edited"
         ProjectStorage.save(file)
+
         ProjectStorage.new()
+        assertEquals("New Project", ProjectStorage.current.name)
+
         ProjectStorage.load(file)
-
-        assertEquals(
-            listOf(Project.Property.NAME, Project.Property.NAME, Project.Property.NAME),
-            recorded
-        )
         assertEquals("Edited", ProjectStorage.current.name)
-    }
-
-    /**
-     * Use case: a view is closed while the application keeps running, so it stops being notified
-     * about later changes of the project.
-     */
-    @Test
-    fun removedListenerIsNotNotified() {
-        ProjectStorage.current.removeListener(listener)
-
-        ProjectStorage.current.name = "Edited"
-
-        assertTrue(recorded.isEmpty(), "expected no notification but was: $recorded")
     }
 
     /**

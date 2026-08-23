@@ -45,14 +45,14 @@ class MainWindowView : FxmlView<MainWindowViewModel>, Initializable {
     private lateinit var viewModel: MainWindowViewModel
 
     // Kept as a field: the binding is only held by this view, and a garbage collected binding would
-    // stop notifying, which would leave the preferences listener registered for good.
+    // stop notifying, so the menu would never be filled again.
     private lateinit var showing: BooleanBinding
 
     override fun initialize(location: URL?, resources: ResourceBundle?) {
-        // The view model follows the preferences exactly while this component is on screen, so it
-        // never keeps a listener in the global storage while nobody looks at the window.
+        // The preferences report nothing, so the view model reads them again every time this
+        // component comes on screen.
         showing = pnlRoot.showingBinding()
-        showing.addListener { _, _, onScreen -> if (onScreen) viewModel.onShow() else viewModel.onHide() }
+        showing.addListener { _, _, onScreen -> if (onScreen) viewModel.onShow() }
 
         viewModel.openRecent.addListener { _: Observable ->
             mnuOpenRecent.items.setAll(viewModel.openRecent.value.map {

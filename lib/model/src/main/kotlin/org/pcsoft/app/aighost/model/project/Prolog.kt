@@ -26,8 +26,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Prolog(
-    override val title: String,
-    override val titleAppendix: List<String> = listOf(),
+    override var title: String,
+    override var titleAppendix: List<String> = listOf(),
 
-    override val paragraph: List<String> = emptyList()
+    override var paragraph: List<String> = emptyList()
 ) : BookPart
