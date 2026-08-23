@@ -15,6 +15,7 @@ package org.pcsoft.app.aighost.app.ui.window
 import de.saxsys.mvvmfx.ViewModel
 import javafx.beans.property.ListProperty
 import javafx.beans.property.ObjectProperty
+import javafx.beans.property.ReadOnlyBooleanProperty
 import javafx.beans.property.SimpleListProperty
 import javafx.collections.FXCollections
 import org.pcsoft.app.aighost.fx.model.FXProjectStorage
@@ -32,6 +33,7 @@ class MainWindowViewModel : ViewModel {
 
     /** Files the user opened last, the most recent one first. */
     val openRecent: ListProperty<File> = SimpleListProperty(FXCollections.observableArrayList())
+    val openRecentDisabled: ReadOnlyBooleanProperty = openRecent.emptyProperty()
     val project: ObjectProperty<Project> = FXProjectStorage.current
 
     /** Takes the recently opened files of the preferences over into [openRecent]. */
