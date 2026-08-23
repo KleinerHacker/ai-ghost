@@ -19,5 +19,8 @@ rootProject.name = "ai-ghost"
 include(":lib:model")
 project(":lib:model").name = "ai-ghost-model"
 
+include(":lib:fx-model")
+project(":lib:fx-model").name = "ai-ghost-fx-model"
+
 include(":app:ui")
 project(":app:ui").name = "ai-ghost-ui"
