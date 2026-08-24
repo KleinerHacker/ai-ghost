@@ -23,9 +23,14 @@ val jacksonVersion = "2.22.1"
 val arrowVersion = "2.1.2"
 
 dependencies {
+    // The plugin API is exposed through the model API, so consumers of the model see the plugin types.
+    api(project(":lib:plugin:ai-ghost-plugin-api"))
+
     api("com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}")
     api("com.fasterxml.jackson.module:jackson-module-kotlin:${jacksonVersion}")
     api("io.arrow-kt:arrow-core:${arrowVersion}")
+
+    implementation("org.slf4j:slf4j-api:2.0.17")
 }
 
 // The module descriptor is the only Java source, while the classes it exports are written in Kotlin.

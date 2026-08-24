@@ -18,18 +18,22 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.pcsoft.app.aighost.fx.model.common.StyleDataProperty
-import org.pcsoft.app.aighost.fx.model.project.BookPartProperty
-import org.pcsoft.app.aighost.fx.model.project.BookProperty
-import org.pcsoft.app.aighost.fx.model.project.SettingsProperty
+import org.pcsoft.app.aighost.fx.model.project.book.BookPartProperty
+import org.pcsoft.app.aighost.fx.model.project.book.BookProperty
+import org.pcsoft.app.aighost.fx.model.project.design.DesignProperty
+import org.pcsoft.app.aighost.fx.model.project.meta.MetaProperty
 import org.pcsoft.app.aighost.model.common.Alignment
+import org.pcsoft.app.aighost.model.project.Project
 import java.io.File
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
 /**
  * Developer tests for [FXProjectStorage].
  *
  * The storage hands the open project to the user interface as a property tree and puts another
  * project in place whenever one is loaded from a file or a fresh one is started. The editor, the
- * project tree and the settings dialog hang on the properties of that tree, from the project itself
+ * project tree and the design dialog hang on the properties of that tree, from the project itself
  * down to the size of a single font, so such an exchange has to reach every single one of them - a
  * property that stays quiet would leave the previous project on screen.
  *
@@ -42,7 +46,8 @@ class FXProjectStorageTest {
     @TempDir
     lateinit var directory: File
 
-    private lateinit var settingsProperty: SettingsProperty
+    private lateinit var metaProperty: MetaProperty
+    private lateinit var designProperty: DesignProperty
     private lateinit var bookProperty: BookProperty
     private lateinit var recorder: ChangeRecorder
 
@@ -54,26 +59,36 @@ class FXProjectStorageTest {
     fun setUp() {
         FXProjectStorage.new()
 
-        settingsProperty = FXProjectStorage.current.settingsProperty as SettingsProperty
+        metaProperty = FXProjectStorage.current.metaProperty as MetaProperty
+        designProperty = FXProjectStorage.current.designProperty as DesignProperty
         bookProperty = FXProjectStorage.current.bookProperty as BookProperty
 
         recorder = ChangeRecorder()
         recorder.watch("project", FXProjectStorage.current)
-        recorder.watch("project.name", FXProjectStorage.current.nameProperty)
-        recorder.watch("project.author", FXProjectStorage.current.authorProperty)
-        recorder.watch("project.copyright", FXProjectStorage.current.copyrightProperty)
 
-        recorder.watch("project.settings", settingsProperty)
-        watchStyle("project.settings.authorFont", settingsProperty.authorFontProperty)
-        watchStyle("project.settings.copyrightFont", settingsProperty.copyrightFontProperty)
-        watchStyle("project.settings.titleFont", settingsProperty.titleFontProperty)
-        watchStyle("project.settings.titleAppendixFont", settingsProperty.titleAppendixFontProperty)
-        watchStyle("project.settings.chapterFont", settingsProperty.chapterFontProperty)
-        watchStyle("project.settings.chapterAppendixFont", settingsProperty.chapterAppendixFontProperty)
-        watchStyle("project.settings.textFont", settingsProperty.textFontProperty)
-        recorder.watch("project.settings.copyrightPage", settingsProperty.copyrightPageProperty)
-        recorder.watch("project.settings.startWithEmptyPage", settingsProperty.startWithEmptyPageProperty)
-        recorder.watch("project.settings.endWithEmptyPage", settingsProperty.endWithEmptyPageProperty)
+        recorder.watch("project.meta", metaProperty)
+        recorder.watch("project.meta.name", metaProperty.nameProperty)
+        recorder.watch("project.meta.author", metaProperty.authorProperty)
+        recorder.watch("project.meta.copyright", metaProperty.copyrightProperty)
+
+        recorder.watch("project.design", designProperty)
+        recorder.watch("project.design.author", designProperty.authorDesignProperty)
+        watchStyle("project.design.author.style", designProperty.authorDesignProperty.styleProperty)
+        recorder.watch("project.design.copyright", designProperty.copyrightDesignProperty)
+        watchStyle("project.design.copyright.style", designProperty.copyrightDesignProperty.styleProperty)
+        recorder.watch("project.design.copyright.show", designProperty.copyrightDesignProperty.showProperty)
+        recorder.watch("project.design.title", designProperty.titleDesignProperty)
+        watchStyle("project.design.title.style", designProperty.titleDesignProperty.styleProperty)
+        recorder.watch("project.design.chapter", designProperty.chapterDesignProperty)
+        watchStyle("project.design.chapter.titleStyle", designProperty.chapterDesignProperty.titleStyleProperty)
+        watchStyle(
+            "project.design.chapter.titleAppendixStyle",
+            designProperty.chapterDesignProperty.titleAppendixStyleProperty
+        )
+        recorder.watch("project.design.text", designProperty.textDesignProperty)
+        watchStyle("project.design.text.style", designProperty.textDesignProperty.styleProperty)
+        recorder.watch("project.design.startWithEmptyPage", designProperty.startWithEmptyPageProperty)
+        recorder.watch("project.design.endWithEmptyPage", designProperty.endWithEmptyPageProperty)
 
         recorder.watch("project.book", bookProperty)
         recorder.watch("project.book.title", bookProperty.titleProperty)
@@ -90,8 +105,8 @@ class FXProjectStorageTest {
      *
      * A fresh project is open, so every field carries its default. A document differing from that
      * default in every single field is loaded, and afterwards every watched property - the project,
-     * the settings, the book, every nested object and every field of all of them - must have
-     * reported a change and must hand out the loaded value.
+     * its three parts, every nested object and every field of all of them - must have reported a
+     * change and must hand out the loaded value.
      */
     @Test
     fun `loading a project fires a change on every property of the tree`() {
@@ -105,9 +120,13 @@ class FXProjectStorageTest {
 
         assertEquals("Loaded Project", FXProjectStorage.current.nameProperty.get())
         assertEquals("Jane Doe", FXProjectStorage.current.authorProperty.get())
-        assertEquals("Georgia", settingsProperty.authorFontProperty.fontProperty.nameProperty.get())
-        assertEquals(21, settingsProperty.authorFontProperty.fontProperty.sizeProperty.get())
-        assertEquals(Alignment.CENTER, settingsProperty.authorFontProperty.alignmentProperty.get())
+        assertEquals("Georgia", designProperty.authorDesignProperty.styleProperty.fontProperty.nameProperty.get())
+        assertEquals(21, designProperty.authorDesignProperty.styleProperty.fontProperty.sizeProperty.get())
+        assertEquals(
+            Alignment.CENTER,
+            designProperty.authorDesignProperty.styleProperty.alignmentProperty.get()
+        )
+        assertEquals(true, designProperty.copyrightDesignProperty.showProperty.get())
         assertEquals("The Loaded Book", bookProperty.titleProperty.get())
         assertEquals("Before It Begins", bookProperty.prologProperty.titleProperty.get())
         assertEquals(1, bookProperty.chaptersProperty.size)
@@ -132,8 +151,9 @@ class FXProjectStorageTest {
 
         assertEquals("New Project", FXProjectStorage.current.nameProperty.get())
         assertEquals("", FXProjectStorage.current.authorProperty.get())
-        assertEquals("Arial", settingsProperty.authorFontProperty.fontProperty.nameProperty.get())
-        assertEquals(Alignment.LEFT, settingsProperty.authorFontProperty.alignmentProperty.get())
+        assertEquals("Arial", designProperty.authorDesignProperty.styleProperty.fontProperty.nameProperty.get())
+        assertEquals(Alignment.LEFT, designProperty.authorDesignProperty.styleProperty.alignmentProperty.get())
+        assertEquals(false, designProperty.copyrightDesignProperty.showProperty.get())
         assertEquals("My Book", bookProperty.titleProperty.get())
         assertEquals(null, bookProperty.prologProperty.get())
         assertEquals(0, bookProperty.chaptersProperty.size)
@@ -194,55 +214,76 @@ class FXProjectStorageTest {
      * Writes a project document carrying a value different from the default in every single field,
      * so a property that does not report a change on loading it can only be a property that was not
      * refreshed.
+     *
+     * The document is an archive holding one entry per project part, which is how the storage writes
+     * a project to disk.
      */
     private fun writeProjectFile(): File {
         val file = File(directory, "loaded-project.aig")
-        file.writeText(
-            """
+
+        val meta = """
             {
               "name": "Loaded Project",
               "author": "Jane Doe",
-              "copyright": "(c) 2026 Jane Doe",
-              "settings": {
-                "authorFont": { "font": { "name": "Georgia", "size": 21, "bold": true, "italic": true }, "alignment": "CENTER" },
-                "copyrightFont": { "font": { "name": "Palatino", "size": 22, "bold": true, "italic": true }, "alignment": "CENTER" },
-                "titleFont": { "font": { "name": "Baskerville", "size": 23, "bold": true, "italic": true }, "alignment": "CENTER" },
-                "titleAppendixFont": { "font": { "name": "Caslon", "size": 24, "bold": true, "italic": true }, "alignment": "CENTER" },
-                "chapterFont": { "font": { "name": "Garamond", "size": 25, "bold": true, "italic": true }, "alignment": "CENTER" },
-                "chapterAppendixFont": { "font": { "name": "Bodoni", "size": 26, "bold": true, "italic": true }, "alignment": "CENTER" },
-                "textFont": { "font": { "name": "Minion", "size": 27, "bold": true, "italic": true }, "alignment": "CENTER" },
-                "copyrightPage": true,
-                "startWithEmptyPage": false,
-                "endWithEmptyPage": false
+              "copyright": "(c) 2026 Jane Doe"
+            }
+        """.trimIndent()
+
+        val design = """
+            {
+              "authorDesign": { "style": { "font": { "name": "Georgia", "size": 21, "bold": true, "italic": true }, "alignment": "CENTER" } },
+              "copyrightDesign": { "style": { "font": { "name": "Palatino", "size": 22, "bold": true, "italic": true }, "alignment": "CENTER" }, "show": true },
+              "titleDesign": { "style": { "font": { "name": "Baskerville", "size": 23, "bold": true, "italic": true }, "alignment": "CENTER" } },
+              "chapterDesign": {
+                "titleStyle": { "font": { "name": "Garamond", "size": 25, "bold": true, "italic": true }, "alignment": "CENTER" },
+                "titleAppendixStyle": { "font": { "name": "Bodoni", "size": 26, "bold": true, "italic": true }, "alignment": "CENTER" }
               },
-              "book": {
-                "title": "The Loaded Book",
-                "titleAppendix": ["A Story Of Loading"],
-                "prolog": {
-                  "title": "Before It Begins",
-                  "titleAppendix": ["Prologue"],
-                  "paragraph": ["The first paragraph of the prolog."]
-                },
-                "chapters": [
-                  {
-                    "name": "chapter-one",
-                    "title": "The First Chapter",
-                    "titleAppendix": ["Chapter One"],
-                    "paragraph": ["The first paragraph of the chapter."]
-                  }
-                ],
-                "epilog": {
-                  "title": "After It Ended",
-                  "titleAppendix": ["Epilogue"],
-                  "paragraph": ["The first paragraph of the epilog."]
-                },
-                "blurb": {
-                  "paragraph": ["A short blurb about the book."]
+              "textDesign": { "style": { "font": { "name": "Minion", "size": 27, "bold": true, "italic": true }, "alignment": "CENTER" } },
+              "startWithEmptyPage": false,
+              "endWithEmptyPage": false
+            }
+        """.trimIndent()
+
+        val book = """
+            {
+              "title": "The Loaded Book",
+              "titleAppendix": ["A Story Of Loading"],
+              "prolog": {
+                "title": "Before It Begins",
+                "titleAppendix": ["Prologue"],
+                "paragraph": ["The first paragraph of the prolog."]
+              },
+              "chapters": [
+                {
+                  "name": "chapter-one",
+                  "title": "The First Chapter",
+                  "titleAppendix": ["Chapter One"],
+                  "paragraph": ["The first paragraph of the chapter."]
                 }
+              ],
+              "epilog": {
+                "title": "After It Ended",
+                "titleAppendix": ["Epilogue"],
+                "paragraph": ["The first paragraph of the epilog."]
+              },
+              "blurb": {
+                "paragraph": ["A short blurb about the book."]
               }
             }
-            """.trimIndent()
-        )
+        """.trimIndent()
+
+        ZipOutputStream(file.outputStream()).use { stream ->
+            for ((name, content) in listOf(
+                Project.PART_META to meta,
+                Project.PART_DESIGN to design,
+                Project.PART_BOOK to book
+            )) {
+                stream.putNextEntry(ZipEntry(name))
+                stream.write(content.toByteArray())
+                stream.closeEntry()
+            }
+        }
+
         return file
     }
 }

@@ -15,19 +15,28 @@ package org.pcsoft.app.aighost.fx.model.project
 import javafx.beans.property.ObjectProperty
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.StringProperty
-import org.pcsoft.app.aighost.model.project.Book
+import org.pcsoft.app.aighost.fx.model.project.book.BookProperty
+import org.pcsoft.app.aighost.fx.model.project.design.DesignProperty
+import org.pcsoft.app.aighost.fx.model.project.meta.MetaProperty
 import org.pcsoft.app.aighost.model.project.Project
+import org.pcsoft.app.aighost.model.project.book.Book
+import org.pcsoft.app.aighost.model.project.design.Design
+import org.pcsoft.app.aighost.model.project.meta.Meta
 
 /**
- * Property holding the project the user is working on and offering every field of that object - and
- * every field of the objects nested in it - as a property of its own.
+ * Property holding the project the user is working on and offering every part of that object - and
+ * every field of the objects nested in those parts - as a property of its own.
+ *
+ * A project is made of parts stored under their identifier, so the three parts the application ships
+ * with are reached through [metaProperty], [designProperty] and [bookProperty]. Writing a part
+ * replaces it in the part map of the project, so a part a plugin added stays where it is.
  *
  * A change travels through the whole object tree in both directions: a changed field is reported by
  * every property between that field and this one, and an exchanged object - a project file that was
- * loaded again for instance - is passed down to the properties of its fields, so a control bound to
+ * loaded again for instance - is passed down to the properties of its parts, so a control bound to
  * any level shows the current value.
  *
- * The project object stays the same instance while one of its fields changes, so such a change reaches
+ * The project object stays the same instance while one of its parts changes, so such a change reaches
  * a listener registered here as an invalidation. A `ChangeListener` registered directly on this
  * property compares the old value with the new one and therefore only sees the exchange of the whole
  * project object; a binding built on this property is re-evaluated in both cases.
@@ -37,74 +46,76 @@ import org.pcsoft.app.aighost.model.project.Project
  */
 class ProjectProperty(project: Project) : SimpleObjectProperty<Project>(project) {
 
-    private val overrideName = org.pcsoft.app.aighost.fx.model.internal.OverrideStringProperty(
-        { newValue -> value?.also { it.name = newValue ?: "" } },
-        { value?.name },
-        { fireValueChangedEvent() }
+    private val overrideMeta = MetaProperty(
+        setter = { newValue -> value?.also { it.meta = newValue ?: Meta() } },
+        getter = { value?.meta },
+        fireEvent = { fireValueChangedEvent() }
     )
+
+    /** Meta data of the project - its name, its author and its copyright notice. */
+    val metaProperty: ObjectProperty<Meta?>
+        get() = overrideMeta
+
+    /** Meta data of the project. */
+    var meta: Meta?
+        get() = overrideMeta.get()
+        set(value) {
+            overrideMeta.set(value)
+        }
+
+    // The meta data is what a user interface reaches for most, so the three texts it carries are
+    // offered here as well instead of forcing every caller through the part property.
 
     /** Name of the project as shown to the user, as a property of its own. */
     val nameProperty: StringProperty
-        get() = overrideName
+        get() = overrideMeta.nameProperty
 
     // A property carries a name of its own, so the accessors of the wrapped field are given another
     // name on the JVM side - otherwise they would silently replace the one of the base class.
     /** Name of the project as shown to the user. */
     var name: String?
-        @JvmName("getProjectName") get() = overrideName.get()
+        @JvmName("getProjectName") get() = overrideMeta.nameProperty.get()
         @JvmName("setProjectName") set(value) {
-            overrideName.set(value)
+            overrideMeta.nameProperty.set(value)
         }
-
-    private val overrideAuthor = org.pcsoft.app.aighost.fx.model.internal.OverrideStringProperty(
-        { newValue -> value?.also { it.author = newValue ?: "" } },
-        { value?.author },
-        { fireValueChangedEvent() }
-    )
 
     /** Author printed in the manuscript, as a property of its own. */
     val authorProperty: StringProperty
-        get() = overrideAuthor
+        get() = overrideMeta.authorProperty
 
     /** Author printed in the manuscript. */
     var author: String?
-        get() = overrideAuthor.get()
+        get() = overrideMeta.authorProperty.get()
         set(value) {
-            overrideAuthor.set(value)
+            overrideMeta.authorProperty.set(value)
         }
-
-    private val overrideCopyright = org.pcsoft.app.aighost.fx.model.internal.OverrideStringProperty(
-        { newValue -> value?.also { it.copyright = newValue ?: "" } },
-        { value?.copyright },
-        { fireValueChangedEvent() }
-    )
 
     /** Copyright notice printed in the manuscript, as a property of its own. */
     val copyrightProperty: StringProperty
-        get() = overrideCopyright
+        get() = overrideMeta.copyrightProperty
 
     /** Copyright notice printed in the manuscript. */
     var copyright: String?
-        get() = overrideCopyright.get()
+        get() = overrideMeta.copyrightProperty.get()
         set(value) {
-            overrideCopyright.set(value)
+            overrideMeta.copyrightProperty.set(value)
         }
 
-    private val overrideSettings = SettingsProperty(
-        setter = { newValue -> value?.also { it.settings = newValue ?: Project.Settings() } },
-        getter = { value?.settings },
+    private val overrideDesign = DesignProperty(
+        setter = { newValue -> value?.also { it.design = newValue ?: Design() } },
+        getter = { value?.design },
         fireEvent = { fireValueChangedEvent() }
     )
 
     /** Typographic and page settings of the manuscript, as a property of its own. */
-    val settingsProperty: ObjectProperty<Project.Settings?>
-        get() = overrideSettings
+    val designProperty: ObjectProperty<Design?>
+        get() = overrideDesign
 
     /** Typographic and page settings of the manuscript. */
-    var settings: Project.Settings?
-        get() = overrideSettings.get()
+    var design: Design?
+        get() = overrideDesign.get()
         set(value) {
-            overrideSettings.set(value)
+            overrideDesign.set(value)
         }
 
     private val overrideBook = BookProperty(
@@ -125,7 +136,7 @@ class ProjectProperty(project: Project) : SimpleObjectProperty<Project>(project)
         }
 
     init {
-        // The constructor of the base class stores the object without announcing it, so the field
+        // The constructor of the base class stores the object without announcing it, so the part
         // properties have to take over its values here - otherwise they would only align on the
         // first exchange and report the initial values as a change of their own.
         invalidated()
@@ -133,14 +144,12 @@ class ProjectProperty(project: Project) : SimpleObjectProperty<Project>(project)
 
     /**
      * Called whenever the project object itself is exchanged - a freshly loaded project file for
-     * instance - so the properties of its fields belong to another object afterwards and have to take
+     * instance - so the properties of its parts belong to another object afterwards and have to take
      * over its values.
      */
     override fun invalidated() {
-        overrideName.refresh()
-        overrideAuthor.refresh()
-        overrideCopyright.refresh()
-        overrideSettings.refresh()
+        overrideMeta.refresh()
+        overrideDesign.refresh()
         overrideBook.refresh()
     }
 

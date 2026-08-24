@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+* Book project is stored as one document holding its parts side by side - the project data, the
+  design of the manuscript and the manuscript itself - so a project written by a newer version still
+  opens with the parts this version knows, and a damaged file is reported instead of opening an empty
+  project
+
 * Course of a session is written to the console and to a log file in `.ai-ghost/logs` of the home
   directory; the file carries more detail than the console, is rolled over daily and at 10 MB, and
   the last ten of the older files are kept compressed

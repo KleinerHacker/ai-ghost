@@ -12,62 +12,96 @@
 
 package org.pcsoft.app.aighost.model.project
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonPropertyOrder
-import org.pcsoft.app.aighost.model.common.StyleData
+import org.pcsoft.app.aighost.model.project.book.Book
+import org.pcsoft.app.aighost.model.project.design.Design
+import org.pcsoft.app.aighost.model.project.meta.Meta
+import org.pcsoft.app.aighost.plugin.api.model.project.ProjectPart
 
 /**
- * A writing project of the user, the root object that is persisted as one JSON document.
+ * A writing project of the user, the root object that is persisted as one archive.
  *
- * Beside the manuscript itself it carries the publishing data and the typographic settings the
- * manuscript is rendered with.
+ * A project is nothing but the parts it is made of: every part is stored under its own identifier and
+ * is written into an entry of its own, so a part added later - by a plugin for instance - travels
+ * with the document without the root object knowing it. The three parts the application ships with
+ * are reachable through [meta], [design] and [book].
  *
- * The project is a plain mutable value object: it is changed on the object itself, one property at a
+ * The project is a plain mutable value object: it is changed on the object itself, one part at a
  * time, and it reports nothing to anybody. Whoever shows a project reads it when it needs the value.
  *
- * @property name Name of the project as shown to the user.
- * @property author Author printed in the manuscript.
- * @property copyright Copyright notice printed in the manuscript.
- * @property settings Typographic and page settings of the manuscript.
- * @property book The manuscript with its title and chapters.
+ * @property parts The parts of the project by their identifier, the three built in ones by default.
  */
-@JsonIgnoreProperties(ignoreUnknown = true)
-@JsonPropertyOrder("name", "author", "copyright", "settings", "book")
 data class Project(
-    var name: String = "New Project",
-    var author: String = "",
-    var copyright: String = "",
-
-    var settings: Settings = Settings(),
-    var book: Book = Book()
+    var parts: Map<String, ProjectPart> = mapOf(
+        PART_META to Meta(),
+        PART_DESIGN to Design(),
+        PART_BOOK to Book()
+    )
 ) {
 
     /**
-     * Typographic and page settings a [Project] is rendered with.
+     * Meta data of the project - its name, its author and its copyright notice.
      *
-     * @property authorFont Style of the author name.
-     * @property copyrightFont Style of the copyright notice.
-     * @property titleFont Style of the book title.
-     * @property titleAppendixFont Style of the further title lines.
-     * @property chapterFont Style of a chapter heading.
-     * @property chapterAppendixFont Style of the further chapter heading lines.
-     * @property textFont Style of the chapter text.
-     * @property copyrightPage Whether a separate copyright page is printed.
-     * @property startWithEmptyPage Whether the manuscript starts with an empty page.
-     * @property endWithEmptyPage Whether the manuscript ends with an empty page.
+     * Reading the part falls back to a fresh [Meta] as long as the project does not carry one, so a
+     * document that lost the entry is shown with the defaults instead of failing.
      */
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    data class Settings(
-        var authorFont: StyleData = StyleData(),
-        var copyrightFont: StyleData = StyleData(),
-        var titleFont: StyleData = StyleData(),
-        var titleAppendixFont: StyleData = StyleData(),
-        var chapterFont: StyleData = StyleData(),
-        var chapterAppendixFont: StyleData = StyleData(),
-        var textFont: StyleData = StyleData(),
+    var meta: Meta
+        get() = parts[PART_META] as? Meta ?: Meta()
+        set(value) {
+            parts = parts + (PART_META to value)
+        }
 
-        var copyrightPage: Boolean = false,
-        var startWithEmptyPage: Boolean = true,
-        var endWithEmptyPage: Boolean = true
-    )
+    /**
+     * Typographic and page settings the manuscript is rendered with.
+     *
+     * Reading the part falls back to a fresh [Design] as long as the project does not carry one, so a
+     * document that lost the entry is shown with the defaults instead of failing.
+     */
+    var design: Design
+        get() = parts[PART_DESIGN] as? Design ?: Design()
+        set(value) {
+            parts = parts + (PART_DESIGN to value)
+        }
+
+    /**
+     * The manuscript with its title and chapters.
+     *
+     * Reading the part falls back to a fresh [Book] as long as the project does not carry one, so a
+     * document that lost the entry is shown with the defaults instead of failing.
+     */
+    var book: Book
+        get() = parts[PART_BOOK] as? Book ?: Book()
+        set(value) {
+            parts = parts + (PART_BOOK to value)
+        }
+
+    companion object {
+        /**
+         * Identifier for the metadata part of the project.
+         *
+         * This constant is used as a unique key to reference the metadata section within the project's structure.
+         * It corresponds to the `Meta` class, which encapsulates essential project information
+         * such as the name, author, and copyright details. The association between this key
+         * and the `Meta` class is established through the `@ProjectPartInfo` annotation.
+         */
+        const val PART_META = "meta"
+
+        /**
+         * Identifier for the design part of the project.
+         *
+         * This constant is used as a unique key to reference the design section within the project's structure.
+         * It corresponds to the `Design` class, which encapsulates typographic and page settings
+         * for the manuscript. The association between this key and the `Design` class is established
+         * through the `@ProjectPartInfo` annotation.
+         */
+        const val PART_DESIGN = "design"
+
+        /**
+         * Identifier for the book part of the project.
+         *
+         * This constant is used as a unique key to reference the book section within the project's structure.
+         * It corresponds to the `Book` class, which encapsulates the manuscript with its title and chapters.
+         * The association between this key and the `Book` class is established through the `@ProjectPartInfo` annotation.
+         */
+        const val PART_BOOK = "book"
+    }
 }

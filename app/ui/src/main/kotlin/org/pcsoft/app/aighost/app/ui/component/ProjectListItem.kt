@@ -12,10 +12,10 @@
 
 package org.pcsoft.app.aighost.app.ui.component
 
-import org.pcsoft.app.aighost.model.project.Blurb
-import org.pcsoft.app.aighost.model.project.Chapter
-import org.pcsoft.app.aighost.model.project.Epilog
-import org.pcsoft.app.aighost.model.project.Prolog
+import org.pcsoft.app.aighost.model.project.book.Blurb
+import org.pcsoft.app.aighost.model.project.book.Chapter
+import org.pcsoft.app.aighost.model.project.book.Epilog
+import org.pcsoft.app.aighost.model.project.book.Prolog
 
 /**
  * One entry of the project tree shown by [ProjectList].

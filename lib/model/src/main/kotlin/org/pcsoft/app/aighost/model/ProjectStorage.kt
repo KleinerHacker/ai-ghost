@@ -17,13 +17,16 @@ import arrow.core.left
 import arrow.core.right
 import com.fasterxml.jackson.core.JacksonException
 import org.pcsoft.app.aighost.model.project.Project
+import org.pcsoft.app.aighost.model.project.book.Book
+import org.pcsoft.app.aighost.model.project.design.Design
+import org.pcsoft.app.aighost.model.project.meta.Meta
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
 /**
- * Holds the project the user is working on and reads and writes it as a JSON file.
+ * Holds the project the user is working on and reads and writes it as an archive of its parts.
  *
  * Exactly one project is open at a time: [current] is the project in effect, [currentFile] the file
  * it belongs to. A project that was never saved has no file yet, so [currentFile] is `null` until
@@ -41,7 +44,7 @@ import java.nio.file.StandardCopyOption
 object ProjectStorage {
 
     /** The project currently open, a fresh one until another is loaded. */
-    var current: Project = Project()
+    var current: Project = createEmptyProject()
         private set
 
     /** The file [current] was read from or written to, `null` while it was never saved. */
@@ -65,7 +68,7 @@ object ProjectStorage {
      * so the next [save] needs an explicit one.
      */
     fun new() {
-        current = Project()
+        current = createEmptyProject()
         currentFile = null
     }
 
@@ -77,7 +80,7 @@ object ProjectStorage {
      * user is working on.
      *
      * Returns [Error.NotFound] when the file does not exist, [Error.NotAFile] when the path exists but
-     * is not a regular file, [Error.Malformed] when the content is not the expected JSON document, and
+     * is not a regular file, [Error.Malformed] when the content is not the expected document, and
      * [Error.Unreadable] when the file cannot be read at all.
      */
     fun load(file: File): Either<Error, Unit> {
@@ -87,7 +90,13 @@ object ProjectStorage {
             return Error.NotAFile(file).left()
 
         val project = try {
-            StorageMapper.mapper.readValue(file, Project::class.java)
+            val parts = StorageIO.loadFromZip(file, Meta::class, Design::class, Book::class)
+            // A file that is not an archive at all carries no entry, so it would open as a project
+            // without a single part. That is not a project document, it is a broken file.
+            if (parts.isEmpty())
+                return Error.Malformed(file, IOException("The file holds no project part")).left()
+
+            Project(parts)
         } catch (e: JacksonException) {
             return Error.Malformed(file, e).left()
         } catch (e: IOException) {
@@ -123,7 +132,7 @@ object ProjectStorage {
 
             val temporary = File.createTempFile(target.name, ".tmp", target.parentFile)
             try {
-                StorageMapper.mapper.writeValue(temporary, current)
+                StorageIO.saveToZip(temporary, *current.parts.values.toTypedArray())
                 Files.move(
                     temporary.toPath(),
                     target.toPath(),
@@ -139,6 +148,16 @@ object ProjectStorage {
             Error.Unreadable(target, e).left()
         }
     }
+
+    /**
+     * Creates and returns a new instance of an empty project.
+     *
+     * The created project contains default initializations for its three main parts:
+     * metadata, design settings, and manuscript content.
+     *
+     * @return A new instance of the `Project` class, initialized with default metadata, design, and book content.
+     */
+    private fun createEmptyProject(): Project = Project()
 
     /**
      * Reason why opening or storing a project failed.
@@ -188,7 +207,7 @@ object ProjectStorage {
         data class Unreadable(override val file: File, val cause: Throwable) : Error
 
         /**
-         * The file was read, but its content is not the JSON document that was expected.
+         * The file was read, but its content is not the project document that was expected.
          *
          * @property file The file that was read.
          * @property cause The underlying parse failure.

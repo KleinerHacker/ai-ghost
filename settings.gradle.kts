@@ -16,6 +16,9 @@ plugins {
 
 rootProject.name = "ai-ghost"
 
+include(":lib:plugin:api")
+project(":lib:plugin:api").name = "ai-ghost-plugin-api"
+
 include(":lib:model")
 project(":lib:model").name = "ai-ghost-model"
 

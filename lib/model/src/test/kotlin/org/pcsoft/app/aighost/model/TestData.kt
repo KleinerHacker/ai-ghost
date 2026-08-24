@@ -15,19 +15,26 @@ package org.pcsoft.app.aighost.model
 import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.FontData
 import org.pcsoft.app.aighost.model.common.StyleData
-import org.pcsoft.app.aighost.model.project.Blurb
-import org.pcsoft.app.aighost.model.project.Book
-import org.pcsoft.app.aighost.model.project.Chapter
-import org.pcsoft.app.aighost.model.project.Epilog
 import org.pcsoft.app.aighost.model.project.Project
-import org.pcsoft.app.aighost.model.project.Prolog
+import org.pcsoft.app.aighost.model.project.book.Blurb
+import org.pcsoft.app.aighost.model.project.book.Book
+import org.pcsoft.app.aighost.model.project.book.Chapter
+import org.pcsoft.app.aighost.model.project.book.Epilog
+import org.pcsoft.app.aighost.model.project.book.Prolog
+import org.pcsoft.app.aighost.model.project.design.AuthorDesign
+import org.pcsoft.app.aighost.model.project.design.ChapterDesign
+import org.pcsoft.app.aighost.model.project.design.CopyrightDesign
+import org.pcsoft.app.aighost.model.project.design.Design
+import org.pcsoft.app.aighost.model.project.design.TextDesign
+import org.pcsoft.app.aighost.model.project.design.TitleDesign
+import org.pcsoft.app.aighost.model.project.meta.Meta
 
 /**
  * Fully populated model instances shared by the tests of this module.
  *
- * [Project.Settings] carries nine mandatory properties, so building one inline would bury the actual
- * assertion of every test that needs a project. The fixtures here are created fresh on each access,
- * so a test may copy and modify them without affecting the next one.
+ * A project is made of several parts, each of them carrying nested styles, so building one inline
+ * would bury the actual assertion of every test that needs a project. The fixtures here are created
+ * fresh on each access, so a test may copy and modify them without affecting the next one.
  */
 object TestData {
 
@@ -39,16 +46,38 @@ object TestData {
     fun style(name: String = "Serif", size: Int = 12, alignment: Alignment = Alignment.LEFT): StyleData =
         StyleData(font = font(name, size), alignment = alignment)
 
-    /** Settings whose styles all differ, so a swapped property is caught by a round trip test. */
-    fun settings(): Project.Settings = Project.Settings(
-        authorFont = style("Sans", 16, Alignment.CENTER),
-        copyrightFont = style("Serif", 8),
-        titleFont = style("Sans", 28, Alignment.CENTER),
-        titleAppendixFont = style("Sans", 18, Alignment.CENTER),
-        chapterFont = style("Sans", 20),
-        chapterAppendixFont = style("Sans", 14),
-        textFont = style("Serif", 11, Alignment.BLOCK),
-        copyrightPage = true,
+    /** Meta data with all three texts filled, so a dropped one shows up in a round trip. */
+    fun meta(): Meta = Meta(
+        name = "My Novel",
+        author = "Jane Doe",
+        copyright = "(c) 2026 Jane Doe"
+    )
+
+    /** The design of the author name, styled differently from every other design part. */
+    fun authorDesign(): AuthorDesign = AuthorDesign(style = style("Sans", 16, Alignment.CENTER))
+
+    /** The design of the copyright page, printed on a page of its own. */
+    fun copyrightDesign(): CopyrightDesign = CopyrightDesign(style = style("Serif", 8), show = true)
+
+    /** The design of the title page, styled differently from every other design part. */
+    fun titleDesign(): TitleDesign = TitleDesign(style = style("Sans", 28, Alignment.CENTER))
+
+    /** The design of a chapter, whose heading and appendix carry styles of their own. */
+    fun chapterDesign(): ChapterDesign = ChapterDesign(
+        titleStyle = style("Sans", 20),
+        titleAppendixStyle = style("Sans", 14)
+    )
+
+    /** The design of the body text, styled differently from every other design part. */
+    fun textDesign(): TextDesign = TextDesign(style = style("Serif", 11, Alignment.BLOCK))
+
+    /** A design whose parts all differ, so a swapped property is caught by a round trip test. */
+    fun design(): Design = Design(
+        authorDesign = authorDesign(),
+        copyrightDesign = copyrightDesign(),
+        titleDesign = titleDesign(),
+        chapterDesign = chapterDesign(),
+        textDesign = textDesign(),
         startWithEmptyPage = true,
         endWithEmptyPage = false
     )
@@ -85,12 +114,12 @@ object TestData {
         blurb = blurb()
     )
 
-    /** A complete project, the root object a JSON document holds. */
+    /** A complete project, the root object a stored document holds. */
     fun project(): Project = Project(
-        name = "My Novel",
-        author = "Jane Doe",
-        copyright = "(c) 2026 Jane Doe",
-        settings = settings(),
-        book = book()
+        mapOf(
+            Project.PART_META to meta(),
+            Project.PART_DESIGN to design(),
+            Project.PART_BOOK to book()
+        )
     )
 }

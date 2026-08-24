@@ -10,4 +10,5 @@ module org.pcsoft.app.aighost.fx.model {
     // The storage entry point and the property models it hands out are the public surface.
     exports org.pcsoft.app.aighost.fx.model;
     exports org.pcsoft.app.aighost.fx.model.pref;
+    exports org.pcsoft.app.aighost.fx.model.project;
 }

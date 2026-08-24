@@ -29,9 +29,16 @@ import org.pcsoft.app.aighost.app.Messages
 import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.FontData
 import org.pcsoft.app.aighost.model.common.StyleData
-import org.pcsoft.app.aighost.model.project.Book
-import org.pcsoft.app.aighost.model.project.Chapter
+import org.pcsoft.app.aighost.model.project.book.Book
+import org.pcsoft.app.aighost.model.project.book.Chapter
 import org.pcsoft.app.aighost.model.project.Project
+import org.pcsoft.app.aighost.model.project.design.AuthorDesign
+import org.pcsoft.app.aighost.model.project.design.ChapterDesign
+import org.pcsoft.app.aighost.model.project.design.CopyrightDesign
+import org.pcsoft.app.aighost.model.project.design.Design
+import org.pcsoft.app.aighost.model.project.design.TextDesign
+import org.pcsoft.app.aighost.model.project.design.TitleDesign
+import org.pcsoft.app.aighost.model.project.meta.Meta
 import org.testfx.framework.junit5.ApplicationTest
 import org.testfx.util.WaitForAsyncUtils
 import java.util.Locale
@@ -69,22 +76,23 @@ class EditorTest : ApplicationTest() {
         StyleData(font = FontData("Serif", 12, bold = false, italic = false), alignment = Alignment.LEFT)
 
     private fun project(book: Book): Project = Project(
-        name = "My Novel",
-        author = "Jane Doe",
-        copyright = "(c) 2026 Jane Doe",
-        settings = Project.Settings(
-            authorFont = style(),
-            copyrightFont = style(),
-            titleFont = style(),
-            titleAppendixFont = style(),
-            chapterFont = style(),
-            chapterAppendixFont = style(),
-            textFont = style(),
-            copyrightPage = false,
-            startWithEmptyPage = false,
-            endWithEmptyPage = false
-        ),
-        book = book
+        mapOf(
+            Project.PART_META to Meta(
+                name = "My Novel",
+                author = "Jane Doe",
+                copyright = "(c) 2026 Jane Doe"
+            ),
+            Project.PART_DESIGN to Design(
+                authorDesign = AuthorDesign(style()),
+                copyrightDesign = CopyrightDesign(style(), show = false),
+                titleDesign = TitleDesign(style()),
+                chapterDesign = ChapterDesign(style(), style()),
+                textDesign = TextDesign(style()),
+                startWithEmptyPage = false,
+                endWithEmptyPage = false
+            ),
+            Project.PART_BOOK to book
+        )
     )
 
     /**
@@ -150,7 +158,7 @@ class EditorTest : ApplicationTest() {
      */
     @Test
     fun handsTheBoundProjectOnToTheProjectTree() {
-        val project = project(Book("My Novel", chapters = listOf(Chapter("first", "The First Part"))))
+        val project = project(Book(title = "My Novel", chapters = listOf(Chapter("first", "The First Part"))))
 
         interact { editor.project.value = project }
         WaitForAsyncUtils.waitForFxEvents()
@@ -164,7 +172,7 @@ class EditorTest : ApplicationTest() {
      */
     @Test
     fun handsTheClosedProjectOnToTheProjectTree() {
-        interact { editor.project.value = project(Book("My Novel")) }
+        interact { editor.project.value = project(Book(title = "My Novel")) }
         WaitForAsyncUtils.waitForFxEvents()
 
         interact { editor.project.value = null }

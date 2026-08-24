@@ -12,134 +12,106 @@
 
 package org.pcsoft.app.aighost.model.project
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertSame
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.pcsoft.app.aighost.model.common.Alignment
-import org.pcsoft.app.aighost.model.common.StyleData
 import org.pcsoft.app.aighost.model.TestData
+import org.pcsoft.app.aighost.model.project.book.Book
+import org.pcsoft.app.aighost.model.project.design.Design
+import org.pcsoft.app.aighost.model.project.meta.Meta
+import org.pcsoft.app.aighost.plugin.api.model.project.ProjectPart
 
 /**
- * Developer tests for [Project] and [Project.Settings].
+ * Developer tests for [Project] and the typed access to its parts.
  */
 class ProjectTest {
 
-    private val mapper: ObjectMapper = ObjectMapper().registerKotlinModule()
-
     /**
-     * Use case: a project is saved and opened again, so the publishing data, the settings and the
-     * whole manuscript come back exactly as they were written.
+     * Use case: the user creates a project through the menu, so it starts with the three parts the
+     * application ships with instead of being empty and unusable.
      */
     @Test
-    fun roundTripsCompleteProject() {
-        val project = TestData.project()
-
-        val restored: Project = mapper.readValue(mapper.writeValueAsString(project))
-
-        assertEquals(project, restored)
-    }
-
-    /**
-     * Use case: the project is written to disk, so the publishing data appears in the JSON under the
-     * stable property names the file format promises.
-     */
-    @Test
-    fun serialisesPublishingData() {
-        val json = mapper.writeValueAsString(TestData.project())
-
-        assertEquals(true, json.contains(""""name":"My Novel""""))
-        assertEquals(true, json.contains(""""author":"Jane Doe""""))
-        assertEquals(true, json.contains(""""copyright":"(c) 2026 Jane Doe""""))
-    }
-
-    /**
-     * Use case: every text of the manuscript is styled separately, so each of the seven styles keeps
-     * its own font and alignment across the round trip instead of collapsing into one.
-     */
-    @Test
-    fun roundTripsEverySettingsStyleSeparately() {
-        val restored: Project = mapper.readValue(mapper.writeValueAsString(TestData.project()))
-        val settings = restored.settings
-
-        assertEquals(16, settings.authorFont.font.size)
-        assertEquals(Alignment.CENTER, settings.authorFont.alignment)
-        assertEquals(8, settings.copyrightFont.font.size)
-        assertEquals(Alignment.CENTER, settings.titleFont.alignment)
-        assertEquals(18, settings.titleAppendixFont.font.size)
-        assertEquals("Sans", settings.chapterFont.font.name)
-        assertEquals(14, settings.chapterAppendixFont.font.size)
-        assertEquals(Alignment.BLOCK, settings.textFont.alignment)
-    }
-
-    /**
-     * Use case: the page options are stored as flags, so each one comes back with the value the user
-     * selected instead of a shared default.
-     */
-    @Test
-    fun roundTripsPageFlags() {
-        val restored: Project = mapper.readValue(mapper.writeValueAsString(TestData.project()))
-
-        assertEquals(true, restored.settings.copyrightPage)
-        assertEquals(true, restored.settings.startWithEmptyPage)
-        assertEquals(false, restored.settings.endWithEmptyPage)
-    }
-
-    /**
-     * Use case: a project written by a newer version carries additional properties, so reading it
-     * ignores what is unknown instead of failing.
-     */
-    @Test
-    fun ignoresUnknownProperties() {
-        val json = mapper.writeValueAsString(TestData.project())
-            .replaceFirst("{", """{"language":"en",""")
-
-        val project: Project = mapper.readValue(json)
-
-        assertEquals(TestData.project(), project)
-    }
-
-    /**
-     * Use case: a project file holds the publishing data only, so it is opened with an empty
-     * manuscript and the default settings instead of being rejected.
-     */
-    @Test
-    fun readsProjectWithoutBookAsDefault() {
-        val project: Project = mapper.readValue("""{"name":"My Novel","author":"Jane Doe","copyright":""}""")
-
-        assertEquals(Book(), project.book)
-        assertEquals(Project.Settings(), project.settings)
-        assertEquals("My Novel", project.name)
-    }
-
-    /**
-     * Use case: the user creates a project through the menu, so it starts as a named but empty
-     * project the user can write into right away instead of asking for every property up front.
-     */
-    @Test
-    fun defaultsToEmptyProject() {
+    fun defaultsToTheThreeBuiltInParts() {
         val project = Project()
 
-        assertEquals("New Project", project.name)
-        assertEquals("", project.author)
-        assertEquals("", project.copyright)
+        assertEquals(
+            setOf(Project.PART_META, Project.PART_DESIGN, Project.PART_BOOK),
+            project.parts.keys
+        )
+        assertEquals(Meta(), project.meta)
+        assertEquals(Design(), project.design)
         assertEquals(Book(), project.book)
-        assertEquals(Project.Settings(), project.settings)
     }
 
     /**
-     * Use case: a fresh project is rendered before the user touched the settings, so every style
-     * carries the default font and the page flags start on the layout the application ships with.
+     * Use case: a view shows the project name and the manuscript, so each part is reached by its type
+     * instead of the view having to look the identifier up and cast the result itself.
      */
     @Test
-    fun defaultsToPlainSettings() {
-        val settings = Project.Settings()
+    fun readsEveryPartByItsType() {
+        val project = TestData.project()
 
-        assertEquals(StyleData(), settings.authorFont)
-        assertEquals(StyleData(), settings.textFont)
-        assertEquals(false, settings.copyrightPage)
-        assertEquals(true, settings.startWithEmptyPage)
-        assertEquals(true, settings.endWithEmptyPage)
+        assertSame(project.parts[Project.PART_META], project.meta)
+        assertSame(project.parts[Project.PART_DESIGN], project.design)
+        assertSame(project.parts[Project.PART_BOOK], project.book)
+        assertEquals("My Novel", project.meta.name)
+    }
+
+    /**
+     * Use case: the user opens the design dialog and confirms it, so the new design replaces the one
+     * the project carried while the other parts stay exactly as they were.
+     */
+    @Test
+    fun writingAPartReplacesOnlyThatPart() {
+        val project = TestData.project()
+        val book = project.book
+        val design = Design(startWithEmptyPage = false, endWithEmptyPage = false)
+
+        project.design = design
+
+        assertEquals(design, project.design)
+        assertSame(book, project.book)
+        assertEquals("My Novel", project.meta.name)
+    }
+
+    /**
+     * Use case: a plugin stores a part of its own in the project, so that part travels with the
+     * document instead of being dropped when a built in part is written.
+     */
+    @Test
+    fun keepsPartsOfOtherOrigin() {
+        val custom = object : ProjectPart {
+            override val version: Int = 1
+        }
+        val project = Project(Project().parts + ("custom" to custom))
+
+        project.meta = Meta(name = "Renamed")
+
+        assertSame(custom, project.parts["custom"])
+        assertEquals("Renamed", project.meta.name)
+    }
+
+    /**
+     * Use case: a document lost a part because an older version wrote it, so the project answers with
+     * the defaults of that part instead of failing when a view reads it.
+     */
+    @Test
+    fun fallsBackToDefaultsForAMissingPart() {
+        val project = Project(emptyMap())
+
+        assertEquals(Meta(), project.meta)
+        assertEquals(Design(), project.design)
+        assertEquals(Book(), project.book)
+    }
+
+    /**
+     * Use case: two projects are compared - a saved one against the one in memory - so they count as
+     * equal exactly when they carry the same parts.
+     */
+    @Test
+    fun comparesByItsParts() {
+        assertEquals(TestData.project(), TestData.project())
+        assertTrue(Project() != TestData.project())
     }
 }

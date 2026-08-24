@@ -117,7 +117,7 @@ object PreferencesStorage {
             return Error.NotAFile(file).left()
 
         return try {
-            StorageMapper.mapper.readValue(file, Preferences::class.java).right()
+            StorageIO.mapper.readValue(file, Preferences::class.java).right()
         } catch (e: JacksonException) {
             Error.Malformed(file, e).left()
         } catch (e: IOException) {
@@ -137,7 +137,7 @@ object PreferencesStorage {
 
             val temporary = File.createTempFile(file.name, ".tmp", file.parentFile)
             try {
-                StorageMapper.mapper.writeValue(temporary, preferences)
+                StorageIO.mapper.writeValue(temporary, preferences)
                 Files.move(
                     temporary.toPath(),
                     file.toPath(),

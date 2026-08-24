@@ -17,6 +17,7 @@ import javafx.beans.property.ListProperty
 import javafx.beans.property.ObjectProperty
 import javafx.beans.property.ReadOnlyBooleanProperty
 import javafx.beans.property.SimpleListProperty
+import javafx.beans.property.StringProperty
 import javafx.collections.FXCollections
 import org.pcsoft.app.aighost.fx.model.FXProjectStorage
 import org.pcsoft.app.aighost.model.PreferencesStorage
@@ -35,6 +36,14 @@ class MainWindowViewModel : ViewModel {
     val openRecent: ListProperty<File> = SimpleListProperty(FXCollections.observableArrayList())
     val openRecentDisabled: ReadOnlyBooleanProperty = openRecent.emptyProperty()
     val project: ObjectProperty<Project> = FXProjectStorage.current
+
+    /**
+     * Name of the open project, the text the window title is built from.
+     *
+     * The name sits in the meta part of the project, which is a plain value object reporting nothing,
+     * so it is taken from the property model instead of read off the project itself.
+     */
+    val projectName: StringProperty = FXProjectStorage.current.nameProperty
 
     /** Takes the recently opened files of the preferences over into [openRecent]. */
     internal fun onShow() {

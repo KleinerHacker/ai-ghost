@@ -13,12 +13,20 @@
 package org.pcsoft.app.aighost.model
 
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertInstanceOf
+import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.pcsoft.app.aighost.model.project.Project
+import org.pcsoft.app.aighost.model.project.book.Book
+import org.pcsoft.app.aighost.model.project.design.Design
+import org.pcsoft.app.aighost.model.project.meta.Meta
 import java.io.File
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 
 /**
  * Developer tests for [ProjectStorage] and [ProjectStorage.Error].
@@ -28,7 +36,7 @@ class ProjectStorageTest {
     @TempDir
     lateinit var directory: File
 
-    private val file: File get() = File(directory, "project.json")
+    private val file: File get() = File(directory, "project.aig")
 
     /** Starts every test with a fresh project, because the storage is shared by the whole process. */
     @BeforeEach
@@ -53,16 +61,12 @@ class ProjectStorageTest {
     }
 
     /**
-     * Use case: the user saves a project and opens it again later, so it comes back from disk exactly
-     * as it was written.
+     * Use case: the user saves a project and opens it again later, so every part comes back from disk
+     * exactly as it was written.
      */
     @Test
     fun roundTripsProject() {
-        ProjectStorage.current.book = TestData.project().book
-        ProjectStorage.current.name = TestData.project().name
-        ProjectStorage.current.author = TestData.project().author
-        ProjectStorage.current.copyright = TestData.project().copyright
-        ProjectStorage.current.settings = TestData.project().settings
+        ProjectStorage.current.parts = TestData.project().parts
 
         assertTrue(ProjectStorage.save(file).isRight())
         ProjectStorage.new()
@@ -77,15 +81,15 @@ class ProjectStorageTest {
      */
     @Test
     fun loadReplacesOpenProject() {
-        val other = File(directory, "other.json")
-        ProjectStorage.current.name = "First"
+        val other = File(directory, "other.aig")
+        ProjectStorage.current.meta = Meta(name = "First")
         ProjectStorage.save(file)
-        ProjectStorage.current.name = "Second"
+        ProjectStorage.current.meta = Meta(name = "Second")
         ProjectStorage.save(other)
 
         ProjectStorage.load(file)
 
-        assertEquals("First", ProjectStorage.current.name)
+        assertEquals("First", ProjectStorage.current.meta.name)
         assertEquals(file, ProjectStorage.currentFile)
     }
 
@@ -95,7 +99,7 @@ class ProjectStorageTest {
      */
     @Test
     fun newClosesProjectAndForgetsFile() {
-        ProjectStorage.current.name = "Stored"
+        ProjectStorage.current.meta = Meta(name = "Stored")
         ProjectStorage.save(file)
 
         ProjectStorage.new()
@@ -112,26 +116,26 @@ class ProjectStorageTest {
     fun changeIsKeptUntilSaved() {
         ProjectStorage.save(file)
 
-        ProjectStorage.current.name = "Changed"
+        ProjectStorage.current.meta = Meta(name = "Changed")
 
-        assertEquals("Changed", ProjectStorage.current.name)
-        assertTrue(file.readText().contains("\"New Project\""))
+        assertEquals("Changed", ProjectStorage.current.meta.name)
+        assertEquals("New Project", storedMeta().name)
     }
 
     /**
      * Use case: a view reads the open project, so every way of changing it - an edit, starting a new
-     * project and opening one - leaves the value in the same instance.
+     * project and opening one - leaves the value in the open project.
      */
     @Test
     fun everyChangeEndsUpInTheOpenProject() {
-        ProjectStorage.current.name = "Edited"
+        ProjectStorage.current.meta = Meta(name = "Edited")
         ProjectStorage.save(file)
 
         ProjectStorage.new()
-        assertEquals("New Project", ProjectStorage.current.name)
+        assertEquals("New Project", ProjectStorage.current.meta.name)
 
         ProjectStorage.load(file)
-        assertEquals("Edited", ProjectStorage.current.name)
+        assertEquals("Edited", ProjectStorage.current.meta.name)
     }
 
     /**
@@ -153,10 +157,10 @@ class ProjectStorageTest {
     @Test
     fun savesToKnownFileWithoutPath() {
         ProjectStorage.save(file)
-        ProjectStorage.current.name = "Edited"
+        ProjectStorage.current.meta = Meta(name = "Edited")
 
         assertTrue(ProjectStorage.save().isRight())
-        assertTrue(file.readText().contains("\"Edited\""))
+        assertEquals("Edited", storedMeta().name)
     }
 
     /**
@@ -178,7 +182,7 @@ class ProjectStorageTest {
      */
     @Test
     fun reportsNotAFileForDirectoryOnLoad() {
-        val asDirectory = File(directory, "project.json").apply { mkdirs() }
+        val asDirectory = File(directory, "project-folder").apply { mkdirs() }
 
         val result = ProjectStorage.load(asDirectory)
 
@@ -191,7 +195,7 @@ class ProjectStorageTest {
      */
     @Test
     fun reportsNotAFileWhenSavingOntoDirectory() {
-        val asDirectory = File(directory, "project.json").apply { mkdirs() }
+        val asDirectory = File(directory, "project-folder").apply { mkdirs() }
 
         val result = ProjectStorage.save(asDirectory)
 
@@ -205,23 +209,24 @@ class ProjectStorageTest {
      */
     @Test
     fun reportsMalformedFileAsError() {
-        ProjectStorage.current.name = "Untouched"
-        file.writeText("{ this is not json")
+        ProjectStorage.current.meta = Meta(name = "Untouched")
+        file.writeText("{ this is not an archive")
 
         val error = ProjectStorage.load(file).leftOrNull()
 
         val malformed = assertInstanceOf(ProjectStorage.Error.Malformed::class.java, error)
         assertEquals(file, malformed.file)
-        assertEquals("Untouched", ProjectStorage.current.name)
+        assertEquals("Untouched", ProjectStorage.current.meta.name)
+        assertNull(ProjectStorage.currentFile)
     }
 
     /**
-     * Use case: the file holds valid JSON that is not a project document, so opening it reports it as
-     * malformed rather than opening a half filled project.
+     * Use case: the archive holds an entry that is not the document the part expects, so opening it
+     * reports the file as malformed rather than opening a half filled project.
      */
     @Test
     fun reportsWrongDocumentAsError() {
-        file.writeText("""{"settings":{"copyrightPage":"yes"}}""")
+        writeArchive(Project.PART_DESIGN to """{"startWithEmptyPage":"yes"}""")
 
         val error = ProjectStorage.load(file).leftOrNull()
 
@@ -229,17 +234,18 @@ class ProjectStorageTest {
     }
 
     /**
-     * Use case: a project written by an older version does not know the newer properties yet, so it
-     * is opened with the defaults filled in instead of being rejected.
+     * Use case: a project written by an older version does not carry every part yet, so it is opened
+     * with the defaults filled in instead of being rejected.
      */
     @Test
     fun readsPartialDocumentWithDefaults() {
-        file.writeText("""{"name":"My Novel"}""")
+        writeArchive(Project.PART_META to """{"name":"My Novel"}""")
 
         assertTrue(ProjectStorage.load(file).isRight())
 
-        assertEquals("My Novel", ProjectStorage.current.name)
-        assertEquals(Project.Settings(), ProjectStorage.current.settings)
+        assertEquals("My Novel", ProjectStorage.current.meta.name)
+        assertEquals(Design(), ProjectStorage.current.design)
+        assertEquals(Book(), ProjectStorage.current.book)
     }
 
     /**
@@ -248,7 +254,7 @@ class ProjectStorageTest {
      */
     @Test
     fun createsMissingParentDirectory() {
-        val nested = File(directory, "books/nested/project.json")
+        val nested = File(directory, "books/nested/project.aig")
 
         assertTrue(ProjectStorage.save(nested).isRight())
         assertTrue(nested.isFile)
@@ -256,18 +262,20 @@ class ProjectStorageTest {
     }
 
     /**
-     * Use case: the user opens the project file to edit it by hand, so it is written as indented JSON
-     * rather than as a single line.
+     * Use case: the user saves the project, so every part is stored in an entry of its own and the
+     * document can be opened again part by part.
      */
     @Test
-    fun writesIndentedJson() {
-        ProjectStorage.current.book = TestData.project().book
+    fun writesEveryPartAsAnEntry() {
+        ProjectStorage.current.parts = TestData.project().parts
+
         ProjectStorage.save(file)
 
-        val content = file.readText()
-
-        assertTrue(content.contains("\n"), "expected indented JSON but was: $content")
-        assertTrue(content.contains("\"book\""))
+        val parts = StorageIO.loadFromZip(file, Meta::class, Design::class, Book::class)
+        assertEquals(
+            setOf(Project.PART_META, Project.PART_DESIGN, Project.PART_BOOK),
+            parts.keys
+        )
     }
 
     /**
@@ -276,14 +284,14 @@ class ProjectStorageTest {
      */
     @Test
     fun overwritesPreviousFileWithoutLeavingTemporaries() {
-        ProjectStorage.current.name = "First"
+        ProjectStorage.current.meta = Meta(name = "First")
         ProjectStorage.save(file)
-        ProjectStorage.current.name = "Second"
+        ProjectStorage.current.meta = Meta(name = "Second")
         ProjectStorage.save(file)
 
         assertTrue(ProjectStorage.load(file).isRight())
-        assertEquals("Second", ProjectStorage.current.name)
-        assertEquals(listOf("project.json"), directory.list()?.sorted())
+        assertEquals("Second", ProjectStorage.current.meta.name)
+        assertEquals(listOf("project.aig"), directory.list()?.sorted())
     }
 
     /**
@@ -292,11 +300,26 @@ class ProjectStorageTest {
      */
     @Test
     fun everyErrorCarriesItsFile() {
-        val asDirectory = File(directory, "project-directory").apply { mkdirs() }
-        val broken = File(directory, "broken.json").apply { writeText("{ this is not json") }
+        val asDirectory = File(directory, "project-folder").apply { mkdirs() }
+        val broken = File(directory, "broken.aig").apply { writeText("{ this is not an archive") }
 
         assertEquals(file, ProjectStorage.load(file).leftOrNull()?.file)
         assertEquals(asDirectory, ProjectStorage.load(asDirectory).leftOrNull()?.file)
         assertEquals(broken, ProjectStorage.load(broken).leftOrNull()?.file)
+    }
+
+    /** The meta part of the document stored in [file], read back the way the storage reads it. */
+    private fun storedMeta(): Meta =
+        StorageIO.loadFromZip(file, Meta::class)[Project.PART_META] as Meta
+
+    /** Writes a hand made archive to [file], so a document of an older version can be opened. */
+    private fun writeArchive(vararg entries: Pair<String, String>) {
+        ZipOutputStream(file.outputStream()).use { stream ->
+            for ((name, content) in entries) {
+                stream.putNextEntry(ZipEntry(name))
+                stream.write(content.toByteArray())
+                stream.closeEntry()
+            }
+        }
     }
 }
