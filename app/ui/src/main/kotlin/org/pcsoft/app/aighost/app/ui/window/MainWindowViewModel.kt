@@ -13,12 +13,9 @@
 package org.pcsoft.app.aighost.app.ui.window
 
 import de.saxsys.mvvmfx.ViewModel
-import javafx.beans.property.ListProperty
-import javafx.beans.property.ObjectProperty
-import javafx.beans.property.ReadOnlyBooleanProperty
-import javafx.beans.property.SimpleListProperty
-import javafx.beans.property.StringProperty
+import javafx.beans.property.*
 import javafx.collections.FXCollections
+import org.pcsoft.app.aighost.app.controller.IoController
 import org.pcsoft.app.aighost.fx.model.FXProjectStorage
 import org.pcsoft.app.aighost.model.PreferencesStorage
 import org.pcsoft.app.aighost.model.project.Project
@@ -33,7 +30,7 @@ import java.io.File
 class MainWindowViewModel : ViewModel {
 
     /** Files the user opened last, the most recent one first. */
-    val openRecent: ListProperty<File> = SimpleListProperty(FXCollections.observableArrayList())
+    val openRecent: SetProperty<File> = SimpleSetProperty(FXCollections.observableSet())
     val openRecentDisabled: ReadOnlyBooleanProperty = openRecent.emptyProperty()
     val project: ObjectProperty<Project> = FXProjectStorage.current
 
@@ -47,6 +44,13 @@ class MainWindowViewModel : ViewModel {
 
     /** Takes the recently opened files of the preferences over into [openRecent]. */
     internal fun onShow() {
-        openRecent.setAll(PreferencesStorage.current.recentOpened.entries.map(::File))
+        openRecent.clear()
+        openRecent.addAll(PreferencesStorage.current.recentOpened.entries.map(::File))
+    }
+
+    internal fun onHide() {
+        val limit = PreferencesStorage.current.recentOpened.max
+        PreferencesStorage.current.recentOpened.entries = openRecent.value.take(limit).map { it.absolutePath }
+        IoController.savePreferences()
     }
 }

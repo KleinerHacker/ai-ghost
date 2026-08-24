@@ -66,4 +66,12 @@ object FXProjectStorage {
      * @return Either [ProjectStorage.Error] if saving failed or [Unit] on success
      */
     fun save(): Either<ProjectStorage.Error, Unit> = ProjectStorage.save()
+
+    /**
+     * Saves the current project to the specified file.
+     *
+     * @param file The file to save the project to
+     * @return Either [ProjectStorage.Error] if saving failed or [Unit] on success
+     */
+    fun save(file: File): Either<ProjectStorage.Error, Unit> = ProjectStorage.save(file)
 }

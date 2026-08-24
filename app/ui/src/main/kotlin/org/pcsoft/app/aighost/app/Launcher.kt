@@ -16,8 +16,8 @@ import de.saxsys.mvvmfx.MvvmFX
 import javafx.application.Application
 import javafx.stage.Stage
 import org.apache.commons.lang3.SystemUtils
+import org.pcsoft.app.aighost.app.controller.IoController
 import org.pcsoft.app.aighost.app.ui.window.MainWindow
-import org.pcsoft.app.aighost.app.util.PreferencesLoader
 import org.pcsoft.app.aighost.app.util.logger
 
 /**
@@ -25,7 +25,7 @@ import org.pcsoft.app.aighost.app.util.logger
  */
 class AiGhostApplication : Application() {
     override fun start(stage: Stage) {
-        PreferencesLoader.loadPreferences(this)
+        IoController.loadPreferences(this)
 
         AiGhostTheme.install()
 

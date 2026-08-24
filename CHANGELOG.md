@@ -7,6 +7,10 @@
   opens with the parts this version knows, and a damaged file is reported instead of opening an empty
   project
 
+* Saving or opening a project that fails is reported in a dialog naming the reason - a missing file,
+  a folder in place of the file, a file that cannot be read or written, or a damaged project file -
+  and the application keeps running with the project it holds
+
 * Course of a session is written to the console and to a log file in `.ai-ghost/logs` of the home
   directory; the file carries more detail than the console, is rolled over daily and at 10 MB, and
   the last ten of the older files are kept compressed
