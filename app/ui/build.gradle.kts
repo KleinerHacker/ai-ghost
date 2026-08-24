@@ -33,7 +33,7 @@ javafx {
 }
 
 val testFxVersion = "4.0.18"
-val log4jVersion = "2.25.2"
+val log4jVersion = "2.26.1"
 
 dependencies {
     implementation(project(":lib:ai-ghost-model"))
