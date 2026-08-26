@@ -10,35 +10,35 @@
  * See the License for the specific language governing permissions and limitations.
  */
 
-package org.pcsoft.app.aighost.fx.model.internal
+package org.pcsoft.app.aighost.fx.model.property.common
 
-import javafx.beans.property.SimpleBooleanProperty
+import javafx.beans.property.SimpleDoubleProperty
 
 /**
- * Property wrapping a plain boolean field of a parent model object.
+ * Property wrapping a plain double field of a parent model object.
  *
  * Reads are answered from [getter], writes are handed to [setter] - no matter whether they come from
  * application code or from a binding - and [fireEvent] lets the parent property report the change of
  * its nested field as its own change.
  *
  * A field property of an object that is not there at all - a prolog a book does not carry - answers
- * with `false` and drops what is written to it.
+ * with `0.0` and drops what is written to it.
  */
-internal class OverrideBooleanProperty(
-    private val setter: (Boolean) -> Unit,
-    private val getter: () -> Boolean,
+class OverrideDoubleProperty(
+    private val setter: (Double) -> Unit,
+    private val getter: () -> Double,
     private val fireEvent: () -> Unit
-) : SimpleBooleanProperty() {
+) : SimpleDoubleProperty() {
 
     // Guards the model object and the parent property while the property takes over a value the model
     // object already carries, so such an alignment is not reported back as a change of its own.
     private var refreshing = false
 
-    override fun get(): Boolean = getter()
+    override fun get(): Double = getter()
 
-    override fun getValue(): Boolean = getter()
+    override fun getValue(): Double = getter()
 
-    override fun set(newValue: Boolean) {
+    override fun set(newValue: Double) {
         check(!isBound) { "A bound value cannot be set." }
 
         // The base class skips the notification when its own cached value does not change, so the
@@ -48,7 +48,7 @@ internal class OverrideBooleanProperty(
         validate()
     }
 
-    override fun setValue(v: Boolean?) = set(v ?: false)
+    override fun setValue(v: Number?) = set(v?.toDouble() ?: 0.0)
 
     /**
      * Called by the base class for every change, including the ones produced by a binding, and thus
@@ -79,7 +79,7 @@ internal class OverrideBooleanProperty(
      *
      * A bound property keeps the value of its binding and is left alone.
      */
-    internal fun refresh() {
+    fun refresh() {
         if (isBound) return
 
         refreshing = true

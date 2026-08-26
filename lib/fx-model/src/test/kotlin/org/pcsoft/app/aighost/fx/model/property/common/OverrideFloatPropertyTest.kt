@@ -10,32 +10,32 @@
  * See the License for the specific language governing permissions and limitations.
  */
 
-package org.pcsoft.app.aighost.fx.model.internal
+package org.pcsoft.app.aighost.fx.model.property.common
 
-import javafx.beans.property.SimpleLongProperty
+import javafx.beans.property.SimpleFloatProperty
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 /**
- * Developer tests for [OverrideLongProperty].
+ * Developer tests for [OverrideFloatProperty].
  *
  * The property is a wrapper around a plain field of a parent POJO: every read goes through the
  * getter of that POJO and every write - no matter whether it comes from application code or from a
  * binding - goes through its setter.
  */
-class OverrideLongPropertyTest {
+class OverrideFloatPropertyTest {
 
     /**
      * Plain model object standing in for the POJO the property writes into.
      */
-    private class Pojo(var size: Long = 0L)
+    private class Pojo(var zoom: Float = 0f)
 
     private val pojo = Pojo()
     private var firedEvents = 0
 
-    private val property = OverrideLongProperty(
-        { pojo.size = it },
-        { pojo.size },
+    private val property = OverrideFloatProperty(
+        { pojo.zoom = it },
+        { pojo.zoom },
         { firedEvents++ }
     )
 
@@ -45,10 +45,10 @@ class OverrideLongPropertyTest {
      */
     @Test
     fun readsInitialValueFromPojo() {
-        pojo.size = 7L
+        pojo.zoom = 7.5f
 
-        assertEquals(7L, property.get())
-        assertEquals(7L, property.value)
+        assertEquals(7.5f, property.get())
+        assertEquals(7.5f, property.value)
     }
 
     /**
@@ -57,23 +57,23 @@ class OverrideLongPropertyTest {
      */
     @Test
     fun readsLaterPojoChanges() {
-        pojo.size = 3L
-        assertEquals(3L, property.get())
+        pojo.zoom = 3.25f
+        assertEquals(3.25f, property.get())
 
-        pojo.size = 9L
+        pojo.zoom = 9.75f
 
-        assertEquals(9L, property.get())
+        assertEquals(9.75f, property.get())
     }
 
     /**
-     * Use case: the user types a new limit into a text field bound to the property, so the value is
-     * written straight into the POJO.
+     * Use case: the user drags a slider bound to the property, so the value is written straight into
+     * the POJO.
      */
     @Test
     fun writesSetToPojo() {
-        property.set(5L)
+        property.set(5.5f)
 
-        assertEquals(5L, pojo.size)
+        assertEquals(5.5f, pojo.zoom)
     }
 
     /**
@@ -82,9 +82,9 @@ class OverrideLongPropertyTest {
      */
     @Test
     fun writesValueToPojo() {
-        property.value = 11L
+        property.value = 11.25f
 
-        assertEquals(11L, pojo.size)
+        assertEquals(11.25f, pojo.zoom)
     }
 
     /**
@@ -93,30 +93,30 @@ class OverrideLongPropertyTest {
      */
     @Test
     fun writesNullAsZeroToPojo() {
-        pojo.size = 4L
+        pojo.zoom = 4.5f
 
         property.setValue(null)
 
-        assertEquals(0L, pojo.size)
+        assertEquals(0f, pojo.zoom)
     }
 
     /**
-     * Use case: the property is bound to another property - for example a spinner value - so every
+     * Use case: the property is bound to another property - for example a slider value - so every
      * value produced by that binding lands in the POJO.
      */
     @Test
     fun writesBoundValueToPojo() {
-        val source = SimpleLongProperty(2L)
+        val source = SimpleFloatProperty(2.5f)
 
         property.bind(source)
 
-        assertEquals(2L, pojo.size)
-        assertEquals(2L, property.get())
+        assertEquals(2.5f, pojo.zoom)
+        assertEquals(2.5f, property.get())
 
-        source.set(8L)
+        source.set(8.5f)
 
-        assertEquals(8L, pojo.size)
-        assertEquals(8L, property.get())
+        assertEquals(8.5f, pojo.zoom)
+        assertEquals(8.5f, property.get())
     }
 
     /**
@@ -125,16 +125,16 @@ class OverrideLongPropertyTest {
      */
     @Test
     fun writesBidirectionallyBoundValueToPojo() {
-        val other = SimpleLongProperty(1L)
+        val other = SimpleFloatProperty(1.5f)
 
         property.bindBidirectional(other)
 
-        other.set(6L)
-        assertEquals(6L, pojo.size)
+        other.set(6.5f)
+        assertEquals(6.5f, pojo.zoom)
 
-        property.value = 12L
-        assertEquals(12L, other.get())
-        assertEquals(12L, pojo.size)
+        property.value = 12.5f
+        assertEquals(12.5f, other.get())
+        assertEquals(12.5f, pojo.zoom)
     }
 
     /**
@@ -146,10 +146,10 @@ class OverrideLongPropertyTest {
         val observed = mutableListOf<Number>()
         property.addListener { _, _, newValue -> observed.add(newValue) }
 
-        property.value = 3L
-        property.value = 4L
+        property.value = 3.5f
+        property.value = 4.5f
 
-        assertEquals(listOf<Number>(3L, 4L), observed)
+        assertEquals(listOf<Number>(3.5f, 4.5f), observed)
     }
 
     /**
@@ -158,8 +158,8 @@ class OverrideLongPropertyTest {
      */
     @Test
     fun invokesFireEventCallbackOnWrite() {
-        property.value = 1L
-        property.value = 2L
+        property.value = 1.5f
+        property.value = 2.5f
 
         assertEquals(2, firedEvents)
     }
@@ -175,11 +175,11 @@ class OverrideLongPropertyTest {
         val observed = mutableListOf<Number>()
         property.addListener { _, _, newValue -> observed.add(newValue) }
 
-        pojo.size = 42L
+        pojo.zoom = 42.5f
         property.refresh()
 
-        assertEquals(listOf<Number>(42L), observed)
-        assertEquals(42L, property.get())
+        assertEquals(listOf<Number>(42.5f), observed)
+        assertEquals(42.5f, property.get())
     }
 
     /**
@@ -189,7 +189,7 @@ class OverrideLongPropertyTest {
      */
     @Test
     fun keepsParentQuietOnRefresh() {
-        pojo.size = 42L
+        pojo.zoom = 42.5f
 
         property.refresh()
 
@@ -203,17 +203,17 @@ class OverrideLongPropertyTest {
      */
     @Test
     fun keepsBoundValueOnRefresh() {
-        val source = SimpleLongProperty(5L)
+        val source = SimpleFloatProperty(5.25f)
         property.bind(source)
         firedEvents = 0
 
         property.refresh()
 
-        assertEquals(5L, pojo.size)
+        assertEquals(5.25f, pojo.zoom)
         assertEquals(0, firedEvents)
 
-        source.set(8L)
+        source.set(8.75f)
 
-        assertEquals(8L, pojo.size)
+        assertEquals(8.75f, pojo.zoom)
     }
 }

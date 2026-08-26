@@ -12,7 +12,7 @@
 
 package org.pcsoft.app.aighost.fx.model.project.book
 
-import org.pcsoft.app.aighost.fx.model.internal.OverrideStringProperty
+import org.pcsoft.app.aighost.fx.model.property.common.OverrideStringProperty
 import org.pcsoft.app.aighost.model.project.book.Chapter
 
 /**

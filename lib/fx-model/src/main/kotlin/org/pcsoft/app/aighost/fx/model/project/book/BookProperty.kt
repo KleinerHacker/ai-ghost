@@ -13,9 +13,9 @@
 package org.pcsoft.app.aighost.fx.model.project.book
 
 import javafx.collections.FXCollections
-import org.pcsoft.app.aighost.fx.model.internal.OverrideListProperty
-import org.pcsoft.app.aighost.fx.model.internal.OverrideObjectProperty
-import org.pcsoft.app.aighost.fx.model.internal.OverrideStringProperty
+import org.pcsoft.app.aighost.fx.model.property.common.OverrideListProperty
+import org.pcsoft.app.aighost.fx.model.project.ProjectPartProperty
+import org.pcsoft.app.aighost.fx.model.property.common.OverrideStringProperty
 import org.pcsoft.app.aighost.model.project.book.Blurb
 import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.book.Chapter
@@ -34,7 +34,7 @@ internal class BookProperty(
     setter: (Book?) -> Unit,
     getter: () -> Book?,
     fireEvent: () -> Unit
-) : OverrideObjectProperty<Book?>(setter, getter, fireEvent) {
+) : ProjectPartProperty<Book>(setter, getter, fireEvent) {
 
     /** Main title of the book, as a property of its own. */
     val titleProperty: OverrideStringProperty = OverrideStringProperty(

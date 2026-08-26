@@ -12,10 +12,10 @@
 
 package org.pcsoft.app.aighost.fx.model.common
 
-import org.pcsoft.app.aighost.fx.model.internal.OverrideBooleanProperty
-import org.pcsoft.app.aighost.fx.model.internal.OverrideIntegerProperty
-import org.pcsoft.app.aighost.fx.model.internal.OverrideObjectProperty
-import org.pcsoft.app.aighost.fx.model.internal.OverrideStringProperty
+import org.pcsoft.app.aighost.fx.model.property.common.OverrideBooleanProperty
+import org.pcsoft.app.aighost.fx.model.property.common.OverrideIntegerProperty
+import org.pcsoft.app.aighost.fx.model.property.common.OverrideObjectProperty
+import org.pcsoft.app.aighost.fx.model.property.common.OverrideStringProperty
 import org.pcsoft.app.aighost.model.common.FontData
 
 /**

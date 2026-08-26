@@ -14,7 +14,7 @@ package org.pcsoft.app.aighost.fx.model.pref
 
 import javafx.beans.property.ObjectProperty
 import javafx.beans.property.SimpleObjectProperty
-import org.pcsoft.app.aighost.fx.model.internal.OverrideObjectProperty
+import org.pcsoft.app.aighost.fx.model.property.common.OverrideObjectProperty
 import org.pcsoft.app.aighost.model.pref.Preferences
 import org.pcsoft.app.aighost.model.pref.RecentOpened
 import org.pcsoft.app.aighost.model.pref.ThemeMode

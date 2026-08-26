@@ -10,46 +10,45 @@
  * See the License for the specific language governing permissions and limitations.
  */
 
-package org.pcsoft.app.aighost.fx.model.internal
+package org.pcsoft.app.aighost.fx.model.property.common
 
-import javafx.beans.property.SimpleStringProperty
+import javafx.beans.property.SimpleDoubleProperty
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 
 /**
- * Developer tests for [OverrideStringProperty].
+ * Developer tests for [OverrideDoubleProperty].
  *
  * The property is a wrapper around a plain field of a parent POJO: every read goes through the
  * getter of that POJO and every write - no matter whether it comes from application code or from a
  * binding - goes through its setter.
  */
-class OverrideStringPropertyTest {
+class OverrideDoublePropertyTest {
 
     /**
      * Plain model object standing in for the POJO the property writes into.
      */
-    private class Pojo(var title: String? = null)
+    private class Pojo(var ratio: Double = 0.0)
 
     private val pojo = Pojo()
     private var firedEvents = 0
 
-    private val property = OverrideStringProperty(
-        { pojo.title = it },
-        { pojo.title },
+    private val property = OverrideDoubleProperty(
+        { pojo.ratio = it },
+        { pojo.ratio },
         { firedEvents++ }
     )
 
     /**
      * Use case: the POJO is filled from a stored file before the user interface is built, so reading
-     * the property returns the text that already sits in the POJO.
+     * the property returns the value that already sits in the POJO.
      */
     @Test
     fun readsInitialValueFromPojo() {
-        pojo.title = "First chapter"
+        pojo.ratio = 7.5
 
-        assertEquals("First chapter", property.get())
-        assertEquals("First chapter", property.value)
+        assertEquals(7.5, property.get())
+        assertEquals(7.5, property.value)
     }
 
     /**
@@ -58,66 +57,66 @@ class OverrideStringPropertyTest {
      */
     @Test
     fun readsLaterPojoChanges() {
-        pojo.title = "Draft"
-        assertEquals("Draft", property.get())
+        pojo.ratio = 3.25
+        assertEquals(3.25, property.get())
 
-        pojo.title = "Final"
+        pojo.ratio = 9.75
 
-        assertEquals("Final", property.get())
+        assertEquals(9.75, property.get())
     }
 
     /**
-     * Use case: the user types a new title into a text field bound to the property, so the text is
-     * written straight into the POJO.
+     * Use case: the user drags a slider bound to the property, so the value is written straight into
+     * the POJO.
      */
     @Test
     fun writesSetToPojo() {
-        property.set("Second chapter")
+        property.set(5.5)
 
-        assertEquals("Second chapter", pojo.title)
+        assertEquals(5.5, pojo.ratio)
     }
 
     /**
      * Use case: the property is filled through the Kotlin value accessor, so the POJO carries the new
-     * text afterwards.
+     * number afterwards.
      */
     @Test
     fun writesValueToPojo() {
-        property.value = "Prologue"
+        property.value = 11.25
 
-        assertEquals("Prologue", pojo.title)
+        assertEquals(11.25, pojo.ratio)
     }
 
     /**
-     * Use case: a caller clears the property, so the POJO holds no text any more instead of keeping
-     * the previous one.
+     * Use case: a caller clears the property, so the POJO falls back to zero rather than keeping the
+     * previous number.
      */
     @Test
-    fun writesNullToPojo() {
-        pojo.title = "Epilogue"
+    fun writesNullAsZeroToPojo() {
+        pojo.ratio = 4.5
 
         property.setValue(null)
 
-        assertNull(pojo.title)
+        assertEquals(0.0, pojo.ratio)
     }
 
     /**
-     * Use case: the property is bound to another property - for example a text field content - so
-     * every value produced by that binding lands in the POJO.
+     * Use case: the property is bound to another property - for example a slider value - so every
+     * value produced by that binding lands in the POJO.
      */
     @Test
     fun writesBoundValueToPojo() {
-        val source = SimpleStringProperty("Chapter one")
+        val source = SimpleDoubleProperty(2.5)
 
         property.bind(source)
 
-        assertEquals("Chapter one", pojo.title)
-        assertEquals("Chapter one", property.get())
+        assertEquals(2.5, pojo.ratio)
+        assertEquals(2.5, property.get())
 
-        source.set("Chapter two")
+        source.set(8.5)
 
-        assertEquals("Chapter two", pojo.title)
-        assertEquals("Chapter two", property.get())
+        assertEquals(8.5, pojo.ratio)
+        assertEquals(8.5, property.get())
     }
 
     /**
@@ -126,16 +125,16 @@ class OverrideStringPropertyTest {
      */
     @Test
     fun writesBidirectionallyBoundValueToPojo() {
-        val other = SimpleStringProperty("Start")
+        val other = SimpleDoubleProperty(1.5)
 
         property.bindBidirectional(other)
 
-        other.set("Middle")
-        assertEquals("Middle", pojo.title)
+        other.set(6.5)
+        assertEquals(6.5, pojo.ratio)
 
-        property.value = "End"
-        assertEquals("End", other.get())
-        assertEquals("End", pojo.title)
+        property.value = 12.5
+        assertEquals(12.5, other.get())
+        assertEquals(12.5, pojo.ratio)
     }
 
     /**
@@ -144,13 +143,13 @@ class OverrideStringPropertyTest {
      */
     @Test
     fun notifiesChangeListenerOnWrite() {
-        val observed = mutableListOf<String?>()
+        val observed = mutableListOf<Number>()
         property.addListener { _, _, newValue -> observed.add(newValue) }
 
-        property.value = "One"
-        property.value = "Two"
+        property.value = 3.5
+        property.value = 4.5
 
-        assertEquals(listOf("One", "Two"), observed)
+        assertEquals(listOf<Number>(3.5, 4.5), observed)
     }
 
     /**
@@ -159,8 +158,8 @@ class OverrideStringPropertyTest {
      */
     @Test
     fun invokesFireEventCallbackOnWrite() {
-        property.value = "One"
-        property.value = "Two"
+        property.value = 1.5
+        property.value = 2.5
 
         assertEquals(2, firedEvents)
     }
@@ -168,19 +167,19 @@ class OverrideStringPropertyTest {
     /**
      * Use case: the model object behind the parent property is exchanged - another project file was
      * loaded for instance - so the wrapped field belongs to another object afterwards and the parent
-     * property lets this property take over the text of that object. Everyone listening here is told
-     * about it, so a text field bound to this property stops showing the text of the previous object.
+     * property lets this property take over the value of that object. Everyone listening here is told
+     * about it, so a control bound to this property stops showing the value of the previous object.
      */
     @Test
     fun takesOverPojoValueOnRefresh() {
-        val observed = mutableListOf<String?>()
+        val observed = mutableListOf<Number>()
         property.addListener { _, _, newValue -> observed.add(newValue) }
 
-        pojo.title = "Refreshed chapter"
+        pojo.ratio = 42.5
         property.refresh()
 
-        assertEquals(listOf("Refreshed chapter"), observed)
-        assertEquals("Refreshed chapter", property.get())
+        assertEquals(listOf<Number>(42.5), observed)
+        assertEquals(42.5, property.get())
     }
 
     /**
@@ -190,7 +189,7 @@ class OverrideStringPropertyTest {
      */
     @Test
     fun keepsParentQuietOnRefresh() {
-        pojo.title = "Refreshed chapter"
+        pojo.ratio = 42.5
 
         property.refresh()
 
@@ -198,23 +197,23 @@ class OverrideStringPropertyTest {
     }
 
     /**
-     * Use case: the property is bound to a text field while the model object behind the parent
-     * property is exchanged, so the binding stays the source of the value: the alignment leaves the
-     * property untouched and the next value of the binding still reaches the POJO.
+     * Use case: the property is bound to a control while the model object behind the parent property
+     * is exchanged, so the binding stays the source of the value: the alignment leaves the property
+     * untouched and the next value of the binding still reaches the POJO.
      */
     @Test
     fun keepsBoundValueOnRefresh() {
-        val source = SimpleStringProperty("Chapter one")
+        val source = SimpleDoubleProperty(5.25)
         property.bind(source)
         firedEvents = 0
 
         property.refresh()
 
-        assertEquals("Chapter one", pojo.title)
+        assertEquals(5.25, pojo.ratio)
         assertEquals(0, firedEvents)
 
-        source.set("Chapter two")
+        source.set(8.75)
 
-        assertEquals("Chapter two", pojo.title)
+        assertEquals(8.75, pojo.ratio)
     }
 }

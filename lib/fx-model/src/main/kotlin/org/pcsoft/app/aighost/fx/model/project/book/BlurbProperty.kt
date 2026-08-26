@@ -13,8 +13,8 @@
 package org.pcsoft.app.aighost.fx.model.project.book
 
 import javafx.collections.FXCollections
-import org.pcsoft.app.aighost.fx.model.internal.OverrideListProperty
-import org.pcsoft.app.aighost.fx.model.internal.OverrideObjectProperty
+import org.pcsoft.app.aighost.fx.model.property.common.OverrideListProperty
+import org.pcsoft.app.aighost.fx.model.property.common.OverrideObjectProperty
 import org.pcsoft.app.aighost.model.project.book.Blurb
 
 /**

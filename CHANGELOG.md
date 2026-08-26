@@ -7,6 +7,9 @@
   opens with the parts this version knows, and a damaged file is reported instead of opening an empty
   project
 
+* Opening a project document that lost one of its parts keeps what you change in that part
+  afterwards - such a part was rebuilt on every read before, so an edit to it was dropped
+
 * Saving or opening a project that fails is reported in a dialog naming the reason - a missing file,
   a folder in place of the file, a file that cannot be read or written, or a damaged project file -
   and the application keeps running with the project it holds

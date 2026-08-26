@@ -10,45 +10,47 @@
  * See the License for the specific language governing permissions and limitations.
  */
 
-package org.pcsoft.app.aighost.fx.model.internal
+package org.pcsoft.app.aighost.fx.model.property.common
 
-import javafx.beans.property.SimpleDoubleProperty
+import javafx.beans.property.SimpleBooleanProperty
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
- * Developer tests for [OverrideDoubleProperty].
+ * Developer tests for [OverrideBooleanProperty].
  *
  * The property is a wrapper around a plain field of a parent POJO: every read goes through the
  * getter of that POJO and every write - no matter whether it comes from application code or from a
  * binding - goes through its setter.
  */
-class OverrideDoublePropertyTest {
+class OverrideBooleanPropertyTest {
 
     /**
      * Plain model object standing in for the POJO the property writes into.
      */
-    private class Pojo(var ratio: Double = 0.0)
+    private class Pojo(var enabled: Boolean = false)
 
     private val pojo = Pojo()
     private var firedEvents = 0
 
-    private val property = OverrideDoubleProperty(
-        { pojo.ratio = it },
-        { pojo.ratio },
+    private val property = OverrideBooleanProperty(
+        { pojo.enabled = it },
+        { pojo.enabled },
         { firedEvents++ }
     )
 
     /**
      * Use case: the POJO is filled from a stored file before the user interface is built, so reading
-     * the property returns the value that already sits in the POJO.
+     * the property returns the flag that already sits in the POJO.
      */
     @Test
     fun readsInitialValueFromPojo() {
-        pojo.ratio = 7.5
+        pojo.enabled = true
 
-        assertEquals(7.5, property.get())
-        assertEquals(7.5, property.value)
+        assertTrue(property.get())
+        assertTrue(property.value)
     }
 
     /**
@@ -57,66 +59,66 @@ class OverrideDoublePropertyTest {
      */
     @Test
     fun readsLaterPojoChanges() {
-        pojo.ratio = 3.25
-        assertEquals(3.25, property.get())
+        pojo.enabled = true
+        assertTrue(property.get())
 
-        pojo.ratio = 9.75
+        pojo.enabled = false
 
-        assertEquals(9.75, property.get())
+        assertFalse(property.get())
     }
 
     /**
-     * Use case: the user drags a slider bound to the property, so the value is written straight into
-     * the POJO.
+     * Use case: the user ticks a check box bound to the property, so the flag is written straight
+     * into the POJO.
      */
     @Test
     fun writesSetToPojo() {
-        property.set(5.5)
+        property.set(true)
 
-        assertEquals(5.5, pojo.ratio)
+        assertTrue(pojo.enabled)
     }
 
     /**
      * Use case: the property is filled through the Kotlin value accessor, so the POJO carries the new
-     * number afterwards.
+     * flag afterwards.
      */
     @Test
     fun writesValueToPojo() {
-        property.value = 11.25
+        property.value = true
 
-        assertEquals(11.25, pojo.ratio)
+        assertTrue(pojo.enabled)
     }
 
     /**
-     * Use case: a caller clears the property, so the POJO falls back to zero rather than keeping the
-     * previous number.
+     * Use case: a caller clears the property, so the POJO falls back to false rather than keeping the
+     * previous flag.
      */
     @Test
-    fun writesNullAsZeroToPojo() {
-        pojo.ratio = 4.5
+    fun writesNullAsFalseToPojo() {
+        pojo.enabled = true
 
         property.setValue(null)
 
-        assertEquals(0.0, pojo.ratio)
+        assertFalse(pojo.enabled)
     }
 
     /**
-     * Use case: the property is bound to another property - for example a slider value - so every
+     * Use case: the property is bound to another property - for example a toggle state - so every
      * value produced by that binding lands in the POJO.
      */
     @Test
     fun writesBoundValueToPojo() {
-        val source = SimpleDoubleProperty(2.5)
+        val source = SimpleBooleanProperty(true)
 
         property.bind(source)
 
-        assertEquals(2.5, pojo.ratio)
-        assertEquals(2.5, property.get())
+        assertTrue(pojo.enabled)
+        assertTrue(property.get())
 
-        source.set(8.5)
+        source.set(false)
 
-        assertEquals(8.5, pojo.ratio)
-        assertEquals(8.5, property.get())
+        assertFalse(pojo.enabled)
+        assertFalse(property.get())
     }
 
     /**
@@ -125,16 +127,16 @@ class OverrideDoublePropertyTest {
      */
     @Test
     fun writesBidirectionallyBoundValueToPojo() {
-        val other = SimpleDoubleProperty(1.5)
+        val other = SimpleBooleanProperty(false)
 
         property.bindBidirectional(other)
 
-        other.set(6.5)
-        assertEquals(6.5, pojo.ratio)
+        other.set(true)
+        assertTrue(pojo.enabled)
 
-        property.value = 12.5
-        assertEquals(12.5, other.get())
-        assertEquals(12.5, pojo.ratio)
+        property.value = false
+        assertFalse(other.get())
+        assertFalse(pojo.enabled)
     }
 
     /**
@@ -143,13 +145,13 @@ class OverrideDoublePropertyTest {
      */
     @Test
     fun notifiesChangeListenerOnWrite() {
-        val observed = mutableListOf<Number>()
+        val observed = mutableListOf<Boolean>()
         property.addListener { _, _, newValue -> observed.add(newValue) }
 
-        property.value = 3.5
-        property.value = 4.5
+        property.value = true
+        property.value = false
 
-        assertEquals(listOf<Number>(3.5, 4.5), observed)
+        assertEquals(listOf(true, false), observed)
     }
 
     /**
@@ -158,8 +160,8 @@ class OverrideDoublePropertyTest {
      */
     @Test
     fun invokesFireEventCallbackOnWrite() {
-        property.value = 1.5
-        property.value = 2.5
+        property.value = true
+        property.value = false
 
         assertEquals(2, firedEvents)
     }
@@ -167,19 +169,19 @@ class OverrideDoublePropertyTest {
     /**
      * Use case: the model object behind the parent property is exchanged - another project file was
      * loaded for instance - so the wrapped field belongs to another object afterwards and the parent
-     * property lets this property take over the value of that object. Everyone listening here is told
-     * about it, so a control bound to this property stops showing the value of the previous object.
+     * property lets this property take over the flag of that object. Everyone listening here is told
+     * about it, so a check box bound to this property stops showing the flag of the previous object.
      */
     @Test
     fun takesOverPojoValueOnRefresh() {
-        val observed = mutableListOf<Number>()
+        val observed = mutableListOf<Boolean>()
         property.addListener { _, _, newValue -> observed.add(newValue) }
 
-        pojo.ratio = 42.5
+        pojo.enabled = true
         property.refresh()
 
-        assertEquals(listOf<Number>(42.5), observed)
-        assertEquals(42.5, property.get())
+        assertEquals(listOf(true), observed)
+        assertTrue(property.get())
     }
 
     /**
@@ -189,7 +191,7 @@ class OverrideDoublePropertyTest {
      */
     @Test
     fun keepsParentQuietOnRefresh() {
-        pojo.ratio = 42.5
+        pojo.enabled = true
 
         property.refresh()
 
@@ -197,23 +199,23 @@ class OverrideDoublePropertyTest {
     }
 
     /**
-     * Use case: the property is bound to a control while the model object behind the parent property
-     * is exchanged, so the binding stays the source of the value: the alignment leaves the property
-     * untouched and the next value of the binding still reaches the POJO.
+     * Use case: the property is bound to a check box while the model object behind the parent
+     * property is exchanged, so the binding stays the source of the value: the alignment leaves the
+     * property untouched and the next value of the binding still reaches the POJO.
      */
     @Test
     fun keepsBoundValueOnRefresh() {
-        val source = SimpleDoubleProperty(5.25)
+        val source = SimpleBooleanProperty(true)
         property.bind(source)
         firedEvents = 0
 
         property.refresh()
 
-        assertEquals(5.25, pojo.ratio)
+        assertTrue(pojo.enabled)
         assertEquals(0, firedEvents)
 
-        source.set(8.75)
+        source.set(false)
 
-        assertEquals(8.75, pojo.ratio)
+        assertFalse(pojo.enabled)
     }
 }

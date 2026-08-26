@@ -12,8 +12,8 @@
 
 package org.pcsoft.app.aighost.fx.model.project.meta
 
-import org.pcsoft.app.aighost.fx.model.internal.OverrideObjectProperty
-import org.pcsoft.app.aighost.fx.model.internal.OverrideStringProperty
+import org.pcsoft.app.aighost.fx.model.project.ProjectPartProperty
+import org.pcsoft.app.aighost.fx.model.property.common.OverrideStringProperty
 import org.pcsoft.app.aighost.model.project.meta.Meta
 
 /**
@@ -30,7 +30,7 @@ internal class MetaProperty(
     setter: (Meta?) -> Unit,
     getter: () -> Meta?,
     fireEvent: () -> Unit
-) : OverrideObjectProperty<Meta?>(setter, getter, fireEvent) {
+) : ProjectPartProperty<Meta>(setter, getter, fireEvent) {
 
     /** Name of the project as shown to the user, as a property of its own. */
     val nameProperty: OverrideStringProperty = OverrideStringProperty(

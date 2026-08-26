@@ -10,45 +10,51 @@
  * See the License for the specific language governing permissions and limitations.
  */
 
-package org.pcsoft.app.aighost.fx.model.internal
+package org.pcsoft.app.aighost.fx.model.property.common
 
-import javafx.beans.property.SimpleIntegerProperty
+import javafx.beans.property.SimpleObjectProperty
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 
 /**
- * Developer tests for [OverrideIntegerProperty].
+ * Developer tests for [OverrideObjectProperty].
  *
  * The property is a wrapper around a plain field of a parent POJO: every read goes through the
  * getter of that POJO and every write - no matter whether it comes from application code or from a
  * binding - goes through its setter.
  */
-class OverrideIntegerPropertyTest {
+class OverrideObjectPropertyTest {
+
+    /**
+     * Value object stored in the wrapped field.
+     */
+    private data class Font(val name: String)
 
     /**
      * Plain model object standing in for the POJO the property writes into.
      */
-    private class Pojo(var max: Int = 0)
+    private class Pojo(var font: Font? = null)
 
     private val pojo = Pojo()
     private var firedEvents = 0
 
-    private val property = OverrideIntegerProperty(
-        { pojo.max = it },
-        { pojo.max },
+    private val property = OverrideObjectProperty(
+        { pojo.font = it },
+        { pojo.font },
         { firedEvents++ }
     )
 
     /**
      * Use case: the POJO is filled from a stored file before the user interface is built, so reading
-     * the property returns the value that already sits in the POJO.
+     * the property returns the object that already sits in the POJO.
      */
     @Test
     fun readsInitialValueFromPojo() {
-        pojo.max = 7
+        pojo.font = Font("Serif")
 
-        assertEquals(7, property.get())
-        assertEquals(7, property.value)
+        assertEquals(Font("Serif"), property.get())
+        assertEquals(Font("Serif"), property.value)
     }
 
     /**
@@ -57,66 +63,66 @@ class OverrideIntegerPropertyTest {
      */
     @Test
     fun readsLaterPojoChanges() {
-        pojo.max = 3
-        assertEquals(3, property.get())
+        pojo.font = Font("Serif")
+        assertEquals(Font("Serif"), property.get())
 
-        pojo.max = 9
+        pojo.font = Font("Mono")
 
-        assertEquals(9, property.get())
+        assertEquals(Font("Mono"), property.get())
     }
 
     /**
-     * Use case: the user types a new limit into a text field bound to the property, so the value is
+     * Use case: the user picks an entry in a combo box bound to the property, so the object is
      * written straight into the POJO.
      */
     @Test
     fun writesSetToPojo() {
-        property.set(5)
+        property.set(Font("Sans"))
 
-        assertEquals(5, pojo.max)
+        assertEquals(Font("Sans"), pojo.font)
     }
 
     /**
      * Use case: the property is filled through the Kotlin value accessor, so the POJO carries the new
-     * number afterwards.
+     * object afterwards.
      */
     @Test
     fun writesValueToPojo() {
-        property.value = 11
+        property.value = Font("Mono")
 
-        assertEquals(11, pojo.max)
+        assertEquals(Font("Mono"), pojo.font)
     }
 
     /**
-     * Use case: a caller clears the property, so the POJO falls back to zero rather than keeping the
-     * previous number.
+     * Use case: a caller clears the property, so the POJO holds no object any more instead of keeping
+     * the previous one.
      */
     @Test
-    fun writesNullAsZeroToPojo() {
-        pojo.max = 4
+    fun writesNullToPojo() {
+        pojo.font = Font("Serif")
 
         property.setValue(null)
 
-        assertEquals(0, pojo.max)
+        assertNull(pojo.font)
     }
 
     /**
-     * Use case: the property is bound to another property - for example a spinner value - so every
-     * value produced by that binding lands in the POJO.
+     * Use case: the property is bound to another property - for example a selection model value - so
+     * every value produced by that binding lands in the POJO.
      */
     @Test
     fun writesBoundValueToPojo() {
-        val source = SimpleIntegerProperty(2)
+        val source = SimpleObjectProperty<Font?>(Font("Serif"))
 
         property.bind(source)
 
-        assertEquals(2, pojo.max)
-        assertEquals(2, property.get())
+        assertEquals(Font("Serif"), pojo.font)
+        assertEquals(Font("Serif"), property.get())
 
-        source.set(8)
+        source.set(Font("Mono"))
 
-        assertEquals(8, pojo.max)
-        assertEquals(8, property.get())
+        assertEquals(Font("Mono"), pojo.font)
+        assertEquals(Font("Mono"), property.get())
     }
 
     /**
@@ -125,16 +131,16 @@ class OverrideIntegerPropertyTest {
      */
     @Test
     fun writesBidirectionallyBoundValueToPojo() {
-        val other = SimpleIntegerProperty(1)
+        val other = SimpleObjectProperty<Font?>(Font("Serif"))
 
         property.bindBidirectional(other)
 
-        other.set(6)
-        assertEquals(6, pojo.max)
+        other.set(Font("Sans"))
+        assertEquals(Font("Sans"), pojo.font)
 
-        property.value = 12
-        assertEquals(12, other.get())
-        assertEquals(12, pojo.max)
+        property.value = Font("Mono")
+        assertEquals(Font("Mono"), other.get())
+        assertEquals(Font("Mono"), pojo.font)
     }
 
     /**
@@ -143,13 +149,13 @@ class OverrideIntegerPropertyTest {
      */
     @Test
     fun notifiesChangeListenerOnWrite() {
-        val observed = mutableListOf<Number>()
+        val observed = mutableListOf<Font?>()
         property.addListener { _, _, newValue -> observed.add(newValue) }
 
-        property.value = 3
-        property.value = 4
+        property.value = Font("Serif")
+        property.value = Font("Mono")
 
-        assertEquals(listOf<Number>(3, 4), observed)
+        assertEquals(listOf(Font("Serif"), Font("Mono")), observed)
     }
 
     /**
@@ -158,8 +164,8 @@ class OverrideIntegerPropertyTest {
      */
     @Test
     fun invokesFireEventCallbackOnWrite() {
-        property.value = 1
-        property.value = 2
+        property.value = Font("Serif")
+        property.value = Font("Mono")
 
         assertEquals(2, firedEvents)
     }

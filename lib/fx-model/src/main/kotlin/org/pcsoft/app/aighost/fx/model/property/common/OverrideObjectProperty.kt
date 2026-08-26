@@ -10,35 +10,35 @@
  * See the License for the specific language governing permissions and limitations.
  */
 
-package org.pcsoft.app.aighost.fx.model.internal
+package org.pcsoft.app.aighost.fx.model.property.common
 
-import javafx.beans.property.SimpleLongProperty
+import javafx.beans.property.SimpleObjectProperty
 
 /**
- * Property wrapping a plain long field of a parent model object.
+ * Property wrapping a plain object field of a parent model object.
  *
  * Reads are answered from [getter], writes are handed to [setter] - no matter whether they come from
  * application code or from a binding - and [fireEvent] lets the parent property report the change of
  * its nested field as its own change.
  *
- * A field property of an object that is not there at all - a prolog a book does not carry - answers
- * with `0` and drops what is written to it.
+ * This is the base every nested property model is built on, the ones of the application and the ones
+ * a plugin brings along for its own project part.
  */
-internal class OverrideLongProperty(
-    private val setter: (Long) -> Unit,
-    private val getter: () -> Long,
+open class OverrideObjectProperty<T>(
+    private val setter: (T) -> Unit,
+    private val getter: () -> T,
     private val fireEvent: () -> Unit
-) : SimpleLongProperty() {
+) : SimpleObjectProperty<T>() {
 
     // Guards the model object and the parent property while the property takes over a value the model
     // object already carries, so such an alignment is not reported back as a change of its own.
     private var refreshing = false
 
-    override fun get(): Long = getter()
+    override fun get(): T = getter()
 
-    override fun getValue(): Long = getter()
+    override fun getValue(): T = getter()
 
-    override fun set(newValue: Long) {
+    override fun set(newValue: T) {
         check(!isBound) { "A bound value cannot be set." }
 
         // The base class skips the notification when its own cached value does not change, so the
@@ -48,7 +48,7 @@ internal class OverrideLongProperty(
         validate()
     }
 
-    override fun setValue(v: Number?) = set(v?.toLong() ?: 0L)
+    override fun setValue(v: T) = set(v)
 
     /**
      * Called by the base class for every change, including the ones produced by a binding, and thus
@@ -79,7 +79,7 @@ internal class OverrideLongProperty(
      *
      * A bound property keeps the value of its binding and is left alone.
      */
-    internal fun refresh() {
+    open fun refresh() {
         if (isBound) return
 
         refreshing = true

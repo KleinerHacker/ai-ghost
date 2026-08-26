@@ -116,10 +116,8 @@ object TestData {
 
     /** A complete project, the root object a stored document holds. */
     fun project(): Project = Project(
-        mapOf(
-            Project.PART_META to meta(),
-            Project.PART_DESIGN to design(),
-            Project.PART_BOOK to book()
-        )
+        meta = meta(),
+        design = design(),
+        book = book()
     )
 }

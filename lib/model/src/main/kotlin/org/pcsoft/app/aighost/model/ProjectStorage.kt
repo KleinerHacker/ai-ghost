@@ -17,9 +17,7 @@ import arrow.core.left
 import arrow.core.right
 import com.fasterxml.jackson.core.JacksonException
 import org.pcsoft.app.aighost.model.project.Project
-import org.pcsoft.app.aighost.model.project.book.Book
-import org.pcsoft.app.aighost.model.project.design.Design
-import org.pcsoft.app.aighost.model.project.meta.Meta
+import org.pcsoft.app.aighost.model.project.StandardProjectParts
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
@@ -33,15 +31,24 @@ import java.nio.file.StandardCopyOption
  * [save] wrote it somewhere. The storage starts with a fresh [Project], so the application always
  * has something to show.
  *
- * The project is a field of the storage and always the same instance: [new] and [load] write into it
- * instead of replacing it, so whoever holds the project keeps working on the open one. The project
- * is a plain mutable value object and reports nothing, so a reader takes the values when it needs
- * them.
+ * [new] and [load] put another project object into [current], so whoever wants to follow the open
+ * project watches that field instead of holding on to the object behind it. The project itself is a
+ * plain mutable value object and reports nothing, so a reader takes the values when it needs them.
+ *
+ * Which parts a document is read into comes from the `ProjectPartRegistry`: the storage registers the
+ * three parts the application ships with and reads everything else a plugin registered, so opening a
+ * project is not tied to a fixed list of parts.
  *
  * Neither operation throws for an expected failure: everything that can go wrong is returned as an
  * [Error] on the left side of an [Either], so the caller decides what the user is told.
  */
 object ProjectStorage {
+
+    init {
+        // Reading a document needs the class behind every entry, so the parts of the application are
+        // known before the first project is opened. A plugin adds its own parts to the same registry.
+        StandardProjectParts.register()
+    }
 
     /** The project currently open, a fresh one until another is loaded. */
     var current: Project = createEmptyProject()
@@ -64,8 +71,8 @@ object ProjectStorage {
     /**
      * Closes the open project and starts a fresh one.
      *
-     * The project keeps its identity and is set back to the defaults. The fresh project has no file,
-     * so the next [save] needs an explicit one.
+     * The fresh project carries the three standard parts with their defaults and no part beyond them.
+     * It has no file, so the next [save] needs an explicit one.
      */
     fun new() {
         current = createEmptyProject()
@@ -75,9 +82,11 @@ object ProjectStorage {
     /**
      * Reads the project from [file] and opens it.
      *
-     * On success the values of the document are written into [current] and [currentFile] points at
-     * [file]. A failure leaves the open project untouched, so a broken file never closes what the
-     * user is working on.
+     * On success the document becomes [current] and [currentFile] points at [file]. A failure leaves
+     * the open project untouched, so a broken file never closes what the user is working on.
+     *
+     * A part the document carries but no class is registered for is skipped, and a standard part the
+     * document lost is replaced by its defaults.
      *
      * Returns [Error.NotFound] when the file does not exist, [Error.NotAFile] when the path exists but
      * is not a regular file, [Error.Malformed] when the content is not the expected document, and
@@ -90,13 +99,13 @@ object ProjectStorage {
             return Error.NotAFile(file).left()
 
         val project = try {
-            val parts = StorageIO.loadFromZip(file, Meta::class, Design::class, Book::class)
+            val parts = StorageIO.loadFromZip(file)
             // A file that is not an archive at all carries no entry, so it would open as a project
             // without a single part. That is not a project document, it is a broken file.
             if (parts.isEmpty())
                 return Error.Malformed(file, IOException("The file holds no project part")).left()
 
-            Project(parts)
+            Project.fromParts(parts)
         } catch (e: JacksonException) {
             return Error.Malformed(file, e).left()
         } catch (e: IOException) {
@@ -111,6 +120,9 @@ object ProjectStorage {
 
     /**
      * Writes the open project to [file], creating the parent directories if they do not exist yet.
+     *
+     * Every part of the project is written, the three standard ones and everything a plugin put beside
+     * them, so a part this application cannot read still survives the save.
      *
      * The document is written to a temporary file next to the target and moved into place afterwards,
      * so a crash during the write leaves the previous document intact instead of a half written file.
@@ -152,8 +164,8 @@ object ProjectStorage {
     /**
      * Creates and returns a new instance of an empty project.
      *
-     * The created project contains default initializations for its three main parts:
-     * metadata, design settings, and manuscript content.
+     * The created project contains default initializations for its three standard parts: metadata,
+     * design settings and manuscript content.
      *
      * @return A new instance of the `Project` class, initialized with default metadata, design, and book content.
      */
