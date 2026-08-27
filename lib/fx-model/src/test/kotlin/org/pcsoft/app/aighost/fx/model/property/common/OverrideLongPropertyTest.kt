@@ -10,47 +10,45 @@
  * See the License for the specific language governing permissions and limitations.
  */
 
-package org.pcsoft.app.aighost.fx.model.internal
+package org.pcsoft.app.aighost.fx.model.property.common
 
-import javafx.beans.property.SimpleBooleanProperty
+import javafx.beans.property.SimpleLongProperty
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
- * Developer tests for [OverrideBooleanProperty].
+ * Developer tests for [OverrideLongProperty].
  *
  * The property is a wrapper around a plain field of a parent POJO: every read goes through the
  * getter of that POJO and every write - no matter whether it comes from application code or from a
  * binding - goes through its setter.
  */
-class OverrideBooleanPropertyTest {
+class OverrideLongPropertyTest {
 
     /**
      * Plain model object standing in for the POJO the property writes into.
      */
-    private class Pojo(var enabled: Boolean = false)
+    private class Pojo(var size: Long = 0L)
 
     private val pojo = Pojo()
     private var firedEvents = 0
 
-    private val property = OverrideBooleanProperty(
-        { pojo.enabled = it },
-        { pojo.enabled },
+    private val property = OverrideLongProperty(
+        { pojo.size = it },
+        { pojo.size },
         { firedEvents++ }
     )
 
     /**
      * Use case: the POJO is filled from a stored file before the user interface is built, so reading
-     * the property returns the flag that already sits in the POJO.
+     * the property returns the value that already sits in the POJO.
      */
     @Test
     fun readsInitialValueFromPojo() {
-        pojo.enabled = true
+        pojo.size = 7L
 
-        assertTrue(property.get())
-        assertTrue(property.value)
+        assertEquals(7L, property.get())
+        assertEquals(7L, property.value)
     }
 
     /**
@@ -59,66 +57,66 @@ class OverrideBooleanPropertyTest {
      */
     @Test
     fun readsLaterPojoChanges() {
-        pojo.enabled = true
-        assertTrue(property.get())
+        pojo.size = 3L
+        assertEquals(3L, property.get())
 
-        pojo.enabled = false
+        pojo.size = 9L
 
-        assertFalse(property.get())
+        assertEquals(9L, property.get())
     }
 
     /**
-     * Use case: the user ticks a check box bound to the property, so the flag is written straight
-     * into the POJO.
+     * Use case: the user types a new limit into a text field bound to the property, so the value is
+     * written straight into the POJO.
      */
     @Test
     fun writesSetToPojo() {
-        property.set(true)
+        property.set(5L)
 
-        assertTrue(pojo.enabled)
+        assertEquals(5L, pojo.size)
     }
 
     /**
      * Use case: the property is filled through the Kotlin value accessor, so the POJO carries the new
-     * flag afterwards.
+     * number afterwards.
      */
     @Test
     fun writesValueToPojo() {
-        property.value = true
+        property.value = 11L
 
-        assertTrue(pojo.enabled)
+        assertEquals(11L, pojo.size)
     }
 
     /**
-     * Use case: a caller clears the property, so the POJO falls back to false rather than keeping the
-     * previous flag.
+     * Use case: a caller clears the property, so the POJO falls back to zero rather than keeping the
+     * previous number.
      */
     @Test
-    fun writesNullAsFalseToPojo() {
-        pojo.enabled = true
+    fun writesNullAsZeroToPojo() {
+        pojo.size = 4L
 
         property.setValue(null)
 
-        assertFalse(pojo.enabled)
+        assertEquals(0L, pojo.size)
     }
 
     /**
-     * Use case: the property is bound to another property - for example a toggle state - so every
+     * Use case: the property is bound to another property - for example a spinner value - so every
      * value produced by that binding lands in the POJO.
      */
     @Test
     fun writesBoundValueToPojo() {
-        val source = SimpleBooleanProperty(true)
+        val source = SimpleLongProperty(2L)
 
         property.bind(source)
 
-        assertTrue(pojo.enabled)
-        assertTrue(property.get())
+        assertEquals(2L, pojo.size)
+        assertEquals(2L, property.get())
 
-        source.set(false)
+        source.set(8L)
 
-        assertFalse(pojo.enabled)
-        assertFalse(property.get())
+        assertEquals(8L, pojo.size)
+        assertEquals(8L, property.get())
     }
 
     /**
@@ -127,16 +125,16 @@ class OverrideBooleanPropertyTest {
      */
     @Test
     fun writesBidirectionallyBoundValueToPojo() {
-        val other = SimpleBooleanProperty(false)
+        val other = SimpleLongProperty(1L)
 
         property.bindBidirectional(other)
 
-        other.set(true)
-        assertTrue(pojo.enabled)
+        other.set(6L)
+        assertEquals(6L, pojo.size)
 
-        property.value = false
-        assertFalse(other.get())
-        assertFalse(pojo.enabled)
+        property.value = 12L
+        assertEquals(12L, other.get())
+        assertEquals(12L, pojo.size)
     }
 
     /**
@@ -145,13 +143,13 @@ class OverrideBooleanPropertyTest {
      */
     @Test
     fun notifiesChangeListenerOnWrite() {
-        val observed = mutableListOf<Boolean>()
+        val observed = mutableListOf<Number>()
         property.addListener { _, _, newValue -> observed.add(newValue) }
 
-        property.value = true
-        property.value = false
+        property.value = 3L
+        property.value = 4L
 
-        assertEquals(listOf(true, false), observed)
+        assertEquals(listOf<Number>(3L, 4L), observed)
     }
 
     /**
@@ -160,8 +158,8 @@ class OverrideBooleanPropertyTest {
      */
     @Test
     fun invokesFireEventCallbackOnWrite() {
-        property.value = true
-        property.value = false
+        property.value = 1L
+        property.value = 2L
 
         assertEquals(2, firedEvents)
     }
@@ -169,19 +167,19 @@ class OverrideBooleanPropertyTest {
     /**
      * Use case: the model object behind the parent property is exchanged - another project file was
      * loaded for instance - so the wrapped field belongs to another object afterwards and the parent
-     * property lets this property take over the flag of that object. Everyone listening here is told
-     * about it, so a check box bound to this property stops showing the flag of the previous object.
+     * property lets this property take over the value of that object. Everyone listening here is told
+     * about it, so a control bound to this property stops showing the value of the previous object.
      */
     @Test
     fun takesOverPojoValueOnRefresh() {
-        val observed = mutableListOf<Boolean>()
+        val observed = mutableListOf<Number>()
         property.addListener { _, _, newValue -> observed.add(newValue) }
 
-        pojo.enabled = true
+        pojo.size = 42L
         property.refresh()
 
-        assertEquals(listOf(true), observed)
-        assertTrue(property.get())
+        assertEquals(listOf<Number>(42L), observed)
+        assertEquals(42L, property.get())
     }
 
     /**
@@ -191,7 +189,7 @@ class OverrideBooleanPropertyTest {
      */
     @Test
     fun keepsParentQuietOnRefresh() {
-        pojo.enabled = true
+        pojo.size = 42L
 
         property.refresh()
 
@@ -199,23 +197,23 @@ class OverrideBooleanPropertyTest {
     }
 
     /**
-     * Use case: the property is bound to a check box while the model object behind the parent
-     * property is exchanged, so the binding stays the source of the value: the alignment leaves the
-     * property untouched and the next value of the binding still reaches the POJO.
+     * Use case: the property is bound to a control while the model object behind the parent property
+     * is exchanged, so the binding stays the source of the value: the alignment leaves the property
+     * untouched and the next value of the binding still reaches the POJO.
      */
     @Test
     fun keepsBoundValueOnRefresh() {
-        val source = SimpleBooleanProperty(true)
+        val source = SimpleLongProperty(5L)
         property.bind(source)
         firedEvents = 0
 
         property.refresh()
 
-        assertTrue(pojo.enabled)
+        assertEquals(5L, pojo.size)
         assertEquals(0, firedEvents)
 
-        source.set(false)
+        source.set(8L)
 
-        assertFalse(pojo.enabled)
+        assertEquals(8L, pojo.size)
     }
 }

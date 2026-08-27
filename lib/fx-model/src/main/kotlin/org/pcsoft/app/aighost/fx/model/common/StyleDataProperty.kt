@@ -12,7 +12,7 @@
 
 package org.pcsoft.app.aighost.fx.model.common
 
-import org.pcsoft.app.aighost.fx.model.internal.OverrideObjectProperty
+import org.pcsoft.app.aighost.fx.model.property.common.OverrideObjectProperty
 import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.FontData
 import org.pcsoft.app.aighost.model.common.StyleData

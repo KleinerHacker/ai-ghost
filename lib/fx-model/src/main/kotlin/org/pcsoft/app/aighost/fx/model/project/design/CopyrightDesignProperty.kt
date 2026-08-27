@@ -13,8 +13,8 @@
 package org.pcsoft.app.aighost.fx.model.project.design
 
 import org.pcsoft.app.aighost.fx.model.common.StyleDataProperty
-import org.pcsoft.app.aighost.fx.model.internal.OverrideBooleanProperty
-import org.pcsoft.app.aighost.fx.model.internal.OverrideObjectProperty
+import org.pcsoft.app.aighost.fx.model.property.common.OverrideBooleanProperty
+import org.pcsoft.app.aighost.fx.model.property.common.OverrideObjectProperty
 import org.pcsoft.app.aighost.model.common.StyleData
 import org.pcsoft.app.aighost.model.project.design.CopyrightDesign
 

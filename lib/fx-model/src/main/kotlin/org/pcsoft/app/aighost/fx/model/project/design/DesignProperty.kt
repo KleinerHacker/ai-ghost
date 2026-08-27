@@ -12,8 +12,8 @@
 
 package org.pcsoft.app.aighost.fx.model.project.design
 
-import org.pcsoft.app.aighost.fx.model.internal.OverrideBooleanProperty
-import org.pcsoft.app.aighost.fx.model.internal.OverrideObjectProperty
+import org.pcsoft.app.aighost.fx.model.property.common.OverrideBooleanProperty
+import org.pcsoft.app.aighost.fx.model.project.ProjectPartProperty
 import org.pcsoft.app.aighost.model.project.design.AuthorDesign
 import org.pcsoft.app.aighost.model.project.design.ChapterDesign
 import org.pcsoft.app.aighost.model.project.design.CopyrightDesign
@@ -35,7 +35,7 @@ internal class DesignProperty(
     setter: (Design?) -> Unit,
     getter: () -> Design?,
     fireEvent: () -> Unit
-) : OverrideObjectProperty<Design?>(setter, getter, fireEvent) {
+) : ProjectPartProperty<Design>(setter, getter, fireEvent) {
 
     /** Typographic settings for the author name, as a property of its own. */
     val authorDesignProperty: AuthorDesignProperty = AuthorDesignProperty(

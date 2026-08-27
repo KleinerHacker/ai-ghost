@@ -10,32 +10,35 @@
  * See the License for the specific language governing permissions and limitations.
  */
 
-package org.pcsoft.app.aighost.fx.model.internal
+package org.pcsoft.app.aighost.fx.model.property.common
 
-import javafx.beans.property.SimpleIntegerProperty
+import javafx.beans.property.SimpleLongProperty
 
 /**
- * Property wrapping a plain int field of a parent model object.
+ * Property wrapping a plain long field of a parent model object.
  *
  * Reads are answered from [getter], writes are handed to [setter] - no matter whether they come from
  * application code or from a binding - and [fireEvent] lets the parent property report the change of
  * its nested field as its own change.
+ *
+ * A field property of an object that is not there at all - a prolog a book does not carry - answers
+ * with `0` and drops what is written to it.
  */
-internal class OverrideIntegerProperty(
-    private val setter: (Int) -> Unit,
-    private val getter: () -> Int,
+class OverrideLongProperty(
+    private val setter: (Long) -> Unit,
+    private val getter: () -> Long,
     private val fireEvent: () -> Unit
-) : SimpleIntegerProperty() {
+) : SimpleLongProperty() {
 
     // Guards the model object and the parent property while the property takes over a value the model
     // object already carries, so such an alignment is not reported back as a change of its own.
     private var refreshing = false
 
-    override fun get(): Int = getter()
+    override fun get(): Long = getter()
 
-    override fun getValue(): Int = getter()
+    override fun getValue(): Long = getter()
 
-    override fun set(newValue: Int) {
+    override fun set(newValue: Long) {
         check(!isBound) { "A bound value cannot be set." }
 
         // The base class skips the notification when its own cached value does not change, so the
@@ -45,7 +48,7 @@ internal class OverrideIntegerProperty(
         validate()
     }
 
-    override fun setValue(v: Number?) = set(v?.toInt() ?: 0)
+    override fun setValue(v: Number?) = set(v?.toLong() ?: 0L)
 
     /**
      * Called by the base class for every change, including the ones produced by a binding, and thus
@@ -76,7 +79,7 @@ internal class OverrideIntegerProperty(
      *
      * A bound property keeps the value of its binding and is left alone.
      */
-    internal fun refresh() {
+    fun refresh() {
         if (isBound) return
 
         refreshing = true

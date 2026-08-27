@@ -74,23 +74,21 @@ class ProjectListTest : ApplicationTest() {
         StyleData(font = FontData("Serif", 12, bold = false, italic = false), alignment = Alignment.LEFT)
 
     private fun project(book: Book): Project = Project(
-        mapOf(
-            Project.PART_META to Meta(
-                name = "My Novel",
-                author = "Jane Doe",
-                copyright = "(c) 2026 Jane Doe"
-            ),
-            Project.PART_DESIGN to Design(
-                authorDesign = AuthorDesign(style()),
-                copyrightDesign = CopyrightDesign(style(), show = false),
-                titleDesign = TitleDesign(style()),
-                chapterDesign = ChapterDesign(style(), style()),
-                textDesign = TextDesign(style()),
-                startWithEmptyPage = false,
-                endWithEmptyPage = false
-            ),
-            Project.PART_BOOK to book
-        )
+        meta = Meta(
+            name = "My Novel",
+            author = "Jane Doe",
+            copyright = "(c) 2026 Jane Doe"
+        ),
+        design = Design(
+            authorDesign = AuthorDesign(style()),
+            copyrightDesign = CopyrightDesign(style(), show = false),
+            titleDesign = TitleDesign(style()),
+            chapterDesign = ChapterDesign(style(), style()),
+            textDesign = TextDesign(style()),
+            startWithEmptyPage = false,
+            endWithEmptyPage = false
+        ),
+        book = book
     )
 
     private fun setProject(project: Project?) {

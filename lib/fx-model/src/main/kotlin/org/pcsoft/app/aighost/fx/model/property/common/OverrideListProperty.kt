@@ -10,7 +10,7 @@
  * See the License for the specific language governing permissions and limitations.
  */
 
-package org.pcsoft.app.aighost.fx.model.internal
+package org.pcsoft.app.aighost.fx.model.property.common
 
 import javafx.beans.property.SimpleListProperty
 import javafx.collections.FXCollections
@@ -26,7 +26,7 @@ import javafx.collections.ObservableList
  * A list property of an object that is not there at all - a prolog a book does not carry - answers
  * with an empty list, so [getter] may return `null`, and drops what is written to it.
  */
-internal class OverrideListProperty<T>(
+class OverrideListProperty<T>(
     private val setter: (List<T>) -> Unit,
     private val getter: () -> List<T>?,
     private val fireEvent: () -> Unit
@@ -115,7 +115,7 @@ internal class OverrideListProperty<T>(
      *
      * A bound property keeps the entries of its binding and is left alone.
      */
-    internal fun refresh() {
+    fun refresh() {
         if (isBound) return
 
         // Reading aligns the observed list with the model object and lets the base class report the

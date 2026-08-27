@@ -11,4 +11,7 @@ module org.pcsoft.app.aighost.fx.model {
     exports org.pcsoft.app.aighost.fx.model;
     exports org.pcsoft.app.aighost.fx.model.pref;
     exports org.pcsoft.app.aighost.fx.model.project;
+
+    // A plugin builds the property model of its own project part on these wrappers.
+    exports org.pcsoft.app.aighost.fx.model.property.common;
 }

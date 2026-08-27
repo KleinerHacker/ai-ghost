@@ -22,14 +22,17 @@ import org.pcsoft.app.aighost.model.project.Project
 import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.design.Design
 import org.pcsoft.app.aighost.model.project.meta.Meta
+import org.pcsoft.app.aighost.plugin.api.model.project.ProjectPart
+import kotlin.reflect.KClass
 
 /**
  * Property holding the project the user is working on and offering every part of that object - and
  * every field of the objects nested in those parts - as a property of its own.
  *
- * A project is made of parts stored under their identifier, so the three parts the application ships
- * with are reached through [metaProperty], [designProperty] and [bookProperty]. Writing a part
- * replaces it in the part map of the project, so a part a plugin added stays where it is.
+ * The three parts the application ships with are reached through [metaProperty], [designProperty] and
+ * [bookProperty]. A part beyond them - one a plugin brings along - is reached through the property
+ * [attachPart] hands out, so such a part is watched and written exactly like a standard one. Writing
+ * a part replaces it in the project and leaves every other part where it is.
  *
  * A change travels through the whole object tree in both directions: a changed field is reported by
  * every property between that field and this one, and an exchanged object - a project file that was
@@ -45,6 +48,10 @@ import org.pcsoft.app.aighost.model.project.meta.Meta
  * and drops what is written to it, so a user interface may be built before a project is opened.
  */
 class ProjectProperty(project: Project) : SimpleObjectProperty<Project>(project) {
+
+    // The parts a plugin attached, in the order they were attached. Declared before everything that
+    // may reach it, because the properties of this class are initialized from top to bottom.
+    private val attachedParts = LinkedHashMap<String, ProjectPartProperty<*>>()
 
     private val overrideMeta = MetaProperty(
         setter = { newValue -> value?.also { it.meta = newValue ?: Meta() } },
@@ -143,6 +150,88 @@ class ProjectProperty(project: Project) : SimpleObjectProperty<Project>(project)
     }
 
     /**
+     * Attaches the property model of a part beyond the three standard ones and hands it out.
+     *
+     * [factory] builds that model from the three accessors it is given: the setter puts the part into
+     * the project - or takes it out again when it is set to `null` - the getter reads it back, and the
+     * event lets a change of the part be reported by this property as its own. From then on the part
+     * is treated like a standard one: an exchanged project reaches it, and a change of it reaches
+     * everyone listening to the project.
+     *
+     * @param identifier The identifier the part is stored under, the one it declares through `ProjectPartInfo`.
+     * @param partClass The type of the part, so an entry of another type is read as absent.
+     * @param factory Builds the property model of the part from setter, getter and change event.
+     * @return The property model that was built.
+     * @throws IllegalArgumentException When [identifier] names one of the three standard parts.
+     * @throws IllegalStateException When a part is already attached under that identifier.
+     */
+    fun <P : ProjectPart, M : ProjectPartProperty<P>> attachPart(
+        identifier: String,
+        partClass: KClass<P>,
+        factory: (setter: (P?) -> Unit, getter: () -> P?, fireEvent: () -> Unit) -> M
+    ): M {
+        require(identifier !in Project.STANDARD_IDENTIFIERS) {
+            "The standard project part '$identifier' is reached through its own property."
+        }
+        check(identifier !in attachedParts) {
+            "A property is already attached for the project part '$identifier'."
+        }
+
+        val property = factory(
+            { newValue ->
+                value?.also { project ->
+                    if (newValue == null) project.removePart(identifier)
+                    else project.putPart(identifier, newValue)
+                }
+            },
+            {
+                value?.part(identifier)
+                    ?.takeIf { partClass.java.isInstance(it) }
+                    ?.let { partClass.java.cast(it) }
+            },
+            { fireValueChangedEvent() }
+        )
+
+        attachedParts[identifier] = property
+        // The property was built empty, so it takes over what the open project carries right now
+        // without announcing that as a change of the project.
+        property.refresh()
+
+        return property
+    }
+
+    /**
+     * Attaches a plain property for a part beyond the three standard ones, without a property per
+     * field of it.
+     *
+     * @param identifier The identifier the part is stored under.
+     * @param partClass The type of the part.
+     * @return The property the part is reached through.
+     */
+    fun <P : ProjectPart> attachPart(identifier: String, partClass: KClass<P>): ObjectProperty<P?> =
+        attachPart(identifier, partClass) { setter, getter, fireEvent ->
+            ProjectPartProperty(setter, getter, fireEvent)
+        }
+
+    /**
+     * Detaches the property attached under [identifier], for instance when a plugin is unloaded.
+     *
+     * The detached property is left as it is and stops following the project; the part itself stays
+     * in the project and is written into the document just the same.
+     *
+     * @param identifier The identifier the part is stored under.
+     * @return `true` when a property was attached under that identifier, `false` otherwise.
+     */
+    fun detachPart(identifier: String): Boolean = attachedParts.remove(identifier) != null
+
+    /**
+     * The property attached under [identifier], or `null` when none is.
+     *
+     * @param identifier The identifier the part is stored under.
+     */
+    fun attachedPart(identifier: String): ProjectPartProperty<*>? = attachedParts[identifier]
+
+    /**
      * Called whenever the project object itself is exchanged - a freshly loaded project file for
      * instance - so the properties of its parts belong to another object afterwards and have to take
      * over its values.
@@ -151,6 +240,10 @@ class ProjectProperty(project: Project) : SimpleObjectProperty<Project>(project)
         overrideMeta.refresh()
         overrideDesign.refresh()
         overrideBook.refresh()
+
+        for (part in attachedParts.values) {
+            part.refresh()
+        }
     }
 
 }

@@ -14,22 +14,25 @@ package org.pcsoft.app.aighost.app.ui.window
 
 import de.saxsys.mvvmfx.FxmlView
 import de.saxsys.mvvmfx.InjectViewModel
+import java.io.File
+import java.net.URL
+import java.util.ResourceBundle
 import javafx.beans.Observable
 import javafx.beans.binding.BooleanBinding
 import javafx.event.EventHandler
 import javafx.fxml.FXML
 import javafx.fxml.Initializable
+import javafx.scene.control.Label
 import javafx.scene.control.Menu
 import javafx.scene.control.MenuItem
 import javafx.scene.layout.BorderPane
+import javafx.scene.layout.VBox
 import javafx.stage.FileChooser
 import org.pcsoft.app.aighost.app.AiGhostIcons
 import org.pcsoft.app.aighost.app.controller.IoController
 import org.pcsoft.app.aighost.app.ui.component.Editor
 import org.pcsoft.app.aighost.app.ui.showingBinding
 import org.pcsoft.app.aighost.fx.model.FXProjectStorage
-import java.net.URL
-import java.util.ResourceBundle
 
 /**
  * View of the application main window, holding the menu bar, the tool bar and the tab pane.
@@ -78,15 +81,31 @@ class MainWindowView : FxmlView<MainWindowViewModel>, Initializable {
         showing.addListener { _, _, onScreen -> if (onScreen) viewModel.onShow() else viewModel.onHide() }
 
         viewModel.openRecent.addListener { _: Observable ->
-            mnuOpenRecent.items.setAll(viewModel.openRecent.value.map { file ->
-                MenuItem(file.absolutePath).apply {
-                    onAction = EventHandler { IoController.loadProject(file) }
-                }
-            })
+            mnuOpenRecent.items.setAll(viewModel.openRecent.value.map(::recentFileItem))
         }
         mnuOpenRecent.disableProperty().bind(viewModel.openRecentDisabled)
 
         editor.project.bind(viewModel.project)
+    }
+
+    /**
+     * Builds the menu entry of a recently opened project: its file name above, the directory it sits
+     * in below.
+     *
+     * Both lines are carried by the graphic of the item instead of its text, because JavaFX puts a
+     * graphic beside the text and not above it. The appearance of the two lines belongs to the
+     * stylesheet, so they only receive their style class here.
+     *
+     * @param file The project file the entry stands for.
+     */
+    private fun recentFileItem(file: File): MenuItem {
+        val name = Label(file.name).apply { styleClass += "recent-file-name" }
+        val directory = Label(file.parent ?: "").apply { styleClass += "recent-file-directory" }
+
+        return MenuItem().apply {
+            graphic = VBox(name, directory).apply { styleClass += "recent-file" }
+            onAction = EventHandler { IoController.loadProject(file) }
+        }
     }
 
     /**

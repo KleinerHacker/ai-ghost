@@ -278,7 +278,9 @@ class FXProjectStorageTest {
                 Project.PART_DESIGN to design,
                 Project.PART_BOOK to book
             )) {
-                stream.putNextEntry(ZipEntry(name))
+                // Every part sits in an entry named after its identifier and carrying the extension
+                // of the document format; an entry without it is not read as a part.
+                stream.putNextEntry(ZipEntry("$name.json"))
                 stream.write(content.toByteArray())
                 stream.closeEntry()
             }

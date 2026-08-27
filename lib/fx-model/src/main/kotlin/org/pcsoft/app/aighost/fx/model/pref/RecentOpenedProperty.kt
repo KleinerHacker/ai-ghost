@@ -13,9 +13,9 @@
 package org.pcsoft.app.aighost.fx.model.pref
 
 import javafx.collections.FXCollections
-import org.pcsoft.app.aighost.fx.model.internal.OverrideIntegerProperty
-import org.pcsoft.app.aighost.fx.model.internal.OverrideListProperty
-import org.pcsoft.app.aighost.fx.model.internal.OverrideObjectProperty
+import org.pcsoft.app.aighost.fx.model.property.common.OverrideIntegerProperty
+import org.pcsoft.app.aighost.fx.model.property.common.OverrideListProperty
+import org.pcsoft.app.aighost.fx.model.property.common.OverrideObjectProperty
 import org.pcsoft.app.aighost.model.pref.RecentOpened
 
 internal class RecentOpenedProperty(

@@ -66,13 +66,29 @@ class ProjectStorageTest {
      */
     @Test
     fun roundTripsProject() {
-        ProjectStorage.current.parts = TestData.project().parts
+        seedCurrentProject()
 
         assertTrue(ProjectStorage.save(file).isRight())
         ProjectStorage.new()
 
         assertTrue(ProjectStorage.load(file).isRight())
         assertEquals(TestData.project(), ProjectStorage.current)
+    }
+
+    /**
+     * Use case: the open document carries a part this application cannot read, so that part goes back
+     * into the file on the next save and comes out of it again unchanged.
+     */
+    @Test
+    fun roundTripsAPartItCannotRead() {
+        ProjectStorage.current.unknownParts = mapOf(OUTLINE to STORED_OUTLINE)
+
+        assertTrue(ProjectStorage.save(file).isRight())
+        ProjectStorage.new()
+
+        assertTrue(ProjectStorage.load(file).isRight())
+        assertEquals(mapOf(OUTLINE to STORED_OUTLINE), ProjectStorage.current.unknownParts)
+        assertEquals(Meta(), ProjectStorage.current.meta)
     }
 
     /**
@@ -226,7 +242,7 @@ class ProjectStorageTest {
      */
     @Test
     fun reportsWrongDocumentAsError() {
-        writeArchive(Project.PART_DESIGN to """{"startWithEmptyPage":"yes"}""")
+        writeArchive("design.json" to """{"startWithEmptyPage":"yes"}""")
 
         val error = ProjectStorage.load(file).leftOrNull()
 
@@ -239,7 +255,7 @@ class ProjectStorageTest {
      */
     @Test
     fun readsPartialDocumentWithDefaults() {
-        writeArchive(Project.PART_META to """{"name":"My Novel"}""")
+        writeArchive("meta.json" to """{"name":"My Novel"}""")
 
         assertTrue(ProjectStorage.load(file).isRight())
 
@@ -267,14 +283,14 @@ class ProjectStorageTest {
      */
     @Test
     fun writesEveryPartAsAnEntry() {
-        ProjectStorage.current.parts = TestData.project().parts
+        seedCurrentProject()
 
         ProjectStorage.save(file)
 
-        val parts = StorageIO.loadFromZip(file, Meta::class, Design::class, Book::class)
+        val content = StorageIO.loadFromZip(file, Meta::class, Design::class, Book::class)
         assertEquals(
             setOf(Project.PART_META, Project.PART_DESIGN, Project.PART_BOOK),
-            parts.keys
+            content.parts.keys
         )
     }
 
@@ -308,9 +324,18 @@ class ProjectStorageTest {
         assertEquals(broken, ProjectStorage.load(broken).leftOrNull()?.file)
     }
 
+    /** Fills the open project with the values of the complete test project, part by part. */
+    private fun seedCurrentProject() {
+        val project = TestData.project()
+
+        ProjectStorage.current.meta = project.meta
+        ProjectStorage.current.design = project.design
+        ProjectStorage.current.book = project.book
+    }
+
     /** The meta part of the document stored in [file], read back the way the storage reads it. */
     private fun storedMeta(): Meta =
-        StorageIO.loadFromZip(file, Meta::class)[Project.PART_META] as Meta
+        StorageIO.loadFromZip(file, Meta::class).parts[Project.PART_META] as Meta
 
     /** Writes a hand made archive to [file], so a document of an older version can be opened. */
     private fun writeArchive(vararg entries: Pair<String, String>) {
@@ -321,5 +346,12 @@ class ProjectStorageTest {
                 stream.closeEntry()
             }
         }
+    }
+
+    private companion object {
+        const val OUTLINE = "outline"
+
+        /** The stored text of a part of an origin this application does not know. */
+        const val STORED_OUTLINE = """{"version":1,"headline":"Three acts"}"""
     }
 }

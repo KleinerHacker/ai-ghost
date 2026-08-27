@@ -12,7 +12,7 @@ where a shortcut is given, straight from the keyboard.
 | New > Project...        | -                  | Creates a new book project                    |
 | New > Chapter...        | `Ctrl+Alt+C`       | Adds a chapter to the current project         |
 | Open...                 | `Ctrl+O`           | Opens an existing book project                |
-| Open recent project     | -                  | Lists the projects opened before               |
+| Open recent project     | -                  | Lists the projects opened before, each with its file name and the folder it sits in |
 | Save                    | `Ctrl+S`           | Saves the current project                     |
 | Save As...              | `Ctrl+Shift+S`     | Saves the current project under a new name    |
 | Preferences...          | -                  | Opens the application preferences             |
