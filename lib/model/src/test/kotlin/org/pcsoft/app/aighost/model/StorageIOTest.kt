@@ -66,12 +66,16 @@ class StorageIOTest {
     }
 
     /**
-     * Use case: a project written before the entries carried the JSON extension is opened, so its
-     * parts are still read instead of the whole document being unreadable.
+     * Use case: an archive holds something that is not a project part at all, so that entry is passed
+     * over instead of being mistaken for a part and written back as one.
      */
     @Test
-    fun readsADocumentWrittenWithoutTheExtension() {
-        writeArchive(file, Project.PART_META to """{"name":"My Novel"}""")
+    fun passesOverAnEntryWithoutTheExtension() {
+        writeArchive(
+            file,
+            "meta.json" to """{"name":"My Novel"}""",
+            "notes.txt" to "a plain note"
+        )
 
         val content = StorageIO.loadFromZip(file, Meta::class, Design::class, Book::class)
 

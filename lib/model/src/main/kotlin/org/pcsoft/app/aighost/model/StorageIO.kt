@@ -42,8 +42,7 @@ internal object StorageIO {
      * The extension every entry of a project archive carries, so the content of the archive is
      * recognizable as JSON in any archive tool.
      *
-     * A document written before this extension existed carries the bare identifier as its entry name,
-     * which is why reading takes the extension off instead of expecting it.
+     * An entry without it is not part of the document format and is passed over when reading.
      */
     private const val ENTRY_SUFFIX = ".json"
 
@@ -117,7 +116,8 @@ internal object StorageIO {
      * An entry no class was named for is not thrown away: its text is kept in
      * [Content.unknownParts], so a project written by a newer version - or by a plugin that is not
      * installed here - opens with the parts this application knows and loses nothing on the next
-     * save.
+     * save. An entry that does not carry the [ENTRY_SUFFIX] is not a project part at all and is
+     * passed over.
      *
      * @param file The zip archive file containing the serialized project parts.
      * @param partClasses The types of project parts to read, everything else is kept as text.
@@ -134,14 +134,19 @@ internal object StorageIO {
 
             var entry = stream.nextEntry
             while (entry != null) {
-                val identifier = identifierIn(entry.name)
-                val partClass = classesByIdentifier[identifier]
-                if (partClass == null) {
-                    log.warn("No model class for project part '{}', keeping it as it was stored", identifier)
-                    unknownParts[identifier] = stream.readBytes().decodeToString()
+                val entryName = entry.name
+                if (!entryName.endsWith(ENTRY_SUFFIX)) {
+                    log.warn("Passing over entry '{}': a project part is stored as a '{}' entry", entryName, ENTRY_SUFFIX)
                 } else {
-                    log.trace("> read part {} from entry name {}", partClass.simpleName, entry.name)
-                    parts[identifier] = mapper.readValue(stream, partClass.java)
+                    val identifier = entryName.removeSuffix(ENTRY_SUFFIX)
+                    val partClass = classesByIdentifier[identifier]
+                    if (partClass == null) {
+                        log.warn("No model class for project part '{}', keeping it as it was stored", identifier)
+                        unknownParts[identifier] = stream.readBytes().decodeToString()
+                    } else {
+                        log.trace("> read part {} from entry name {}", partClass.simpleName, entryName)
+                        parts[identifier] = mapper.readValue(stream, partClass.java)
+                    }
                 }
 
                 stream.closeEntry()
@@ -161,10 +166,4 @@ internal object StorageIO {
 
     /** The name the entry of the part with this identifier is stored under. */
     private fun entryNameOf(identifier: String): String = identifier + ENTRY_SUFFIX
-
-    /**
-     * The identifier behind an entry name, with the extension taken off. A document written before
-     * the extension existed carries the bare identifier, which passes through unchanged.
-     */
-    private fun identifierIn(entryName: String): String = entryName.removeSuffix(ENTRY_SUFFIX)
 }

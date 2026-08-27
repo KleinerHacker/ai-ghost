@@ -242,7 +242,7 @@ class ProjectStorageTest {
      */
     @Test
     fun reportsWrongDocumentAsError() {
-        writeArchive(Project.PART_DESIGN to """{"startWithEmptyPage":"yes"}""")
+        writeArchive("design.json" to """{"startWithEmptyPage":"yes"}""")
 
         val error = ProjectStorage.load(file).leftOrNull()
 
@@ -255,7 +255,7 @@ class ProjectStorageTest {
      */
     @Test
     fun readsPartialDocumentWithDefaults() {
-        writeArchive(Project.PART_META to """{"name":"My Novel"}""")
+        writeArchive("meta.json" to """{"name":"My Novel"}""")
 
         assertTrue(ProjectStorage.load(file).isRight())
 
