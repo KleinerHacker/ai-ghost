@@ -21,10 +21,15 @@ import org.pcsoft.app.aighost.plugin.api.model.project.ProjectPart
  * A writing project of the user, the root object that is persisted as one archive.
  *
  * The three parts the application ships with are fields of the project: [meta], [design] and [book]
- * are always there, are never `null` and are reached without a lookup. Everything a plugin adds sits
- * beside them in [extensionParts], stored under the identifier the part declares. [parts] shows both
- * as one map, which is what the storage writes into the archive - one entry per part - so a part
- * added later travels with the document without the root object knowing it.
+ * are always there, are never `null` and are reached without a lookup. A part of another origin that
+ * this application can read sits beside them in [extensionParts]; [parts] shows both as one map,
+ * which is what the storage writes into the archive - one entry per part.
+ *
+ * A part the application cannot read - written by a newer version or by a plugin that is not
+ * installed here - is not thrown away either: it is kept as the text it was stored as, in
+ * [unknownParts], and is written back unchanged on the next save. Such a part is deliberately not
+ * part of [parts]: it is not a [ProjectPart], nothing can work with it, and mixing it in with the
+ * ones that are would hide exactly that difference.
  *
  * The project is a plain mutable value object: it is changed on the object itself, one part at a
  * time, and it reports nothing to anybody. Whoever shows a project reads it when it needs the value.
@@ -32,20 +37,24 @@ import org.pcsoft.app.aighost.plugin.api.model.project.ProjectPart
  * @property meta Meta data of the project - its name, its author and its copyright notice.
  * @property design Typographic and page settings the manuscript is rendered with.
  * @property book The manuscript with its title and chapters.
- * @property extensionParts The parts beyond the three standard ones, by their identifier.
+ * @property extensionParts The readable parts beyond the three standard ones, by their identifier.
+ * @property unknownParts The stored text of every part this application cannot read, by its identifier.
  */
 data class Project(
     var meta: Meta = Meta(),
     var design: Design = Design(),
     var book: Book = Book(),
-    var extensionParts: Map<String, ProjectPart> = emptyMap()
+    var extensionParts: Map<String, ProjectPart> = emptyMap(),
+    var unknownParts: Map<String, String> = emptyMap()
 ) {
 
     /**
-     * Every part of the project by the identifier it is stored under, the three standard ones first.
+     * Every readable part of the project by the identifier it is stored under, the three standard
+     * ones first.
      *
      * The map is built on every read and is not the storage of the project: a part is written through
-     * [putPart] or through the field of the standard part it belongs to.
+     * [putPart] or through the field of the standard part it belongs to. A part of [unknownParts] is
+     * not in here - it is text, not a part this application can work with.
      */
     val parts: Map<String, ProjectPart>
         get() = linkedMapOf<String, ProjectPart>(
@@ -55,9 +64,10 @@ data class Project(
         ) + extensionParts
 
     /**
-     * The part stored under [identifier], or `null` when the project carries none.
+     * The readable part stored under [identifier], or `null` when the project carries none.
      *
-     * The three standard identifiers always answer with the part behind their field.
+     * The three standard identifiers always answer with the part behind their field. A part that was
+     * only kept as text is not answered here, it is read from [unknownParts].
      *
      * @param identifier The identifier a part is stored under.
      */
@@ -72,7 +82,9 @@ data class Project(
      * Puts [part] into the project under [identifier], replacing what was stored there before.
      *
      * A standard identifier writes the field of that part, so it keeps its type - everything else
-     * lands beside the standard parts and is written into the archive just the same.
+     * lands beside the standard parts and is written into the archive just the same. A text that was
+     * kept under the same identifier is dropped: the part that can be worked with supersedes it, and
+     * the archive must not receive that entry twice.
      *
      * @param identifier The identifier the part is stored under.
      * @param part The part to store.
@@ -85,12 +97,17 @@ data class Project(
             PART_BOOK -> book = part as? Book ?: throw mismatch(identifier, "Book", part)
             else -> extensionParts = extensionParts + (identifier to part)
         }
+
+        if (identifier in unknownParts) {
+            unknownParts = unknownParts - identifier
+        }
     }
 
     /**
-     * Removes the part stored under [identifier] from the project.
+     * Removes the readable part stored under [identifier] from the project.
      *
-     * The three standard parts belong to every project and cannot be taken out of it.
+     * The three standard parts belong to every project and cannot be taken out of it. A part that was
+     * only kept as text stays where it is - it is removed by writing [unknownParts].
      *
      * @param identifier The identifier of the part to remove.
      * @return `true` when the project carried such a part, `false` otherwise.
@@ -147,24 +164,29 @@ data class Project(
          */
         const val PART_BOOK = "book"
 
-        /** The identifiers of the parts every project carries, whatever a plugin adds beside them. */
+        /** The identifiers of the parts every project carries, whatever is stored beside them. */
         val STANDARD_IDENTIFIERS: Set<String> = setOf(PART_META, PART_DESIGN, PART_BOOK)
 
         /**
-         * Builds a project from the parts a document was read from.
+         * Builds a project from what a document was read from.
          *
          * The three standard parts are taken out of [parts] and fall back to their defaults when the
          * document does not carry them, so a file that lost an entry opens with the defaults instead
-         * of failing. Every other part is kept as it is, so a part of a plugin that is not installed
-         * here survives the next save.
+         * of failing. Every other readable part is kept as it is, and [unknownParts] carries the text
+         * of the entries no class was named for, so they survive the next save.
          *
-         * @param parts The parts by the identifier they were stored under.
+         * @param parts The readable parts by the identifier they were stored under.
+         * @param unknownParts The stored text of the entries that could not be read, by their identifier.
          */
-        fun fromParts(parts: Map<String, ProjectPart>): Project = Project(
+        fun fromParts(
+            parts: Map<String, ProjectPart>,
+            unknownParts: Map<String, String> = emptyMap()
+        ): Project = Project(
             meta = parts[PART_META] as? Meta ?: Meta(),
             design = parts[PART_DESIGN] as? Design ?: Design(),
             book = parts[PART_BOOK] as? Book ?: Book(),
-            extensionParts = parts.filterKeys { it !in STANDARD_IDENTIFIERS }
+            extensionParts = parts.filterKeys { it !in STANDARD_IDENTIFIERS },
+            unknownParts = unknownParts
         )
     }
 }

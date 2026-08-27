@@ -43,6 +43,7 @@ class ProjectTest {
         assertEquals(Design(), project.design)
         assertEquals(Book(), project.book)
         assertEquals(emptyMap<String, ProjectPart>(), project.extensionParts)
+        assertEquals(emptyMap<String, String>(), project.unknownParts)
     }
 
     /**
@@ -62,6 +63,37 @@ class ProjectTest {
         assertSame(project.design, project.parts[Project.PART_DESIGN])
         assertSame(project.book, project.parts[Project.PART_BOOK])
         assertSame(custom, project.parts["custom"])
+    }
+
+    /**
+     * Use case: a document carries a part this application cannot read, so it is kept as the text it
+     * was stored as and stays out of the parts a view could try to work with.
+     */
+    @Test
+    fun keepsAPartItCannotReadOutOfTheParts() {
+        val project = Project(unknownParts = mapOf("plugin-notes" to STORED_NOTES))
+
+        assertEquals(
+            listOf(Project.PART_META, Project.PART_DESIGN, Project.PART_BOOK),
+            project.parts.keys.toList()
+        )
+        assertNull(project.part("plugin-notes"))
+        assertEquals(mapOf("plugin-notes" to STORED_NOTES), project.unknownParts)
+    }
+
+    /**
+     * Use case: the part behind a text the application could not read becomes readable - a plugin was
+     * installed - so writing it takes the text away and the archive keeps one entry, not two.
+     */
+    @Test
+    fun puttingAPartDropsTheTextStoredUnderTheSameIdentifier() {
+        val custom = customPart()
+        val project = Project(unknownParts = mapOf("plugin-notes" to STORED_NOTES))
+
+        project.putPart("plugin-notes", custom)
+
+        assertSame(custom, project.part("plugin-notes"))
+        assertEquals(emptyMap<String, String>(), project.unknownParts)
     }
 
     /**
@@ -198,12 +230,16 @@ class ProjectTest {
         val meta = Meta(name = "My Novel")
         val custom = customPart()
 
-        val project = Project.fromParts(mapOf(Project.PART_META to meta, "custom" to custom))
+        val project = Project.fromParts(
+            mapOf(Project.PART_META to meta, "custom" to custom),
+            mapOf("plugin-notes" to STORED_NOTES)
+        )
 
         assertSame(meta, project.meta)
         assertEquals(Design(), project.design)
         assertEquals(Book(), project.book)
         assertEquals(mapOf("custom" to custom), project.extensionParts)
+        assertEquals(mapOf("plugin-notes" to STORED_NOTES), project.unknownParts)
     }
 
     /**
@@ -228,6 +264,7 @@ class ProjectTest {
         assertEquals(TestData.project(), TestData.project())
         assertTrue(Project() != TestData.project())
         assertTrue(Project() != Project(extensionParts = mapOf("custom" to customPart())))
+        assertTrue(Project() != Project(unknownParts = mapOf("plugin-notes" to STORED_NOTES)))
     }
 
     /**
@@ -235,5 +272,10 @@ class ProjectTest {
      */
     private fun customPart(): ProjectPart = object : ProjectPart {
         override val version: Int = 1
+    }
+
+    private companion object {
+        /** The stored text of a part this application cannot read. */
+        const val STORED_NOTES = """{"version":1,"note":"written elsewhere"}"""
     }
 }

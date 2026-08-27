@@ -10,6 +10,12 @@
 * Opening a project document that lost one of its parts keeps what you change in that part
   afterwards - such a part was rebuilt on every read before, so an edit to it was dropped
 
+* Project document keeps a part this version cannot read - written by a newer version for instance -
+  and writes it back unchanged when you save, instead of dropping it
+
+* Entries inside a project document carry the `.json` extension, so the content is recognizable in
+  any archive tool; a document written before that is still opened
+
 * Saving or opening a project that fails is reported in a dialog naming the reason - a missing file,
   a folder in place of the file, a file that cannot be read or written, or a damaged project file -
   and the application keeps running with the project it holds

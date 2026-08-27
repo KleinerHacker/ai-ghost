@@ -38,7 +38,6 @@ import org.pcsoft.app.aighost.model.project.design.Design
 import org.pcsoft.app.aighost.model.project.design.TextDesign
 import org.pcsoft.app.aighost.model.project.meta.Meta
 import org.pcsoft.app.aighost.plugin.api.model.project.ProjectPart
-import org.pcsoft.app.aighost.plugin.api.model.project.ProjectPartInfo
 
 /**
  * Developer tests for [ProjectProperty].
@@ -401,14 +400,12 @@ class ProjectPropertyTest {
     }
 
     /** A part of a plugin, standing in for what such a plugin puts into a project. */
-    @ProjectPartInfo(identifier = NOTES)
     data class NotesPart(
         override val version: Int = 1,
         var note: String = ""
     ) : ProjectPart
 
     /** A part of a plugin that is watched as a whole, without a property per field. */
-    @ProjectPartInfo(identifier = OUTLINE)
     data class OutlinePart(
         override val version: Int = 1,
         var headline: String = ""

@@ -12,7 +12,6 @@
 
 package org.pcsoft.app.aighost.model
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertInstanceOf
@@ -25,9 +24,6 @@ import org.pcsoft.app.aighost.model.project.Project
 import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.design.Design
 import org.pcsoft.app.aighost.model.project.meta.Meta
-import org.pcsoft.app.aighost.plugin.api.model.project.ProjectPart
-import org.pcsoft.app.aighost.plugin.api.model.project.ProjectPartInfo
-import org.pcsoft.app.aighost.plugin.api.model.project.ProjectPartRegistry
 import java.io.File
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
@@ -48,14 +44,10 @@ class ProjectStorageTest {
         ProjectStorage.new()
     }
 
-    /**
-     * Leaves a fresh project behind and releases the part a single test registered, because both the
-     * storage and the registry are shared by the whole process.
-     */
+    /** Leaves a fresh project behind, because the storage is shared by the whole process. */
     @AfterEach
     fun cleanUp() {
         ProjectStorage.new()
-        ProjectPartRegistry.unregister(OUTLINE)
     }
 
     /**
@@ -84,22 +76,19 @@ class ProjectStorageTest {
     }
 
     /**
-     * Use case: a plugin put a part of its own into the project and announced its class, so that part
-     * is written into the document and comes back from it beside the standard parts.
+     * Use case: the open document carries a part this application cannot read, so that part goes back
+     * into the file on the next save and comes out of it again unchanged.
      */
     @Test
-    fun roundTripsAPartAPluginAdded() {
-        ProjectPartRegistry.register(OutlinePart::class)
-        ProjectStorage.current.putPart(OUTLINE, OutlinePart(headline = "Three acts"))
+    fun roundTripsAPartItCannotRead() {
+        ProjectStorage.current.unknownParts = mapOf(OUTLINE to STORED_OUTLINE)
 
         assertTrue(ProjectStorage.save(file).isRight())
         ProjectStorage.new()
 
         assertTrue(ProjectStorage.load(file).isRight())
-        assertEquals(
-            mapOf(OUTLINE to OutlinePart(headline = "Three acts")),
-            ProjectStorage.current.extensionParts
-        )
+        assertEquals(mapOf(OUTLINE to STORED_OUTLINE), ProjectStorage.current.unknownParts)
+        assertEquals(Meta(), ProjectStorage.current.meta)
     }
 
     /**
@@ -298,10 +287,10 @@ class ProjectStorageTest {
 
         ProjectStorage.save(file)
 
-        val parts = StorageIO.loadFromZip(file)
+        val content = StorageIO.loadFromZip(file, Meta::class, Design::class, Book::class)
         assertEquals(
             setOf(Project.PART_META, Project.PART_DESIGN, Project.PART_BOOK),
-            parts.keys
+            content.parts.keys
         )
     }
 
@@ -346,7 +335,7 @@ class ProjectStorageTest {
 
     /** The meta part of the document stored in [file], read back the way the storage reads it. */
     private fun storedMeta(): Meta =
-        StorageIO.loadFromZip(file)[Project.PART_META] as Meta
+        StorageIO.loadFromZip(file, Meta::class).parts[Project.PART_META] as Meta
 
     /** Writes a hand made archive to [file], so a document of an older version can be opened. */
     private fun writeArchive(vararg entries: Pair<String, String>) {
@@ -361,13 +350,8 @@ class ProjectStorageTest {
 
     private companion object {
         const val OUTLINE = "outline"
-    }
 
-    /** A part of a plugin, standing in for what such a plugin puts into a project. */
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    @ProjectPartInfo(identifier = OUTLINE)
-    data class OutlinePart(
-        override val version: Int = 1,
-        var headline: String = ""
-    ) : ProjectPart
+        /** The stored text of a part of an origin this application does not know. */
+        const val STORED_OUTLINE = """{"version":1,"headline":"Three acts"}"""
+    }
 }

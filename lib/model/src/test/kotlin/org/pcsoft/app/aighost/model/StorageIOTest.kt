@@ -12,19 +12,14 @@
 
 package org.pcsoft.app.aighost.model
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.pcsoft.app.aighost.model.project.Project
-import org.pcsoft.app.aighost.model.project.StandardProjectParts
+import org.pcsoft.app.aighost.model.project.book.Book
+import org.pcsoft.app.aighost.model.project.design.Design
 import org.pcsoft.app.aighost.model.project.meta.Meta
-import org.pcsoft.app.aighost.plugin.api.model.project.ProjectPart
-import org.pcsoft.app.aighost.plugin.api.model.project.ProjectPartInfo
-import org.pcsoft.app.aighost.plugin.api.model.project.ProjectPartRegistry
 import java.io.File
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
@@ -41,33 +36,15 @@ class StorageIOTest {
     private val file: File get() = File(directory, "project.aig")
 
     /**
-     * The class behind an entry comes from the registry, so the parts the application ships with are
-     * announced before a document is read.
-     */
-    @BeforeEach
-    fun setUp() {
-        StandardProjectParts.register()
-    }
-
-    /**
-     * The registry lives as long as the process does, so a part registered for a single test is taken
-     * back again - the tests of the archive must not see each other's parts.
-     */
-    @AfterEach
-    fun tearDown() {
-        ProjectPartRegistry.unregister(NOTES)
-    }
-
-    /**
-     * Use case: the user saves a project, so every part lands in an entry of its own that is named
-     * after the identifier the part declares instead of after its class.
+     * Use case: the user opens the stored document with an archive tool, so every part sits in an
+     * entry named after the identifier the part declares and carrying the JSON extension.
      */
     @Test
     fun storesEveryPartUnderItsIdentifier() {
-        StorageIO.saveToZip(file, TestData.meta(), TestData.design(), TestData.book())
+        StorageIO.saveToZip(file, listOf(TestData.meta(), TestData.design(), TestData.book()))
 
         assertEquals(
-            listOf(Project.PART_BOOK, Project.PART_DESIGN, Project.PART_META).sorted(),
+            listOf("book.json", "design.json", "meta.json"),
             entryNamesOf(file).sorted()
         )
     }
@@ -78,46 +55,63 @@ class StorageIOTest {
      */
     @Test
     fun roundTripsEveryPart() {
-        StorageIO.saveToZip(file, TestData.meta(), TestData.design(), TestData.book())
+        StorageIO.saveToZip(file, listOf(TestData.meta(), TestData.design(), TestData.book()))
 
-        val parts = StorageIO.loadFromZip(file)
+        val content = StorageIO.loadFromZip(file, Meta::class, Design::class, Book::class)
 
-        assertEquals(TestData.meta(), parts[Project.PART_META])
-        assertEquals(TestData.design(), parts[Project.PART_DESIGN])
-        assertEquals(TestData.book(), parts[Project.PART_BOOK])
+        assertEquals(TestData.meta(), content.parts[Project.PART_META])
+        assertEquals(TestData.design(), content.parts[Project.PART_DESIGN])
+        assertEquals(TestData.book(), content.parts[Project.PART_BOOK])
+        assertTrue(content.unknownParts.isEmpty())
     }
 
     /**
-     * Use case: a plugin announced the part it brings along, so a document written with that plugin is
-     * read into the class of the plugin like any part the application ships with.
+     * Use case: a project written before the entries carried the JSON extension is opened, so its
+     * parts are still read instead of the whole document being unreadable.
      */
     @Test
-    fun readsAPartAPluginRegistered() {
-        ProjectPartRegistry.register(NotesPart::class)
-        StorageIO.saveToZip(file, TestData.meta(), NotesPart(note = "Written by a plugin"))
+    fun readsADocumentWrittenWithoutTheExtension() {
+        writeArchive(file, Project.PART_META to """{"name":"My Novel"}""")
 
-        val parts = StorageIO.loadFromZip(file)
+        val content = StorageIO.loadFromZip(file, Meta::class, Design::class, Book::class)
 
-        assertEquals(setOf(Project.PART_META, NOTES), parts.keys)
-        assertEquals(NotesPart(note = "Written by a plugin"), parts[NOTES])
+        assertEquals("My Novel", (content.parts[Project.PART_META] as Meta).name)
+        assertTrue(content.unknownParts.isEmpty())
     }
 
     /**
-     * Use case: a project carries a part of a plugin that is not installed here, so that entry is
-     * skipped and the parts this application knows are still opened.
+     * Use case: a project carries a part written by a newer version or by a plugin that is not
+     * installed here, so that entry is kept as it was stored instead of being thrown away.
      */
     @Test
-    fun skipsAnEntryWithoutAModelClass() {
+    fun keepsAnEntryWithoutAModelClass() {
         writeArchive(
             file,
-            Project.PART_META to """{"name":"My Novel"}""",
-            "plugin-notes" to """{"note":"written elsewhere"}"""
+            "meta.json" to """{"name":"My Novel"}""",
+            "plugin-notes.json" to """{"note":"written elsewhere"}"""
         )
 
-        val parts = StorageIO.loadFromZip(file)
+        val content = StorageIO.loadFromZip(file, Meta::class, Design::class, Book::class)
 
-        assertEquals(setOf(Project.PART_META), parts.keys)
-        assertEquals("My Novel", (parts[Project.PART_META] as Meta).name)
+        assertEquals(setOf(Project.PART_META), content.parts.keys)
+        assertEquals(
+            mapOf("plugin-notes" to """{"note":"written elsewhere"}"""),
+            content.unknownParts
+        )
+    }
+
+    /**
+     * Use case: a project holding a part this application cannot read is saved again, so that part
+     * goes back into the document exactly as it came out of it.
+     */
+    @Test
+    fun writesAnUnreadPartBackUnchanged() {
+        val stored = """{"note":"written elsewhere"}"""
+
+        StorageIO.saveToZip(file, listOf(TestData.meta()), mapOf("plugin-notes" to stored))
+
+        assertEquals(listOf("meta.json", "plugin-notes.json"), entryNamesOf(file).sorted())
+        assertEquals(stored, readEntry(file, "plugin-notes.json"))
     }
 
     /**
@@ -128,9 +122,10 @@ class StorageIOTest {
     fun readsNoPartFromAForeignFile() {
         file.writeText("{ this is not an archive")
 
-        val parts = StorageIO.loadFromZip(file)
+        val content = StorageIO.loadFromZip(file, Meta::class, Design::class, Book::class)
 
-        assertTrue(parts.isEmpty())
+        assertTrue(content.parts.isEmpty())
+        assertTrue(content.unknownParts.isEmpty())
     }
 
     /**
@@ -139,9 +134,9 @@ class StorageIOTest {
      */
     @Test
     fun writesIndentedJsonPerEntry() {
-        StorageIO.saveToZip(file, TestData.meta())
+        StorageIO.saveToZip(file, listOf(TestData.meta()))
 
-        val content = readEntry(file, Project.PART_META)
+        val content = readEntry(file, "meta.json")
 
         assertTrue(content.contains("\n"), "expected indented JSON but was: $content")
         assertTrue(content.contains(""""name" : "My Novel""""))
@@ -171,16 +166,4 @@ class StorageIOTest {
             }
         }
     }
-
-    private companion object {
-        const val NOTES = "notes"
-    }
-
-    /** A part of a plugin, standing in for what such a plugin puts into a project. */
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    @ProjectPartInfo(identifier = NOTES)
-    data class NotesPart(
-        override val version: Int = 1,
-        var note: String = ""
-    ) : ProjectPart
 }
