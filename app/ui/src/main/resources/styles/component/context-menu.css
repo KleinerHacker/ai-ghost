@@ -48,3 +48,39 @@
     -fx-border-color: -ghost-tint-line transparent transparent transparent;
     -fx-border-width: 1px 0 0 0;
 }
+
+/*
+ * Entry of the "open recent" menu, carried by the graphic of the item: the file name above, the
+ * directory the file sits in below. The name is clearly larger, it is what the user looks for; the
+ * directory only tells two projects of the same name apart.
+ */
+
+.menu-item .recent-file {
+    -fx-spacing: 1px;
+}
+
+.menu-item .recent-file-name {
+    -fx-font-size: 16px;
+    -fx-text-fill: -ghost-ink;
+}
+
+.menu-item .recent-file-directory {
+    -fx-font-size: 11px;
+    -fx-text-fill: -ghost-ink-soft;
+}
+
+.menu-item:focused .recent-file-name,
+.menu-item:hover .recent-file-name {
+    -fx-text-fill: -ghost-primary-dark;
+}
+
+.menu-item:focused .recent-file-directory,
+.menu-item:hover .recent-file-directory {
+    -fx-text-fill: -ghost-primary;
+}
+
+/* The opacity leaves the geometry of the entry untouched, so nothing jumps when it is disabled. */
+.menu-item:disabled .recent-file-name,
+.menu-item:disabled .recent-file-directory {
+    -fx-opacity: 0.5;
+}

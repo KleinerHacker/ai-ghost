@@ -13,13 +13,19 @@
 package org.pcsoft.app.aighost.app.ui.window
 
 import de.saxsys.mvvmfx.MvvmFX
+import java.io.File
+import java.util.Locale
+import java.util.ResourceBundle
+import javafx.scene.control.Label
 import javafx.scene.control.Menu
 import javafx.scene.control.MenuBar
+import javafx.scene.layout.VBox
 import javafx.stage.Stage
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.app.AiGhostIcons
@@ -27,11 +33,8 @@ import org.pcsoft.app.aighost.app.AiGhostTheme
 import org.pcsoft.app.aighost.app.Messages
 import org.pcsoft.app.aighost.model.PreferencesStorage
 import org.pcsoft.app.aighost.model.pref.RecentOpened
-import org.junit.jupiter.api.BeforeAll
 import org.testfx.framework.junit5.ApplicationTest
 import org.testfx.util.WaitForAsyncUtils
-import java.util.Locale
-import java.util.ResourceBundle
 
 /**
  * Integration tests starting the complete main window.
@@ -77,15 +80,27 @@ class MainWindowIT : ApplicationTest() {
     }
 
     /** Texts of the entries the "open recent" menu currently offers. */
-    private fun openRecentEntries(): List<String> {
+    private fun openRecentEntries(): List<Pair<String, String>> {
         val menuBar = window.scene.root.lookup(".menu-bar") as MenuBar
         val fileMenu = menuBar.menus.first()
         val openRecent = fileMenu.items
             .filterIsInstance<Menu>()
             .first { it.text == "Zuletzt geöffnete Projekte" }
 
-        return openRecent.items.map { it.text }
+        return openRecent.items.map { item ->
+            val lines = (item.graphic as VBox).children.filterIsInstance<Label>()
+            lines[0].text to lines[1].text
+        }
     }
+
+    /**
+     * The name and the directory the entry of [path] is expected to show.
+     *
+     * Both are derived the same way the view derives them, so the expectation holds on a platform
+     * that writes its paths differently.
+     */
+    private fun entryOf(path: String): Pair<String, String> =
+        File(path).let { it.name to (it.parent ?: "") }
 
     /** Stores [paths] as the recently opened files of the current user. */
     private fun storeRecentlyOpened(vararg paths: String) {
@@ -140,7 +155,10 @@ class MainWindowIT : ApplicationTest() {
 
         showAgain()
 
-        assertEquals(listOf("second-novel.ghost", "first-novel.ghost"), openRecentEntries())
+        assertEquals(
+            listOf(entryOf("/books/second-novel.ghost"), entryOf("/books/first-novel.ghost")),
+            openRecentEntries()
+        )
     }
 
     /**
@@ -151,13 +169,13 @@ class MainWindowIT : ApplicationTest() {
     fun openRecentIsRefreshedWhenTheWindowIsShownAgain() {
         storeRecentlyOpened("/books/first-novel.ghost")
         showAgain()
-        assertEquals(listOf("first-novel.ghost"), openRecentEntries())
+        assertEquals(listOf(entryOf("/books/first-novel.ghost")), openRecentEntries())
 
         storeRecentlyOpened("/books/second-novel.ghost")
-        assertEquals(listOf("first-novel.ghost"), openRecentEntries())
+        assertEquals(listOf(entryOf("/books/first-novel.ghost")), openRecentEntries())
 
         showAgain()
-        assertEquals(listOf("second-novel.ghost"), openRecentEntries())
+        assertEquals(listOf(entryOf("/books/second-novel.ghost")), openRecentEntries())
     }
 
     /**
@@ -168,14 +186,14 @@ class MainWindowIT : ApplicationTest() {
     fun openRecentIsRefreshedWhenTheContentBecomesVisibleAgain() {
         storeRecentlyOpened("/books/first-novel.ghost")
         showAgain()
-        assertEquals(listOf("first-novel.ghost"), openRecentEntries())
+        assertEquals(listOf(entryOf("/books/first-novel.ghost")), openRecentEntries())
 
         interact { window.scene.root.isVisible = false }
         storeRecentlyOpened("/books/second-novel.ghost")
-        assertEquals(listOf("first-novel.ghost"), openRecentEntries())
+        assertEquals(listOf(entryOf("/books/first-novel.ghost")), openRecentEntries())
 
         interact { window.scene.root.isVisible = true }
         WaitForAsyncUtils.waitForFxEvents()
-        assertEquals(listOf("second-novel.ghost"), openRecentEntries())
+        assertEquals(listOf(entryOf("/books/second-novel.ghost")), openRecentEntries())
     }
 }

@@ -16,6 +16,12 @@
 * Entries inside a project document carry the `.json` extension, so the content is recognizable in
   any archive tool
 
+* Menu "open recent project" shows each entry on two lines - the file name, and below it in
+  smaller type the folder the project sits in, so two projects of the same name are told apart
+
+* List of recently opened projects is no longer emptied when the window leaves the screen without a
+  project having been opened meanwhile
+
 * Saving or opening a project that fails is reported in a dialog naming the reason - a missing file,
   a folder in place of the file, a file that cannot be read or written, or a damaged project file -
   and the application keeps running with the project it holds
