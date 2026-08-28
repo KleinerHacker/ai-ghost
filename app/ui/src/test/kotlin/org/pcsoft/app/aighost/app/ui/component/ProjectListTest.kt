@@ -179,7 +179,7 @@ class ProjectListTest : ApplicationTest() {
     fun handsOnPrologEpilogAndBlurbOfTheBoundProject() {
         val prolog = Prolog("Before It All")
         val epilog = Epilog("After It All")
-        val blurb = Blurb(listOf("A gripping tale."))
+        val blurb = Blurb(paragraph = listOf("A gripping tale."))
 
         setProject(project(Book(title = "My Novel", prolog = prolog, epilog = epilog, blurb = blurb)))
 

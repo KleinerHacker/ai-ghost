@@ -10,22 +10,21 @@
  * See the License for the specific language governing permissions and limitations.
  */
 
-package org.pcsoft.app.aighost.model.project.book
+package org.pcsoft.app.aighost.model.project.common
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
 /**
- * The blurb of a [Book], the advertising text printed on the cover.
+ * Represents a prompt used within an AI-driven context.
  *
- * Unlike the written parts of the manuscript the blurb carries no heading of its own: it is text
- * only. A book has at most one blurb, and only if the user created it, so [Book.blurb] stays empty
- * until then.
+ * This class can be utilized to define structured input prompts for various generative tasks, enabling
+ * more meaningful and contextually appropriate outputs based on both content and desired style.
  *
- * @property prompt Prompt for the blurb, empty by default.
- * @property paragraph Paragraphs of the blurb in their order, empty by default.
+ * @param contentPrompt Describes the primary content of a given prompt, such as a question or request.
+ * @param stylePrompt Specifies styling, tone, or additional context for refining the AI's response.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class Blurb(
-    var prompt: String = "",
-    var paragraph: List<String> = emptyList()
+data class AIPrompt(
+    var contentPrompt: String = "",
+    var stylePrompt: String = ""
 )

@@ -15,12 +15,14 @@ package org.pcsoft.app.aighost.fx.model.project.book
 import javafx.collections.FXCollections
 import org.pcsoft.app.aighost.fx.model.property.common.OverrideListProperty
 import org.pcsoft.app.aighost.fx.model.project.ProjectPartProperty
+import org.pcsoft.app.aighost.fx.model.project.common.AIPromptProperty
 import org.pcsoft.app.aighost.fx.model.property.common.OverrideStringProperty
 import org.pcsoft.app.aighost.model.project.book.Blurb
 import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.book.Chapter
 import org.pcsoft.app.aighost.model.project.book.Epilog
 import org.pcsoft.app.aighost.model.project.book.Prolog
+import org.pcsoft.app.aighost.model.project.common.AIPrompt
 
 /**
  * Property wrapping the manuscript of a project and offering every field of it - and every field of
@@ -62,6 +64,20 @@ internal class BookProperty(
         get() = titleAppendixProperty.get()
         set(value) {
             titleAppendixProperty.set(FXCollections.observableArrayList(value))
+        }
+
+    /** Prompts the manuscript as a whole is generated from, as a property of their own. */
+    val promptsProperty: AIPromptProperty = AIPromptProperty(
+        { newValue -> value?.also { it.prompts = newValue ?: AIPrompt() } },
+        { value?.prompts },
+        { fireValueChangedEvent() }
+    )
+
+    /** Prompts the manuscript as a whole is generated from. */
+    var prompts: AIPrompt?
+        get() = promptsProperty.get()
+        set(value) {
+            promptsProperty.set(value)
         }
 
     /** Prolog printed before the first chapter, as a property of its own. */
@@ -142,6 +158,7 @@ internal class BookProperty(
     private fun refreshFields() {
         titleProperty.refresh()
         titleAppendixProperty.refresh()
+        promptsProperty.refresh()
         prologProperty.refresh()
         chaptersProperty.refresh()
         epilogProperty.refresh()

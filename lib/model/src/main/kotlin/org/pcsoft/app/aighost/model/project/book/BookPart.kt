@@ -12,6 +12,8 @@
 
 package org.pcsoft.app.aighost.model.project.book
 
+import org.pcsoft.app.aighost.model.project.common.AIPrompt
+
 /**
  * A written part of a [Book] that carries a heading and its text.
  *
@@ -20,10 +22,12 @@ package org.pcsoft.app.aighost.model.project.book
  *
  * @property title Heading of the part.
  * @property titleAppendix Further heading lines shown below the title.
+ * @property prompts Prompts for the part.
  * @property paragraph Paragraphs of the part in their order.
  */
 interface BookPart {
     var title: String
     var titleAppendix: List<String>
+    var prompts: AIPrompt
     var paragraph: List<String>
 }

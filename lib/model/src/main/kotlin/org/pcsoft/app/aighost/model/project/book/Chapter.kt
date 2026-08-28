@@ -13,6 +13,7 @@
 package org.pcsoft.app.aighost.model.project.book
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import org.pcsoft.app.aighost.model.project.common.AIPrompt
 
 /**
  * A single chapter of a [Book].
@@ -25,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
  * @property name Name of the chapter as shown in the project tree.
  * @property title Heading of the chapter as printed in the manuscript.
  * @property titleAppendix Further heading lines shown below the title, empty by default.
+ * @property prompts Prompts for the chapter, empty by default.
  * @property paragraph Paragraphs of the chapter in their order, empty by default.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -32,6 +34,8 @@ data class Chapter(
     var name: String,
     override var title: String,
     override var titleAppendix: List<String> = listOf(),
+
+    override var prompts: AIPrompt = AIPrompt(),
 
     override var paragraph: List<String> = emptyList()
 ) : BookPart

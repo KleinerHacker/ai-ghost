@@ -15,19 +15,35 @@ package org.pcsoft.app.aighost.fx.model.project.book
 import javafx.collections.FXCollections
 import org.pcsoft.app.aighost.fx.model.property.common.OverrideListProperty
 import org.pcsoft.app.aighost.fx.model.property.common.OverrideObjectProperty
+import org.pcsoft.app.aighost.fx.model.property.common.OverrideStringProperty
 import org.pcsoft.app.aighost.model.project.book.Blurb
 
 /**
- * Property wrapping the blurb of a book and offering its text as a property of its own.
+ * Property wrapping the blurb of a book and offering its prompt and its text as properties of their
+ * own.
  *
  * A book carries a blurb only after the user created it, so the wrapped object is absent until then
- * and the text property answers with no paragraphs at all.
+ * and the field properties answer with an empty prompt and with no paragraphs at all.
  */
 internal class BlurbProperty(
     setter: (Blurb?) -> Unit,
     getter: () -> Blurb?,
     fireEvent: () -> Unit
 ) : OverrideObjectProperty<Blurb?>(setter, getter, fireEvent) {
+
+    /** Prompt the blurb is generated from, as a property of its own. */
+    val promptProperty: OverrideStringProperty = OverrideStringProperty(
+        { newValue -> value?.also { it.prompt = newValue ?: "" } },
+        { value?.prompt },
+        { fireValueChangedEvent() }
+    )
+
+    /** Prompt the blurb is generated from. */
+    var prompt: String?
+        get() = promptProperty.get()
+        set(value) {
+            promptProperty.set(value)
+        }
 
     /** Paragraphs of the blurb in their order, as a property of their own. */
     val paragraphProperty: OverrideListProperty<String> = OverrideListProperty(
@@ -58,11 +74,12 @@ internal class BlurbProperty(
     }
 
     /**
-     * Lets the text property take over the paragraphs of the object the property carries now. A field
-     * whose value did not change reports nothing, so an exchanged object is not announced as a change
-     * of every one of its fields.
+     * Lets the field properties take over the prompt and the paragraphs of the object the property
+     * carries now. A field whose value did not change reports nothing, so an exchanged object is not
+     * announced as a change of every one of its fields.
      */
     private fun refreshFields() {
+        promptProperty.refresh()
         paragraphProperty.refresh()
     }
 

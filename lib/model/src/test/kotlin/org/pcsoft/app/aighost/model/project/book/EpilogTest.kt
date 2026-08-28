@@ -17,6 +17,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.pcsoft.app.aighost.model.project.common.AIPrompt
 
 /**
  * Developer tests for [org.pcsoft.app.aighost.model.project.book.Epilog].
@@ -26,14 +27,15 @@ class EpilogTest {
     private val mapper: ObjectMapper = ObjectMapper().registerKotlinModule()
 
     /**
-     * Use case: the user creates the epilog and only titles it, so it starts without appendix lines
-     * and without text instead of forcing content up front.
+     * Use case: the user creates the epilog and only titles it, so it starts without appendix lines,
+     * without prompts and without text instead of forcing content up front.
      */
     @Test
-    fun defaultsToEmptyAppendixAndText() {
+    fun defaultsToEmptyAppendixPromptsAndText() {
         val epilog = Epilog("After It All")
 
         assertEquals(emptyList<String>(), epilog.titleAppendix)
+        assertEquals(AIPrompt(), epilog.prompts)
         assertEquals(emptyList<String>(), epilog.paragraph)
     }
 
@@ -43,45 +45,59 @@ class EpilogTest {
      */
     @Test
     fun isABookPart() {
-        val part: BookPart = Epilog("After It All", listOf("A last word"), listOf("Text."))
+        val part: BookPart = Epilog(
+            "After It All",
+            listOf("A last word"),
+            AIPrompt("Tell how it ended.", "Calm and slow."),
+            listOf("Text.")
+        )
 
         assertEquals("After It All", part.title)
         assertEquals(listOf("A last word"), part.titleAppendix)
+        assertEquals(AIPrompt("Tell how it ended.", "Calm and slow."), part.prompts)
         assertEquals(listOf("Text."), part.paragraph)
     }
 
     /**
-     * Use case: the epilog is written to disk, so heading, appendix lines and paragraphs appear in
-     * the JSON under the stable property names the file format promises.
+     * Use case: the epilog is written to disk, so heading, appendix lines, prompts and paragraphs
+     * appear in the JSON under the stable property names the file format promises.
      */
     @Test
-    fun serialisesTitleAppendixAndParagraphs() {
-        val epilog = Epilog("After It All", listOf("A last word"), listOf("And that was that."))
+    fun serialisesTitleAppendixPromptsAndParagraphs() {
+        val epilog = Epilog(
+            "After It All",
+            listOf("A last word"),
+            AIPrompt("Tell how it ended.", "Calm and slow."),
+            listOf("And that was that.")
+        )
 
         val json = mapper.writeValueAsString(epilog)
 
         assertEquals(
             """{"title":"After It All","titleAppendix":["A last word"],""" +
+                """"prompts":{"contentPrompt":"Tell how it ended.","stylePrompt":"Calm and slow."},""" +
                 """"paragraph":["And that was that."]}""",
             json
         )
     }
 
     /**
-     * Use case: a stored epilog is read back, so heading and all paragraphs survive the round trip
-     * unchanged and keep their order.
+     * Use case: a stored epilog is read back, so heading, prompts and all paragraphs survive the
+     * round trip unchanged and keep their order.
      */
     @Test
     fun roundTripsParagraphsInOrder() {
         val epilog = Epilog(
             "After It All",
             listOf("A last word", "and another"),
+            AIPrompt("Tell how it ended.", "Calm and slow."),
             listOf("First paragraph.", "Second paragraph.")
         )
 
         val restored: Epilog = mapper.readValue(mapper.writeValueAsString(epilog))
 
         assertEquals(epilog, restored)
+        assertEquals(AIPrompt("Tell how it ended.", "Calm and slow."), restored.prompts)
         assertEquals(listOf("First paragraph.", "Second paragraph."), restored.paragraph)
     }
 

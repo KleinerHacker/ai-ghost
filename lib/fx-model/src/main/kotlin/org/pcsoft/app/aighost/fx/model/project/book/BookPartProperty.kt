@@ -13,10 +13,12 @@
 package org.pcsoft.app.aighost.fx.model.project.book
 
 import javafx.collections.FXCollections
+import org.pcsoft.app.aighost.fx.model.project.common.AIPromptProperty
 import org.pcsoft.app.aighost.fx.model.property.common.OverrideListProperty
 import org.pcsoft.app.aighost.fx.model.property.common.OverrideObjectProperty
 import org.pcsoft.app.aighost.fx.model.property.common.OverrideStringProperty
 import org.pcsoft.app.aighost.model.project.book.BookPart
+import org.pcsoft.app.aighost.model.project.common.AIPrompt
 
 /**
  * Property wrapping a written part of a book - a prolog, a chapter or an epilog - and offering the
@@ -60,6 +62,20 @@ internal abstract class BookPartProperty<T : BookPart?>(
             titleAppendixProperty.set(FXCollections.observableArrayList(value))
         }
 
+    /** Prompts the text of the part is generated from, as a property of their own. */
+    val promptsProperty: AIPromptProperty = AIPromptProperty(
+        { newValue -> value?.also { it.prompts = newValue ?: AIPrompt() } },
+        { value?.prompts },
+        { fireValueChangedEvent() }
+    )
+
+    /** Prompts the text of the part is generated from. */
+    var prompts: AIPrompt?
+        get() = promptsProperty.get()
+        set(value) {
+            promptsProperty.set(value)
+        }
+
     /** Paragraphs of the part in their order, as a property of their own. */
     val paragraphProperty: OverrideListProperty<String> = OverrideListProperty(
         { newValue -> value?.also { it.paragraph = newValue } },
@@ -98,6 +114,7 @@ internal abstract class BookPartProperty<T : BookPart?>(
     protected open fun refreshFields() {
         titleProperty.refresh()
         titleAppendixProperty.refresh()
+        promptsProperty.refresh()
         paragraphProperty.refresh()
     }
 

@@ -13,6 +13,7 @@
 package org.pcsoft.app.aighost.model.project.book
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import org.pcsoft.app.aighost.model.project.common.AIPrompt
 
 /**
  * The prolog of a [Book], printed before the first chapter.
@@ -22,12 +23,15 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
  *
  * @property title Heading of the prolog.
  * @property titleAppendix Further heading lines shown below the title, empty by default.
+ * @property prompts Prompts for the prolog, empty by default.
  * @property paragraph Paragraphs of the prolog in their order, empty by default.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Prolog(
     override var title: String,
     override var titleAppendix: List<String> = listOf(),
+
+    override var prompts: AIPrompt = AIPrompt(),
 
     override var paragraph: List<String> = emptyList()
 ) : BookPart
