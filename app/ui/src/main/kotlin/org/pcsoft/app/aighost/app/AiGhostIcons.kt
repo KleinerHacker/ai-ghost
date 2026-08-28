@@ -80,6 +80,12 @@ object AiGhostIcons {
     /** Icon for handing a text over to the AI, be it to write it or to improve its wording. */
     val aiAction: Image by lazy { load("ai-action") }
 
+    /** Icon for adding another entry to a list the user builds up. */
+    val add: Image by lazy { load("add") }
+
+    /** Icon for removing a single entry from a list the user builds up. */
+    val remove: Image by lazy { load("remove") }
+
     /**
      * Creates the button graphic for handing a text over to the AI, scaled to [MENU_ICON_SIZE].
      *
@@ -89,6 +95,26 @@ object AiGhostIcons {
      */
     @JvmStatic
     fun buttonAiAction(): ImageView = aiAction.toImageView()
+
+    /**
+     * Creates the button graphic for adding an entry, scaled to [MENU_ICON_SIZE].
+     *
+     * Referenced from FXML through `fx:factory`.
+     *
+     * @return a new image view showing [add]
+     */
+    @JvmStatic
+    fun buttonAdd(): ImageView = add.toImageView()
+
+    /**
+     * Creates the button graphic for removing an entry, scaled to [MENU_ICON_SIZE].
+     *
+     * Referenced from FXML through `fx:factory`.
+     *
+     * @return a new image view showing [remove]
+     */
+    @JvmStatic
+    fun buttonRemove(): ImageView = remove.toImageView()
 
     /**
      * Creates the menu graphic for creating an epilog, scaled to [MENU_ICON_SIZE].

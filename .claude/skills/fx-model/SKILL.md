@@ -39,6 +39,16 @@ description: Mirroring rule between the plain model POJOs in lib/model (ai-ghost
 * `invalidated()` MUST refresh every field property, `refresh()` of a nested model MUST do the same
 * A change of a field MUST fire the change event of its parent property, up to the root
 
+## Visibility
+
+* An FX model used by `app/ui` MUST be public AND its package MUST be exported in
+  `lib/fx-model/src/main/java/module-info.java`
+  * Without the export the module system rejects the type, although Kotlin resolves it
+* An FX model nobody outside the module reaches stays `internal`
+* A public FX model MUST NOT expose a member of an `internal` type
+  * Such a member stays `internal`, and what the user interface needs is offered as a short
+    accessor of a public type next to it
+
 ## Testing
 
 * Load the `testing` skill before writing the tests

@@ -12,6 +12,7 @@
 
 package org.pcsoft.app.aighost.fx.model.project.book
 
+import javafx.beans.property.StringProperty
 import javafx.collections.FXCollections
 import org.pcsoft.app.aighost.fx.model.property.common.OverrideListProperty
 import org.pcsoft.app.aighost.fx.model.project.ProjectPartProperty
@@ -31,8 +32,12 @@ import org.pcsoft.app.aighost.model.project.common.AIPrompt
  * Prolog, epilog and blurb exist only after the user created them, so the properties standing for
  * them carry no object until then and their field properties answer with neutral values. The chapters
  * are offered as a list of the plain objects, because the user arranges them as a whole.
+ *
+ * This is the one property model a user interface is handed, so what it needs is reachable from
+ * outside: the title, the further title lines and the two prompts the manuscript is generated from.
+ * The parts below the book stay inside this module and are reached through their own editors later.
  */
-internal class BookProperty(
+class BookProperty internal constructor(
     setter: (Book?) -> Unit,
     getter: () -> Book?,
     fireEvent: () -> Unit
@@ -67,7 +72,7 @@ internal class BookProperty(
         }
 
     /** Prompts the manuscript as a whole is generated from, as a property of their own. */
-    val promptsProperty: AIPromptProperty = AIPromptProperty(
+    internal val promptsProperty: AIPromptProperty = AIPromptProperty(
         { newValue -> value?.also { it.prompts = newValue ?: AIPrompt() } },
         { value?.prompts },
         { fireValueChangedEvent() }
@@ -80,8 +85,33 @@ internal class BookProperty(
             promptsProperty.set(value)
         }
 
+    // The two prompts are what a user interface reaches for, so they are offered here as well
+    // instead of handing the prompt object itself outside of this module.
+
+    /** Description of what the manuscript is about, as a property of its own. */
+    val contentPromptProperty: StringProperty
+        get() = promptsProperty.contentPromptProperty
+
+    /** Description of what the manuscript is about. */
+    var contentPrompt: String?
+        get() = promptsProperty.contentPromptProperty.get()
+        set(value) {
+            promptsProperty.contentPromptProperty.set(value)
+        }
+
+    /** Description of the tone the manuscript is written in, as a property of its own. */
+    val stylePromptProperty: StringProperty
+        get() = promptsProperty.stylePromptProperty
+
+    /** Description of the tone the manuscript is written in. */
+    var stylePrompt: String?
+        get() = promptsProperty.stylePromptProperty.get()
+        set(value) {
+            promptsProperty.stylePromptProperty.set(value)
+        }
+
     /** Prolog printed before the first chapter, as a property of its own. */
-    val prologProperty: PrologProperty = PrologProperty(
+    internal val prologProperty: PrologProperty = PrologProperty(
         { newValue -> value?.also { it.prolog = newValue } },
         { value?.prolog },
         { fireValueChangedEvent() }
@@ -109,7 +139,7 @@ internal class BookProperty(
         }
 
     /** Epilog printed after the last chapter, as a property of its own. */
-    val epilogProperty: EpilogProperty = EpilogProperty(
+    internal val epilogProperty: EpilogProperty = EpilogProperty(
         { newValue -> value?.also { it.epilog = newValue } },
         { value?.epilog },
         { fireValueChangedEvent() }
@@ -123,7 +153,7 @@ internal class BookProperty(
         }
 
     /** Advertising text printed on the cover, as a property of its own. */
-    val blurbProperty: BlurbProperty = BlurbProperty(
+    internal val blurbProperty: BlurbProperty = BlurbProperty(
         { newValue -> value?.also { it.blurb = newValue } },
         { value?.blurb },
         { fireValueChangedEvent() }

@@ -64,7 +64,7 @@ class ProjectPropertyTest {
 
         metaProperty = property.metaProperty as MetaProperty
         designProperty = property.designProperty as DesignProperty
-        bookProperty = property.bookProperty as BookProperty
+        bookProperty = property.bookProperty
         notesProperty = property.attachPart(NOTES, NotesPart::class, ::NotesProperty)
 
         recorder = ChangeRecorder()

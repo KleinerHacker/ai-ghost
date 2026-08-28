@@ -545,6 +545,28 @@ class BookPropertyTest {
     }
 
     /**
+     * Use case: a user interface reaches the two prompts of the manuscript through the short
+     * accessors the book offers, so writing through them lands in the model object just the same.
+     */
+    @Test
+    fun writesPromptsThroughTheShortAccessorsToModelAndNotifiesTree() {
+        property.contentPromptProperty.set("Tell a story of a way back.")
+        property.stylePromptProperty.set("Write it plainly.")
+
+        assertEquals("Tell a story of a way back.", holder.book?.prompts?.contentPrompt)
+        assertEquals("Write it plainly.", holder.book?.prompts?.stylePrompt)
+        assertEquals("Tell a story of a way back.", property.contentPrompt)
+        assertEquals("Write it plainly.", property.stylePrompt)
+        assertEquals(
+            promptText(AIPrompt("Tell a story of a way back.", "Write it plainly.")),
+            promptsView.get()
+        )
+        assertTrue(promptsViewChanges > 0) { "the binding on the prompts of the book was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+    }
+
+    /**
      * Use case: the user describes what the prolog is about, so the prompt of that nested object is
      * written through the tree and every binding above it - up to the book - shows it.
      */

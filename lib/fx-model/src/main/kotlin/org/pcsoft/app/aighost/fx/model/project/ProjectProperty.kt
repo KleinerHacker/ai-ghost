@@ -131,8 +131,13 @@ class ProjectProperty(project: Project) : SimpleObjectProperty<Project>(project)
         fireEvent = { fireValueChangedEvent() }
     )
 
-    /** The manuscript with its title and chapters, as a property of its own. */
-    val bookProperty: ObjectProperty<Book?>
+    /**
+     * The manuscript with its title and chapters, as a property of its own.
+     *
+     * Unlike the other parts the book is handed out with its own type, so a user interface reaches
+     * the fields of the manuscript - its title, its further title lines and its prompts - through it.
+     */
+    val bookProperty: BookProperty
         get() = overrideBook
 
     /** The manuscript with its title and chapters. */

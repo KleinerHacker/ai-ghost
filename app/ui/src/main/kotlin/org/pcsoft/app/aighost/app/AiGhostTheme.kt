@@ -60,6 +60,8 @@ object AiGhostTheme {
         "/styles/component/editor.css",
         "/styles/component/prompt-area.css",
         "/styles/component/text-field.css",
+        "/styles/component/text-field-list-item.css",
+        "/styles/component/book-editor.css",
         "/styles/component/dialog.css"
     )
 

@@ -1,0 +1,37 @@
+/*
+ * Copyright (c) KleinerHacker alias Pfeiffer C Soft 2026.
+ * This work is licensed under the Apache License, Version 2.0.
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at:
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, this software is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations.
+ */
+
+/* The book editor: the fields of the manuscript, laid out one below the other. */
+
+/* The scroll pane above is transparent, so the editor is the surface the fields sit on. */
+.book-editor {
+    -fx-background-color: -ghost-surface;
+}
+
+/* The name of a field stands above it and steps back from the text written into the field. */
+.book-editor-label {
+    -fx-text-fill: -ghost-ink-soft;
+    -fx-font-weight: bold;
+}
+
+/*
+ * The plus carries its icon only, so it keeps the padding of a square button instead of the wider
+ * one a labelled button needs. The cross of a title line belongs to the list entry and is styled
+ * with it.
+ */
+.book-editor-add {
+    -fx-padding: 3px 3px 3px 3px;
+}
+
+.book-editor-add:disabled {
+    -fx-opacity: 0.4;
+}

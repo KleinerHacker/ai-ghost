@@ -61,7 +61,7 @@ class FXProjectStorageTest {
 
         metaProperty = FXProjectStorage.current.metaProperty as MetaProperty
         designProperty = FXProjectStorage.current.designProperty as DesignProperty
-        bookProperty = FXProjectStorage.current.bookProperty as BookProperty
+        bookProperty = FXProjectStorage.current.bookProperty
 
         recorder = ChangeRecorder()
         recorder.watch("project", FXProjectStorage.current)
