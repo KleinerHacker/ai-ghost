@@ -95,7 +95,12 @@ class AiPromptAreaView : FxmlView<AiPromptAreaViewModel>, Initializable {
         viewModel.usage.addListener { _, _, usage -> applyUsage(usage) }
         applyUsage(viewModel.usage.get())
 
-        btnOptimize.setOnAction { viewModel.optimize() }
+        // The action of the button would climb up to the component itself, where it would pass as a
+        // second action of the component beside the one the component fires on its own.
+        btnOptimize.setOnAction { event ->
+            event.consume()
+            viewModel.optimize()
+        }
     }
 
     /**

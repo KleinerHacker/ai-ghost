@@ -35,7 +35,7 @@
                 <HBox alignment="CENTER_LEFT" spacing="6">
                     <Button fx:id="btnOptimize" styleClass="prompt-optimize">
                         <graphic>
-                            <AiGhostIcons fx:factory="buttonOptimizePrompt"/>
+                            <AiGhostIcons fx:factory="buttonAiAction"/>
                         </graphic>
                         <tooltip>
                             <Tooltip text="%aiPromptArea.optimize.tooltip"/>

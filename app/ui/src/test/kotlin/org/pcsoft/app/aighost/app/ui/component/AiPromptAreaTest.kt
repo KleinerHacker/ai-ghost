@@ -185,17 +185,25 @@ class AiPromptAreaTest : ApplicationTest() {
 
     /**
      * Use case: the user asks the AI for a better wording, so the wand hands the request on as the
-     * action event of the component.
+     * action event of the component - once per press, not once more for the action of the button
+     * that climbs up to the component on its own.
      */
     @Test
     fun wandFiresTheOptimizeEvent() {
         var source: Any? = null
-        interact { promptArea.setOnOptimizePrompt { event -> source = event.source } }
+        var fired = 0
+        interact {
+            promptArea.setOnOptimizePrompt { event ->
+                source = event.source
+                fired++
+            }
+        }
 
         clickOn(optimizeButton)
         WaitForAsyncUtils.waitForFxEvents()
 
         assertSame(promptArea, source)
+        assertEquals(1, fired, "the request was handed on more than once")
     }
 
     /**
