@@ -15,6 +15,7 @@ package org.pcsoft.app.aighost.model
 import arrow.core.Either
 import arrow.core.left
 import arrow.core.right
+import com.fasterxml.jackson.core.JacksonException
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -111,15 +112,24 @@ internal object StorageIO {
      * save. An entry that does not carry the [ENTRY_SUFFIX] is not a project part at all and is
      * passed over.
      *
-     * A project document holds the three standard parts, so an archive missing one of them is
-     * corrupt - a file that is not an archive at all carries no entry and would otherwise open as a
-     * project of pure defaults. Such a file is answered with [Error.Corrupt] instead of a project.
+     * A part is weighed by what it is, not by what went wrong with it: the standard parts named by
+     * [Project.STANDARD_IDENTIFIERS] belong to every document, so a document that does not hold one
+     * of them - because its entry is gone or because its content cannot be parsed - is corrupt and
+     * is answered with [Error.Corrupt]. A file that is not an archive at all carries no entry and is
+     * caught by the very same rule instead of opening as a project of pure defaults.
+     *
+     * Everything beyond the standard parts is not worth throwing the document away for. A part the
+     * meta data announces but the archive does not hold any more, and a part whose content cannot be
+     * parsed, is reported as lost in [LoadResult.lostParts] while the rest of the document opens.
+     * Such a part is taken out of [Meta.additionalParts] of the returned project, so the document
+     * stops announcing what it no longer holds and is complete again on the next save.
      *
      * @param file The zip archive file containing the serialized project parts.
      * @param partClasses The types of project parts to read, everything else is kept as text.
-     * @return The project read from the archive, or the reason why the file holds none.
+     * @return The project read from the archive together with what got lost, or the reason why the
+     *         file holds no project at all.
      */
-    fun loadFromZip(file: File, vararg partClasses: KClass<out ProjectPart>): Either<Error, Project> {
+    fun loadFromZip(file: File, vararg partClasses: KClass<out ProjectPart>): Either<Error, LoadResult> {
         log.debug("Load from ZIP: {}", file.absolutePath)
 
         val classesByIdentifier = partClasses.associateBy { identifierOf(it) }
@@ -127,6 +137,7 @@ internal object StorageIO {
         return ZipInputStream(file.inputStream()).use { stream ->
             val parts = mutableMapOf<String, ProjectPart>()
             val unknownParts = mutableMapOf<String, String>()
+            val unparsable = mutableSetOf<String>()
 
             var entry = stream.nextEntry
             while (entry != null) {
@@ -141,7 +152,14 @@ internal object StorageIO {
                         unknownParts[identifier] = stream.readBytes().decodeToString()
                     } else {
                         log.trace("> read part {} from entry name {}", partClass.simpleName, entryName)
-                        parts[identifier] = mapper.readValue(stream, partClass.java)
+                        try {
+                            parts[identifier] = mapper.readValue(stream, partClass.java)
+                        } catch (e: JacksonException) {
+                            // A part that cannot be parsed is not there for whoever reads the
+                            // document. Whether that is fatal is decided below, by what the part is.
+                            log.warn("The project part '{}' could not be read", identifier, e)
+                            unparsable += identifier
+                        }
                     }
                 }
 
@@ -149,13 +167,21 @@ internal object StorageIO {
                 entry = stream.nextEntry
             }
 
-            val missing = missingPartsOf(parts, unknownParts)
+            val missing = Project.STANDARD_IDENTIFIERS - parts.keys
             if (missing.isNotEmpty()) {
-                log.warn("The archive is missing the project part(s) {}", missing)
-                Error.Corrupt(missing).left()
-            } else {
-                Project.fromParts(parts, unknownParts).right()
+                log.warn("The archive is missing the standard project part(s) {}", missing)
+                return@use Error.Corrupt(missing).left()
             }
+
+            val lost = lostPartsOf(parts, unknownParts, unparsable)
+            if (lost.isNotEmpty()) {
+                log.warn("The archive lost the additional project part(s) {}", lost)
+            }
+
+            val project = Project.fromParts(parts, unknownParts)
+            project.meta.additionalParts = project.meta.additionalParts - lost
+
+            LoadResult(project, lost).right()
         }
     }
 
@@ -167,39 +193,53 @@ internal object StorageIO {
         (project.extensionParts.keys + project.unknownParts.keys).sorted()
 
     /**
-     * The parts a complete document holds but the archive did not, so an empty answer means the
-     * archive is complete.
+     * The parts beyond the standard ones the document should hold but does not any more, so an empty
+     * answer means nothing got lost.
      *
-     * The three standard parts belong to every document. Everything beyond them is named by the meta
-     * data of the document itself, which is why a part that got lost is noticed at all - an entry
-     * that is gone leaves nothing behind that could be missed.
+     * Everything beyond the standard parts is named by the meta data of the document itself, which
+     * is why a part that got lost is noticed at all - an entry that is gone leaves nothing behind
+     * that could be missed. A part whose content could not be parsed is lost just the same, even
+     * when the meta data does not name it, because its entry is there but says nothing.
      *
      * @param parts The parts that were read from the archive, by their identifier.
      * @param unknownParts The text of the entries no class was named for, by their identifier.
+     * @param unparsable The identifiers of the entries whose content could not be parsed.
      */
-    private fun missingPartsOf(
+    private fun lostPartsOf(
         parts: Map<String, ProjectPart>,
-        unknownParts: Map<String, String>
+        unknownParts: Map<String, String>,
+        unparsable: Set<String>
     ): Set<String> {
-        val standard = Project.STANDARD_IDENTIFIERS - parts.keys
-        if (standard.isNotEmpty())
-            return standard
+        val announced = (parts[Project.PART_META] as? Meta)?.additionalParts.orEmpty().toSet()
+        val gone = announced - parts.keys - unknownParts.keys
 
-        val announced = (parts[Project.PART_META] as? Meta)?.additionalParts.orEmpty()
-        return announced.toSet() - parts.keys - unknownParts.keys
+        return gone + (unparsable - Project.STANDARD_IDENTIFIERS)
     }
+
+    /**
+     * What reading an archive answered with: the project it holds and what did not survive the read.
+     *
+     * @property project The project that was read, complete in its standard parts.
+     * @property lostParts The identifiers of the parts beyond the standard ones the document
+     *                     announces or carries but that could not be read, empty for a complete
+     *                     document.
+     */
+    data class LoadResult(val project: Project, val lostParts: Set<String>)
 
     /**
      * Reason why an archive could not be read as a project.
      *
      * Everything that goes wrong in the file system or in the parser is thrown, so the caller can
-     * tell those apart from a file that was read without trouble but simply is not a project.
+     * tell those apart from a file that was read without trouble but simply is not a project. A
+     * failure that only concerns a part beyond the standard ones is not an error at all - it is
+     * reported as [LoadResult.lostParts] beside the project that could still be read.
      */
     sealed interface Error {
 
         /**
          * The file was read, but it does not hold all three standard parts a project document is
-         * made of, so it is corrupt.
+         * made of - either because their entry is gone or because their content cannot be parsed -
+         * so it is corrupt.
          *
          * @property missing The identifiers of the standard parts the archive does not hold.
          */

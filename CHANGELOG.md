@@ -7,9 +7,14 @@
   opens with the parts this version knows, and a damaged file is reported instead of opening an empty
   project
 
-* Project document that lost one of its parts is reported as a corrupt project instead of being
-  opened with empty defaults in place of the lost part; a saved document names the parts stored
-  beside the standard ones, so a part that went missing is noticed as well
+* Project document that lost one of its three basic parts - the project data, the design or the
+  manuscript - is reported as a corrupt project instead of being opened with empty defaults in place
+  of the lost part; a saved document names the parts stored beside those three, so a part that went
+  missing is noticed as well
+
+* Project document that only lost a part beyond the three basic ones is no longer thrown away: a
+  warning names the affected parts, says that saving removes them from the file for good, and opens
+  the project only after you confirm
 
 * Project document keeps a part this version cannot read - written by a newer version for instance -
   and writes it back unchanged when you save, instead of dropping it

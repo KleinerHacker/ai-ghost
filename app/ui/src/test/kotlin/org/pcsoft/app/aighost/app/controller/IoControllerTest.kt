@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.app.Messages
 import org.pcsoft.app.aighost.model.PreferencesStorage
 import org.pcsoft.app.aighost.model.ProjectStorage
+import org.pcsoft.app.aighost.model.project.Project
 import java.io.File
 import java.io.IOException
 
@@ -153,6 +154,37 @@ class IoControllerTest {
     }
 
     /**
+     * Use case: the project file lost a part beyond the standard ones, so the dialog says the project
+     * lost content instead of calling the whole project corrupt.
+     */
+    @Test
+    fun namesTheIncompleteProject() {
+        assertEquals(
+            Messages["project.error.incomplete"],
+            IoController.reasonOfProjectError(incompleteError())
+        )
+    }
+
+    /**
+     * Use case: the user is asked whether an incomplete project may be opened anyway, so every text
+     * of that dialog is in the bundle - reading a missing key fails right here - and no two of them
+     * say the same thing.
+     */
+    @Test
+    fun carriesEveryTextOfTheRescueDialog() {
+        val texts = listOf(
+            Messages["project.incomplete.title"],
+            Messages["project.incomplete.header"],
+            Messages["project.incomplete.content"],
+            Messages["project.incomplete.parts"],
+            Messages["project.incomplete.hint"],
+            Messages["project.incomplete.button"]
+        )
+
+        assertEquals(texts.size, texts.toSet().size, "two texts of the rescue dialog are the same")
+    }
+
+    /**
      * Use case: the dialogs of two failures are told apart by their text, so no two failures of the
      * same storage are described with one and the same sentence.
      */
@@ -164,7 +196,8 @@ class IoControllerTest {
             ProjectStorage.Error.NotAFile(file),
             ProjectStorage.Error.Unreadable(file, IOException("denied")),
             ProjectStorage.Error.Malformed(file, IOException("broken")),
-            ProjectStorage.Error.Corrupt(file, setOf("book"))
+            ProjectStorage.Error.Corrupt(file, setOf("book")),
+            incompleteError()
         ).map { IoController.reasonOfProjectError(it) }
 
         val preferencesReasons = listOf(
@@ -181,4 +214,8 @@ class IoControllerTest {
             "two preferences failures share one text"
         )
     }
+
+    /** A project that lost one part beyond the standard ones, the rescued project beside it. */
+    private fun incompleteError(): ProjectStorage.Error.Incomplete =
+        ProjectStorage.Error.Incomplete(file, setOf("outline"), Project())
 }

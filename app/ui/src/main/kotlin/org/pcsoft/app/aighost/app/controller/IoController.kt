@@ -58,14 +58,59 @@ object IoController {
     fun loadProject(file: File): Boolean {
         log.debug("Loading project {}", file.absolutePath)
 
-        return FXProjectStorage.load(file).onLeft { error ->
-            log.warn("Failed to load project: {}", error::class.simpleName)
-            showFailure(
-                Messages["project.error.load.title"],
-                Messages["project.error.load.header"],
-                reasonOfProjectError(error),
-            )
-        }.fold({false}, {true})
+        return FXProjectStorage.load(file).fold({ error ->
+            when (error) {
+                is ProjectStorage.Error.Incomplete -> rescueProject(error)
+                else -> {
+                    log.warn("Failed to load project: {}", error::class.simpleName)
+                    showFailure(
+                        Messages["project.error.load.title"],
+                        Messages["project.error.load.header"],
+                        reasonOfProjectError(error),
+                    )
+                    false
+                }
+            }
+        }, { true })
+    }
+
+    /**
+     * Opens a project that lost parts beyond the standard ones, but only when the user accepts the
+     * loss.
+     *
+     * The user is told plainly what the document lost and that the loss becomes final with the next
+     * save, because the project is written without those parts from then on.
+     *
+     * @param error The failure that carries the project that could still be read.
+     * @return `true` when the project was opened, `false` when the user did not accept the loss.
+     */
+    private fun rescueProject(error: ProjectStorage.Error.Incomplete): Boolean {
+        log.warn("Project {} lost the part(s) {}", error.file.absolutePath, error.lostParts)
+
+        val openButton = ButtonType(Messages["project.incomplete.button"])
+        val cancelButton = ButtonType(Messages["button.cancel"])
+
+        val result = Alert(Alert.AlertType.WARNING).apply {
+            title = Messages["project.incomplete.title"]
+            headerText = Messages["project.incomplete.header"]
+            contentText = listOf(
+                Messages["project.incomplete.content"],
+                Messages["project.incomplete.parts"],
+                error.lostParts.sorted().joinToString(System.lineSeparator()) { "- $it" },
+                Messages["project.incomplete.hint"]
+            ).joinToString(System.lineSeparator() + System.lineSeparator())
+
+            buttonTypes.setAll(openButton, cancelButton)
+            decorate(this)
+        }.showAndWait()
+
+        if (!result.isPresent || result.get() != openButton) {
+            log.info("The incomplete project was not opened")
+            return false
+        }
+
+        FXProjectStorage.open(error.recovered, error.file)
+        return true
     }
 
     /**
@@ -81,6 +126,7 @@ object IoController {
         is ProjectStorage.Error.Unreadable -> Messages["project.error.unreadable"]
         is ProjectStorage.Error.Malformed -> Messages["project.error.malformed"]
         is ProjectStorage.Error.Corrupt -> Messages["project.error.corrupt"]
+        is ProjectStorage.Error.Incomplete -> Messages["project.error.incomplete"]
     }
     //endregion
 

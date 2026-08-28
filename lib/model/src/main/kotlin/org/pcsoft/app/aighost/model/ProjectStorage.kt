@@ -83,10 +83,17 @@ object ProjectStorage {
      * A part the document carries but no class is named for is kept as text. A document missing one
      * of the three standard parts is not opened with defaults in their place - it is corrupt.
      *
+     * A document that lost only a part beyond the standard ones is not lost itself: it is answered
+     * with [Error.Incomplete], which carries the project that could be read and the identifiers of
+     * what it lost, so the caller can tell the user what a rescue costs and open the project through
+     * [open] afterwards. Nothing of that happens behind the user's back - [load] itself does not
+     * open such a document.
+     *
      * Returns [Error.NotFound] when the file does not exist, [Error.NotAFile] when the path exists but
      * is not a regular file, [Error.Corrupt] when the file was read but does not hold every standard
-     * part, [Error.Malformed] when the content is not the expected document, and [Error.Unreadable]
-     * when the file cannot be read at all.
+     * part, [Error.Incomplete] when only parts beyond the standard ones got lost, [Error.Malformed]
+     * when the content is not the expected document, and [Error.Unreadable] when the file cannot be
+     * read at all.
      */
     fun load(file: File): Either<Error, Unit> {
         if (!file.exists())
@@ -94,7 +101,7 @@ object ProjectStorage {
         if (!file.isFile)
             return Error.NotAFile(file).left()
 
-        val project = try {
+        val result = try {
             StorageIO.loadFromZip(file, Meta::class, Design::class, Book::class)
                 .fold({ return errorOf(it, file).left() }, { it })
         } catch (e: JacksonException) {
@@ -103,10 +110,30 @@ object ProjectStorage {
             return Error.Unreadable(file, e).left()
         }
 
-        current = project
-        currentFile = file
+        if (result.lostParts.isNotEmpty())
+            return Error.Incomplete(file, result.lostParts, result.project).left()
+
+        open(result.project, file)
 
         return Unit.right()
+    }
+
+    /**
+     * Opens [project] as the project of [file], whatever it took to read it.
+     *
+     * This is what [load] does itself for a complete document and what a caller does for a document
+     * [Error.Incomplete] reported on: the project it carries is opened only when the user accepted
+     * the loss, which is a decision this storage does not make.
+     *
+     * The lost parts are gone from the moment the project is opened - the next [save] writes the
+     * document without them.
+     *
+     * @param project The project to open.
+     * @param file The file the project was read from.
+     */
+    fun open(project: Project, file: File) {
+        current = project
+        currentFile = file
     }
 
     /**
@@ -177,8 +204,9 @@ object ProjectStorage {
      *
      * The storage never throws for these cases, it returns them as the left side of an [Either], so a
      * caller has to decide what to do: [NoFile] and [NotFound] are answered by asking the user for a
-     * path, while [NotAFile], [Unreadable], [Corrupt] and [Malformed] point at something the user
-     * should be told about.
+     * path, [Incomplete] by asking whether the project may be opened without what it lost, while
+     * [NotAFile], [Unreadable], [Corrupt] and [Malformed] point at something the user should be told
+     * about.
      *
      * @property file The file the failing operation worked on, `null` when there was none.
      */
@@ -235,5 +263,23 @@ object ProjectStorage {
          * @property missing The identifiers of the standard parts the file does not hold.
          */
         data class Corrupt(override val file: File, val missing: Set<String>) : Error
+
+        /**
+         * The file holds every standard part, but a part beyond them got lost: its entry is gone or
+         * its content could not be read.
+         *
+         * The project can still be worked with, which is why [recovered] carries it: opening it is a
+         * decision of the user, because the lost parts are written out of the document on the next
+         * save. The project is opened through [ProjectStorage.open] once the user agreed.
+         *
+         * @property file The file that was read.
+         * @property lostParts The identifiers of the parts that got lost.
+         * @property recovered The project that could be read, without the lost parts.
+         */
+        data class Incomplete(
+            override val file: File,
+            val lostParts: Set<String>,
+            val recovered: Project
+        ) : Error
     }
 }

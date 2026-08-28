@@ -32,8 +32,10 @@ an archive holding one `.json` entry per project part. The three parts every pro
 meta data, its design and the manuscript - are fields of the project. A part this version cannot read
 is kept as the text it was stored as and written back unchanged, so a document written by a newer
 version or by a plugin loses nothing here. The meta data names every part stored beside the three
-standard ones, so a document that lost an entry is reported as corrupt instead of being opened with
-defaults in its place. Both documents are written with Jackson.
+standard ones, so a document that lost an entry is noticed at all. A document missing one of the
+three standard parts is reported as corrupt instead of being opened with defaults in its place; a
+document that only lost a part beyond them is offered for rescue, naming what would be lost, and is
+opened once the user accepts it. Both documents are written with Jackson.
 
 ### State of implementation
 

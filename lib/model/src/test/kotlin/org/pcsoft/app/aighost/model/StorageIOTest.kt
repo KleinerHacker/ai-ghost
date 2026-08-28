@@ -13,6 +13,7 @@
 package org.pcsoft.app.aighost.model
 
 import arrow.core.Either
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertInstanceOf
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -23,10 +24,26 @@ import org.pcsoft.app.aighost.model.project.Project
 import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.design.Design
 import org.pcsoft.app.aighost.model.project.meta.Meta
+import org.pcsoft.app.aighost.plugin.api.model.project.ProjectPart
+import org.pcsoft.app.aighost.plugin.api.model.project.ProjectPartInfo
 import java.io.File
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
+import kotlin.reflect.KClass
+
+/**
+ * A project part beyond the three standard ones, so a test can hand a readable part of another
+ * origin to the archive and see how a failure of such a part is weighed.
+ *
+ * @property note The text the part carries.
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
+@ProjectPartInfo(identifier = "notes")
+data class TestNotes(
+    override val version: Int = 1,
+    var note: String = ""
+) : ProjectPart
 
 /**
  * Developer tests for [StorageIO], the archive a project document is made of.
@@ -55,16 +72,18 @@ class StorageIOTest {
 
     /**
      * Use case: the user saves a project and opens it again, so the project comes back from the
-     * archive exactly as it was written - the second and third part included.
+     * archive exactly as it was written - the second and third part included - and nothing is
+     * reported as lost.
      */
     @Test
     fun roundTripsTheWholeProject() {
         StorageIO.saveToZip(file, TestData.project())
 
-        val project = load()
+        val result = loadEither().getOrNull()
 
-        assertNotNull(project)
-        assertEquals(TestData.project(), project)
+        assertNotNull(result)
+        assertEquals(TestData.project(), result!!.project)
+        assertTrue(result.lostParts.isEmpty())
     }
 
     /**
@@ -162,14 +181,91 @@ class StorageIOTest {
     }
 
     /**
-     * Use case: the archive lost a part the meta data names, so the document is reported as corrupt
-     * instead of opening without a part the user stored in it.
+     * Use case: the entry of a standard part is there but its content is broken, so the part is as
+     * gone as a missing entry and the document is reported as corrupt.
      */
     @Test
-    fun reportsAMissingAdditionalPartAsCorrupt() {
+    fun reportsAnUnreadableStandardPartAsCorrupt() {
+        writeArchive(
+            file,
+            "meta.json" to """{"name":"My Novel"}""",
+            "design.json" to "{}",
+            "book.json" to "{ this is not the book"
+        )
+
+        assertEquals(setOf(Project.PART_BOOK), corruptionOf(loadEither()).missing)
+    }
+
+    /**
+     * Use case: the archive lost a part the meta data names, so the document still opens with
+     * everything else and the lost part is reported instead of the whole project being thrown away.
+     */
+    @Test
+    fun reportsAMissingAdditionalPartAsLost() {
         writeArchive(file, *standardEntries(additionalParts = listOf("plugin-notes")))
 
-        assertEquals(setOf("plugin-notes"), corruptionOf(loadEither()).missing)
+        val result = loadEither().getOrNull()
+
+        assertNotNull(result)
+        assertEquals(setOf("plugin-notes"), result!!.lostParts)
+        assertEquals("My Novel", result.project.meta.name)
+    }
+
+    /**
+     * Use case: a part beyond the standard ones got lost, so the meta data of the opened project
+     * stops naming it and the document is complete again on the next save.
+     */
+    @Test
+    fun dropsALostPartFromTheMetaData() {
+        writeArchive(
+            file,
+            *standardEntries(additionalParts = listOf("plugin-notes", "other-notes")),
+            "other-notes.json" to """{"note":"still there"}"""
+        )
+
+        val result = loadEither().getOrNull()
+
+        assertNotNull(result)
+        assertEquals(listOf("other-notes"), result!!.project.meta.additionalParts)
+    }
+
+    /**
+     * Use case: the entry of a part beyond the standard ones is there but its content is broken, so
+     * only that part is reported as lost while the rest of the document opens.
+     */
+    @Test
+    fun reportsAnUnreadableAdditionalPartAsLost() {
+        writeArchive(
+            file,
+            *standardEntries(additionalParts = listOf("notes")),
+            "notes.json" to "{ this is not a note"
+        )
+
+        val result = loadEither(TestNotes::class).getOrNull()
+
+        assertNotNull(result)
+        assertEquals(setOf("notes"), result!!.lostParts)
+        assertTrue(result.project.extensionParts.isEmpty())
+        assertTrue(result.project.meta.additionalParts.isEmpty())
+    }
+
+    /**
+     * Use case: a part beyond the standard ones is readable, so it opens beside the standard parts
+     * and nothing is reported as lost.
+     */
+    @Test
+    fun readsAnAdditionalPartBesideTheStandardOnes() {
+        writeArchive(
+            file,
+            *standardEntries(additionalParts = listOf("notes")),
+            "notes.json" to """{"note":"written here"}"""
+        )
+
+        val result = loadEither(TestNotes::class).getOrNull()
+
+        assertNotNull(result)
+        assertTrue(result!!.lostParts.isEmpty())
+        assertEquals(TestNotes(note = "written here"), result.project.extensionParts["notes"])
     }
 
     /**
@@ -186,15 +282,15 @@ class StorageIOTest {
         assertTrue(content.contains(""""name" : "My Novel""""))
     }
 
-    /** Reads the archive at [file] as a project document. */
-    private fun loadEither(): Either<StorageIO.Error, Project> =
-        StorageIO.loadFromZip(file, Meta::class, Design::class, Book::class)
+    /** Reads the archive at [file] as a project document, knowing the given additional parts. */
+    private fun loadEither(vararg additional: KClass<out ProjectPart>): Either<StorageIO.Error, StorageIO.LoadResult> =
+        StorageIO.loadFromZip(file, Meta::class, Design::class, Book::class, *additional)
 
     /** The project the archive at [file] holds, `null` when it holds none. */
-    private fun load(): Project? = loadEither().getOrNull()
+    private fun load(): Project? = loadEither().getOrNull()?.project
 
     /** The corruption the read of the archive reported, failing the test when it read a project. */
-    private fun corruptionOf(result: Either<StorageIO.Error, Project>): StorageIO.Error.Corrupt =
+    private fun corruptionOf(result: Either<StorageIO.Error, StorageIO.LoadResult>): StorageIO.Error.Corrupt =
         assertInstanceOf(StorageIO.Error.Corrupt::class.java, result.leftOrNull())
 
     /** The three entries every project document holds, the meta data naming [additionalParts]. */

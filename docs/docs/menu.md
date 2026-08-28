@@ -19,6 +19,19 @@ where a shortcut is given, straight from the keyboard.
 | Project Settings...     | -                  | Opens the settings of the current project     |
 | Exit                    | `Alt+F4`           | Closes the application                        |
 
+### Opening a project that is not complete
+
+A book project is one document made of several parts. What happens when a part is missing depends on
+which part it is:
+
+* **A basic part is missing or damaged** - the project data, the design or the manuscript itself:
+  the project cannot be opened at all and is reported as corrupt. The project you are working on
+  stays open.
+* **Any other part is missing or damaged** - a part of a plugin for instance: AI Ghost warns you,
+  names the affected parts and asks whether the project may be opened anyway. Opening it does not
+  bring those parts back - as soon as you save the project, they are removed from the file for good.
+  Cancel and back up the file first if you want to keep them.
+
 ## Publish
 
 | Entry             | Shortcut       | What it does                                |

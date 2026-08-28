@@ -191,6 +191,28 @@ class FXProjectStorageTest {
         assertEquals("New Project", FXProjectStorage.current.nameProperty.get())
     }
 
+    /**
+     * Opening a project the user rescued has to reach every property of the tree.
+     *
+     * A document that lost a part beyond the standard ones is not opened by the load itself, it is
+     * handed over as the project of the failure and opened once the user accepted the loss. That way
+     * of opening has to refresh the tree exactly like a plain load does.
+     */
+    @Test
+    fun `opening a rescued project fires a change on every property of the tree`() {
+        val file = writeProjectFile()
+        assertTrue(FXProjectStorage.load(file).isRight()) { "The test could not establish a loaded project" }
+        val rescued = org.pcsoft.app.aighost.model.ProjectStorage.current
+        FXProjectStorage.new()
+        recorder.reset()
+
+        FXProjectStorage.open(rescued, file)
+
+        recorder.assertAllFired("Opening a rescued project")
+        assertEquals("Loaded Project", FXProjectStorage.current.nameProperty.get())
+        assertEquals(file, FXProjectStorage.currentFile)
+    }
+
     /** Puts a style and every field nested in it under observation. */
     private fun watchStyle(prefix: String, property: StyleDataProperty) {
         recorder.watch(prefix, property)
