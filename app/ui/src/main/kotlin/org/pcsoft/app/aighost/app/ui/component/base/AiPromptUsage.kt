@@ -10,7 +10,7 @@
  * See the License for the specific language governing permissions and limitations.
  */
 
-package org.pcsoft.app.aighost.app.ui.component
+package org.pcsoft.app.aighost.app.ui.component.base
 
 /**
  * How far the written prompt has eaten into the number of characters it is allowed to use.

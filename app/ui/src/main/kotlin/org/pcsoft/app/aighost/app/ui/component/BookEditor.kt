@@ -21,9 +21,9 @@ import org.pcsoft.app.aighost.fx.model.project.book.BookProperty
  * Editing surface for the manuscript itself: its title, the title lines below it and the two prompts
  * it is written from.
  *
- * The title and every title line are written into an [AiTextField], so the AI may write them instead
+ * The title and every title line are written into an [org.pcsoft.app.aighost.app.ui.component.base.AiTextField], so the AI may write them instead
  * of the user; the title lines grow and shrink with the buttons next to and below them. The prompts
- * are written into an [AiPromptArea] each.
+ * are written into an [org.pcsoft.app.aighost.app.ui.component.base.AiPromptArea] each.
  *
  * The component owns no data of its own: [book] is set by whoever shows the component and is the only
  * way in and out, so everything the user writes lands in that manuscript right away.

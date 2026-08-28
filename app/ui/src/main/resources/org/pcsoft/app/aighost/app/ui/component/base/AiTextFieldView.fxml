@@ -20,7 +20,7 @@
 <?import org.pcsoft.app.aighost.app.AiGhostIcons?>
 <fx:root type="BorderPane" xmlns="http://javafx.com/javafx"
          xmlns:fx="http://javafx.com/fxml"
-         fx:controller="org.pcsoft.app.aighost.app.ui.component.AiTextFieldView">
+         fx:controller="org.pcsoft.app.aighost.app.ui.component.base.AiTextFieldView">
     <center>
         <TextField fx:id="txtValue"/>
     </center>

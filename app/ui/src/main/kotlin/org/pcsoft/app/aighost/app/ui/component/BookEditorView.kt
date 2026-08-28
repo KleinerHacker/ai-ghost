@@ -21,6 +21,9 @@ import javafx.scene.control.Button
 import javafx.scene.layout.VBox
 import org.pcsoft.app.aighost.app.Messages
 import org.pcsoft.app.aighost.app.ui.AiGhostDialog
+import org.pcsoft.app.aighost.app.ui.component.base.AiPromptArea
+import org.pcsoft.app.aighost.app.ui.component.base.AiTextField
+import org.pcsoft.app.aighost.app.ui.component.base.AiTextFieldListItem
 import java.net.URL
 import java.text.MessageFormat
 import java.util.ResourceBundle
@@ -29,7 +32,7 @@ import java.util.ResourceBundle
  * View of [BookEditor], holding the fields of the manuscript.
  *
  * The title lines are not laid out in the FXML, because there are as many of them as the user wants:
- * they are built here, one [AiTextFieldListItem] per line, and follow the list of the view model. An
+ * they are built here, one [org.pcsoft.app.aighost.app.ui.component.base.AiTextFieldListItem] per line, and follow the list of the view model. An
  * item is only rebuilt when a line was added or removed - a line that was merely rewritten keeps its
  * item, so the user does not lose the cursor while typing.
  *

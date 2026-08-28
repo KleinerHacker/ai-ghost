@@ -21,8 +21,8 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 <?import org.pcsoft.app.aighost.app.AiGhostIcons?>
-<?import org.pcsoft.app.aighost.app.ui.component.AiPromptArea?>
-<?import org.pcsoft.app.aighost.app.ui.component.AiTextField?>
+<?import org.pcsoft.app.aighost.app.ui.component.base.AiPromptArea?>
+<?import org.pcsoft.app.aighost.app.ui.component.base.AiTextField?>
 <fx:root type="BorderPane" styleClass="book-editor" xmlns="http://javafx.com/javafx"
          xmlns:fx="http://javafx.com/fxml"
          fx:controller="org.pcsoft.app.aighost.app.ui.component.BookEditorView">

@@ -17,10 +17,10 @@
 <?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.BorderPane?>
 <?import org.pcsoft.app.aighost.app.AiGhostIcons?>
-<?import org.pcsoft.app.aighost.app.ui.component.AiTextField?>
+<?import org.pcsoft.app.aighost.app.ui.component.base.AiTextField?>
 <fx:root type="BorderPane" styleClass="ai-list-item" xmlns="http://javafx.com/javafx"
          xmlns:fx="http://javafx.com/fxml"
-         fx:controller="org.pcsoft.app.aighost.app.ui.component.AiTextFieldListItemView">
+         fx:controller="org.pcsoft.app.aighost.app.ui.component.base.AiTextFieldListItemView">
     <center>
         <AiTextField fx:id="txtValue"/>
     </center>

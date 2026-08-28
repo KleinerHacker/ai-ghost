@@ -30,6 +30,9 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.app.Messages
+import org.pcsoft.app.aighost.app.ui.component.base.AiPromptArea
+import org.pcsoft.app.aighost.app.ui.component.base.AiTextField
+import org.pcsoft.app.aighost.app.ui.component.base.AiTextFieldListItem
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
 import org.pcsoft.app.aighost.fx.model.project.book.BookProperty
 import org.pcsoft.app.aighost.model.project.Project

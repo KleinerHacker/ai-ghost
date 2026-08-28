@@ -22,7 +22,7 @@
 <?import org.pcsoft.app.aighost.app.AiGhostIcons?>
 <fx:root type="BorderPane" xmlns="http://javafx.com/javafx"
          xmlns:fx="http://javafx.com/fxml"
-         fx:controller="org.pcsoft.app.aighost.app.ui.component.AiPromptAreaView">
+         fx:controller="org.pcsoft.app.aighost.app.ui.component.base.AiPromptAreaView">
     <center>
         <TextArea fx:id="txaPrompt" wrapText="true"/>
     </center>
