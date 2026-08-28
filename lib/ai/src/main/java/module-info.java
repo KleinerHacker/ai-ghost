@@ -10,23 +10,10 @@
  * See the License for the specific language governing permissions and limitations.
  */
 
-plugins {
-    id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
+module org.pcsoft.app.aighost.ai {
+    requires kotlin.stdlib;
+
+    requires org.slf4j;
+
+    exports org.pcsoft.app.aighost.ai.util;
 }
-
-rootProject.name = "ai-ghost"
-
-include(":lib:plugin:api")
-project(":lib:plugin:api").name = "ai-ghost-plugin-api"
-
-include(":lib:model")
-project(":lib:model").name = "ai-ghost-model"
-
-include(":lib:fx-model")
-project(":lib:fx-model").name = "ai-ghost-fx-model"
-
-include(":lib:ai")
-project(":lib:ai").name = "ai-ghost-ai"
-
-include(":app:ui")
-project(":app:ui").name = "ai-ghost-ui"

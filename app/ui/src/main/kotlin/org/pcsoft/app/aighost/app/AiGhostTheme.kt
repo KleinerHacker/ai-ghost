@@ -57,6 +57,7 @@ object AiGhostTheme {
         "/styles/component/tab-pane.css",
         "/styles/component/split-pane.css",
         "/styles/component/editor.css",
+        "/styles/component/prompt-area.css",
         "/styles/component/dialog.css"
     )
 

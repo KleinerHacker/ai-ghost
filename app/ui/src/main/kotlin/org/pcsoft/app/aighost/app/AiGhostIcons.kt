@@ -77,6 +77,19 @@ object AiGhostIcons {
     /** Icon for the online help. */
     val helpOnline: Image by lazy { load("help-online") }
 
+    /** Icon for handing a prompt to the AI so that it improves the wording. */
+    val optimizePrompt: Image by lazy { load("optimize-prompt") }
+
+    /**
+     * Creates the button graphic for optimising a prompt, scaled to [MENU_ICON_SIZE].
+     *
+     * Referenced from FXML through `fx:factory`.
+     *
+     * @return a new image view showing [optimizePrompt]
+     */
+    @JvmStatic
+    fun buttonOptimizePrompt(): ImageView = optimizePrompt.toImageView()
+
     /**
      * Creates the menu graphic for creating an epilog, scaled to [MENU_ICON_SIZE].
      *

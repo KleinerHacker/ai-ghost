@@ -49,6 +49,8 @@ opened once the user accepts it. Both documents are written with Jackson.
 | Plugin API (`lib/plugin/ai-ghost-plugin-api`)     | Planned     |
 | JavaFX desktop shell (`app/ai-ghost-ui`)          | Implemented |
 | JSON data model (`lib/ai-ghost-model`)            | Implemented |
+| AI support library (`lib/ai-ghost-ai`)            | Implemented |
+| Prompt input with character limit and token estimate | Implemented |
 | ZIP distribution with start scripts and `libs`    | Implemented |
 | MVVM UI architecture (MVVM FX)                    | Implemented |
 | Internationalisation of the UI (English, German)  | Implemented |
