@@ -17,6 +17,8 @@
   -->
 
 <?import org.pcsoft.app.aighost.app.ui.component.Editor?>
+<?import org.controlsfx.control.StatusBar?>
+<?import javafx.geometry.Insets?>
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="org.pcsoft.app.aighost.app.ui.window.MainWindowView"
@@ -169,5 +171,25 @@
             <Tab text="%tab.preview" closable="false"/>
         </TabPane>
     </center>
+    <bottom>
+        <StatusBar text="">
+            <leftItems>
+                <Label text="Breadcrumb"/>
+            </leftItems>
+            <rightItems>
+                <Label text="Pages">
+                    <padding>
+                        <Insets right="5"/>
+                    </padding>
+                </Label>
+                <Label text="Words">
+                    <padding>
+                        <Insets right="5"/>
+                    </padding>
+                </Label>
+                <Label text="Characters"/>
+            </rightItems>
+        </StatusBar>
+    </bottom>
 
 </BorderPane>

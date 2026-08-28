@@ -49,6 +49,7 @@ object AiGhostTheme {
         "/styles/component/menu-bar.css",
         "/styles/component/context-menu.css",
         "/styles/component/tool-bar.css",
+        "/styles/component/status-bar.css",
         "/styles/component/button.css",
         "/styles/component/tooltip.css",
         "/styles/component/text-input.css",
