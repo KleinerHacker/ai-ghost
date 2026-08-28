@@ -114,6 +114,40 @@ class AiGhostIconsTest {
     }
 
     /**
+     * Use case: a dialog is opened in either colour scheme, so both variants of both dialog icons
+     * are shipped and are decoded in the size they are shown in.
+     */
+    @Test
+    fun dialogIconIsShippedForEveryColorScheme() {
+        AiGhostColorScheme.entries.forEach { scheme ->
+            listOf("error" to AiGhostIcons.error(scheme), "warning" to AiGhostIcons.warning(scheme))
+                .forEach { (name, image) ->
+                    assertFalse(image.isError, "icon $name of scheme $scheme could not be loaded")
+                    assertEquals(
+                        AiGhostIcons.DIALOG_ICON_STORED_SIZE.toDouble(),
+                        image.width,
+                        "icon $name of scheme $scheme has the wrong width"
+                    )
+                    assertEquals(
+                        AiGhostIcons.DIALOG_ICON_STORED_SIZE.toDouble(),
+                        image.height,
+                        "icon $name of scheme $scheme has the wrong height"
+                    )
+                }
+        }
+    }
+
+    /**
+     * Use case: the same dialog is opened again, so its icon is decoded once and handed out from
+     * then on, while the two colour schemes stay two different images.
+     */
+    @Test
+    fun dialogIconIsDecodedOncePerColorScheme() {
+        assertSame(AiGhostIcons.error(AiGhostColorScheme.LIGHT), AiGhostIcons.error(AiGhostColorScheme.LIGHT))
+        assertNotSame(AiGhostIcons.error(AiGhostColorScheme.LIGHT), AiGhostIcons.error(AiGhostColorScheme.DARK))
+    }
+
+    /**
      * Use case: the application icon is available in every declared size, so the window manager can
      * pick the size it needs.
      */

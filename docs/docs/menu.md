@@ -28,9 +28,9 @@ which part it is:
   the project cannot be opened at all and is reported as corrupt. The project you are working on
   stays open.
 * **Any other part is missing or damaged** - a part of a plugin for instance: AI Ghost warns you,
-  names the affected parts and asks whether the project may be opened anyway. Opening it does not
-  bring those parts back - as soon as you save the project, they are removed from the file for good.
-  Cancel and back up the file first if you want to keep them.
+  asks whether the project may be opened anyway and names the affected parts behind *Show details*.
+  Opening it does not bring those parts back - as soon as you save the project, they are removed from
+  the file for good. Answer with *No* and back up the file first if you want to keep them.
 
 ## Publish
 

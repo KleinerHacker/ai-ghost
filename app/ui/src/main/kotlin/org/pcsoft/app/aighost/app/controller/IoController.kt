@@ -13,10 +13,8 @@
 package org.pcsoft.app.aighost.app.controller
 
 import javafx.application.Application
-import javafx.scene.control.Alert
-import javafx.scene.control.ButtonType
-import org.pcsoft.app.aighost.app.AiGhostTheme
 import org.pcsoft.app.aighost.app.Messages
+import org.pcsoft.app.aighost.app.ui.AiGhostDialog
 import org.pcsoft.app.aighost.app.util.logger
 import org.pcsoft.app.aighost.fx.model.FXPreferencesStorage
 import org.pcsoft.app.aighost.fx.model.FXProjectStorage
@@ -79,7 +77,9 @@ object IoController {
      * loss.
      *
      * The user is told plainly what the document lost and that the loss becomes final with the next
-     * save, because the project is written without those parts from then on.
+     * save, because the project is written without those parts from then on. The parts themselves
+     * are handed to the details pane of the dialog, so a long list does not push the question out of
+     * sight.
      *
      * @param error The failure that carries the project that could still be read.
      * @return `true` when the project was opened, `false` when the user did not accept the loss.
@@ -87,24 +87,17 @@ object IoController {
     private fun rescueProject(error: ProjectStorage.Error.Incomplete): Boolean {
         log.warn("Project {} lost the part(s) {}", error.file.absolutePath, error.lostParts)
 
-        val openButton = ButtonType(Messages["project.incomplete.button"])
-        val cancelButton = ButtonType(Messages["button.cancel"])
-
-        val result = Alert(Alert.AlertType.WARNING).apply {
-            title = Messages["project.incomplete.title"]
-            headerText = Messages["project.incomplete.header"]
-            contentText = listOf(
+        val confirmed = AiGhostDialog.showWarningConfirmDetails(
+            Messages["project.incomplete.title"],
+            Messages["project.incomplete.header"],
+            listOf(
                 Messages["project.incomplete.content"],
-                Messages["project.incomplete.parts"],
-                error.lostParts.sorted().joinToString(System.lineSeparator()) { "- $it" },
                 Messages["project.incomplete.hint"]
-            ).joinToString(System.lineSeparator() + System.lineSeparator())
+            ).joinToString(System.lineSeparator() + System.lineSeparator()),
+            error.lostParts.sorted().joinToString(System.lineSeparator()) { "- $it" },
+        )
 
-            buttonTypes.setAll(openButton, cancelButton)
-            decorate(this)
-        }.showAndWait()
-
-        if (!result.isPresent || result.get() != openButton) {
+        if (!confirmed) {
             log.info("The incomplete project was not opened")
             return false
         }
@@ -214,19 +207,13 @@ object IoController {
     private fun askForResetPreferences(app: Application) {
         log.debug("Asking for reset preferences")
 
-        val resetButton = ButtonType(Messages["preferences.reset.button"])
-        val cancelButton = ButtonType(Messages["button.cancel"])
+        val confirmed = AiGhostDialog.showWarningConfirm(
+            Messages["preferences.reset.title"],
+            Messages["preferences.reset.header"],
+            Messages["preferences.reset.content"],
+        )
 
-        val result = Alert(Alert.AlertType.CONFIRMATION).apply {
-            title = Messages["preferences.reset.title"]
-            headerText = Messages["preferences.reset.header"]
-            contentText = Messages["preferences.reset.content"]
-
-            buttonTypes.setAll(resetButton, cancelButton)
-            decorate(this)
-        }.showAndWait()
-
-        if (result.isPresent && result.get() == resetButton) {
+        if (confirmed) {
             resetPreferences(app)
         } else {
             exitingApp(app)
@@ -268,14 +255,7 @@ object IoController {
     private fun showFailure(title: String, header: String, reason: String) {
         log.debug("Inform about error: {}", header)
 
-        Alert(Alert.AlertType.ERROR).apply {
-            this.title = title
-            headerText = header
-            contentText = reason
-
-            buttonTypes.setAll(ButtonType(Messages["button.ok"]))
-            decorate(this)
-        }.showAndWait()
+        AiGhostDialog.showError(title, header, reason)
     }
 
     /**
@@ -284,16 +264,6 @@ object IoController {
     private fun exitingApp(app: Application) {
         log.info("Exiting application")
         app.stop()
-    }
-
-    /**
-     * Dresses the dialog in the application theme, so an alert of the start up looks like every
-     * other window.
-     *
-     * @param alert the alert to decorate
-     */
-    private fun decorate(alert: Alert) {
-        alert.dialogPane.scene?.let(AiGhostTheme::apply)
     }
 
 }

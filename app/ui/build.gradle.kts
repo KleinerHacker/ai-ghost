@@ -76,6 +76,29 @@ tasks.withType<Test> {
     systemProperty("java.awt.headless", "true")
 }
 
+// The dialogs are looked at by a human being, not by an assertion: their icons have to keep their
+// contrast in both colour schemes and their layout has to survive an unfolded details pane. The demo
+// that opens them lives in its own source set, so it is neither shipped with the application nor run
+// by the tests, and it is compiled only when somebody starts it on purpose.
+val demo: SourceSet by sourceSets.creating {
+    compileClasspath += sourceSets["main"].output
+    runtimeClasspath += sourceSets["main"].output
+}
+
+configurations["demoImplementation"].extendsFrom(configurations["implementation"])
+configurations["demoRuntimeOnly"].extendsFrom(configurations["runtimeOnly"])
+
+tasks.register<JavaExec>("runDialogDemo") {
+    group = "demo"
+    description = "Opens every dialog of the application for a manual look. Hangs on no other task " +
+            "and is never run by `build` or `test`."
+
+    mainClass.set("org.pcsoft.app.aighost.app.ui.dialog.DialogDemoKt")
+    classpath = demo.runtimeClasspath
+    // The demo runs on the classpath, the way the UI tests do, so JavaFX is loaded as a plain library.
+    jvmArgs = listOf("--enable-native-access=ALL-UNNAMED")
+}
+
 // The Ghost Writer font is drawn by the vector generator in `tools/font`. The generated file is
 // checked in and is what every build ships, so the generator is only run when somebody asks for it:
 // the task hangs on no other task and has to be called on purpose after the generator was changed.

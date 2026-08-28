@@ -176,9 +176,7 @@ class IoControllerTest {
             Messages["project.incomplete.title"],
             Messages["project.incomplete.header"],
             Messages["project.incomplete.content"],
-            Messages["project.incomplete.parts"],
-            Messages["project.incomplete.hint"],
-            Messages["project.incomplete.button"]
+            Messages["project.incomplete.hint"]
         )
 
         assertEquals(texts.size, texts.toSet().size, "two texts of the rescue dialog are the same")

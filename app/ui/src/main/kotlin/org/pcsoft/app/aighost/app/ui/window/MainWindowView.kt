@@ -14,9 +14,6 @@ package org.pcsoft.app.aighost.app.ui.window
 
 import de.saxsys.mvvmfx.FxmlView
 import de.saxsys.mvvmfx.InjectViewModel
-import java.io.File
-import java.net.URL
-import java.util.ResourceBundle
 import javafx.beans.Observable
 import javafx.beans.binding.BooleanBinding
 import javafx.event.EventHandler
@@ -33,6 +30,9 @@ import org.pcsoft.app.aighost.app.controller.IoController
 import org.pcsoft.app.aighost.app.ui.component.Editor
 import org.pcsoft.app.aighost.app.ui.showingBinding
 import org.pcsoft.app.aighost.fx.model.FXProjectStorage
+import java.io.File
+import java.net.URL
+import java.util.*
 
 /**
  * View of the application main window, holding the menu bar, the tool bar and the tab pane.

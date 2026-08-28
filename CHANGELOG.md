@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+* Messages of the application are shown in dialogs of their own look, with an icon drawn for the
+  light and for the dark appearance, and a report you unfold with "Show details" whenever there is
+  more to say than one sentence - the parts an incomplete project lost, for instance
+
+* Question dialogs are answered with "Yes" and "No" instead of a button naming the action, and
+  closing such a dialog with ESCAPE or the window close button counts as "No"
+
 * Book project is stored as one document holding its parts side by side - the project data, the
   design of the manuscript and the manuscript itself - so a project written by a newer version still
   opens with the parts this version knows, and a damaged file is reported instead of opening an empty
