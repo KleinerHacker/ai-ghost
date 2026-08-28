@@ -24,7 +24,9 @@ import org.pcsoft.app.aighost.model.project.meta.Meta
  * property answers with a neutral value and drops what is written to it until then.
  *
  * The version of the part is not offered as a property: it names the shape of the stored document,
- * is never written by the user and never changes while a project is open.
+ * is never written by the user and never changes while a project is open. The list of the additional
+ * parts is left out for the same reason: it is bookkeeping of the storage, written on every save out
+ * of the parts the project carries, and nothing the user edits.
  */
 internal class MetaProperty(
     setter: (Meta?) -> Unit,

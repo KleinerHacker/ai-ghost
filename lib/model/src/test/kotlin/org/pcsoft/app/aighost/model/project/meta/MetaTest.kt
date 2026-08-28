@@ -39,6 +39,21 @@ class MetaTest {
         assertEquals("New Project", meta.name)
         assertEquals("", meta.author)
         assertEquals("", meta.copyright)
+        assertEquals(emptyList<String>(), meta.additionalParts)
+    }
+
+    /**
+     * Use case: the document says which parts belong to it, so the list of the parts beyond the
+     * standard ones is stored under a stable property name and comes back from the file.
+     */
+    @Test
+    fun roundTripsTheAdditionalParts() {
+        val meta = TestData.meta().apply { additionalParts = listOf("outline") }
+
+        val json = mapper.writeValueAsString(meta)
+
+        assertEquals(true, json.contains(""""additionalParts":["outline"]"""))
+        assertEquals(meta, mapper.readValue<Meta>(json))
     }
 
     /**

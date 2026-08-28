@@ -12,11 +12,16 @@
 
 package org.pcsoft.app.aighost.model
 
+import arrow.core.Either
+import arrow.core.left
+import arrow.core.right
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.module.kotlin.kotlinModule
+import org.pcsoft.app.aighost.model.project.Project
+import org.pcsoft.app.aighost.model.project.meta.Meta
 import org.pcsoft.app.aighost.model.util.logger
 import org.pcsoft.app.aighost.plugin.api.model.project.ProjectPart
 import org.pcsoft.app.aighost.plugin.api.model.project.ProjectPartInfo
@@ -57,41 +62,28 @@ internal object StorageIO {
         .build()
 
     /**
-     * What a project archive was read into.
+     * Saves the given project into a zip file.
      *
-     * The two sides are kept apart on purpose: [parts] is what the application can work with, while
-     * [unknownParts] is text it only carries along.
+     * Every readable part of [project] is serialized into an entry of its own, named after the
+     * identifier it is stored under and carrying the [ENTRY_SUFFIX]. Every part the project only
+     * carries as text is written back exactly as it was read, under the same name, so a part this
+     * application cannot read survives the save untouched.
      *
-     * @property parts The parts that were read into a model class, by their identifier.
-     * @property unknownParts The stored text of every entry no model class was named for, by its identifier.
+     * The meta data of [project] takes over the identifiers of everything written beside the three
+     * standard parts before it is serialized, so the document says itself which entries belong to
+     * it and reading it can tell whether it still holds all of them.
+     *
+     * @param file The output zip file where the project will be saved.
+     * @param project The project to serialize into the archive.
      */
-    data class Content(
-        val parts: Map<String, ProjectPart>,
-        val unknownParts: Map<String, String>
-    )
-
-    /**
-     * Saves the given project parts into a zip file.
-     *
-     * Each part is serialized into an entry of its own, named after the identifier the part declares
-     * through [ProjectPartInfo] and carrying the [ENTRY_SUFFIX]. Every entry of [unknownParts] is
-     * written back exactly as it was read, under the same name, so a part this application cannot
-     * read survives the save untouched.
-     *
-     * @param file The output zip file where the project parts will be saved.
-     * @param parts The parts to serialize into the archive.
-     * @param unknownParts The stored text of the parts to write back unchanged, by their identifier.
-     */
-    fun saveToZip(
-        file: File,
-        parts: Collection<ProjectPart>,
-        unknownParts: Map<String, String> = emptyMap()
-    ) {
+    fun saveToZip(file: File, project: Project) {
         log.debug("Save to ZIP: {}", file.absolutePath)
 
+        project.meta.additionalParts = additionalPartsOf(project)
+
         ZipOutputStream(file.outputStream()).use { stream ->
-            for (part in parts) {
-                val entryName = entryNameOf(identifierOf(part::class))
+            for ((identifier, part) in project.parts) {
+                val entryName = entryNameOf(identifier)
                 log.trace("> store part {} with entry name {}", part::class.simpleName, entryName)
 
                 stream.putNextEntry(ZipEntry(entryName))
@@ -99,7 +91,7 @@ internal object StorageIO {
                 stream.closeEntry()
             }
 
-            for ((identifier, json) in unknownParts) {
+            for ((identifier, json) in project.unknownParts) {
                 val entryName = entryNameOf(identifier)
                 log.trace("> store unread part with entry name {}", entryName)
 
@@ -111,19 +103,23 @@ internal object StorageIO {
     }
 
     /**
-     * Loads and deserializes project parts from a zip archive file.
+     * Loads a project from a zip archive file.
      *
      * An entry no class was named for is not thrown away: its text is kept in
-     * [Content.unknownParts], so a project written by a newer version - or by a plugin that is not
+     * [Project.unknownParts], so a project written by a newer version - or by a plugin that is not
      * installed here - opens with the parts this application knows and loses nothing on the next
      * save. An entry that does not carry the [ENTRY_SUFFIX] is not a project part at all and is
      * passed over.
      *
+     * A project document holds the three standard parts, so an archive missing one of them is
+     * corrupt - a file that is not an archive at all carries no entry and would otherwise open as a
+     * project of pure defaults. Such a file is answered with [Error.Corrupt] instead of a project.
+     *
      * @param file The zip archive file containing the serialized project parts.
      * @param partClasses The types of project parts to read, everything else is kept as text.
-     * @return The parts that could be read and the text of the ones that could not.
+     * @return The project read from the archive, or the reason why the file holds none.
      */
-    fun loadFromZip(file: File, vararg partClasses: KClass<out ProjectPart>): Content {
+    fun loadFromZip(file: File, vararg partClasses: KClass<out ProjectPart>): Either<Error, Project> {
         log.debug("Load from ZIP: {}", file.absolutePath)
 
         val classesByIdentifier = partClasses.associateBy { identifierOf(it) }
@@ -153,8 +149,61 @@ internal object StorageIO {
                 entry = stream.nextEntry
             }
 
-            Content(parts, unknownParts)
+            val missing = missingPartsOf(parts, unknownParts)
+            if (missing.isNotEmpty()) {
+                log.warn("The archive is missing the project part(s) {}", missing)
+                Error.Corrupt(missing).left()
+            } else {
+                Project.fromParts(parts, unknownParts).right()
+            }
         }
+    }
+
+    /**
+     * The identifiers of everything [project] stores beside the three standard parts, in a stable
+     * order so the same project is written the same way twice.
+     */
+    private fun additionalPartsOf(project: Project): List<String> =
+        (project.extensionParts.keys + project.unknownParts.keys).sorted()
+
+    /**
+     * The parts a complete document holds but the archive did not, so an empty answer means the
+     * archive is complete.
+     *
+     * The three standard parts belong to every document. Everything beyond them is named by the meta
+     * data of the document itself, which is why a part that got lost is noticed at all - an entry
+     * that is gone leaves nothing behind that could be missed.
+     *
+     * @param parts The parts that were read from the archive, by their identifier.
+     * @param unknownParts The text of the entries no class was named for, by their identifier.
+     */
+    private fun missingPartsOf(
+        parts: Map<String, ProjectPart>,
+        unknownParts: Map<String, String>
+    ): Set<String> {
+        val standard = Project.STANDARD_IDENTIFIERS - parts.keys
+        if (standard.isNotEmpty())
+            return standard
+
+        val announced = (parts[Project.PART_META] as? Meta)?.additionalParts.orEmpty()
+        return announced.toSet() - parts.keys - unknownParts.keys
+    }
+
+    /**
+     * Reason why an archive could not be read as a project.
+     *
+     * Everything that goes wrong in the file system or in the parser is thrown, so the caller can
+     * tell those apart from a file that was read without trouble but simply is not a project.
+     */
+    sealed interface Error {
+
+        /**
+         * The file was read, but it does not hold all three standard parts a project document is
+         * made of, so it is corrupt.
+         *
+         * @property missing The identifiers of the standard parts the archive does not hold.
+         */
+        data class Corrupt(val missing: Set<String>) : Error
     }
 
     /**

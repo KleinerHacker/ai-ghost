@@ -141,6 +141,18 @@ class IoControllerTest {
     }
 
     /**
+     * Use case: the project file does not hold every part a project is made of, so the dialog says
+     * the project is corrupt.
+     */
+    @Test
+    fun namesTheCorruptProject() {
+        assertEquals(
+            Messages["project.error.corrupt"],
+            IoController.reasonOfProjectError(ProjectStorage.Error.Corrupt(file, setOf("book")))
+        )
+    }
+
+    /**
      * Use case: the dialogs of two failures are told apart by their text, so no two failures of the
      * same storage are described with one and the same sentence.
      */
@@ -151,7 +163,8 @@ class IoControllerTest {
             ProjectStorage.Error.NotFound(file),
             ProjectStorage.Error.NotAFile(file),
             ProjectStorage.Error.Unreadable(file, IOException("denied")),
-            ProjectStorage.Error.Malformed(file, IOException("broken"))
+            ProjectStorage.Error.Malformed(file, IOException("broken")),
+            ProjectStorage.Error.Corrupt(file, setOf("book"))
         ).map { IoController.reasonOfProjectError(it) }
 
         val preferencesReasons = listOf(

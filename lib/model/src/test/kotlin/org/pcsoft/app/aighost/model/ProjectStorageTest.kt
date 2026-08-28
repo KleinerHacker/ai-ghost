@@ -88,7 +88,7 @@ class ProjectStorageTest {
 
         assertTrue(ProjectStorage.load(file).isRight())
         assertEquals(mapOf(OUTLINE to STORED_OUTLINE), ProjectStorage.current.unknownParts)
-        assertEquals(Meta(), ProjectStorage.current.meta)
+        assertEquals(Meta(additionalParts = listOf(OUTLINE)), ProjectStorage.current.meta)
     }
 
     /**
@@ -220,18 +220,19 @@ class ProjectStorageTest {
     }
 
     /**
-     * Use case: the project file was damaged by another program, so opening it reports it as
-     * malformed and the project the user works on stays open.
+     * Use case: the user opens a file that is not a project document at all, so opening it reports a
+     * corrupt project and the project the user works on stays open.
      */
     @Test
-    fun reportsMalformedFileAsError() {
+    fun reportsForeignFileAsCorrupt() {
         ProjectStorage.current.meta = Meta(name = "Untouched")
         file.writeText("{ this is not an archive")
 
         val error = ProjectStorage.load(file).leftOrNull()
 
-        val malformed = assertInstanceOf(ProjectStorage.Error.Malformed::class.java, error)
-        assertEquals(file, malformed.file)
+        val corrupt = assertInstanceOf(ProjectStorage.Error.Corrupt::class.java, error)
+        assertEquals(file, corrupt.file)
+        assertEquals(Project.STANDARD_IDENTIFIERS, corrupt.missing)
         assertEquals("Untouched", ProjectStorage.current.meta.name)
         assertNull(ProjectStorage.currentFile)
     }
@@ -250,18 +251,36 @@ class ProjectStorageTest {
     }
 
     /**
-     * Use case: a project written by an older version does not carry every part yet, so it is opened
-     * with the defaults filled in instead of being rejected.
+     * Use case: the project document lost one of the parts it is made of, so it is reported as
+     * corrupt instead of being opened with the defaults of the lost part in its place.
      */
     @Test
-    fun readsPartialDocumentWithDefaults() {
-        writeArchive("meta.json" to """{"name":"My Novel"}""")
+    fun reportsIncompleteDocumentAsCorrupt() {
+        writeArchive("meta.json" to """{"name":"My Novel"}""", "design.json" to "{}")
 
-        assertTrue(ProjectStorage.load(file).isRight())
+        val error = ProjectStorage.load(file).leftOrNull()
 
-        assertEquals("My Novel", ProjectStorage.current.meta.name)
-        assertEquals(Design(), ProjectStorage.current.design)
-        assertEquals(Book(), ProjectStorage.current.book)
+        val corrupt = assertInstanceOf(ProjectStorage.Error.Corrupt::class.java, error)
+        assertEquals(setOf(Project.PART_BOOK), corrupt.missing)
+        assertNull(ProjectStorage.currentFile)
+    }
+
+    /**
+     * Use case: the project document lost a part its meta data names, so it is reported as corrupt
+     * instead of opening without a part the user stored in it.
+     */
+    @Test
+    fun reportsDocumentWithLostAdditionalPartAsCorrupt() {
+        writeArchive(
+            "meta.json" to """{"name":"My Novel","additionalParts":["$OUTLINE"]}""",
+            "design.json" to "{}",
+            "book.json" to "{}"
+        )
+
+        val error = ProjectStorage.load(file).leftOrNull()
+
+        val corrupt = assertInstanceOf(ProjectStorage.Error.Corrupt::class.java, error)
+        assertEquals(setOf(OUTLINE), corrupt.missing)
     }
 
     /**
@@ -287,10 +306,10 @@ class ProjectStorageTest {
 
         ProjectStorage.save(file)
 
-        val content = StorageIO.loadFromZip(file, Meta::class, Design::class, Book::class)
+        val project = StorageIO.loadFromZip(file, Meta::class, Design::class, Book::class).getOrNull()
         assertEquals(
             setOf(Project.PART_META, Project.PART_DESIGN, Project.PART_BOOK),
-            content.parts.keys
+            project?.parts?.keys
         )
     }
 
@@ -335,7 +354,7 @@ class ProjectStorageTest {
 
     /** The meta part of the document stored in [file], read back the way the storage reads it. */
     private fun storedMeta(): Meta =
-        StorageIO.loadFromZip(file, Meta::class).parts[Project.PART_META] as Meta
+        StorageIO.loadFromZip(file, Meta::class, Design::class, Book::class).getOrNull()!!.meta
 
     /** Writes a hand made archive to [file], so a document of an older version can be opened. */
     private fun writeArchive(vararg entries: Pair<String, String>) {

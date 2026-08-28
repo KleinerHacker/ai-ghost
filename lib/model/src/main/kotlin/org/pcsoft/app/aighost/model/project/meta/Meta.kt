@@ -30,10 +30,16 @@ private const val VERSION = 1
  * This class captures the essential information about the project,
  * including its name, author, and copyright details.
  *
+ * Beside what the user typed, the meta data carries the list of the parts the document holds beyond
+ * the three standard ones. It is written on every save and is read to tell a complete document from
+ * one that lost an entry on its way, which the entries alone cannot answer: a part that is gone is
+ * simply not there any more.
+ *
  * @property version Version of the project metadata structure.
  * @property name The name of the project.
  * @property author The author of the project.
  * @property copyright The copyright information for the project.
+ * @property additionalParts The identifiers of the parts stored beside the three standard ones.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ProjectPartInfo(identifier = Project.PART_META)
@@ -43,4 +49,5 @@ data class Meta(
     var name: String = "New Project",
     var author: String = "",
     var copyright: String = "",
+    var additionalParts: List<String> = emptyList(),
 ) : ProjectPart

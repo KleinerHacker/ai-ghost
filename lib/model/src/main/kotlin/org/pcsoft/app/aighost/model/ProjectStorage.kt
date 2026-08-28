@@ -80,12 +80,13 @@ object ProjectStorage {
      * On success the document becomes [current] and [currentFile] points at [file]. A failure leaves
      * the open project untouched, so a broken file never closes what the user is working on.
      *
-     * A part the document carries but no class is named for is kept as text, and a standard part the
-     * document lost is replaced by its defaults.
+     * A part the document carries but no class is named for is kept as text. A document missing one
+     * of the three standard parts is not opened with defaults in their place - it is corrupt.
      *
      * Returns [Error.NotFound] when the file does not exist, [Error.NotAFile] when the path exists but
-     * is not a regular file, [Error.Malformed] when the content is not the expected document, and
-     * [Error.Unreadable] when the file cannot be read at all.
+     * is not a regular file, [Error.Corrupt] when the file was read but does not hold every standard
+     * part, [Error.Malformed] when the content is not the expected document, and [Error.Unreadable]
+     * when the file cannot be read at all.
      */
     fun load(file: File): Either<Error, Unit> {
         if (!file.exists())
@@ -94,13 +95,8 @@ object ProjectStorage {
             return Error.NotAFile(file).left()
 
         val project = try {
-            val content = StorageIO.loadFromZip(file, Meta::class, Design::class, Book::class)
-            // A file that is not an archive at all carries no entry, so it would open as a project
-            // without a single part. That is not a project document, it is a broken file.
-            if (content.parts.isEmpty())
-                return Error.Malformed(file, IOException("The file holds no project part")).left()
-
-            Project.fromParts(content.parts, content.unknownParts)
+            StorageIO.loadFromZip(file, Meta::class, Design::class, Book::class)
+                .fold({ return errorOf(it, file).left() }, { it })
         } catch (e: JacksonException) {
             return Error.Malformed(file, e).left()
         } catch (e: IOException) {
@@ -139,7 +135,7 @@ object ProjectStorage {
 
             val temporary = File.createTempFile(target.name, ".tmp", target.parentFile)
             try {
-                StorageIO.saveToZip(temporary, current.parts.values, current.unknownParts)
+                StorageIO.saveToZip(temporary, current)
                 Files.move(
                     temporary.toPath(),
                     target.toPath(),
@@ -167,12 +163,22 @@ object ProjectStorage {
     private fun createEmptyProject(): Project = Project()
 
     /**
+     * The failure this storage reports for a failure of the archive.
+     *
+     * @param error The failure the archive reported.
+     * @param file The file that was read.
+     */
+    private fun errorOf(error: StorageIO.Error, file: File): Error = when (error) {
+        is StorageIO.Error.Corrupt -> Error.Corrupt(file, error.missing)
+    }
+
+    /**
      * Reason why opening or storing a project failed.
      *
      * The storage never throws for these cases, it returns them as the left side of an [Either], so a
      * caller has to decide what to do: [NoFile] and [NotFound] are answered by asking the user for a
-     * path, while [NotAFile], [Unreadable] and [Malformed] point at something the user should be told
-     * about.
+     * path, while [NotAFile], [Unreadable], [Corrupt] and [Malformed] point at something the user
+     * should be told about.
      *
      * @property file The file the failing operation worked on, `null` when there was none.
      */
@@ -220,5 +226,14 @@ object ProjectStorage {
          * @property cause The underlying parse failure.
          */
         data class Malformed(override val file: File, val cause: Throwable) : Error
+
+        /**
+         * The file was read without trouble, but it does not hold every standard part a project is
+         * made of, so the project is corrupt.
+         *
+         * @property file The file that was read.
+         * @property missing The identifiers of the standard parts the file does not hold.
+         */
+        data class Corrupt(override val file: File, val missing: Set<String>) : Error
     }
 }

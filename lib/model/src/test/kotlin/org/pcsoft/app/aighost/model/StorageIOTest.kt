@@ -12,7 +12,10 @@
 
 package org.pcsoft.app.aighost.model
 
+import arrow.core.Either
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertInstanceOf
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
@@ -36,12 +39,13 @@ class StorageIOTest {
     private val file: File get() = File(directory, "project.aig")
 
     /**
-     * Use case: the user opens the stored document with an archive tool, so every part sits in an
-     * entry named after the identifier the part declares and carrying the JSON extension.
+     * Use case: the user opens the stored document with an archive tool, so every part of the
+     * project sits in an entry named after the identifier the part declares and carrying the JSON
+     * extension.
      */
     @Test
     fun storesEveryPartUnderItsIdentifier() {
-        StorageIO.saveToZip(file, listOf(TestData.meta(), TestData.design(), TestData.book()))
+        StorageIO.saveToZip(file, TestData.project())
 
         assertEquals(
             listOf("book.json", "design.json", "meta.json"),
@@ -50,19 +54,17 @@ class StorageIOTest {
     }
 
     /**
-     * Use case: the user saves a project and opens it again, so every part comes back from the
-     * archive exactly as it was written - the second and third entry included.
+     * Use case: the user saves a project and opens it again, so the project comes back from the
+     * archive exactly as it was written - the second and third part included.
      */
     @Test
-    fun roundTripsEveryPart() {
-        StorageIO.saveToZip(file, listOf(TestData.meta(), TestData.design(), TestData.book()))
+    fun roundTripsTheWholeProject() {
+        StorageIO.saveToZip(file, TestData.project())
 
-        val content = StorageIO.loadFromZip(file, Meta::class, Design::class, Book::class)
+        val project = load()
 
-        assertEquals(TestData.meta(), content.parts[Project.PART_META])
-        assertEquals(TestData.design(), content.parts[Project.PART_DESIGN])
-        assertEquals(TestData.book(), content.parts[Project.PART_BOOK])
-        assertTrue(content.unknownParts.isEmpty())
+        assertNotNull(project)
+        assertEquals(TestData.project(), project)
     }
 
     /**
@@ -73,14 +75,15 @@ class StorageIOTest {
     fun passesOverAnEntryWithoutTheExtension() {
         writeArchive(
             file,
-            "meta.json" to """{"name":"My Novel"}""",
+            *standardEntries(),
             "notes.txt" to "a plain note"
         )
 
-        val content = StorageIO.loadFromZip(file, Meta::class, Design::class, Book::class)
+        val project = load()
 
-        assertEquals("My Novel", (content.parts[Project.PART_META] as Meta).name)
-        assertTrue(content.unknownParts.isEmpty())
+        assertNotNull(project)
+        assertEquals("My Novel", project!!.meta.name)
+        assertTrue(project.unknownParts.isEmpty())
     }
 
     /**
@@ -91,16 +94,17 @@ class StorageIOTest {
     fun keepsAnEntryWithoutAModelClass() {
         writeArchive(
             file,
-            "meta.json" to """{"name":"My Novel"}""",
+            *standardEntries(additionalParts = listOf("plugin-notes")),
             "plugin-notes.json" to """{"note":"written elsewhere"}"""
         )
 
-        val content = StorageIO.loadFromZip(file, Meta::class, Design::class, Book::class)
+        val project = load()
 
-        assertEquals(setOf(Project.PART_META), content.parts.keys)
+        assertNotNull(project)
+        assertTrue(project!!.extensionParts.isEmpty())
         assertEquals(
             mapOf("plugin-notes" to """{"note":"written elsewhere"}"""),
-            content.unknownParts
+            project.unknownParts
         )
     }
 
@@ -112,24 +116,60 @@ class StorageIOTest {
     fun writesAnUnreadPartBackUnchanged() {
         val stored = """{"note":"written elsewhere"}"""
 
-        StorageIO.saveToZip(file, listOf(TestData.meta()), mapOf("plugin-notes" to stored))
+        StorageIO.saveToZip(file, TestData.project().apply { unknownParts = mapOf("plugin-notes" to stored) })
 
-        assertEquals(listOf("meta.json", "plugin-notes.json"), entryNamesOf(file).sorted())
+        assertEquals(
+            listOf("book.json", "design.json", "meta.json", "plugin-notes.json"),
+            entryNamesOf(file).sorted()
+        )
         assertEquals(stored, readEntry(file, "plugin-notes.json"))
     }
 
     /**
-     * Use case: the user opens a file that is not a project archive at all, so no part is read
-     * instead of a half filled project being reported as complete.
+     * Use case: a project carrying a part beyond the standard ones is saved, so the meta data of the
+     * document names that part and the next read can tell whether it is still there.
      */
     @Test
-    fun readsNoPartFromAForeignFile() {
+    fun namesEveryAdditionalPartInTheMetaData() {
+        val project = TestData.project().apply { unknownParts = mapOf("plugin-notes" to "{}") }
+
+        StorageIO.saveToZip(file, project)
+
+        assertEquals(listOf("plugin-notes"), project.meta.additionalParts)
+        assertEquals(listOf("plugin-notes"), load()!!.meta.additionalParts)
+    }
+
+    /**
+     * Use case: the user opens a file that is not a project archive at all, so it is reported as a
+     * corrupt project instead of a document of pure defaults being opened as the user's project.
+     */
+    @Test
+    fun reportsAForeignFileAsCorrupt() {
         file.writeText("{ this is not an archive")
 
-        val content = StorageIO.loadFromZip(file, Meta::class, Design::class, Book::class)
+        assertEquals(Project.STANDARD_IDENTIFIERS, corruptionOf(loadEither()).missing)
+    }
 
-        assertTrue(content.parts.isEmpty())
-        assertTrue(content.unknownParts.isEmpty())
+    /**
+     * Use case: the archive lost one of the three standard parts on its way, so it is reported as a
+     * corrupt project instead of being opened with the defaults of that part.
+     */
+    @Test
+    fun reportsAMissingStandardPartAsCorrupt() {
+        writeArchive(file, "meta.json" to """{"name":"My Novel"}""", "design.json" to "{}")
+
+        assertEquals(setOf(Project.PART_BOOK), corruptionOf(loadEither()).missing)
+    }
+
+    /**
+     * Use case: the archive lost a part the meta data names, so the document is reported as corrupt
+     * instead of opening without a part the user stored in it.
+     */
+    @Test
+    fun reportsAMissingAdditionalPartAsCorrupt() {
+        writeArchive(file, *standardEntries(additionalParts = listOf("plugin-notes")))
+
+        assertEquals(setOf("plugin-notes"), corruptionOf(loadEither()).missing)
     }
 
     /**
@@ -138,12 +178,34 @@ class StorageIOTest {
      */
     @Test
     fun writesIndentedJsonPerEntry() {
-        StorageIO.saveToZip(file, listOf(TestData.meta()))
+        StorageIO.saveToZip(file, TestData.project())
 
         val content = readEntry(file, "meta.json")
 
         assertTrue(content.contains("\n"), "expected indented JSON but was: $content")
         assertTrue(content.contains(""""name" : "My Novel""""))
+    }
+
+    /** Reads the archive at [file] as a project document. */
+    private fun loadEither(): Either<StorageIO.Error, Project> =
+        StorageIO.loadFromZip(file, Meta::class, Design::class, Book::class)
+
+    /** The project the archive at [file] holds, `null` when it holds none. */
+    private fun load(): Project? = loadEither().getOrNull()
+
+    /** The corruption the read of the archive reported, failing the test when it read a project. */
+    private fun corruptionOf(result: Either<StorageIO.Error, Project>): StorageIO.Error.Corrupt =
+        assertInstanceOf(StorageIO.Error.Corrupt::class.java, result.leftOrNull())
+
+    /** The three entries every project document holds, the meta data naming [additionalParts]. */
+    private fun standardEntries(additionalParts: List<String> = emptyList()): Array<Pair<String, String>> {
+        val names = additionalParts.joinToString(",") { "\"$it\"" }
+
+        return arrayOf(
+            "meta.json" to """{"name":"My Novel","additionalParts":[$names]}""",
+            "design.json" to "{}",
+            "book.json" to "{}"
+        )
     }
 
     /** The names of all entries the archive at [file] holds, in the order they are stored. */

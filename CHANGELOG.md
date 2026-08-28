@@ -7,8 +7,9 @@
   opens with the parts this version knows, and a damaged file is reported instead of opening an empty
   project
 
-* Opening a project document that lost one of its parts keeps what you change in that part
-  afterwards - such a part was rebuilt on every read before, so an edit to it was dropped
+* Project document that lost one of its parts is reported as a corrupt project instead of being
+  opened with empty defaults in place of the lost part; a saved document names the parts stored
+  beside the standard ones, so a part that went missing is noticed as well
 
 * Project document keeps a part this version cannot read - written by a newer version for instance -
   and writes it back unchanged when you save, instead of dropping it

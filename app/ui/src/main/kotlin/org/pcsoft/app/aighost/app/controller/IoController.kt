@@ -80,6 +80,7 @@ object IoController {
         is ProjectStorage.Error.NotAFile -> Messages["project.error.notAFile"]
         is ProjectStorage.Error.Unreadable -> Messages["project.error.unreadable"]
         is ProjectStorage.Error.Malformed -> Messages["project.error.malformed"]
+        is ProjectStorage.Error.Corrupt -> Messages["project.error.corrupt"]
     }
     //endregion
 
