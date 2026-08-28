@@ -23,12 +23,19 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.app.Messages
-import org.pcsoft.app.aighost.model.project.Blurb
-import org.pcsoft.app.aighost.model.project.Book
-import org.pcsoft.app.aighost.model.project.Chapter
-import org.pcsoft.app.aighost.model.project.Epilog
+import org.pcsoft.app.aighost.model.project.book.Blurb
+import org.pcsoft.app.aighost.model.project.book.Book
+import org.pcsoft.app.aighost.model.project.book.Chapter
+import org.pcsoft.app.aighost.model.project.book.Epilog
 import org.pcsoft.app.aighost.model.project.Project
-import org.pcsoft.app.aighost.model.project.Prolog
+import org.pcsoft.app.aighost.model.project.design.AuthorDesign
+import org.pcsoft.app.aighost.model.project.design.ChapterDesign
+import org.pcsoft.app.aighost.model.project.design.CopyrightDesign
+import org.pcsoft.app.aighost.model.project.design.Design
+import org.pcsoft.app.aighost.model.project.design.TextDesign
+import org.pcsoft.app.aighost.model.project.design.TitleDesign
+import org.pcsoft.app.aighost.model.project.meta.Meta
+import org.pcsoft.app.aighost.model.project.book.Prolog
 import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.FontData
 import org.pcsoft.app.aighost.model.common.StyleData
@@ -67,18 +74,17 @@ class ProjectListTest : ApplicationTest() {
         StyleData(font = FontData("Serif", 12, bold = false, italic = false), alignment = Alignment.LEFT)
 
     private fun project(book: Book): Project = Project(
-        name = "My Novel",
-        author = "Jane Doe",
-        copyright = "(c) 2026 Jane Doe",
-        settings = Project.Settings(
-            authorFont = style(),
-            copyrightFont = style(),
-            titleFont = style(),
-            titleAppendixFont = style(),
-            chapterFont = style(),
-            chapterAppendixFont = style(),
-            textFont = style(),
-            copyrightPage = false,
+        meta = Meta(
+            name = "My Novel",
+            author = "Jane Doe",
+            copyright = "(c) 2026 Jane Doe"
+        ),
+        design = Design(
+            authorDesign = AuthorDesign(style()),
+            copyrightDesign = CopyrightDesign(style(), show = false),
+            titleDesign = TitleDesign(style()),
+            chapterDesign = ChapterDesign(style(), style()),
+            textDesign = TextDesign(style()),
             startWithEmptyPage = false,
             endWithEmptyPage = false
         ),
@@ -130,8 +136,7 @@ class ProjectListTest : ApplicationTest() {
     fun listsEveryChapterOfTheBoundProject() {
         setProject(
             project(
-                Book(
-                    "My Novel",
+                Book(title = "My Novel",
                     chapters = listOf(
                         Chapter("first", "The First Part"),
                         Chapter("second", "The Second Part")
@@ -155,7 +160,7 @@ class ProjectListTest : ApplicationTest() {
      */
     @Test
     fun labelsAChapterByItsNameNotByItsTitle() {
-        setProject(project(Book("My Novel", chapters = listOf(Chapter("draft-01", "The First Part")))))
+        setProject(project(Book(title = "My Novel", chapters = listOf(Chapter("draft-01", "The First Part")))))
 
         val chapterItem = chaptersItem().children.single()
         val cell = tree.lookupAll(".tree-cell")
@@ -176,7 +181,7 @@ class ProjectListTest : ApplicationTest() {
         val epilog = Epilog("After It All")
         val blurb = Blurb(listOf("A gripping tale."))
 
-        setProject(project(Book("My Novel", prolog = prolog, epilog = epilog, blurb = blurb)))
+        setProject(project(Book(title = "My Novel", prolog = prolog, epilog = epilog, blurb = blurb)))
 
         assertEquals(
             listOf(
@@ -195,7 +200,7 @@ class ProjectListTest : ApplicationTest() {
      */
     @Test
     fun reportsTheSelectedChapter() {
-        setProject(project(Book("My Novel", chapters = listOf(Chapter("first", "The First Part")))))
+        setProject(project(Book(title = "My Novel", chapters = listOf(Chapter("first", "The First Part")))))
 
         val reported = mutableListOf<ProjectListItem?>()
         projectList.selectedItem.addListener { _, _, new -> reported += new }
@@ -226,10 +231,10 @@ class ProjectListTest : ApplicationTest() {
      */
     @Test
     fun clearsTheSelectionWhenAnotherProjectIsBound() {
-        setProject(project(Book("My Novel", chapters = listOf(Chapter("first", "The First Part")))))
+        setProject(project(Book(title = "My Novel", chapters = listOf(Chapter("first", "The First Part")))))
         interact { tree.selectionModel.select(chaptersItem().children.single()) }
 
-        setProject(project(Book("Another Novel", chapters = listOf(Chapter("other", "Another Part")))))
+        setProject(project(Book(title = "Another Novel", chapters = listOf(Chapter("other", "Another Part")))))
 
         assertNull(projectList.selectedItem.value)
         assertEquals(
@@ -244,7 +249,7 @@ class ProjectListTest : ApplicationTest() {
      */
     @Test
     fun emptiesTheChaptersBranchWhenNoProjectIsBound() {
-        setProject(project(Book("My Novel", chapters = listOf(Chapter("first", "The First Part")))))
+        setProject(project(Book(title = "My Novel", chapters = listOf(Chapter("first", "The First Part")))))
 
         setProject(null)
 

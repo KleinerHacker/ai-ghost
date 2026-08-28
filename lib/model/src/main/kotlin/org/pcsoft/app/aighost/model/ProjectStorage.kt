@@ -17,23 +17,28 @@ import arrow.core.left
 import arrow.core.right
 import com.fasterxml.jackson.core.JacksonException
 import org.pcsoft.app.aighost.model.project.Project
+import org.pcsoft.app.aighost.model.project.book.Book
+import org.pcsoft.app.aighost.model.project.design.Design
+import org.pcsoft.app.aighost.model.project.meta.Meta
 import java.io.File
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
 /**
- * Holds the project the user is working on and reads and writes it as a JSON file.
+ * Holds the project the user is working on and reads and writes it as an archive of its parts.
  *
  * Exactly one project is open at a time: [current] is the project in effect, [currentFile] the file
  * it belongs to. A project that was never saved has no file yet, so [currentFile] is `null` until
  * [save] wrote it somewhere. The storage starts with a fresh [Project], so the application always
  * has something to show.
  *
- * The project is a field of the storage and always the same instance: [new] and [load] write into it
- * instead of replacing it, so whoever holds the project keeps working on the open one. The project
- * is a plain mutable value object and reports nothing, so a reader takes the values when it needs
- * them.
+ * [new] and [load] put another project object into [current], so whoever wants to follow the open
+ * project watches that field instead of holding on to the object behind it. The project itself is a
+ * plain mutable value object and reports nothing, so a reader takes the values when it needs them.
+ *
+ * A part of the document this application cannot read is kept as the text it was stored as and is
+ * written back unchanged on the next save, so opening a project never loses what it does not know.
  *
  * Neither operation throws for an expected failure: everything that can go wrong is returned as an
  * [Error] on the left side of an [Either], so the caller decides what the user is told.
@@ -41,7 +46,7 @@ import java.nio.file.StandardCopyOption
 object ProjectStorage {
 
     /** The project currently open, a fresh one until another is loaded. */
-    var current: Project = Project()
+    var current: Project = createEmptyProject()
         private set
 
     /** The file [current] was read from or written to, `null` while it was never saved. */
@@ -61,24 +66,34 @@ object ProjectStorage {
     /**
      * Closes the open project and starts a fresh one.
      *
-     * The project keeps its identity and is set back to the defaults. The fresh project has no file,
-     * so the next [save] needs an explicit one.
+     * The fresh project carries the three standard parts with their defaults and no part beyond them.
+     * It has no file, so the next [save] needs an explicit one.
      */
     fun new() {
-        current = Project()
+        current = createEmptyProject()
         currentFile = null
     }
 
     /**
      * Reads the project from [file] and opens it.
      *
-     * On success the values of the document are written into [current] and [currentFile] points at
-     * [file]. A failure leaves the open project untouched, so a broken file never closes what the
-     * user is working on.
+     * On success the document becomes [current] and [currentFile] points at [file]. A failure leaves
+     * the open project untouched, so a broken file never closes what the user is working on.
+     *
+     * A part the document carries but no class is named for is kept as text. A document missing one
+     * of the three standard parts is not opened with defaults in their place - it is corrupt.
+     *
+     * A document that lost only a part beyond the standard ones is not lost itself: it is answered
+     * with [Error.Incomplete], which carries the project that could be read and the identifiers of
+     * what it lost, so the caller can tell the user what a rescue costs and open the project through
+     * [open] afterwards. Nothing of that happens behind the user's back - [load] itself does not
+     * open such a document.
      *
      * Returns [Error.NotFound] when the file does not exist, [Error.NotAFile] when the path exists but
-     * is not a regular file, [Error.Malformed] when the content is not the expected JSON document, and
-     * [Error.Unreadable] when the file cannot be read at all.
+     * is not a regular file, [Error.Corrupt] when the file was read but does not hold every standard
+     * part, [Error.Incomplete] when only parts beyond the standard ones got lost, [Error.Malformed]
+     * when the content is not the expected document, and [Error.Unreadable] when the file cannot be
+     * read at all.
      */
     fun load(file: File): Either<Error, Unit> {
         if (!file.exists())
@@ -86,22 +101,46 @@ object ProjectStorage {
         if (!file.isFile)
             return Error.NotAFile(file).left()
 
-        val project = try {
-            StorageMapper.mapper.readValue(file, Project::class.java)
+        val result = try {
+            StorageIO.loadFromZip(file, Meta::class, Design::class, Book::class)
+                .fold({ return errorOf(it, file).left() }, { it })
         } catch (e: JacksonException) {
             return Error.Malformed(file, e).left()
         } catch (e: IOException) {
             return Error.Unreadable(file, e).left()
         }
 
-        current = project
-        currentFile = file
+        if (result.lostParts.isNotEmpty())
+            return Error.Incomplete(file, result.lostParts, result.project).left()
+
+        open(result.project, file)
 
         return Unit.right()
     }
 
     /**
+     * Opens [project] as the project of [file], whatever it took to read it.
+     *
+     * This is what [load] does itself for a complete document and what a caller does for a document
+     * [Error.Incomplete] reported on: the project it carries is opened only when the user accepted
+     * the loss, which is a decision this storage does not make.
+     *
+     * The lost parts are gone from the moment the project is opened - the next [save] writes the
+     * document without them.
+     *
+     * @param project The project to open.
+     * @param file The file the project was read from.
+     */
+    fun open(project: Project, file: File) {
+        current = project
+        currentFile = file
+    }
+
+    /**
      * Writes the open project to [file], creating the parent directories if they do not exist yet.
+     *
+     * Every part of the project is written, the three standard ones and everything stored beside
+     * them, so a part this application cannot read still survives the save.
      *
      * The document is written to a temporary file next to the target and moved into place afterwards,
      * so a crash during the write leaves the previous document intact instead of a half written file.
@@ -123,7 +162,7 @@ object ProjectStorage {
 
             val temporary = File.createTempFile(target.name, ".tmp", target.parentFile)
             try {
-                StorageMapper.mapper.writeValue(temporary, current)
+                StorageIO.saveToZip(temporary, current)
                 Files.move(
                     temporary.toPath(),
                     target.toPath(),
@@ -141,11 +180,32 @@ object ProjectStorage {
     }
 
     /**
+     * Creates and returns a new instance of an empty project.
+     *
+     * The created project contains default initializations for its three standard parts: metadata,
+     * design settings and manuscript content.
+     *
+     * @return A new instance of the `Project` class, initialized with default metadata, design, and book content.
+     */
+    private fun createEmptyProject(): Project = Project()
+
+    /**
+     * The failure this storage reports for a failure of the archive.
+     *
+     * @param error The failure the archive reported.
+     * @param file The file that was read.
+     */
+    private fun errorOf(error: StorageIO.Error, file: File): Error = when (error) {
+        is StorageIO.Error.Corrupt -> Error.Corrupt(file, error.missing)
+    }
+
+    /**
      * Reason why opening or storing a project failed.
      *
      * The storage never throws for these cases, it returns them as the left side of an [Either], so a
      * caller has to decide what to do: [NoFile] and [NotFound] are answered by asking the user for a
-     * path, while [NotAFile], [Unreadable] and [Malformed] point at something the user should be told
+     * path, [Incomplete] by asking whether the project may be opened without what it lost, while
+     * [NotAFile], [Unreadable], [Corrupt] and [Malformed] point at something the user should be told
      * about.
      *
      * @property file The file the failing operation worked on, `null` when there was none.
@@ -188,11 +248,38 @@ object ProjectStorage {
         data class Unreadable(override val file: File, val cause: Throwable) : Error
 
         /**
-         * The file was read, but its content is not the JSON document that was expected.
+         * The file was read, but its content is not the project document that was expected.
          *
          * @property file The file that was read.
          * @property cause The underlying parse failure.
          */
         data class Malformed(override val file: File, val cause: Throwable) : Error
+
+        /**
+         * The file was read without trouble, but it does not hold every standard part a project is
+         * made of, so the project is corrupt.
+         *
+         * @property file The file that was read.
+         * @property missing The identifiers of the standard parts the file does not hold.
+         */
+        data class Corrupt(override val file: File, val missing: Set<String>) : Error
+
+        /**
+         * The file holds every standard part, but a part beyond them got lost: its entry is gone or
+         * its content could not be read.
+         *
+         * The project can still be worked with, which is why [recovered] carries it: opening it is a
+         * decision of the user, because the lost parts are written out of the document on the next
+         * save. The project is opened through [ProjectStorage.open] once the user agreed.
+         *
+         * @property file The file that was read.
+         * @property lostParts The identifiers of the parts that got lost.
+         * @property recovered The project that could be read, without the lost parts.
+         */
+        data class Incomplete(
+            override val file: File,
+            val lostParts: Set<String>,
+            val recovered: Project
+        ) : Error
     }
 }

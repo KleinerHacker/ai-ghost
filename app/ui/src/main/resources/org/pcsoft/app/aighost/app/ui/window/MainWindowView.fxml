@@ -35,19 +35,19 @@
                             </graphic>
                         </MenuItem>
                     </Menu>
-                    <MenuItem text="%menu.file.open" accelerator="Shortcut+O">
+                    <MenuItem text="%menu.file.open" accelerator="Shortcut+O" onAction="#actionOpen">
                         <graphic>
                             <AiGhostIcons fx:factory="menuOpen"/>
                         </graphic>
                     </MenuItem>
                     <Menu fx:id="mnuOpenRecent" text="%menu.file.openRecent"/>
                     <SeparatorMenuItem/>
-                    <MenuItem text="%menu.file.save" accelerator="Shortcut+S">
+                    <MenuItem text="%menu.file.save" accelerator="Shortcut+S" onAction="#actionSave">
                         <graphic>
                             <AiGhostIcons fx:factory="menuSave"/>
                         </graphic>
                     </MenuItem>
-                    <MenuItem text="%menu.file.saveAs" accelerator="Shortcut+Shift+S">
+                    <MenuItem text="%menu.file.saveAs" accelerator="Shortcut+Shift+S" onAction="#actionSaveAs">
                         <graphic>
                             <AiGhostIcons fx:factory="menuSaveAs"/>
                         </graphic>
@@ -94,7 +94,7 @@
                     </tooltip>
                 </Button>
                 <Separator/>
-                <Button>
+                <Button onAction="#actionOpen">
                     <graphic>
                         <AiGhostIcons fx:factory="menuOpen"/>
                     </graphic>
@@ -103,7 +103,7 @@
                     </tooltip>
                 </Button>
                 <Separator/>
-                <Button>
+                <Button onAction="#actionSave">
                     <graphic>
                         <AiGhostIcons fx:factory="menuSave"/>
                     </graphic>
@@ -111,7 +111,7 @@
                         <Tooltip text="%menu.file.save"/>
                     </tooltip>
                 </Button>
-                <Button>
+                <Button onAction="#actionSaveAs">
                     <graphic>
                         <AiGhostIcons fx:factory="menuSaveAs"/>
                     </graphic>

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright (c) KleinerHacker alias Pfeiffer C Soft 2026.
+  ~ This work is licensed under the Apache License, Version 2.0.
+  ~ You may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at:
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, this software is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and limitations.
+  -->
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<VBox fx:id="pnlRoot" spacing="12.0" styleClass="detail-dialog-content"
+      xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.pcsoft.app.aighost.app.ui.dialog.DetailDialogView">
+    <padding>
+        <Insets top="16.0" right="16.0" bottom="8.0" left="16.0"/>
+    </padding>
+    <children>
+        <!-- Header and button keep the height they ask for (minHeight="-Infinity" is USE_PREF_SIZE),
+             so a window that is one pixel short while the animation runs squeezes the details pane
+             and never the wrapped text above it. -->
+        <HBox spacing="16.0" minHeight="-Infinity" VBox.vgrow="NEVER">
+            <children>
+                <ImageView fx:id="imgIcon" fitWidth="48.0" fitHeight="48.0" preserveRatio="true" smooth="true"/>
+                <VBox spacing="6.0" maxWidth="360.0" minHeight="-Infinity">
+                    <children>
+                        <Label fx:id="lblCaption" styleClass="detail-dialog-caption" wrapText="true"
+                               minHeight="-Infinity"/>
+                        <Label fx:id="lblMessage" styleClass="detail-dialog-message" wrapText="true"
+                               minHeight="-Infinity"/>
+                    </children>
+                </VBox>
+            </children>
+        </HBox>
+        <Button fx:id="btnDetails" styleClass="detail-dialog-toggle" minHeight="-Infinity" VBox.vgrow="NEVER"/>
+        <!-- The pane asks for no size of its own: its height is animated, its width is the one the
+             header above it needs, so unfolding it never widens the dialog. It takes every pixel the
+             window has left over, so a mismatch lands here and nowhere else. -->
+        <TextArea fx:id="txaDetails" styleClass="detail-dialog-details" editable="false" wrapText="true"
+                  visible="false" managed="false" VBox.vgrow="ALWAYS"
+                  minWidth="0.0" prefWidth="0.0" maxWidth="Infinity"
+                  minHeight="0.0" prefHeight="0.0"/>
+    </children>
+</VBox>

@@ -27,7 +27,15 @@ The book project holds the outline, all chapters and the context material the ag
 application itself is a JavaFX desktop UI written in Kotlin (`app/ai-ghost-ui`), distributed as a
 self-contained ZIP archive carrying the start scripts and every required JAR, so no installation
 beyond a JDK is needed. The persisted data - the preferences and the book project with its chapters -
-lives in the library `lib/ai-ghost-model`, which serialises it to JSON via Jackson.
+lives in the library `lib/ai-ghost-model`. The preferences are one JSON document; a book project is
+an archive holding one `.json` entry per project part. The three parts every project carries - its
+meta data, its design and the manuscript - are fields of the project. A part this version cannot read
+is kept as the text it was stored as and written back unchanged, so a document written by a newer
+version or by a plugin loses nothing here. The meta data names every part stored beside the three
+standard ones, so a document that lost an entry is noticed at all. A document missing one of the
+three standard parts is reported as corrupt instead of being opened with defaults in its place; a
+document that only lost a part beyond them is offered for rescue, naming what would be lost, and is
+opened once the user accepts it. Both documents are written with Jackson.
 
 ### State of implementation
 
@@ -38,6 +46,7 @@ lives in the library `lib/ai-ghost-model`, which serialises it to JSON via Jacks
 | Context handling (outline, characters, tone)      | Planned     |
 | Book project with outline and chapters            | Planned     |
 | Export of the finished manuscript                 | Planned     |
+| Plugin API (`lib/plugin/ai-ghost-plugin-api`)     | Planned     |
 | JavaFX desktop shell (`app/ai-ghost-ui`)          | Implemented |
 | JSON data model (`lib/ai-ghost-model`)            | Implemented |
 | ZIP distribution with start scripts and `libs`    | Implemented |

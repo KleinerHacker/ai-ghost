@@ -40,8 +40,8 @@ AI Ghost reads `preferences.json` before the first window appears and tells you 
 * **The file does not exist yet** - the defaults are used and the file is written again. This is the
   normal case of a first start, so nothing is asked.
 * **The file is damaged or cannot be read** - AI Ghost asks whether the preferences may be reset to
-  their defaults. Choosing *Cancel* closes the application, so you can repair or back up the file by
-  hand before your settings are overwritten.
+  their defaults. Answering with *No* closes the application, so you can repair or back up the file
+  by hand before your settings are overwritten.
 * **A folder sits where the file is expected** - AI Ghost reports the problem and closes, because it
   must not remove that folder on its own. Move or delete it and start again.
 

@@ -20,11 +20,11 @@ import javafx.beans.property.ReadOnlyObjectProperty
 import javafx.beans.property.ReadOnlyObjectWrapper
 import javafx.beans.property.SimpleObjectProperty
 import javafx.collections.FXCollections
-import org.pcsoft.app.aighost.model.project.Blurb
-import org.pcsoft.app.aighost.model.project.Chapter
-import org.pcsoft.app.aighost.model.project.Epilog
+import org.pcsoft.app.aighost.model.project.book.Blurb
+import org.pcsoft.app.aighost.model.project.book.Chapter
+import org.pcsoft.app.aighost.model.project.book.Epilog
 import org.pcsoft.app.aighost.model.project.Project
-import org.pcsoft.app.aighost.model.project.Prolog
+import org.pcsoft.app.aighost.model.project.book.Prolog
 
 /**
  * View model of [ProjectList].

@@ -32,6 +32,12 @@ object AiGhostIcons {
     /** Default edge length in pixels used when an icon is rendered into a tree node. */
     const val TREE_ICON_SIZE: Double = 16.0
 
+    /** Default edge length in pixels used when an icon is rendered into a dialog. */
+    const val DIALOG_ICON_SIZE: Double = 48.0
+
+    /** Edge length in pixels the dialog icons are stored in. */
+    const val DIALOG_ICON_STORED_SIZE: Int = 48
+
     /** Edge lengths in pixels for which the application icon is available. */
     val APPLICATION_ICON_SIZES: List<Int> = listOf(16, 24, 32, 48, 64, 128, 256, 512)
 
@@ -212,6 +218,48 @@ object AiGhostIcons {
      */
     @JvmStatic
     fun treeBlurb(): ImageView = blurb.toImageView(TREE_ICON_SIZE)
+
+    /**
+     * Reads the icon of an error dialog for the given colour scheme.
+     *
+     * The dialog icons are the only ones drawn twice, because they sit on a coloured surface and
+     * would lose their contrast in the other scheme.
+     *
+     * @param scheme colour scheme the icon is shown in, the one of the theme by default
+     * @return the loaded image
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun error(scheme: AiGhostColorScheme = AiGhostTheme.colorScheme): Image = themed("error", scheme)
+
+    /**
+     * Reads the icon of a warning dialog for the given colour scheme.
+     *
+     * @param scheme colour scheme the icon is shown in, the one of the theme by default
+     * @return the loaded image
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun warning(scheme: AiGhostColorScheme = AiGhostTheme.colorScheme): Image = themed("warning", scheme)
+
+    /**
+     * Loads a themed icon, which is shipped once per colour scheme.
+     *
+     * The dark variant of an icon carries the suffix `-dark`, the light one the plain name. Loaded
+     * images are kept, so showing a dialog again does not decode its icon a second time.
+     *
+     * @param name name of the icon without variant, size and extension
+     * @param scheme colour scheme the icon is shown in
+     * @return the loaded image
+     */
+    private fun themed(name: String, scheme: AiGhostColorScheme): Image =
+        themedIcons.getOrPut(name to scheme) {
+            val variant = if (scheme == AiGhostColorScheme.DARK) "$name-dark" else name
+            load(variant, DIALOG_ICON_STORED_SIZE)
+        }
+
+    /** Themed icons already decoded, keyed by name and colour scheme. */
+    private val themedIcons: MutableMap<Pair<String, AiGhostColorScheme>, Image> = mutableMapOf()
 
     /**
      * Loads an icon from the `icons` resource folder, which names its files `<name>@<size>.png`.

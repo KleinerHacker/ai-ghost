@@ -2,6 +2,43 @@
 
 ## [Unreleased]
 
+* Messages of the application are shown in dialogs of their own look, with an icon drawn for the
+  light and for the dark appearance, and a report you unfold with "Show details" whenever there is
+  more to say than one sentence - the parts an incomplete project lost, for instance
+
+* Question dialogs are answered with "Yes" and "No" instead of a button naming the action, and
+  closing such a dialog with ESCAPE or the window close button counts as "No"
+
+* Book project is stored as one document holding its parts side by side - the project data, the
+  design of the manuscript and the manuscript itself - so a project written by a newer version still
+  opens with the parts this version knows, and a damaged file is reported instead of opening an empty
+  project
+
+* Project document that lost one of its three basic parts - the project data, the design or the
+  manuscript - is reported as a corrupt project instead of being opened with empty defaults in place
+  of the lost part; a saved document names the parts stored beside those three, so a part that went
+  missing is noticed as well
+
+* Project document that only lost a part beyond the three basic ones is no longer thrown away: a
+  warning names the affected parts, says that saving removes them from the file for good, and opens
+  the project only after you confirm
+
+* Project document keeps a part this version cannot read - written by a newer version for instance -
+  and writes it back unchanged when you save, instead of dropping it
+
+* Entries inside a project document carry the `.json` extension, so the content is recognizable in
+  any archive tool
+
+* Menu "open recent project" shows each entry on two lines - the file name, and below it in
+  smaller type the folder the project sits in, so two projects of the same name are told apart
+
+* List of recently opened projects is no longer emptied when the window leaves the screen without a
+  project having been opened meanwhile
+
+* Saving or opening a project that fails is reported in a dialog naming the reason - a missing file,
+  a folder in place of the file, a file that cannot be read or written, or a damaged project file -
+  and the application keeps running with the project it holds
+
 * Course of a session is written to the console and to a log file in `.ai-ghost/logs` of the home
   directory; the file carries more detail than the console, is rolled over daily and at 10 MB, and
   the last ten of the older files are kept compressed

@@ -22,23 +22,24 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.TestData
+import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.pref.Preferences
 import org.pcsoft.app.aighost.model.pref.ThemeMode
-import org.pcsoft.app.aighost.model.project.Blurb
-import org.pcsoft.app.aighost.model.project.Book
-import org.pcsoft.app.aighost.model.project.Chapter
-import org.pcsoft.app.aighost.model.project.Epilog
-import org.pcsoft.app.aighost.model.project.Project
-import org.pcsoft.app.aighost.model.project.Prolog
+import org.pcsoft.app.aighost.model.project.book.Blurb
+import org.pcsoft.app.aighost.model.project.book.Book
+import org.pcsoft.app.aighost.model.project.book.Chapter
+import org.pcsoft.app.aighost.model.project.book.Epilog
+import org.pcsoft.app.aighost.model.project.book.Prolog
+import org.pcsoft.app.aighost.model.project.design.Design
+import org.pcsoft.app.aighost.model.project.meta.Meta
 
 /**
  * Developer tests for the JSON persistence of the whole model.
  *
  * Where the tests of the single classes check one type, these tests write and parse complete
- * documents the way the application stores them on disk, including pretty printing and hand written
- * files.
+ * documents the way the application stores them in the entries of a project archive, including
+ * pretty printing and hand written files.
  */
 class ModelJsonTest {
 
@@ -47,53 +48,66 @@ class ModelJsonTest {
         .enable(SerializationFeature.INDENT_OUTPUT)
 
     /**
-     * Use case: a project file that a user edited by hand is opened, so a full JSON document with
+     * Use case: a manuscript that a user edited by hand is opened, so a full JSON document with
      * arbitrary formatting is parsed into the complete object graph, including prolog, epilog and
      * blurb.
      */
     @Test
-    fun parsesHandWrittenProjectDocument() {
+    fun parsesHandWrittenBookDocument() {
         val json = """
             {
-              "name" : "My Novel",
-              "author" : "Jane Doe",
-              "copyright" : "(c) 2026 Jane Doe",
-              "settings" : {
-                "authorFont" : { "font" : { "name" : "Sans", "size" : 16, "bold" : false, "italic" : false }, "alignment" : "CENTER" },
-                "copyrightFont" : { "font" : { "name" : "Serif", "size" : 8, "bold" : false, "italic" : false } },
-                "titleFont" : { "font" : { "name" : "Sans", "size" : 28, "bold" : true, "italic" : false }, "alignment" : "CENTER" },
-                "titleAppendixFont" : { "font" : { "name" : "Sans", "size" : 18, "bold" : false, "italic" : true }, "alignment" : "CENTER" },
-                "chapterFont" : { "font" : { "name" : "Sans", "size" : 20, "bold" : true, "italic" : false } },
-                "chapterAppendixFont" : { "font" : { "name" : "Sans", "size" : 14, "bold" : false, "italic" : true } },
-                "textFont" : { "font" : { "name" : "Serif", "size" : 11, "bold" : false, "italic" : false }, "alignment" : "BLOCK" },
-                "copyrightPage" : true,
-                "startWithEmptyPage" : false,
-                "endWithEmptyPage" : true
-              },
-              "book" : {
-                "title" : "My Novel",
-                "prolog" : { "title" : "Before It All", "paragraph" : [ "Long before." ] },
-                "chapters" : [
-                  { "name" : "first", "title" : "Prologue", "paragraph" : [ "Once upon a time." ] },
-                  { "name" : "second", "title" : "Chapter 1", "paragraph" : [ "The beginning.", "And on it went." ] }
-                ],
-                "epilog" : { "title" : "After It All", "paragraph" : [ "And that was that." ] },
-                "blurb" : { "paragraph" : [ "A gripping tale." ] }
-              }
+              "title" : "My Novel",
+              "prolog" : { "title" : "Before It All", "paragraph" : [ "Long before." ] },
+              "chapters" : [
+                { "name" : "first", "title" : "Prologue", "paragraph" : [ "Once upon a time." ] },
+                { "name" : "second", "title" : "Chapter 1", "paragraph" : [ "The beginning.", "And on it went." ] }
+              ],
+              "epilog" : { "title" : "After It All", "paragraph" : [ "And that was that." ] },
+              "blurb" : { "paragraph" : [ "A gripping tale." ] }
             }
         """.trimIndent()
 
-        val project: Project = mapper.readValue(json)
+        val book: Book = mapper.readValue(json)
 
-        assertEquals("My Novel", project.name)
-        assertEquals("Jane Doe", project.author)
-        assertEquals(Alignment.BLOCK, project.settings.textFont.alignment)
-        assertEquals(true, project.settings.copyrightPage)
-        assertEquals(listOf("first", "second"), project.book.chapters.map(Chapter::name))
-        assertEquals(listOf("The beginning.", "And on it went."), project.book.chapters[1].paragraph)
-        assertEquals(Prolog("Before It All", paragraph = listOf("Long before.")), project.book.prolog)
-        assertEquals(Epilog("After It All", paragraph = listOf("And that was that.")), project.book.epilog)
-        assertEquals(Blurb(listOf("A gripping tale.")), project.book.blurb)
+        assertEquals("My Novel", book.title)
+        assertEquals(listOf("first", "second"), book.chapters.map(Chapter::name))
+        assertEquals(listOf("The beginning.", "And on it went."), book.chapters[1].paragraph)
+        assertEquals(Prolog("Before It All", paragraph = listOf("Long before.")), book.prolog)
+        assertEquals(Epilog("After It All", paragraph = listOf("And that was that.")), book.epilog)
+        assertEquals(Blurb(listOf("A gripping tale.")), book.blurb)
+    }
+
+    /**
+     * Use case: a design that a user edited by hand is opened, so every style and every page flag is
+     * parsed into the nested object graph instead of being dropped.
+     */
+    @Test
+    fun parsesHandWrittenDesignDocument() {
+        val json = """
+            {
+              "authorDesign" : { "style" : { "font" : { "name" : "Sans", "size" : 16 }, "alignment" : "CENTER" } },
+              "copyrightDesign" : { "style" : { "font" : { "name" : "Serif", "size" : 8 } }, "show" : true },
+              "titleDesign" : { "style" : { "font" : { "name" : "Sans", "size" : 28, "bold" : true } } },
+              "chapterDesign" : {
+                "titleStyle" : { "font" : { "name" : "Sans", "size" : 20, "bold" : true } },
+                "titleAppendixStyle" : { "font" : { "name" : "Sans", "size" : 14, "italic" : true } }
+              },
+              "textDesign" : { "style" : { "font" : { "name" : "Serif", "size" : 11 }, "alignment" : "BLOCK" } },
+              "startWithEmptyPage" : false,
+              "endWithEmptyPage" : true
+            }
+        """.trimIndent()
+
+        val design: Design = mapper.readValue(json)
+
+        assertEquals(16, design.authorDesign.style.font.size)
+        assertEquals(Alignment.CENTER, design.authorDesign.style.alignment)
+        assertEquals(true, design.copyrightDesign.show)
+        assertEquals(true, design.titleDesign.style.font.bold)
+        assertEquals(true, design.chapterDesign.titleAppendixStyle.font.italic)
+        assertEquals(Alignment.BLOCK, design.textDesign.style.alignment)
+        assertEquals(false, design.startWithEmptyPage)
+        assertEquals(true, design.endWithEmptyPage)
     }
 
     /**
@@ -101,51 +115,31 @@ class ModelJsonTest {
      * the missing properties are read back as absent parts instead of failing the parse.
      */
     @Test
-    fun parsesProjectDocumentWithoutOptionalBookParts() {
+    fun parsesBookDocumentWithoutOptionalParts() {
         val json = """
             {
-              "name" : "My Novel",
-              "author" : "Jane Doe",
-              "copyright" : "(c) 2026 Jane Doe",
-              "settings" : {
-                "authorFont" : { "font" : { "name" : "Sans", "size" : 16, "bold" : false, "italic" : false } },
-                "copyrightFont" : { "font" : { "name" : "Serif", "size" : 8, "bold" : false, "italic" : false } },
-                "titleFont" : { "font" : { "name" : "Sans", "size" : 28, "bold" : true, "italic" : false } },
-                "titleAppendixFont" : { "font" : { "name" : "Sans", "size" : 18, "bold" : false, "italic" : true } },
-                "chapterFont" : { "font" : { "name" : "Sans", "size" : 20, "bold" : true, "italic" : false } },
-                "chapterAppendixFont" : { "font" : { "name" : "Sans", "size" : 14, "bold" : false, "italic" : true } },
-                "textFont" : { "font" : { "name" : "Serif", "size" : 11, "bold" : false, "italic" : false } },
-                "copyrightPage" : false,
-                "startWithEmptyPage" : false,
-                "endWithEmptyPage" : false
-              },
-              "book" : {
-                "title" : "My Novel",
-                "chapters" : [ { "name" : "first", "title" : "Prologue" } ]
-              }
+              "title" : "My Novel",
+              "chapters" : [ { "name" : "first", "title" : "Prologue" } ]
             }
         """.trimIndent()
 
-        val project: Project = mapper.readValue(json)
+        val book: Book = mapper.readValue(json)
 
-        assertNull(project.book.prolog)
-        assertNull(project.book.epilog)
-        assertNull(project.book.blurb)
-        assertEquals(listOf("first"), project.book.chapters.map(Chapter::name))
+        assertNull(book.prolog)
+        assertNull(book.epilog)
+        assertNull(book.blurb)
+        assertEquals(listOf("first"), book.chapters.map(Chapter::name))
     }
 
     /**
-     * Use case: a project is saved to disk, so the written document is readable JSON that parses back
-     * into exactly the project that was written.
+     * Use case: a project is saved to disk, so every part is written as readable JSON that parses
+     * back into exactly the part that was written.
      */
     @Test
-    fun writesAndParsesProjectDocument() {
-        val project = TestData.project()
-
-        val json = mapper.writeValueAsString(project)
-        val restored: Project = mapper.readValue(json)
-
-        assertEquals(project, restored)
+    fun writesAndParsesEveryProjectPart() {
+        assertEquals(TestData.meta(), mapper.readValue<Meta>(mapper.writeValueAsString(TestData.meta())))
+        assertEquals(TestData.design(), mapper.readValue<Design>(mapper.writeValueAsString(TestData.design())))
+        assertEquals(TestData.book(), mapper.readValue<Book>(mapper.writeValueAsString(TestData.book())))
     }
 
     /**
@@ -154,23 +148,21 @@ class ModelJsonTest {
      */
     @Test
     fun escapesSpecialCharactersInChapterText() {
-        val project = TestData.project().apply {
-            book = Book(
-                "Special\"Characters",
-                listOf("A \\ backslash"),
-                chapters = listOf(
-                    Chapter(
-                        "chapter\\1",
-                        "Chapter\\1",
-                        paragraph = listOf("He said: \"Hello\"\nand left.\tEnd")
-                    )
+        val book = Book(
+            title = "Special\"Characters",
+            titleAppendix = listOf("A \\ backslash"),
+            chapters = listOf(
+                Chapter(
+                    "chapter\\1",
+                    "Chapter\\1",
+                    paragraph = listOf("He said: \"Hello\"\nand left.\tEnd")
                 )
             )
-        }
+        )
 
-        val restored: Project = mapper.readValue(mapper.writeValueAsString(project))
+        val restored: Book = mapper.readValue(mapper.writeValueAsString(book))
 
-        assertEquals(project, restored)
+        assertEquals(book, restored)
     }
 
     /**
@@ -179,20 +171,17 @@ class ModelJsonTest {
      */
     @Test
     fun keepsUnicodeText() {
-        val project = TestData.project().apply {
-            author = "Renée Müller"
-            book = Book(
-                "Café Notes",
-                chapters = listOf(
-                    Chapter("naïve", "Naïve Beginnings", paragraph = listOf("A café, a résumé – ok."))
-                ),
-                blurb = Blurb(listOf("Crème de la crème – a novel."))
-            )
-        }
+        val meta = Meta(name = "Café Notes", author = "Renée Müller")
+        val book = Book(
+            title = "Café Notes",
+            chapters = listOf(
+                Chapter("naïve", "Naïve Beginnings", paragraph = listOf("A café, a résumé – ok."))
+            ),
+            blurb = Blurb(listOf("Crème de la crème – a novel."))
+        )
 
-        val restored: Project = mapper.readValue(mapper.writeValueAsString(project))
-
-        assertEquals(project, restored)
+        assertEquals(meta, mapper.readValue<Meta>(mapper.writeValueAsString(meta)))
+        assertEquals(book, mapper.readValue<Book>(mapper.writeValueAsString(book)))
     }
 
     /**
@@ -221,13 +210,13 @@ class ModelJsonTest {
     }
 
     /**
-     * Use case: a project file is truncated or damaged, so opening it fails with a parse error
-     * instead of producing a half filled project.
+     * Use case: a project entry is truncated or damaged, so opening it fails with a parse error
+     * instead of producing a half filled part.
      */
     @Test
     fun rejectsBrokenDocument() {
         assertThrows<JsonProcessingException> {
-            mapper.readValue<Project>("""{"name":"My Novel","book":{"title":""")
+            mapper.readValue<Book>("""{"title":""")
         }
     }
 
@@ -236,14 +225,13 @@ class ModelJsonTest {
      * with instead of being rejected, and everything else is read as written.
      */
     @Test
-    fun readsProjectWithoutNameAsDefault() {
-        val json = mapper.writeValueAsString(TestData.project())
+    fun readsMetaWithoutNameAsDefault() {
+        val json = mapper.writeValueAsString(TestData.meta())
             .replaceFirst(""""name" : "My Novel",""", "")
 
-        val project: Project = mapper.readValue(json)
+        val meta: Meta = mapper.readValue(json)
 
-        assertEquals("New Project", project.name)
-        assertEquals("Jane Doe", project.author)
-        assertEquals(TestData.book(), project.book)
+        assertEquals("New Project", meta.name)
+        assertEquals("Jane Doe", meta.author)
     }
 }

@@ -36,7 +36,7 @@ class MainWindow : Stage() {
         titleProperty().bind(
             Bindings.concat(
                 "AI Ghost - ",
-                Bindings.selectString(viewModel.project, "name")
+                viewModel.projectName
             )
         )
     }
