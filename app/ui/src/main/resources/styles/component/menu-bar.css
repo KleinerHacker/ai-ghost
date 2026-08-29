@@ -19,9 +19,17 @@
     -fx-padding: 2px 6px 2px 6px;
 }
 
+/*
+ * An entry of the menu bar is a menu button, but it is not a raised control: the bar carries it, so
+ * it drops the fill, the edge and the shadow a button has in styles/component/button.css and shows
+ * its state through a tint only. The border stays 2px wide, just invisible, so focusing an entry
+ * does not move the bar.
+ */
 .menu-bar > .container > .menu-button {
     -fx-background-color: transparent;
     -fx-background-radius: 8px;
+    -fx-border-color: transparent;
+    -fx-effect: null;
     -fx-padding: 4px 10px 4px 10px;
 }
 

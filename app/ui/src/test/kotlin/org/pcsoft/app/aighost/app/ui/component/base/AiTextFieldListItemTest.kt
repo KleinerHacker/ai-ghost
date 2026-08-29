@@ -54,7 +54,7 @@ class AiTextFieldListItemTest : ApplicationTest() {
     private val createButton: Button
         get() = item.lookup(".ai-create") as Button
 
-    /** The cross asking for the entry to be removed. */
+    /** The bin asking for the entry to be removed. */
     private val deleteButton: Button
         get() = item.lookup(".ai-delete") as Button
 
@@ -109,19 +109,19 @@ class AiTextFieldListItemTest : ApplicationTest() {
     }
 
     /**
-     * Use case: nobody says what the entry holds, so the cross explains itself in general words.
+     * Use case: nobody says what the entry holds, so the bin explains itself in general words.
      */
     @Test
-    fun crossExplainsItselfInGeneralWords() {
+    fun binExplainsItselfInGeneralWords() {
         assertEquals("Remove entry", deleteButton.tooltip.text)
     }
 
     /**
-     * Use case: whoever shows the item says what removing means here, so the cross explains itself
+     * Use case: whoever shows the item says what removing means here, so the bin explains itself
      * with those words instead.
      */
     @Test
-    fun crossExplainsItselfWithTheGivenWords() {
+    fun binExplainsItselfWithTheGivenWords() {
         interact { item.deleteTooltip.value = "Remove title line" }
         WaitForAsyncUtils.waitForFxEvents()
 
@@ -129,19 +129,19 @@ class AiTextFieldListItemTest : ApplicationTest() {
     }
 
     /**
-     * Use case: the cross carries its icon, so the user recognises what pressing it does.
+     * Use case: the bin carries its icon, so the user recognises what pressing it does.
      */
     @Test
-    fun crossCarriesItsIcon() {
+    fun binCarriesItsIcon() {
         assertNotNull(deleteButton.graphic as ImageView)
     }
 
     /**
-     * Use case: the user presses the cross, so the item reports the request with itself as its source
+     * Use case: the user presses the bin, so the item reports the request with itself as its source
      * without taking anything away - the list it belongs to decides that.
      */
     @Test
-    fun crossReportsTheRemovalWithoutCarryingItOut() {
+    fun binReportsTheRemovalWithoutCarryingItOut() {
         var source: Any? = null
         interact {
             item.setOnDeleteAction { event -> source = event.source }
@@ -153,22 +153,22 @@ class AiTextFieldListItemTest : ApplicationTest() {
 
         assertSame(item, source)
         assertEquals("A ghost story", item.text.value)
-        assertFalse(dialogIsOpen(), "the cross asked a question of its own")
+        assertFalse(dialogIsOpen(), "the bin asked a question of its own")
     }
 
     /**
-     * Use case: the cross is pressed while a handler listens for the wand only, so the request of the
-     * cross does not pass as a request for an AI text.
+     * Use case: the bin is pressed while a handler listens for the wand only, so the request of the
+     * bin does not pass as a request for an AI text.
      */
     @Test
-    fun crossDoesNotPassAsTheWand() {
+    fun binDoesNotPassAsTheWand() {
         var created = false
         interact { item.setOnCreateAiText { created = true } }
 
         clickOn(deleteButton)
         WaitForAsyncUtils.waitForFxEvents()
 
-        assertFalse(created, "the cross reported a request for an AI text")
+        assertFalse(created, "the bin reported a request for an AI text")
     }
 
     /**
@@ -188,11 +188,11 @@ class AiTextFieldListItemTest : ApplicationTest() {
     }
 
     /**
-     * Use case: the wand is pressed while a handler listens for the cross only, so the request of the
+     * Use case: the wand is pressed while a handler listens for the bin only, so the request of the
      * wand does not pass as a request to remove the entry.
      */
     @Test
-    fun wandDoesNotPassAsTheCross() {
+    fun wandDoesNotPassAsTheBin() {
         var deleted = false
         interact { item.setOnDeleteAction { deleted = true } }
 
@@ -240,7 +240,7 @@ class AiTextFieldListItemTest : ApplicationTest() {
     }
 
     /**
-     * Use case: both handlers are removed again, so pressing the wand or the cross no longer reaches
+     * Use case: both handlers are removed again, so pressing the wand or the bin no longer reaches
      * anybody.
      */
     @Test

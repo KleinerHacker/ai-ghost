@@ -42,7 +42,7 @@ class AiTextFieldListItemEvent(
         val CREATE_AI_TEXT: EventType<AiTextFieldListItemEvent> =
             EventType(ANY, "AI_TEXT_FIELD_LIST_ITEM_CREATE")
 
-        /** Request of the cross, asking for the entry to be removed. */
+        /** Request of the bin, asking for the entry to be removed. */
         val DELETE: EventType<AiTextFieldListItemEvent> =
             EventType(ANY, "AI_TEXT_FIELD_LIST_ITEM_DELETE")
     }

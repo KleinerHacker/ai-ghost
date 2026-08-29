@@ -115,7 +115,7 @@ class BookEditorView : FxmlView<BookEditorViewModel>, Initializable {
     }
 
     /**
-     * Builds one entry per title line, each holding the field of the line and the cross removing it.
+     * Builds one entry per title line, each holding the field of the line and the bin removing it.
      */
     private fun rebuildTitleAppendix() {
         appendixItems.clear()
@@ -124,7 +124,7 @@ class BookEditorView : FxmlView<BookEditorViewModel>, Initializable {
             val item = AiTextFieldListItem()
             item.text.value = line
             item.promptText.value = messages.getString(APPENDIX_PROMPT_KEY)
-            // The entry holds a title line, which it does not know by itself, so the cross is told
+            // The entry holds a title line, which it does not know by itself, so the bin is told
             // what removing means here.
             item.deleteTooltip.value = messages.getString(REMOVE_TOOLTIP_KEY)
             // An entry is asked for its position only when the user acts, so an entry that moved

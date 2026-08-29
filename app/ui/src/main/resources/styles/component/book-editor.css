@@ -25,7 +25,7 @@
 
 /*
  * The plus carries its icon only, so it keeps the padding of a square button instead of the wider
- * one a labelled button needs. The cross of a title line belongs to the list entry and is styled
+ * one a labelled button needs. The bin of a title line belongs to the list entry and is styled
  * with it.
  */
 .book-editor-add {

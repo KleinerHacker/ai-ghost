@@ -285,7 +285,7 @@ class BookEditorTest : ApplicationTest() {
     }
 
     /**
-     * Use case: the user presses the cross of a row and agrees to lose the line, so the row is gone,
+     * Use case: the user presses the bin of a row and agrees to lose the line, so the row is gone,
      * the manuscript no longer carries it and the rows left behind still write to their own line.
      */
     @Test
@@ -307,7 +307,7 @@ class BookEditorTest : ApplicationTest() {
     }
 
     /**
-     * Use case: the user presses the cross of a row and refuses to lose the line, so everything stays
+     * Use case: the user presses the bin of a row and refuses to lose the line, so everything stays
      * as it was.
      */
     @Test
@@ -429,7 +429,7 @@ class BookEditorTest : ApplicationTest() {
     }
 
     /**
-     * Use case: the cross of a row explains itself through a tooltip and carries its icon.
+     * Use case: the bin of a row explains itself through a tooltip and carries its icon.
      */
     @Test
     fun removeButtonCarriesIconAndTooltip() {
@@ -465,7 +465,7 @@ class BookEditorTest : ApplicationTest() {
     private fun removeButtonOfRow(index: Int): Button = fieldOfRow(index).lookup(".ai-delete") as Button
 
     /**
-     * Presses the cross of a row and waits until the question about the title line stands.
+     * Presses the bin of a row and waits until the question about the title line stands.
      *
      * The question blocks the JavaFX thread while it is open, so the button is pressed without
      * waiting for the press to be worked off.

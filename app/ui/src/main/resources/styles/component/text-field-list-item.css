@@ -10,7 +10,7 @@
  * See the License for the specific language governing permissions and limitations.
  */
 
-/* One entry of a list of AI texts: the field of the entry and the cross taking it out again. */
+/* One entry of a list of AI texts: the field of the entry and the bin taking it out again. */
 
 /* The entry sits on the surface it was placed on, so a list carries no background of its own. */
 .ai-list-item {
@@ -18,7 +18,7 @@
 }
 
 /*
- * The cross carries its icon only, so it keeps the padding of a square button instead of the wider
+ * The bin carries its icon only, so it keeps the padding of a square button instead of the wider
  * one a labelled button needs.
  */
 .ai-delete {

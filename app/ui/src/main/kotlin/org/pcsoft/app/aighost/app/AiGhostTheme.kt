@@ -43,14 +43,16 @@ object AiGhostTheme {
      * Resource paths of the component stylesheets, one per styled control.
      *
      * Styling another control means adding a stylesheet next to the existing ones and listing it
-     * here; the order inside the list does not matter, because the selectors do not overlap.
+     * here. The order inside the list only matters where a stylesheet takes a look off a control
+     * that another one gave it: the tool bar keeps its buttons flat against the raised look of
+     * `button.css` and is therefore listed after it.
      */
     val COMPONENT_PATHS: List<String> = listOf(
         "/styles/component/menu-bar.css",
         "/styles/component/context-menu.css",
-        "/styles/component/tool-bar.css",
         "/styles/component/status-bar.css",
         "/styles/component/button.css",
+        "/styles/component/tool-bar.css",
         "/styles/component/tooltip.css",
         "/styles/component/text-input.css",
         "/styles/component/tree-view.css",
