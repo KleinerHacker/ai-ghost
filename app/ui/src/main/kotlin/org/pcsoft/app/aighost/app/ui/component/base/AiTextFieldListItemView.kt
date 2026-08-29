@@ -74,6 +74,6 @@ class AiTextFieldListItemView : FxmlView<AiTextFieldListItemViewModel>, Initiali
 
     private companion object {
         /** Key of the general wording of the cross inside the resource bundle. */
-        const val DELETE_TOOLTIP_KEY: String = "aiTextFieldListItem.delete.tooltip"
+        const val DELETE_TOOLTIP_KEY: String = "component.aiTextFieldListItem.delete.tooltip"
     }
 }

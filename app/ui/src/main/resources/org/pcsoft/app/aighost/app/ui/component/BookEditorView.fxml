@@ -33,10 +33,10 @@
                     <Insets top="10" right="10" bottom="10" left="10"/>
                 </padding>
 
-                <Label styleClass="book-editor-label" text="%bookEditor.title.label"/>
+                <Label styleClass="book-editor-label" text="%component.bookEditor.title.label"/>
                 <AiTextField fx:id="txtTitle"/>
 
-                <Label styleClass="book-editor-label" text="%bookEditor.titleAppendix.label">
+                <Label styleClass="book-editor-label" text="%component.bookEditor.titleAppendix.label">
                     <VBox.margin>
                         <Insets top="10"/>
                     </VBox.margin>
@@ -48,19 +48,19 @@
                             <AiGhostIcons fx:factory="buttonAdd"/>
                         </graphic>
                         <tooltip>
-                            <Tooltip text="%bookEditor.titleAppendix.add.tooltip"/>
+                            <Tooltip text="%component.bookEditor.titleAppendix.add.tooltip"/>
                         </tooltip>
                     </Button>
                 </HBox>
 
-                <Label styleClass="book-editor-label" text="%bookEditor.prompt.content.label">
+                <Label styleClass="book-editor-label" text="%component.bookEditor.prompt.content.label">
                     <VBox.margin>
                         <Insets top="10"/>
                     </VBox.margin>
                 </Label>
                 <AiPromptArea fx:id="txaContentPrompt" prefHeight="140"/>
 
-                <Label styleClass="book-editor-label" text="%bookEditor.prompt.style.label">
+                <Label styleClass="book-editor-label" text="%component.bookEditor.prompt.style.label">
                     <VBox.margin>
                         <Insets top="10"/>
                     </VBox.margin>

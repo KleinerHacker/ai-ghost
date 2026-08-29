@@ -59,7 +59,7 @@ class IoControllerTest {
     @Test
     fun namesTheMissingProjectFile() {
         assertEquals(
-            Messages["project.error.notFound"],
+            Messages["text.project.error.notFound"],
             IoController.reasonOfProjectError(ProjectStorage.Error.NotFound(file))
         )
     }
@@ -71,7 +71,7 @@ class IoControllerTest {
     @Test
     fun namesADirectoryInPlaceOfTheProjectFile() {
         assertEquals(
-            Messages["project.error.notAFile"],
+            Messages["text.project.error.notAFile"],
             IoController.reasonOfProjectError(ProjectStorage.Error.NotAFile(file))
         )
     }
@@ -83,7 +83,7 @@ class IoControllerTest {
     @Test
     fun namesTheUnreadableProjectFile() {
         assertEquals(
-            Messages["project.error.unreadable"],
+            Messages["text.project.error.unreadable"],
             IoController.reasonOfProjectError(ProjectStorage.Error.Unreadable(file, IOException("denied")))
         )
     }
@@ -95,7 +95,7 @@ class IoControllerTest {
     @Test
     fun namesTheDamagedProjectFile() {
         assertEquals(
-            Messages["project.error.malformed"],
+            Messages["text.project.error.malformed"],
             IoController.reasonOfProjectError(ProjectStorage.Error.Malformed(file, IOException("broken")))
         )
     }
@@ -107,7 +107,7 @@ class IoControllerTest {
     @Test
     fun namesTheMissingPreferencesFile() {
         assertEquals(
-            Messages["preferences.error.notFound"],
+            Messages["text.preferences.error.notFound"],
             IoController.reasonOfPreferencesError(PreferencesStorage.Error.NotFound(file))
         )
     }
@@ -119,7 +119,7 @@ class IoControllerTest {
     @Test
     fun namesADirectoryInPlaceOfThePreferencesFile() {
         assertEquals(
-            Messages["preferences.error.notAFile"],
+            Messages["text.preferences.error.notAFile"],
             IoController.reasonOfPreferencesError(PreferencesStorage.Error.NotAFile(file))
         )
     }
@@ -131,7 +131,7 @@ class IoControllerTest {
     @Test
     fun namesTheDamagedPreferencesFile() {
         assertEquals(
-            Messages["preferences.error.malformed"],
+            Messages["text.preferences.error.malformed"],
             IoController.reasonOfPreferencesError(PreferencesStorage.Error.Malformed(file, IOException("broken")))
         )
     }
@@ -143,7 +143,7 @@ class IoControllerTest {
     @Test
     fun namesTheUnreadablePreferencesFile() {
         assertEquals(
-            Messages["preferences.error.unreadable"],
+            Messages["text.preferences.error.unreadable"],
             IoController.reasonOfPreferencesError(PreferencesStorage.Error.Unreadable(file, IOException("denied")))
         )
     }
@@ -155,7 +155,7 @@ class IoControllerTest {
     @Test
     fun namesTheCorruptProject() {
         assertEquals(
-            Messages["project.error.corrupt"],
+            Messages["text.project.error.corrupt"],
             IoController.reasonOfProjectError(ProjectStorage.Error.Corrupt(file, setOf("book")))
         )
     }
@@ -167,7 +167,7 @@ class IoControllerTest {
     @Test
     fun namesTheIncompleteProject() {
         assertEquals(
-            Messages["project.error.incomplete"],
+            Messages["text.project.error.incomplete"],
             IoController.reasonOfProjectError(incompleteError())
         )
     }
@@ -180,10 +180,10 @@ class IoControllerTest {
     @Test
     fun carriesEveryTextOfTheRescueDialog() {
         val texts = listOf(
-            Messages["project.incomplete.title"],
-            Messages["project.incomplete.header"],
-            Messages["project.incomplete.content"],
-            Messages["project.incomplete.hint"]
+            Messages["text.project.incomplete.title"],
+            Messages["text.project.incomplete.header"],
+            Messages["text.project.incomplete.content"],
+            Messages["text.project.incomplete.hint"]
         )
 
         assertEquals(texts.size, texts.toSet().size, "two texts of the rescue dialog are the same")

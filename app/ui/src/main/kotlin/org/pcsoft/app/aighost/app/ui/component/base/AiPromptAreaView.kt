@@ -115,9 +115,9 @@ class AiPromptAreaView : FxmlView<AiPromptAreaViewModel>, Initializable {
 
     private companion object {
         /** Key of the character counter inside the resource bundle. */
-        const val COUNTER_KEY: String = "aiPromptArea.counter"
+        const val COUNTER_KEY: String = "component.aiPromptArea.counter"
 
         /** Key of the estimated token cost inside the resource bundle. */
-        const val TOKENS_KEY: String = "aiPromptArea.tokens"
+        const val TOKENS_KEY: String = "component.aiPromptArea.tokens"
     }
 }

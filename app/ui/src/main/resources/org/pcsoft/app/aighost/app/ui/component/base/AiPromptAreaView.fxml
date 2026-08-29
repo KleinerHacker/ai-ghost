@@ -38,7 +38,7 @@
                             <AiGhostIcons fx:factory="buttonAiAction"/>
                         </graphic>
                         <tooltip>
-                            <Tooltip text="%aiPromptArea.optimize.tooltip"/>
+                            <Tooltip text="%component.aiPromptArea.optimize.tooltip"/>
                         </tooltip>
                     </Button>
                     <Label fx:id="lblTokens" styleClass="prompt-tokens"/>

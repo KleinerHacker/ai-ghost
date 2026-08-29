@@ -33,7 +33,7 @@
                 <AiGhostIcons fx:factory="buttonAiAction"/>
             </graphic>
             <tooltip>
-                <Tooltip text="%aiTextField.create.tooltip"/>
+                <Tooltip text="%component.aiTextField.create.tooltip"/>
             </tooltip>
         </Button>
     </right>

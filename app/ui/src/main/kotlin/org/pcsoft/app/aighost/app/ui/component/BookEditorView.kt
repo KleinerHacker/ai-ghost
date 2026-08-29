@@ -145,21 +145,21 @@ class BookEditorView : FxmlView<BookEditorViewModel>, Initializable {
         const val PROMPT_MAX_CHARACTERS: Long = 2000L
 
         /** Key of the hint shown in the empty title field inside the resource bundle. */
-        const val TITLE_PROMPT_KEY: String = "bookEditor.title.prompt"
+        const val TITLE_PROMPT_KEY: String = "component.bookEditor.title.prompt"
 
         /** Key of the hint shown in an empty title line inside the resource bundle. */
-        const val APPENDIX_PROMPT_KEY: String = "bookEditor.titleAppendix.prompt"
+        const val APPENDIX_PROMPT_KEY: String = "component.bookEditor.titleAppendix.prompt"
 
         /** Key of the tooltip of the button removing a title line inside the resource bundle. */
-        const val REMOVE_TOOLTIP_KEY: String = "bookEditor.titleAppendix.remove.tooltip"
+        const val REMOVE_TOOLTIP_KEY: String = "component.bookEditor.titleAppendix.remove.tooltip"
 
         /** Key of the title of the remove question inside the resource bundle. */
-        const val REMOVE_TITLE_KEY: String = "bookEditor.titleAppendix.remove.title"
+        const val REMOVE_TITLE_KEY: String = "component.bookEditor.titleAppendix.remove.title"
 
         /** Key of the headline of the remove question inside the resource bundle. */
-        const val REMOVE_HEADER_KEY: String = "bookEditor.titleAppendix.remove.header"
+        const val REMOVE_HEADER_KEY: String = "component.bookEditor.titleAppendix.remove.header"
 
         /** Key of the text of the remove question inside the resource bundle. */
-        const val REMOVE_CONTENT_KEY: String = "bookEditor.titleAppendix.remove.content"
+        const val REMOVE_CONTENT_KEY: String = "component.bookEditor.titleAppendix.remove.content"
     }
 }

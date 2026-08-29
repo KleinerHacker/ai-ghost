@@ -67,12 +67,12 @@ class AiTextFieldView : FxmlView<AiTextFieldViewModel>, Initializable {
 
     private companion object {
         /** Key of the title of the overwrite question inside the resource bundle. */
-        const val OVERWRITE_TITLE_KEY: String = "aiTextField.overwrite.title"
+        const val OVERWRITE_TITLE_KEY: String = "component.aiTextField.overwrite.title"
 
         /** Key of the headline of the overwrite question inside the resource bundle. */
-        const val OVERWRITE_HEADER_KEY: String = "aiTextField.overwrite.header"
+        const val OVERWRITE_HEADER_KEY: String = "component.aiTextField.overwrite.header"
 
         /** Key of the text of the overwrite question inside the resource bundle. */
-        const val OVERWRITE_CONTENT_KEY: String = "aiTextField.overwrite.content"
+        const val OVERWRITE_CONTENT_KEY: String = "component.aiTextField.overwrite.content"
     }
 }

@@ -60,8 +60,8 @@ object IoController {
         return ProjectStorage.save(project, file).onLeft { error ->
             log.warn("Failed to save project: {}", error::class.simpleName)
             showFailure(
-                Messages["project.error.save.title"],
-                Messages["project.error.save.header"],
+                Messages["text.project.error.save.title"],
+                Messages["text.project.error.save.header"],
                 reasonOfProjectError(error),
             )
         }.fold({ false }, { true })
@@ -86,8 +86,8 @@ object IoController {
                 else -> {
                     log.warn("Failed to load project: {}", error::class.simpleName)
                     showFailure(
-                        Messages["project.error.load.title"],
-                        Messages["project.error.load.header"],
+                        Messages["text.project.error.load.title"],
+                        Messages["text.project.error.load.header"],
                         reasonOfProjectError(error),
                     )
                     null
@@ -112,11 +112,11 @@ object IoController {
         log.warn("Project {} lost the part(s) {}", error.file.absolutePath, error.lostParts)
 
         val confirmed = AiGhostDialog.showWarningConfirmDetails(
-            Messages["project.incomplete.title"],
-            Messages["project.incomplete.header"],
+            Messages["text.project.incomplete.title"],
+            Messages["text.project.incomplete.header"],
             listOf(
-                Messages["project.incomplete.content"],
-                Messages["project.incomplete.hint"]
+                Messages["text.project.incomplete.content"],
+                Messages["text.project.incomplete.hint"]
             ).joinToString(System.lineSeparator() + System.lineSeparator()),
             error.lostParts.sorted().joinToString(System.lineSeparator()) { "- $it" },
         )
@@ -136,12 +136,12 @@ object IoController {
      * @return A localized string explaining the reason for the error.
      */
     internal fun reasonOfProjectError(error: ProjectStorage.Error): String = when (error) {
-        is ProjectStorage.Error.NotFound -> Messages["project.error.notFound"]
-        is ProjectStorage.Error.NotAFile -> Messages["project.error.notAFile"]
-        is ProjectStorage.Error.Unreadable -> Messages["project.error.unreadable"]
-        is ProjectStorage.Error.Malformed -> Messages["project.error.malformed"]
-        is ProjectStorage.Error.Corrupt -> Messages["project.error.corrupt"]
-        is ProjectStorage.Error.Incomplete -> Messages["project.error.incomplete"]
+        is ProjectStorage.Error.NotFound -> Messages["text.project.error.notFound"]
+        is ProjectStorage.Error.NotAFile -> Messages["text.project.error.notAFile"]
+        is ProjectStorage.Error.Unreadable -> Messages["text.project.error.unreadable"]
+        is ProjectStorage.Error.Malformed -> Messages["text.project.error.malformed"]
+        is ProjectStorage.Error.Corrupt -> Messages["text.project.error.corrupt"]
+        is ProjectStorage.Error.Incomplete -> Messages["text.project.error.incomplete"]
     }
     //endregion
 
@@ -177,8 +177,8 @@ object IoController {
         return PreferencesStorage.save(preferences.value).onLeft { error ->
             log.warn("Failed to save preferences: {}", error::class.simpleName)
             showFailure(
-                Messages["preferences.error.title"],
-                Messages["preferences.error.save.header"],
+                Messages["text.preferences.error.title"],
+                Messages["text.preferences.error.save.header"],
                 reasonOfPreferencesError(error),
             )
         }.fold({ false }, { true })
@@ -213,10 +213,10 @@ object IoController {
      * @return A localized string explaining the reason for the error.
      */
     internal fun reasonOfPreferencesError(error: PreferencesStorage.Error): String = when (error) {
-        is PreferencesStorage.Error.NotAFile -> Messages["preferences.error.notAFile"]
-        is PreferencesStorage.Error.Malformed -> Messages["preferences.error.malformed"]
-        is PreferencesStorage.Error.NotFound -> Messages["preferences.error.notFound"]
-        is PreferencesStorage.Error.Unreadable -> Messages["preferences.error.unreadable"]
+        is PreferencesStorage.Error.NotAFile -> Messages["text.preferences.error.notAFile"]
+        is PreferencesStorage.Error.Malformed -> Messages["text.preferences.error.malformed"]
+        is PreferencesStorage.Error.NotFound -> Messages["text.preferences.error.notFound"]
+        is PreferencesStorage.Error.Unreadable -> Messages["text.preferences.error.unreadable"]
     }
 
     /**
@@ -231,9 +231,9 @@ object IoController {
         log.debug("Asking for reset preferences")
 
         val confirmed = AiGhostDialog.showWarningConfirm(
-            Messages["preferences.reset.title"],
-            Messages["preferences.reset.header"],
-            Messages["preferences.reset.content"],
+            Messages["text.preferences.reset.title"],
+            Messages["text.preferences.reset.header"],
+            Messages["text.preferences.reset.content"],
         )
 
         if (confirmed) {
@@ -262,7 +262,7 @@ object IoController {
     private fun handleComplexFailure(reason: String, app: Application) {
         log.debug("Inform about complex error")
 
-        showFailure(Messages["preferences.error.title"], Messages["preferences.error.header"], reason)
+        showFailure(Messages["text.preferences.error.title"], Messages["text.preferences.error.header"], reason)
 
         exitingApp(app)
     }

@@ -27,63 +27,63 @@
     <top>
         <VBox>
             <MenuBar>
-                <Menu text="%menu.file">
-                    <Menu text="%menu.file.new">
-                        <MenuItem text="%menu.file.new.project"/>
+                <Menu text="%window.main.menu.file">
+                    <Menu text="%window.main.menu.file.new">
+                        <MenuItem text="%window.main.menu.file.new.project"/>
                         <SeparatorMenuItem/>
-                        <MenuItem text="%menu.file.new.chapter" accelerator="Shortcut+Alt+C">
+                        <MenuItem text="%window.main.menu.file.new.chapter" accelerator="Shortcut+Alt+C">
                             <graphic>
                                 <AiGhostIcons fx:factory="menuChapter"/>
                             </graphic>
                         </MenuItem>
                     </Menu>
-                    <MenuItem text="%menu.file.open" accelerator="Shortcut+O" onAction="#actionOpen">
+                    <MenuItem text="%window.main.menu.file.open" accelerator="Shortcut+O" onAction="#actionOpen">
                         <graphic>
                             <AiGhostIcons fx:factory="menuOpen"/>
                         </graphic>
                     </MenuItem>
-                    <Menu fx:id="mnuOpenRecent" text="%menu.file.openRecent"/>
+                    <Menu fx:id="mnuOpenRecent" text="%window.main.menu.file.openRecent"/>
                     <SeparatorMenuItem/>
-                    <MenuItem text="%menu.file.save" accelerator="Shortcut+S" onAction="#actionSave">
+                    <MenuItem text="%window.main.menu.file.save" accelerator="Shortcut+S" onAction="#actionSave">
                         <graphic>
                             <AiGhostIcons fx:factory="menuSave"/>
                         </graphic>
                     </MenuItem>
-                    <MenuItem text="%menu.file.saveAs" accelerator="Shortcut+Shift+S" onAction="#actionSaveAs">
+                    <MenuItem text="%window.main.menu.file.saveAs" accelerator="Shortcut+Shift+S" onAction="#actionSaveAs">
                         <graphic>
                             <AiGhostIcons fx:factory="menuSaveAs"/>
                         </graphic>
                     </MenuItem>
                     <SeparatorMenuItem/>
-                    <MenuItem text="%menu.file.preferences">
+                    <MenuItem text="%window.main.menu.file.preferences">
                         <graphic>
                             <AiGhostIcons fx:factory="menuPreferences"/>
                         </graphic>
                     </MenuItem>
-                    <MenuItem text="%menu.file.projectSettings">
+                    <MenuItem text="%window.main.menu.file.projectSettings">
                         <graphic>
                             <AiGhostIcons fx:factory="menuProjectSettings"/>
                         </graphic>
                     </MenuItem>
                     <SeparatorMenuItem/>
-                    <MenuItem text="%menu.file.exit" accelerator="Alt+F4" onAction="#actionExit"/>
+                    <MenuItem text="%window.main.menu.file.exit" accelerator="Alt+F4" onAction="#actionExit"/>
                 </Menu>
-                <Menu text="%menu.publish">
-                    <Menu text="%menu.publish.export">
+                <Menu text="%window.main.menu.publish">
+                    <Menu text="%window.main.menu.publish.export">
                         <graphic>
                             <AiGhostIcons fx:factory="menuExport"/>
                         </graphic>
-                        <MenuItem text="%menu.publish.export.pdf"/>
+                        <MenuItem text="%window.main.menu.publish.export.pdf"/>
                     </Menu>
                 </Menu>
-                <Menu text="%menu.help">
-                    <MenuItem text="%menu.help.online" accelerator="F1" onAction="#actionHelpOnline">
+                <Menu text="%window.main.menu.help">
+                    <MenuItem text="%window.main.menu.help.online" accelerator="F1" onAction="#actionHelpOnline">
                         <graphic>
                             <AiGhostIcons fx:factory="menuHelpOnline"/>
                         </graphic>
                     </MenuItem>
                     <SeparatorMenuItem/>
-                    <MenuItem text="%menu.help.about"/>
+                    <MenuItem text="%window.main.menu.help.about"/>
                 </Menu>
             </MenuBar>
             <ToolBar>
@@ -92,7 +92,7 @@
                         <AiGhostIcons fx:factory="menuChapter"/>
                     </graphic>
                     <tooltip>
-                        <Tooltip text="%menu.file.new.chapter"/>
+                        <Tooltip text="%window.main.menu.file.new.chapter"/>
                     </tooltip>
                 </Button>
                 <Separator/>
@@ -101,7 +101,7 @@
                         <AiGhostIcons fx:factory="menuOpen"/>
                     </graphic>
                     <tooltip>
-                        <Tooltip text="%menu.file.open"/>
+                        <Tooltip text="%window.main.menu.file.open"/>
                     </tooltip>
                 </Button>
                 <Separator/>
@@ -110,7 +110,7 @@
                         <AiGhostIcons fx:factory="menuSave"/>
                     </graphic>
                     <tooltip>
-                        <Tooltip text="%menu.file.save"/>
+                        <Tooltip text="%window.main.menu.file.save"/>
                     </tooltip>
                 </Button>
                 <Button onAction="#actionSaveAs">
@@ -118,7 +118,7 @@
                         <AiGhostIcons fx:factory="menuSaveAs"/>
                     </graphic>
                     <tooltip>
-                        <Tooltip text="%menu.file.saveAs"/>
+                        <Tooltip text="%window.main.menu.file.saveAs"/>
                     </tooltip>
                 </Button>
                 <Separator/>
@@ -127,7 +127,7 @@
                         <AiGhostIcons fx:factory="menuPreferences"/>
                     </graphic>
                     <tooltip>
-                        <Tooltip text="%menu.file.preferences"/>
+                        <Tooltip text="%window.main.menu.file.preferences"/>
                     </tooltip>
                 </Button>
                 <Button>
@@ -135,7 +135,7 @@
                         <AiGhostIcons fx:factory="menuProjectSettings"/>
                     </graphic>
                     <tooltip>
-                        <Tooltip text="%menu.file.projectSettings"/>
+                        <Tooltip text="%window.main.menu.file.projectSettings"/>
                     </tooltip>
                 </Button>
                 <Separator/>
@@ -144,10 +144,10 @@
                         <AiGhostIcons fx:factory="menuExport"/>
                     </graphic>
                     <tooltip>
-                        <Tooltip text="%menu.publish.export"/>
+                        <Tooltip text="%window.main.menu.publish.export"/>
                     </tooltip>
                     <items>
-                        <MenuItem text="%menu.publish.export.pdf"/>
+                        <MenuItem text="%window.main.menu.publish.export.pdf"/>
                     </items>
                 </MenuButton>
                 <Separator/>
@@ -156,7 +156,7 @@
                         <AiGhostIcons fx:factory="menuHelpOnline"/>
                     </graphic>
                     <tooltip>
-                        <Tooltip text="%menu.help.online"/>
+                        <Tooltip text="%window.main.menu.help.online"/>
                     </tooltip>
                 </Button>
             </ToolBar>
@@ -165,10 +165,10 @@
 
     <center>
         <TabPane>
-            <Tab text="%tab.editor" closable="false">
+            <Tab text="%window.main.tab.editor" closable="false">
                 <Editor fx:id="editor"/>
             </Tab>
-            <Tab text="%tab.preview" closable="false"/>
+            <Tab text="%window.main.tab.preview" closable="false"/>
         </TabPane>
     </center>
     <bottom>
