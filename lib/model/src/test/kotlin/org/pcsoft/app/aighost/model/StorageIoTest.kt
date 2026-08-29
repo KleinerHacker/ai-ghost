@@ -46,9 +46,9 @@ data class TestNotes(
 ) : ProjectPart
 
 /**
- * Developer tests for [StorageIO], the archive a project document is made of.
+ * Developer tests for [StorageIo], the archive a project document is made of.
  */
-class StorageIOTest {
+class StorageIoTest {
 
     @TempDir
     lateinit var directory: File
@@ -62,7 +62,7 @@ class StorageIOTest {
      */
     @Test
     fun storesEveryPartUnderItsIdentifier() {
-        StorageIO.saveToZip(file, TestData.project())
+        StorageIo.saveToZip(file, TestData.project())
 
         assertEquals(
             listOf("book.json", "design.json", "meta.json"),
@@ -77,7 +77,7 @@ class StorageIOTest {
      */
     @Test
     fun roundTripsTheWholeProject() {
-        StorageIO.saveToZip(file, TestData.project())
+        StorageIo.saveToZip(file, TestData.project())
 
         val result = loadEither().getOrNull()
 
@@ -135,7 +135,7 @@ class StorageIOTest {
     fun writesAnUnreadPartBackUnchanged() {
         val stored = """{"note":"written elsewhere"}"""
 
-        StorageIO.saveToZip(file, TestData.project().apply { unknownParts = mapOf("plugin-notes" to stored) })
+        StorageIo.saveToZip(file, TestData.project().apply { unknownParts = mapOf("plugin-notes" to stored) })
 
         assertEquals(
             listOf("book.json", "design.json", "meta.json", "plugin-notes.json"),
@@ -152,7 +152,7 @@ class StorageIOTest {
     fun namesEveryAdditionalPartInTheMetaData() {
         val project = TestData.project().apply { unknownParts = mapOf("plugin-notes" to "{}") }
 
-        StorageIO.saveToZip(file, project)
+        StorageIo.saveToZip(file, project)
 
         assertEquals(listOf("plugin-notes"), project.meta.additionalParts)
         assertEquals(listOf("plugin-notes"), load()!!.meta.additionalParts)
@@ -274,7 +274,7 @@ class StorageIOTest {
      */
     @Test
     fun writesIndentedJsonPerEntry() {
-        StorageIO.saveToZip(file, TestData.project())
+        StorageIo.saveToZip(file, TestData.project())
 
         val content = readEntry(file, "meta.json")
 
@@ -283,15 +283,15 @@ class StorageIOTest {
     }
 
     /** Reads the archive at [file] as a project document, knowing the given additional parts. */
-    private fun loadEither(vararg additional: KClass<out ProjectPart>): Either<StorageIO.Error, StorageIO.LoadResult> =
-        StorageIO.loadFromZip(file, Meta::class, Design::class, Book::class, *additional)
+    private fun loadEither(vararg additional: KClass<out ProjectPart>): Either<StorageIo.Error, StorageIo.LoadResult> =
+        StorageIo.loadFromZip(file, Meta::class, Design::class, Book::class, *additional)
 
     /** The project the archive at [file] holds, `null` when it holds none. */
     private fun load(): Project? = loadEither().getOrNull()?.project
 
     /** The corruption the read of the archive reported, failing the test when it read a project. */
-    private fun corruptionOf(result: Either<StorageIO.Error, StorageIO.LoadResult>): StorageIO.Error.Corrupt =
-        assertInstanceOf(StorageIO.Error.Corrupt::class.java, result.leftOrNull())
+    private fun corruptionOf(result: Either<StorageIo.Error, StorageIo.LoadResult>): StorageIo.Error.Corrupt =
+        assertInstanceOf(StorageIo.Error.Corrupt::class.java, result.leftOrNull())
 
     /** The three entries every project document holds, the meta data naming [additionalParts]. */
     private fun standardEntries(additionalParts: List<String> = emptyList()): Array<Pair<String, String>> {

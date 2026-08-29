@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.app.Messages
+import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
 import org.pcsoft.app.aighost.model.project.book.Blurb
 import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.book.Chapter
@@ -52,6 +53,11 @@ class ProjectListTest : ApplicationTest() {
     private lateinit var projectList: ProjectList
 
     @Suppress("UNCHECKED_CAST")
+    // The tree follows the property model of the surrounding window, which is handed over once and
+    // carries another project whenever the user opens or closes one.
+    private val projectModel = ProjectProperty(Project())
+
+    @Suppress("UNCHECKED_CAST")
     private val tree: TreeView<ProjectListItem>
         get() = projectList.lookup(".tree-view") as TreeView<ProjectListItem>
 
@@ -66,6 +72,7 @@ class ProjectListTest : ApplicationTest() {
         )
 
         projectList = ProjectList()
+        projectList.bindProject(projectModel)
         stage.scene = Scene(projectList, 300.0, 400.0)
         stage.show()
     }
@@ -91,8 +98,8 @@ class ProjectListTest : ApplicationTest() {
         book = book
     )
 
-    private fun setProject(project: Project?) {
-        interact { projectList.project.value = project }
+    private fun setProject(project: Project) {
+        interact { projectModel.value = project }
         // The cells are rebuilt on the next pulse, so a test looking at them waits for it.
         WaitForAsyncUtils.waitForFxEvents()
     }
@@ -244,14 +251,14 @@ class ProjectListTest : ApplicationTest() {
     }
 
     /**
-     * Use case: the open project is closed, so the chapters disappear from the tree while the fixed
-     * branches stay in place.
+     * Use case: the open project is closed and a fresh one takes its place, so the chapters
+     * disappear from the tree while the fixed branches stay in place.
      */
     @Test
-    fun emptiesTheChaptersBranchWhenNoProjectIsBound() {
+    fun emptiesTheChaptersBranchForAFreshProject() {
         setProject(project(Book(title = "My Novel", chapters = listOf(Chapter("first", "The First Part")))))
 
-        setProject(null)
+        setProject(Project())
 
         assertEquals(emptyList<ProjectListItem>(), chaptersItem().children.map { it.value })
         assertEquals(4, tree.root.children.size)

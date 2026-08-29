@@ -22,8 +22,10 @@ description: Mirroring rule between the plain model POJOs in lib/model (ai-ghost
   * `org.pcsoft.app.aighost.model.pref.RecentOpened`
     -> `org.pcsoft.app.aighost.fx.model.pref.RecentOpenedProperty`
 * Naming scheme: `<PojoName>Property`
-* Storage counterparts follow the scheme `FX<StorageName>`
-  * `PreferencesStorage` -> `FXPreferencesStorage`
+* A storage of `lib/model` gets NO counterpart in `lib/fx-model`
+  * A storage only reads and writes; it keeps nothing, so there is no state to offer as a property
+  * Whoever holds the loaded object holds it as a property model of `lib/fx-model` - the settings in
+    `IoController`, the open project in `MainWindowViewModel`
 
 ## Structure Of An FX Model
 

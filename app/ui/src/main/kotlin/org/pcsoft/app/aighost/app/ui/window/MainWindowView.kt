@@ -26,10 +26,8 @@ import javafx.scene.layout.BorderPane
 import javafx.scene.layout.VBox
 import javafx.stage.FileChooser
 import org.pcsoft.app.aighost.app.AiGhostIcons
-import org.pcsoft.app.aighost.app.controller.IoController
 import org.pcsoft.app.aighost.app.ui.component.Editor
 import org.pcsoft.app.aighost.app.ui.showingBinding
-import org.pcsoft.app.aighost.fx.model.FXProjectStorage
 import java.io.File
 import java.net.URL
 import java.util.*
@@ -38,8 +36,8 @@ import java.util.*
  * View of the application main window, holding the menu bar, the tool bar and the tab pane.
  *
  * This view manages the main user interface components and coordinates user interactions with the
- * underlying [MainWindowViewModel]. It handles file operations (new, open, save), manages the recent
- * files menu, and orchestrates the editor component.
+ * underlying [MainWindowViewModel]. It asks the user for a file where one is needed and leaves
+ * everything else - reading, writing and the open project itself - to the view model.
  *
  * Texts come from the global resource bundle via the `%key` syntax of the FXML file; the menu icons
  * are attached by the FXML file itself through the `fx:factory` methods of [AiGhostIcons].
@@ -68,8 +66,8 @@ class MainWindowView : FxmlView<MainWindowViewModel>, Initializable {
      * Initializes the view after the FXML file has been loaded.
      *
      * Sets up the visibility tracking to refresh the view model when the window appears on screen,
-     * binds the recent files menu to the view model's list of recent projects, and connects the
-     * editor component to the current project.
+     * binds the recent files menu to the view model's list of recent projects, and hands the project
+     * of the window to the editor component.
      *
      * @param location The location used to resolve relative paths for the root object, or null if unknown.
      * @param resources The resources used to localize the root object, or null if not localized.
@@ -85,7 +83,9 @@ class MainWindowView : FxmlView<MainWindowViewModel>, Initializable {
         }
         mnuOpenRecent.disableProperty().bind(viewModel.openRecentDisabled)
 
-        editor.project.bind(viewModel.project)
+        // The editor works on the property model of the window instead of on a project handed to it
+        // through a property of its own, so a property never carries another property.
+        editor.bindProject(viewModel.project)
     }
 
     /**
@@ -104,7 +104,7 @@ class MainWindowView : FxmlView<MainWindowViewModel>, Initializable {
 
         return MenuItem().apply {
             graphic = VBox(name, directory).apply { styleClass += "recent-file" }
-            onAction = EventHandler { IoController.loadProject(file) }
+            onAction = EventHandler { viewModel.openProject(file) }
         }
     }
 
@@ -140,12 +140,12 @@ class MainWindowView : FxmlView<MainWindowViewModel>, Initializable {
      * This action is typically triggered by the Save menu item or Ctrl+S keyboard shortcut.
      */
     fun actionSave() {
-        if (!FXProjectStorage.alreadySaved) {
+        if (!viewModel.alreadySaved.get()) {
             actionSaveAs()
             return
         }
 
-        IoController.saveProject()
+        viewModel.saveProject()
     }
 
     /**
@@ -153,7 +153,7 @@ class MainWindowView : FxmlView<MainWindowViewModel>, Initializable {
      *
      * Opens a file chooser dialog allowing the user to specify where to save the project.
      * The dialog is filtered to show only AI Ghost Project files (*.aih). If the user selects
-     * a location, the project is saved there via [IoController.saveProject].
+     * a location, the project is saved there through the view model.
      *
      * This action is typically triggered by the Save As menu item or when saving a new project
      * for the first time.
@@ -165,7 +165,7 @@ class MainWindowView : FxmlView<MainWindowViewModel>, Initializable {
                 FileChooser.ExtensionFilter("AI Ghost Project", "*.aih")
             )
         }.showSaveDialog(pnlRoot.scene.window)?.let {
-            IoController.saveProject(it)
+            viewModel.saveProject(it)
         }
     }
 
@@ -173,8 +173,8 @@ class MainWindowView : FxmlView<MainWindowViewModel>, Initializable {
      * Prompts the user to select a project file to open.
      *
      * Opens a file chooser dialog allowing the user to browse for an existing AI Ghost Project
-     * file (*.aih). If the user selects a file, it is loaded via [IoController.loadProject],
-     * replacing the current project in the editor.
+     * file (*.aih). If the user selects a file, it is opened through the view model, replacing the
+     * current project in the editor.
      *
      * This action is typically triggered by the Open menu item or Ctrl+O keyboard shortcut.
      */
@@ -185,9 +185,7 @@ class MainWindowView : FxmlView<MainWindowViewModel>, Initializable {
                 FileChooser.ExtensionFilter("AI Ghost Project", "*.aih")
             )
         }.showOpenDialog(pnlRoot.scene.window)?.let {
-            if (IoController.loadProject(it)) {
-                viewModel.openRecent.add(it)
-            }
+            viewModel.openProject(it)
         }
     }
 }

@@ -23,24 +23,21 @@ import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
 /**
- * Keeps the [Preferences] of the current user and backs them by a JSON file.
+ * Reads and writes the [Preferences] of the current user as a JSON file.
  *
- * The preferences are a field of the storage: [current] hands out the one instance the application
- * works on. A file changed from outside while the application runs takes effect on an explicit [load].
- *
- * Settings are changed on that instance, which is a plain mutable value object and reports nothing,
- * so whoever needs a setting reads it when it is needed. A change is only written when [save] is
- * called, so the file follows the preferences instead of the preferences following the file.
+ * The storage holds nothing: [load] hands the preferences of the file to its caller and [save] writes
+ * the preferences it is given. Whoever works with the preferences keeps them - in this application
+ * that is the user interface, which offers them as a property model of `ai-ghost-fx-model`. A file
+ * changed from outside while the application runs therefore takes effect on an explicit [load].
  *
  * The file lives in the user's home directory and is written with indentation, so it can be edited
  * by hand. Nothing throws for an expected failure: [load] and [save] return an [Either] carrying an
- * [Error] on the left, so a caller can tell the user about a file that cannot be read or written
- * without having to handle the preferences itself - a failure to read leaves the defaults in effect.
+ * [Error] on the left, so a caller can tell the user about a file that cannot be read or written -
+ * and decide for itself whether the defaults take the place of what could not be read.
  */
 object PreferencesStorage {
 
     private const val FILE_NAME = ".ai-ghost/preferences.json"
-    private var loaded = false
 
     /**
      * The file the preferences are read from and written to.
@@ -52,51 +49,19 @@ object PreferencesStorage {
         internal set
 
     /**
-     * The preferences the application works on.
+     * Reads [defaultFile] and hands out the preferences it holds.
      *
-     * Reading fails as long as no [load] succeeded and no [reset] was performed, so nobody works on
-     * settings that were never established. Whoever needs the preferences after a failed [load] has
-     * to decide first what should happen to the unreadable file and call [reset] afterwards.
-     *
-     * A successful [load] puts the preferences of the file in place as a new instance, so a holder
-     * of the previous one has to ask for [current] again. The property models of `ai-ghost-fx-model`
-     * do that for their bindings themselves.
-     */
-    var current: Preferences = Preferences()
-        private set
-
-    /**
-     * Reads [defaultFile] and puts its content in place as [current].
-     *
-     * A failure leaves the storage unloaded, so [current] keeps failing until the caller answered
-     * the failure - by [reset] for instance, which puts the defaults in place.
+     * Nothing is kept here, so a failure leaves the caller with whatever it worked on before. What a
+     * failure means is its decision - the defaults of [Preferences] are one answer to it.
      *
      * Returns [Error.NotFound] when nothing is stored yet, [Error.NotAFile] when the path exists but
      * is not a regular file, [Error.Malformed] when the content is not the expected JSON document,
      * and [Error.Unreadable] when the file cannot be read at all.
      */
-    fun load(): Either<Error, Unit> {
-        return read()
-            .onRight { current = it; loaded = true }
-            .onLeft { current = Preferences(); loaded = false }
-            .map { }
-    }
+    fun load(): Either<Error, Preferences> = read()
 
     /**
-     * Resets the current user preferences to their default values.
-     *
-     * This method initializes the current preferences to a new instance of the [Preferences] class,
-     * resetting all settings to their defaults as defined in the [Preferences] data class.
-     * It also marks the preferences as successfully loaded by setting the `loaded` flag to `true`.
-     */
-    fun reset() {
-        current = Preferences()
-        loaded = true
-    }
-
-    /**
-     * Writes the preferences of [current] to [defaultFile], creating the parent directories if they
-     * do not exist yet.
+     * Writes [preferences] to [defaultFile], creating the parent directories if they do not exist yet.
      *
      * The document is written to a temporary file next to the target and moved into place
      * afterwards, so a crash during the write leaves the previous preferences intact instead of a
@@ -104,10 +69,12 @@ object PreferencesStorage {
      *
      * Returns [Error.NotAFile] when the path exists but is not a regular file, so an existing
      * directory is never replaced, and [Error.Unreadable] when the file cannot be written.
+     *
+     * @param preferences The preferences to store.
      */
-    fun save(): Either<Error, Unit> = write(current)
+    fun save(preferences: Preferences): Either<Error, Unit> = write(preferences)
 
-    /** Reads [defaultFile] into preferences of its own, without touching [current]. */
+    /** Reads [defaultFile] into preferences of its own. */
     private fun read(): Either<Error, Preferences> {
         val file = defaultFile
 
@@ -117,7 +84,7 @@ object PreferencesStorage {
             return Error.NotAFile(file).left()
 
         return try {
-            StorageIO.mapper.readValue(file, Preferences::class.java).right()
+            StorageIo.mapper.readValue(file, Preferences::class.java).right()
         } catch (e: JacksonException) {
             Error.Malformed(file, e).left()
         } catch (e: IOException) {
@@ -137,7 +104,7 @@ object PreferencesStorage {
 
             val temporary = File.createTempFile(file.name, ".tmp", file.parentFile)
             try {
-                StorageIO.mapper.writeValue(temporary, preferences)
+                StorageIo.mapper.writeValue(temporary, preferences)
                 Files.move(
                     temporary.toPath(),
                     file.toPath(),
@@ -158,8 +125,8 @@ object PreferencesStorage {
      *
      * The storage never throws for these cases, it returns them as the left side of an [Either], so
      * a caller has to decide what to do: [NotFound] is the normal state of a fresh installation and
-     * is usually answered with the defaults that stay in effect, while [NotAFile], [Unreadable] and
-     * [Malformed] point at something the user should be told about.
+     * is usually answered with the defaults, while [NotAFile], [Unreadable] and [Malformed] point at
+     * something the user should be told about.
      *
      * @property file The file the failing operation worked on.
      */

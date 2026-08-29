@@ -50,7 +50,7 @@ class BookEditorViewModelTest {
             prompts = AIPrompt(contentPrompt = "A house nobody lives in", stylePrompt = "Dark and quiet")
         )
 
-        viewModel.book.value = bookPropertyOf(book)
+        viewModel.bind(bookPropertyOf(book))
 
         assertEquals("The Silent House", viewModel.title.value)
         assertEquals(listOf("A ghost story"), viewModel.titleAppendix)
@@ -65,7 +65,7 @@ class BookEditorViewModelTest {
     @Test
     fun writtenTextReachesTheBook() {
         val book = Book()
-        viewModel.book.value = bookPropertyOf(book)
+        viewModel.bind(bookPropertyOf(book))
 
         viewModel.title.value = "The Silent House"
         viewModel.contentPrompt.value = "A house nobody lives in"
@@ -83,7 +83,7 @@ class BookEditorViewModelTest {
     @Test
     fun addedTitleLineReachesTheBook() {
         val book = Book()
-        viewModel.book.value = bookPropertyOf(book)
+        viewModel.bind(bookPropertyOf(book))
 
         viewModel.addTitleAppendix()
         viewModel.setTitleAppendix(0, "A ghost story")
@@ -99,7 +99,7 @@ class BookEditorViewModelTest {
     @Test
     fun titleLineBeyondTheListIsDropped() {
         val book = Book(titleAppendix = listOf("A ghost story"))
-        viewModel.book.value = bookPropertyOf(book)
+        viewModel.bind(bookPropertyOf(book))
 
         viewModel.setTitleAppendix(5, "Book one")
         viewModel.setTitleAppendix(-1, "Book one")
@@ -113,7 +113,7 @@ class BookEditorViewModelTest {
     @Test
     fun titleLineIsRemovedAfterAgreement() {
         val book = Book(titleAppendix = listOf("A ghost story", "Book one"))
-        viewModel.book.value = bookPropertyOf(book)
+        viewModel.bind(bookPropertyOf(book))
 
         var asked: String? = null
         viewModel.confirmRemove = { line -> asked = line; true }
@@ -130,7 +130,7 @@ class BookEditorViewModelTest {
     @Test
     fun titleLineIsKeptAfterRefusal() {
         val book = Book(titleAppendix = listOf("A ghost story", "Book one"))
-        viewModel.book.value = bookPropertyOf(book)
+        viewModel.bind(bookPropertyOf(book))
 
         viewModel.confirmRemove = { false }
         viewModel.removeTitleAppendix(0)
@@ -145,7 +145,7 @@ class BookEditorViewModelTest {
     @Test
     fun removingBeyondTheListIsHarmless() {
         val book = Book(titleAppendix = listOf("A ghost story"))
-        viewModel.book.value = bookPropertyOf(book)
+        viewModel.bind(bookPropertyOf(book))
 
         var asked = false
         viewModel.confirmRemove = { asked = true; true }
@@ -163,7 +163,7 @@ class BookEditorViewModelTest {
     fun changedBookReachesTheFields() {
         val book = Book()
         val property = bookPropertyOf(book)
-        viewModel.book.value = property
+        viewModel.bind(property)
 
         property.title = "The Silent House"
         property.contentPrompt = "A house nobody lives in"
@@ -181,8 +181,8 @@ class BookEditorViewModelTest {
         val first = Book(title = "The Silent House", titleAppendix = listOf("A ghost story"))
         val second = Book(title = "The Open Door", titleAppendix = listOf("Book one", "Book two"))
 
-        viewModel.book.value = bookPropertyOf(first)
-        viewModel.book.value = bookPropertyOf(second)
+        viewModel.bind(bookPropertyOf(first))
+        viewModel.bind(bookPropertyOf(second))
 
         assertEquals("The Open Door", viewModel.title.value)
         assertEquals(listOf("Book one", "Book two"), viewModel.titleAppendix)
@@ -207,9 +207,9 @@ class BookEditorViewModelTest {
             titleAppendix = listOf("A ghost story"),
             prompts = AIPrompt(contentPrompt = "A house nobody lives in", stylePrompt = "Dark and quiet")
         )
-        viewModel.book.value = bookPropertyOf(book)
+        viewModel.bind(bookPropertyOf(book))
 
-        viewModel.book.value = null
+        viewModel.bind(null)
 
         assertEquals("", viewModel.title.value)
         assertEquals("", viewModel.contentPrompt.value)
@@ -226,7 +226,7 @@ class BookEditorViewModelTest {
     @Test
     fun removingWithoutQuestionIsCarriedOut() {
         val book = Book(titleAppendix = listOf("A ghost story"))
-        viewModel.book.value = bookPropertyOf(book)
+        viewModel.bind(bookPropertyOf(book))
 
         viewModel.removeTitleAppendix(0)
 

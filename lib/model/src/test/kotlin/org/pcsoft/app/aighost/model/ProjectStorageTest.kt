@@ -12,12 +12,11 @@
 
 package org.pcsoft.app.aighost.model
 
-import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertInstanceOf
-import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertNotSame
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.pcsoft.app.aighost.model.project.Project
@@ -38,90 +37,47 @@ class ProjectStorageTest {
 
     private val file: File get() = File(directory, "project.aig")
 
-    /** Starts every test with a fresh project, because the storage is shared by the whole process. */
-    @BeforeEach
-    fun reset() {
-        ProjectStorage.new()
-    }
-
-    /** Leaves a fresh project behind, because the storage is shared by the whole process. */
-    @AfterEach
-    fun cleanUp() {
-        ProjectStorage.new()
-    }
-
-    /**
-     * Use case: the application is started, so an empty project is open right away and the user can
-     * begin writing without opening anything first.
-     */
-    @Test
-    fun startsWithFreshProject() {
-        assertEquals(Project(), ProjectStorage.current)
-        assertNull(ProjectStorage.currentFile)
-    }
-
     /**
      * Use case: the user saves a project and opens it again later, so every part comes back from disk
      * exactly as it was written.
      */
     @Test
     fun roundTripsProject() {
-        seedCurrentProject()
+        assertTrue(ProjectStorage.save(TestData.project(), file).isRight())
 
-        assertTrue(ProjectStorage.save(file).isRight())
-        ProjectStorage.new()
-
-        assertTrue(ProjectStorage.load(file).isRight())
-        assertEquals(TestData.project(), ProjectStorage.current)
+        assertEquals(TestData.project(), ProjectStorage.load(file).getOrNull())
     }
 
     /**
-     * Use case: the open document carries a part this application cannot read, so that part goes back
-     * into the file on the next save and comes out of it again unchanged.
+     * Use case: the project carries a part this application cannot read, so that part goes into the
+     * file on the next save and comes out of it again unchanged.
      */
     @Test
     fun roundTripsAPartItCannotRead() {
-        ProjectStorage.current.unknownParts = mapOf(OUTLINE to STORED_OUTLINE)
+        val project = Project().apply { unknownParts = mapOf(OUTLINE to STORED_OUTLINE) }
 
-        assertTrue(ProjectStorage.save(file).isRight())
-        ProjectStorage.new()
+        assertTrue(ProjectStorage.save(project, file).isRight())
 
-        assertTrue(ProjectStorage.load(file).isRight())
-        assertEquals(mapOf(OUTLINE to STORED_OUTLINE), ProjectStorage.current.unknownParts)
-        assertEquals(Meta(additionalParts = listOf(OUTLINE)), ProjectStorage.current.meta)
+        val loaded = ProjectStorage.load(file).getOrNull()
+        assertEquals(mapOf(OUTLINE to STORED_OUTLINE), loaded?.unknownParts)
+        assertEquals(Meta(additionalParts = listOf(OUTLINE)), loaded?.meta)
     }
 
     /**
-     * Use case: only one project is open at a time, so opening another one replaces the open project
-     * and its file instead of keeping both around.
+     * Use case: the storage keeps nothing, so every load builds a project of its own and two windows
+     * reading the same document never write into the same object.
      */
     @Test
-    fun loadReplacesOpenProject() {
-        val other = File(directory, "other.aig")
-        ProjectStorage.current.meta = Meta(name = "First")
-        ProjectStorage.save(file)
-        ProjectStorage.current.meta = Meta(name = "Second")
-        ProjectStorage.save(other)
+    fun eachLoadHandsOutItsOwnProject() {
+        ProjectStorage.save(Project(), file)
 
-        ProjectStorage.load(file)
+        val first = ProjectStorage.load(file).getOrNull()
+        val second = ProjectStorage.load(file).getOrNull()
 
-        assertEquals("First", ProjectStorage.current.meta.name)
-        assertEquals(file, ProjectStorage.currentFile)
-    }
-
-    /**
-     * Use case: the user closes a project and starts a new one, so the open project falls back to the
-     * defaults and the next save asks for a path again.
-     */
-    @Test
-    fun newClosesProjectAndForgetsFile() {
-        ProjectStorage.current.meta = Meta(name = "Stored")
-        ProjectStorage.save(file)
-
-        ProjectStorage.new()
-
-        assertEquals(Project(), ProjectStorage.current)
-        assertNull(ProjectStorage.currentFile)
+        assertNotNull(first)
+        assertNotNull(second)
+        assertNotSame(first, second)
+        assertEquals(first, second)
     }
 
     /**
@@ -130,66 +86,25 @@ class ProjectStorageTest {
      */
     @Test
     fun changeIsKeptUntilSaved() {
-        ProjectStorage.save(file)
+        val project = Project()
+        ProjectStorage.save(project, file)
 
-        ProjectStorage.current.meta = Meta(name = "Changed")
+        project.meta = Meta(name = "Changed")
 
-        assertEquals("Changed", ProjectStorage.current.meta.name)
         assertEquals("New Project", storedMeta().name)
-    }
-
-    /**
-     * Use case: a view reads the open project, so every way of changing it - an edit, starting a new
-     * project and opening one - leaves the value in the open project.
-     */
-    @Test
-    fun everyChangeEndsUpInTheOpenProject() {
-        ProjectStorage.current.meta = Meta(name = "Edited")
-        ProjectStorage.save(file)
-
-        ProjectStorage.new()
-        assertEquals("New Project", ProjectStorage.current.meta.name)
-
-        ProjectStorage.load(file)
-        assertEquals("Edited", ProjectStorage.current.meta.name)
-    }
-
-    /**
-     * Use case: the user saves a project that was never stored, so the storage reports that it needs
-     * a path instead of guessing one.
-     */
-    @Test
-    fun reportsNoFileWhenSavingUnnamedProject() {
-        val result = ProjectStorage.save()
-
-        assertEquals(ProjectStorage.Error.NoFile, result.leftOrNull())
-        assertNull(ProjectStorage.Error.NoFile.file)
-    }
-
-    /**
-     * Use case: the user saves an opened project again, so it goes back to the file it came from
-     * without asking for the path a second time.
-     */
-    @Test
-    fun savesToKnownFileWithoutPath() {
-        ProjectStorage.save(file)
-        ProjectStorage.current.meta = Meta(name = "Edited")
-
-        assertTrue(ProjectStorage.save().isRight())
-        assertEquals("Edited", storedMeta().name)
+        assertTrue(ProjectStorage.save(project, file).isRight())
+        assertEquals("Changed", storedMeta().name)
     }
 
     /**
      * Use case: a recently opened entry points at a project that was deleted meanwhile, so opening it
-     * reports the missing file and leaves the open project untouched.
+     * reports the missing file and hands out no project.
      */
     @Test
     fun reportsNotFoundForMissingFile() {
         val result = ProjectStorage.load(file)
 
         assertEquals(ProjectStorage.Error.NotFound(file), result.leftOrNull())
-        assertEquals(Project(), ProjectStorage.current)
-        assertNull(ProjectStorage.currentFile)
     }
 
     /**
@@ -213,7 +128,7 @@ class ProjectStorageTest {
     fun reportsNotAFileWhenSavingOntoDirectory() {
         val asDirectory = File(directory, "project-folder").apply { mkdirs() }
 
-        val result = ProjectStorage.save(asDirectory)
+        val result = ProjectStorage.save(Project(), asDirectory)
 
         assertEquals(ProjectStorage.Error.NotAFile(asDirectory), result.leftOrNull())
         assertTrue(asDirectory.isDirectory)
@@ -221,11 +136,10 @@ class ProjectStorageTest {
 
     /**
      * Use case: the user opens a file that is not a project document at all, so opening it reports a
-     * corrupt project and the project the user works on stays open.
+     * corrupt project and hands out nothing the application could work with.
      */
     @Test
     fun reportsForeignFileAsCorrupt() {
-        ProjectStorage.current.meta = Meta(name = "Untouched")
         file.writeText("{ this is not an archive")
 
         val error = ProjectStorage.load(file).leftOrNull()
@@ -233,14 +147,12 @@ class ProjectStorageTest {
         val corrupt = assertInstanceOf(ProjectStorage.Error.Corrupt::class.java, error)
         assertEquals(file, corrupt.file)
         assertEquals(Project.STANDARD_IDENTIFIERS, corrupt.missing)
-        assertEquals("Untouched", ProjectStorage.current.meta.name)
-        assertNull(ProjectStorage.currentFile)
     }
 
     /**
      * Use case: the archive holds an entry that is not the document the part expects, so the standard
-     * part is as gone as a missing entry and the file is reported as corrupt rather than opening a
-     * half filled project.
+     * part is as gone as a missing entry and the file is reported as corrupt rather than handing out
+     * a half filled project.
      */
     @Test
     fun reportsWrongDocumentAsCorrupt() {
@@ -250,12 +162,11 @@ class ProjectStorageTest {
 
         val corrupt = assertInstanceOf(ProjectStorage.Error.Corrupt::class.java, error)
         assertEquals(Project.STANDARD_IDENTIFIERS, corrupt.missing)
-        assertNull(ProjectStorage.currentFile)
     }
 
     /**
      * Use case: the project document lost one of the parts it is made of, so it is reported as
-     * corrupt instead of being opened with the defaults of the lost part in its place.
+     * corrupt instead of being handed out with the defaults of the lost part in its place.
      */
     @Test
     fun reportsIncompleteDocumentAsCorrupt() {
@@ -265,17 +176,15 @@ class ProjectStorageTest {
 
         val corrupt = assertInstanceOf(ProjectStorage.Error.Corrupt::class.java, error)
         assertEquals(setOf(Project.PART_BOOK), corrupt.missing)
-        assertNull(ProjectStorage.currentFile)
     }
 
     /**
      * Use case: the project document lost a part its meta data names beyond the standard ones, so the
      * loss is reported with the project that could be rescued instead of the whole document being
-     * thrown away - and nothing is opened before the user knows about it.
+     * thrown away - and the project is not handed out as a complete one.
      */
     @Test
     fun reportsDocumentWithLostAdditionalPartAsIncomplete() {
-        ProjectStorage.current.meta = Meta(name = "Untouched")
         writeArchive(
             "meta.json" to """{"name":"My Novel","additionalParts":["$OUTLINE"]}""",
             "design.json" to "{}",
@@ -289,16 +198,14 @@ class ProjectStorageTest {
         assertEquals(setOf(OUTLINE), incomplete.lostParts)
         assertEquals("My Novel", incomplete.recovered.meta.name)
         assertTrue(incomplete.recovered.meta.additionalParts.isEmpty())
-        assertEquals("Untouched", ProjectStorage.current.meta.name)
-        assertNull(ProjectStorage.currentFile)
     }
 
     /**
      * Use case: the user accepts the loss of a part beyond the standard ones, so the rescued project
-     * becomes the open project of its file and the lost part is gone from the next save.
+     * is written back without that part and the loss becomes final.
      */
     @Test
-    fun opensTheRescuedProject() {
+    fun savesTheRescuedProjectWithoutTheLostPart() {
         writeArchive(
             "meta.json" to """{"name":"My Novel","additionalParts":["$OUTLINE"]}""",
             "design.json" to "{}",
@@ -309,11 +216,9 @@ class ProjectStorageTest {
             ProjectStorage.load(file).leftOrNull()
         )
 
-        ProjectStorage.open(incomplete.recovered, incomplete.file)
+        assertTrue(ProjectStorage.save(incomplete.recovered, incomplete.file).isRight())
 
-        assertEquals("My Novel", ProjectStorage.current.meta.name)
-        assertEquals(file, ProjectStorage.currentFile)
-        assertTrue(ProjectStorage.save().isRight())
+        assertEquals("My Novel", storedMeta().name)
         assertTrue(storedMeta().additionalParts.isEmpty())
     }
 
@@ -325,9 +230,8 @@ class ProjectStorageTest {
     fun createsMissingParentDirectory() {
         val nested = File(directory, "books/nested/project.aig")
 
-        assertTrue(ProjectStorage.save(nested).isRight())
+        assertTrue(ProjectStorage.save(Project(), nested).isRight())
         assertTrue(nested.isFile)
-        assertEquals(nested, ProjectStorage.currentFile)
     }
 
     /**
@@ -336,11 +240,9 @@ class ProjectStorageTest {
      */
     @Test
     fun writesEveryPartAsAnEntry() {
-        seedCurrentProject()
+        ProjectStorage.save(TestData.project(), file)
 
-        ProjectStorage.save(file)
-
-        val result = StorageIO.loadFromZip(file, Meta::class, Design::class, Book::class).getOrNull()
+        val result = StorageIo.loadFromZip(file, Meta::class, Design::class, Book::class).getOrNull()
         assertEquals(
             setOf(Project.PART_META, Project.PART_DESIGN, Project.PART_BOOK),
             result?.project?.parts?.keys
@@ -353,19 +255,16 @@ class ProjectStorageTest {
      */
     @Test
     fun overwritesPreviousFileWithoutLeavingTemporaries() {
-        ProjectStorage.current.meta = Meta(name = "First")
-        ProjectStorage.save(file)
-        ProjectStorage.current.meta = Meta(name = "Second")
-        ProjectStorage.save(file)
+        ProjectStorage.save(Project().apply { meta = Meta(name = "First") }, file)
+        ProjectStorage.save(Project().apply { meta = Meta(name = "Second") }, file)
 
-        assertTrue(ProjectStorage.load(file).isRight())
-        assertEquals("Second", ProjectStorage.current.meta.name)
+        assertEquals("Second", ProjectStorage.load(file).getOrNull()?.meta?.name)
         assertEquals(listOf("project.aig"), directory.list()?.sorted())
     }
 
     /**
-     * Use case: an error is shown to the user, so every failure that happened on a path names it and
-     * the caller does not have to remember which file it asked for.
+     * Use case: an error is shown to the user, so every failure names the path it happened on and the
+     * caller does not have to remember which file it asked for.
      */
     @Test
     fun everyErrorCarriesItsFile() {
@@ -377,18 +276,9 @@ class ProjectStorageTest {
         assertEquals(broken, ProjectStorage.load(broken).leftOrNull()?.file)
     }
 
-    /** Fills the open project with the values of the complete test project, part by part. */
-    private fun seedCurrentProject() {
-        val project = TestData.project()
-
-        ProjectStorage.current.meta = project.meta
-        ProjectStorage.current.design = project.design
-        ProjectStorage.current.book = project.book
-    }
-
     /** The meta part of the document stored in [file], read back the way the storage reads it. */
     private fun storedMeta(): Meta =
-        StorageIO.loadFromZip(file, Meta::class, Design::class, Book::class).getOrNull()!!.project.meta
+        StorageIo.loadFromZip(file, Meta::class, Design::class, Book::class).getOrNull()!!.project.meta
 
     /** Writes a hand made archive to [file], so a document of an older version can be opened. */
     private fun writeArchive(vararg entries: Pair<String, String>) {

@@ -41,8 +41,8 @@ import kotlin.reflect.KClass
  *
  * The mapper is thread safe once it is built, so the storages use it as it is.
  */
-internal object StorageIO {
-    private val log = logger<StorageIO>()
+internal object StorageIo {
+    private val log = logger<StorageIo>()
 
     /**
      * The extension every entry of a project archive carries, so the content of the archive is

@@ -17,15 +17,17 @@ import javafx.geometry.Orientation
 import javafx.scene.Scene
 import javafx.scene.control.Label
 import javafx.scene.control.SplitPane
+import javafx.scene.control.TextField
+import javafx.scene.control.TreeView
 import javafx.stage.Stage
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.app.Messages
+import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
 import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.FontData
 import org.pcsoft.app.aighost.model.common.StyleData
@@ -51,6 +53,10 @@ class EditorTest : ApplicationTest() {
 
     private lateinit var editor: Editor
 
+    // The editor follows the property model of the surrounding window, which is handed over once and
+    // carries another project whenever the user opens or closes one.
+    private val projectModel = ProjectProperty(Project())
+
     private val splitPane: SplitPane
         get() = editor.lookup(".split-pane") as SplitPane
 
@@ -68,6 +74,7 @@ class EditorTest : ApplicationTest() {
         )
 
         editor = Editor()
+        editor.bindProject(projectModel)
         stage.scene = Scene(editor, 900.0, 600.0)
         stage.show()
     }
@@ -142,7 +149,7 @@ class EditorTest : ApplicationTest() {
         val placeholder = editor.lookup(".editor-placeholder") as Label
 
         assertNotNull(placeholder)
-        assertEquals("Select an entry in the project tree to edit it.", placeholder.text)
+        assertEquals("Not implemented yet.", placeholder.text)
         assertSame(
             splitPane.items.last(),
             placeholder.parent,
@@ -150,32 +157,57 @@ class EditorTest : ApplicationTest() {
         )
     }
 
-    /**
-     * Use case: a project is bound to the editor from the outside, so the project tree on the left
-     * shows exactly that project without anyone binding it separately.
-     */
-    @Test
-    fun handsTheBoundProjectOnToTheProjectTree() {
-        val project = project(Book(title = "My Novel", chapters = listOf(Chapter("first", "The First Part"))))
+    /** The chapter titles the project tree on the left currently lists. */
+    @Suppress("UNCHECKED_CAST")
+    private fun chapterTitles(): List<String> {
+        val tree = projectList.lookup(".tree-view") as TreeView<ProjectListItem>
 
-        interact { editor.project.value = project }
+        return tree.root.children
+            .first { it.value is ProjectListItem.Chapters }
+            .children
+            .map { (it.value as ProjectListItem.ChapterItem).chapter.title }
+    }
+
+    /** Puts [project] into the model the editor was handed and lets the controls follow it. */
+    private fun setProject(project: Project) {
+        interact { projectModel.value = project }
         WaitForAsyncUtils.waitForFxEvents()
-
-        assertSame(project, projectList.project.value)
     }
 
     /**
-     * Use case: the open project is closed, so the tree is emptied along with the editor instead of
-     * keeping the project that is no longer open.
+     * Use case: the project model of the window is handed to the editor, so the project tree on the
+     * left shows exactly that project without anyone binding it separately.
+     */
+    @Test
+    fun handsTheBoundProjectOnToTheProjectTree() {
+        setProject(project(Book(title = "My Novel", chapters = listOf(Chapter("first", "The First Part")))))
+
+        assertEquals(listOf("The First Part"), chapterTitles())
+    }
+
+    /**
+     * Use case: the open project is closed and a fresh one takes its place, so the tree is emptied
+     * along with the editor instead of keeping the project that is no longer open.
      */
     @Test
     fun handsTheClosedProjectOnToTheProjectTree() {
-        interact { editor.project.value = project(Book(title = "My Novel")) }
-        WaitForAsyncUtils.waitForFxEvents()
+        setProject(project(Book(title = "My Novel", chapters = listOf(Chapter("first", "The First Part")))))
 
-        interact { editor.project.value = null }
-        WaitForAsyncUtils.waitForFxEvents()
+        setProject(Project())
 
-        assertNull(projectList.project.value)
+        assertEquals(emptyList<String>(), chapterTitles())
+    }
+
+    /**
+     * Use case: the manuscript of the bound project reaches the editing area, so its title stands in
+     * the title field without the surrounding window binding that field itself.
+     */
+    @Test
+    fun handsTheManuscriptOnToTheBookEditor() {
+        setProject(project(Book(title = "My Novel")))
+
+        val title = editor.lookup("#txtTitle").lookup(".text-field") as TextField
+
+        assertEquals("My Novel", title.text)
     }
 }

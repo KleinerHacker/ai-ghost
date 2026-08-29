@@ -13,7 +13,6 @@
 package org.pcsoft.app.aighost.app.ui.component
 
 import de.saxsys.mvvmfx.FluentViewLoader
-import javafx.beans.property.ObjectProperty
 import javafx.scene.layout.BorderPane
 import org.pcsoft.app.aighost.fx.model.project.book.BookProperty
 
@@ -25,8 +24,8 @@ import org.pcsoft.app.aighost.fx.model.project.book.BookProperty
  * of the user; the title lines grow and shrink with the buttons next to and below them. The prompts
  * are written into an [org.pcsoft.app.aighost.app.ui.component.base.AiPromptArea] each.
  *
- * The component owns no data of its own: [book] is set by whoever shows the component and is the only
- * way in and out, so everything the user writes lands in that manuscript right away.
+ * The component owns no data of its own: [bindBook] hands it the property model of the manuscript,
+ * which is the only way in and out, so everything the user writes lands in that manuscript right away.
  */
 class BookEditor : BorderPane() {
 
@@ -41,6 +40,13 @@ class BookEditor : BorderPane() {
         }
     }
 
-    /** The manuscript being edited, absent while no project is open. */
-    val book: ObjectProperty<BookProperty?> by viewModel::book
+    /**
+     * Hands the property model of the manuscript to the editor.
+     *
+     * The model is taken as it is and not as the value of a property of this component, so a
+     * property never carries another property.
+     *
+     * @param book the manuscript to edit, `null` to edit none
+     */
+    fun bindBook(book: BookProperty?) = viewModel.bind(book)
 }

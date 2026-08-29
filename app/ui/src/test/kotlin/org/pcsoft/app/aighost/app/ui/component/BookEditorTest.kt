@@ -116,7 +116,7 @@ class BookEditorTest : ApplicationTest() {
      */
     private fun show(book: Book): BookProperty {
         val property = bookPropertyOf(book)
-        interact { editor.book.value = property }
+        interact { editor.bindBook(property) }
         WaitForAsyncUtils.waitForFxEvents()
 
         return property
@@ -393,7 +393,7 @@ class BookEditorTest : ApplicationTest() {
         )
         show(book)
 
-        interact { editor.book.value = null }
+        interact { editor.bindBook(null) }
         WaitForAsyncUtils.waitForFxEvents()
 
         assertEquals("", titleInput.text)

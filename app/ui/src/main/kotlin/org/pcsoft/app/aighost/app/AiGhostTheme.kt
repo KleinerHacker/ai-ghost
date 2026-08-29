@@ -16,7 +16,7 @@ import javafx.application.Application
 import javafx.application.ColorScheme
 import javafx.application.Platform
 import javafx.scene.Scene
-import org.pcsoft.app.aighost.model.PreferencesStorage
+import org.pcsoft.app.aighost.app.controller.IoController
 import org.pcsoft.app.aighost.model.pref.ThemeMode
 
 /**
@@ -89,7 +89,7 @@ object AiGhostTheme {
     fun install() {
         Application.setUserAgentStylesheet(Application.STYLESHEET_MODENA)
         AiGhostFonts.install()
-        colorScheme = resolve(PreferencesStorage.current.themeMode)
+        colorScheme = resolve(IoController.preferences.themeMode)
     }
 
     /**

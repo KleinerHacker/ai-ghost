@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.app.Messages
 import org.pcsoft.app.aighost.model.PreferencesStorage
 import org.pcsoft.app.aighost.model.ProjectStorage
+import org.pcsoft.app.aighost.model.pref.ThemeMode
 import org.pcsoft.app.aighost.model.project.Project
 import java.io.File
 import java.io.IOException
@@ -34,15 +35,21 @@ class IoControllerTest {
     private val file = File("project.aig")
 
     /**
-     * Use case: the user saves a project that was never stored, so the dialog names the missing path
-     * instead of a generic failure.
+     * Use case: the settings belong to the process and not to a window, so the controller carries them
+     * as a property model whose fields reach the value object the application works on.
      */
     @Test
-    fun namesTheMissingPathOfAProject() {
-        assertEquals(
-            Messages["project.error.noFile"],
-            IoController.reasonOfProjectError(ProjectStorage.Error.NoFile)
-        )
+    fun offersTheSettingsAsAPropertyModel() {
+        val preferences = IoController.preferences.value
+        val stored = preferences.themeMode
+
+        try {
+            IoController.preferences.themeModeProperty.value = ThemeMode.DARK
+
+            assertEquals(ThemeMode.DARK, preferences.themeMode)
+        } finally {
+            IoController.preferences.themeModeProperty.value = stored
+        }
     }
 
     /**
@@ -189,7 +196,6 @@ class IoControllerTest {
     @Test
     fun tellsEveryFailureApartByItsText() {
         val projectReasons = listOf(
-            ProjectStorage.Error.NoFile,
             ProjectStorage.Error.NotFound(file),
             ProjectStorage.Error.NotAFile(file),
             ProjectStorage.Error.Unreadable(file, IOException("denied")),
