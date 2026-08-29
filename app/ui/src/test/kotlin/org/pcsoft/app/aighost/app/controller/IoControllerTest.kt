@@ -41,14 +41,14 @@ class IoControllerTest {
     @Test
     fun offersTheSettingsAsAPropertyModel() {
         val preferences = IoController.preferences.value
-        val stored = preferences.themeMode
+        val stored = preferences.appearance.themeMode
 
         try {
-            IoController.preferences.themeModeProperty.value = ThemeMode.DARK
+            IoController.preferences.appearanceProperty.themeModeProperty.value = ThemeMode.DARK
 
-            assertEquals(ThemeMode.DARK, preferences.themeMode)
+            assertEquals(ThemeMode.DARK, preferences.appearance.themeMode)
         } finally {
-            IoController.preferences.themeModeProperty.value = stored
+            IoController.preferences.appearanceProperty.themeModeProperty.value = stored
         }
     }
 

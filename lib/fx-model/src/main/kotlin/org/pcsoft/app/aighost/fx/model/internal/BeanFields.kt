@@ -16,10 +16,12 @@ import javafx.beans.InvalidationListener
 import javafx.beans.property.BooleanProperty
 import javafx.beans.property.IntegerProperty
 import javafx.beans.property.ListProperty
+import javafx.beans.property.LongProperty
 import javafx.beans.property.Property
 import javafx.beans.property.StringProperty
 import javafx.beans.property.adapter.JavaBeanBooleanPropertyBuilder
 import javafx.beans.property.adapter.JavaBeanIntegerPropertyBuilder
+import javafx.beans.property.adapter.JavaBeanLongPropertyBuilder
 import javafx.beans.property.adapter.JavaBeanObjectPropertyBuilder
 import javafx.beans.property.adapter.JavaBeanProperty
 import javafx.beans.property.adapter.JavaBeanStringPropertyBuilder
@@ -75,6 +77,17 @@ internal class BeanFields<B : Any>(private val fireEvent: () -> Unit) {
     fun integer(property: IntegerProperty, name: String) =
         value(property, 0, null) { bean ->
             JavaBeanIntegerPropertyBuilder.create().bean(bean).name(name).build()
+        }
+
+    /**
+     * Ties [property] to the wide whole number field named [name] of the wrapped object, the one a
+     * count that may leave the range of an `Int` is carried in.
+     *
+     * The property carries `0` as long as no object is bound.
+     */
+    fun long(property: LongProperty, name: String) =
+        value(property, 0L, null) { bean ->
+            JavaBeanLongPropertyBuilder.create().bean(bean).name(name).build()
         }
 
     /**

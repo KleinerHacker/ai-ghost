@@ -24,8 +24,11 @@ import org.pcsoft.app.aighost.model.project.design.TextDesign
  *
  * The wrapped object may be absent as long as no design sits above this property, so the style
  * property answers with a neutral value and drops what is written to it until then.
+ *
+ * This property model is handed out with its own type, so a caller reaches the style directly; it is
+ * built by the design carrying it alone and therefore carries an internal constructor.
  */
-internal class TextDesignProperty : SimpleObjectProperty<TextDesign?>() {
+class TextDesignProperty internal constructor() : SimpleObjectProperty<TextDesign?>() {
 
     private val fields = BeanFields<TextDesign> { fireValueChangedEvent() }
 

@@ -29,8 +29,11 @@ import org.pcsoft.app.aighost.model.project.meta.Meta
  * is never written by the user and never changes while a project is open. The list of the additional
  * parts is left out for the same reason: it is bookkeeping of the storage, written on every save out
  * of the parts the project carries, and nothing the user edits.
+ *
+ * This property model is handed out with its own type, so a caller reaches every field of the meta
+ * data directly; it is built by the project alone and therefore carries an internal constructor.
  */
-internal class MetaProperty : ProjectPartProperty<Meta>() {
+class MetaProperty internal constructor() : ProjectPartProperty<Meta>() {
 
     private val fields = BeanFields<Meta> { fireValueChangedEvent() }
 

@@ -26,8 +26,11 @@ import org.pcsoft.app.aighost.model.project.design.CopyrightDesign
  *
  * The wrapped object may be absent as long as no design sits above this property, so every field
  * property answers with a neutral value and drops what is written to it until then.
+ *
+ * This property model is handed out with its own type, so a caller reaches every field of it
+ * directly; it is built by the design carrying it alone and therefore carries an internal constructor.
  */
-internal class CopyrightDesignProperty : SimpleObjectProperty<CopyrightDesign?>() {
+class CopyrightDesignProperty internal constructor() : SimpleObjectProperty<CopyrightDesign?>() {
 
     private val fields = BeanFields<CopyrightDesign> { fireValueChangedEvent() }
 

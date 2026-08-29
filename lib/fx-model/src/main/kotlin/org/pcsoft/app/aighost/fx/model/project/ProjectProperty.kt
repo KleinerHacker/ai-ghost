@@ -15,7 +15,6 @@ package org.pcsoft.app.aighost.fx.model.project
 import javafx.beans.InvalidationListener
 import javafx.beans.property.ObjectProperty
 import javafx.beans.property.SimpleObjectProperty
-import javafx.beans.property.StringProperty
 import org.pcsoft.app.aighost.fx.model.internal.BeanFields
 import org.pcsoft.app.aighost.fx.model.project.book.BookProperty
 import org.pcsoft.app.aighost.fx.model.project.design.DesignProperty
@@ -61,92 +60,40 @@ class ProjectProperty(project: Project) : SimpleObjectProperty<Project>(project)
     // alignment is not written back into it.
     private var attaching = false
 
-    private val overrideMeta = MetaProperty()
-
     /** Meta data of the project - its name, its author and its copyright notice. */
-    val metaProperty: ObjectProperty<Meta?>
-        get() = overrideMeta
+    val metaProperty: MetaProperty = MetaProperty()
 
     /** Meta data of the project. */
     var meta: Meta?
-        get() = overrideMeta.get()
+        get() = metaProperty.get()
         set(value) {
-            overrideMeta.set(value)
+            metaProperty.set(value)
         }
-
-    // The meta data is what a user interface reaches for most, so the three texts it carries are
-    // offered here as well instead of forcing every caller through the part property.
-
-    /** Name of the project as shown to the user, as a property of its own. */
-    val nameProperty: StringProperty
-        get() = overrideMeta.nameProperty
-
-    // A property carries a name of its own, so the accessors of the wrapped field are given another
-    // name on the JVM side - otherwise they would silently replace the one of the base class.
-    /** Name of the project as shown to the user. */
-    var name: String?
-        @JvmName("getProjectName") get() = overrideMeta.nameProperty.get()
-        @JvmName("setProjectName") set(value) {
-            overrideMeta.nameProperty.set(value)
-        }
-
-    /** Author printed in the manuscript, as a property of its own. */
-    val authorProperty: StringProperty
-        get() = overrideMeta.authorProperty
-
-    /** Author printed in the manuscript. */
-    var author: String?
-        get() = overrideMeta.authorProperty.get()
-        set(value) {
-            overrideMeta.authorProperty.set(value)
-        }
-
-    /** Copyright notice printed in the manuscript, as a property of its own. */
-    val copyrightProperty: StringProperty
-        get() = overrideMeta.copyrightProperty
-
-    /** Copyright notice printed in the manuscript. */
-    var copyright: String?
-        get() = overrideMeta.copyrightProperty.get()
-        set(value) {
-            overrideMeta.copyrightProperty.set(value)
-        }
-
-    private val overrideDesign = DesignProperty()
 
     /** Typographic and page settings of the manuscript, as a property of its own. */
-    val designProperty: ObjectProperty<Design?>
-        get() = overrideDesign
+    val designProperty: DesignProperty = DesignProperty()
 
     /** Typographic and page settings of the manuscript. */
     var design: Design?
-        get() = overrideDesign.get()
+        get() = designProperty.get()
         set(value) {
-            overrideDesign.set(value)
+            designProperty.set(value)
         }
 
-    private val overrideBook = BookProperty()
-
-    /**
-     * The manuscript with its title and chapters, as a property of its own.
-     *
-     * Unlike the other parts the book is handed out with its own type, so a user interface reaches
-     * the fields of the manuscript - its title, its further title lines and its prompts - through it.
-     */
-    val bookProperty: BookProperty
-        get() = overrideBook
+    /** The manuscript with its title and chapters, as a property of its own. */
+    val bookProperty: BookProperty = BookProperty()
 
     /** The manuscript with its title and chapters. */
     var book: Book?
-        get() = overrideBook.get()
+        get() = bookProperty.get()
         set(value) {
-            overrideBook.set(value)
+            bookProperty.set(value)
         }
 
     init {
-        fields.model(overrideMeta, "meta", overrideMeta::refresh)
-        fields.model(overrideDesign, "design", overrideDesign::refresh)
-        fields.model(overrideBook, "book", overrideBook::refresh)
+        fields.model(metaProperty, "meta", metaProperty::refresh)
+        fields.model(designProperty, "design", designProperty::refresh)
+        fields.model(bookProperty, "book", bookProperty::refresh)
 
         // The properties of the parts belong to another object after every exchange, so they are tied
         // to the one this property carries now. The constructor of the base class stored the project

@@ -19,5 +19,8 @@ import org.pcsoft.app.aighost.model.project.book.Prolog
  *
  * A book carries a prolog only after the user created it, so the wrapped object is absent until then
  * and every field property answers with a neutral value.
+ *
+ * This property model is handed out with its own type, so a caller reaches every field of the prolog
+ * directly; it is built by the book alone and therefore carries an internal constructor.
  */
-internal class PrologProperty : BookPartProperty<Prolog?>()
+class PrologProperty internal constructor() : BookPartProperty<Prolog?>()

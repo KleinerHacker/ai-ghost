@@ -70,9 +70,9 @@ class BookEditorTest : ApplicationTest() {
     private val appendixHint: Label
         get() = editor.lookup(".ai-list-empty") as Label
 
-    /** The area the content prompt is written in. */
-    private val contentPromptArea: AiPromptArea
-        get() = editor.lookup("#txaContentPrompt") as AiPromptArea
+    /** The area the story prompt is written in. */
+    private val storyPromptArea: AiPromptArea
+        get() = editor.lookup("#txaStoryPrompt") as AiPromptArea
 
     /** The area the style prompt is written in. */
     private val stylePromptArea: AiPromptArea
@@ -84,7 +84,7 @@ class BookEditorTest : ApplicationTest() {
 
     /** The writing surface the content prompt is typed into. */
     private val contentPromptInput: TextArea
-        get() = contentPromptArea.lookup(".text-area") as TextArea
+        get() = storyPromptArea.lookup(".text-area") as TextArea
 
     /** The writing surface the style prompt is typed into. */
     private val stylePromptInput: TextArea
@@ -202,8 +202,8 @@ class BookEditorTest : ApplicationTest() {
 
         interact {
             property.title = "The Silent House"
-            property.contentPrompt = "A house nobody lives in"
-            property.stylePrompt = "Dark and quiet"
+            property.promptsProperty.contentPrompt = "A house nobody lives in"
+            property.promptsProperty.stylePrompt = "Dark and quiet"
             property.titleAppendix = listOf("A ghost story", "Book one")
         }
         WaitForAsyncUtils.waitForFxEvents()

@@ -92,7 +92,7 @@ object AiGhostTheme {
     fun install() {
         Application.setUserAgentStylesheet(Application.STYLESHEET_MODENA)
         AiGhostFonts.install()
-        colorScheme = resolve(IoController.preferences.themeMode)
+        colorScheme = resolve(IoController.preferences.appearanceProperty.themeMode)
     }
 
     /**

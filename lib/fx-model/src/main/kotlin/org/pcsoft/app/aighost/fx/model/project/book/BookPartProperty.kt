@@ -33,11 +33,16 @@ import org.pcsoft.app.aighost.model.project.common.AIPrompt
  *
  * A part carrying further fields of its own registers them in [fields] and is then treated exactly
  * like the shared ones.
+ *
+ * A part built on this class is handed out with its own type, so a caller reaches every field of it
+ * directly; such a part is built by the book carrying it alone and therefore carries an internal
+ * constructor.
  */
-internal abstract class BookPartProperty<T : BookPart?> : SimpleObjectProperty<T>() {
+abstract class BookPartProperty<T : BookPart?> internal constructor() : SimpleObjectProperty<T>() {
 
-    /** The fields of the wrapped part, the shared ones and the ones a derived class adds. */
-    protected val fields: BeanFields<BookPart> = BeanFields { fireValueChangedEvent() }
+    // The fields of the wrapped part, the shared ones and the ones a derived class adds. They are
+    // registered inside this module only, so they stay behind the public surface of the part.
+    internal val fields: BeanFields<BookPart> = BeanFields { fireValueChangedEvent() }
 
     /** Heading of the part, as a property of its own. */
     val titleProperty: StringProperty = SimpleStringProperty()

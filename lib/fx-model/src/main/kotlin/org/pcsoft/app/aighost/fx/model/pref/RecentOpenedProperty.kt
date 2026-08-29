@@ -27,8 +27,11 @@ import org.pcsoft.app.aighost.model.pref.RecentOpened
  *
  * The preferences always carry such an object, so the field properties answer with the values of the
  * one this property is tied to right now.
+ *
+ * This property model is handed out with its own type, so a caller reaches every field of the entry
+ * list directly; it is built by the preferences alone and therefore carries an internal constructor.
  */
-internal class RecentOpenedProperty : SimpleObjectProperty<RecentOpened>() {
+class RecentOpenedProperty internal constructor() : SimpleObjectProperty<RecentOpened>() {
 
     private val fields = BeanFields<RecentOpened> { fireValueChangedEvent() }
 

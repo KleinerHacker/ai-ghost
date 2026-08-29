@@ -11,7 +11,9 @@ The appearance is part of your preferences, stored in `preferences.json` inside 
 
 ```json
 {
-  "themeMode": "SYSTEM"
+  "appearance": {
+    "themeMode": "SYSTEM"
+  }
 }
 ```
 

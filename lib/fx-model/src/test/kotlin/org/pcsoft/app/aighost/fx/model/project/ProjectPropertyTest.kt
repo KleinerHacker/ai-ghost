@@ -64,8 +64,8 @@ class ProjectPropertyTest {
         project = newProject()
         property = ProjectProperty(project)
 
-        metaProperty = property.metaProperty as MetaProperty
-        designProperty = property.designProperty as DesignProperty
+        metaProperty = property.metaProperty
+        designProperty = property.designProperty
         bookProperty = property.bookProperty
         notesProperty = property.attachPart(NOTES, NotesPart::class, ::NotesProperty)
 
@@ -129,8 +129,8 @@ class ProjectPropertyTest {
         assertSame(project.meta, property.metaProperty.get())
         assertSame(project.design, property.designProperty.get())
         assertSame(project.book, property.bookProperty.get())
-        assertEquals("My Novel", property.nameProperty.get())
-        assertEquals("Jane Doe", property.authorProperty.get())
+        assertEquals("My Novel", property.metaProperty.nameProperty.get())
+        assertEquals("Jane Doe", property.metaProperty.authorProperty.get())
     }
 
     /**
@@ -149,7 +149,7 @@ class ProjectPropertyTest {
      */
     @Test
     fun writingTheNameReachesTheProject() {
-        property.nameProperty.set("Renamed")
+        property.metaProperty.nameProperty.set("Renamed")
 
         assertEquals("Renamed", project.meta.name)
         assertEquals(1, recorder.countOf("project.meta.name"))
@@ -235,7 +235,7 @@ class ProjectPropertyTest {
     @Test
     fun writingThroughABindingReachesTheProject() {
         val input = SimpleStringProperty("Bound Name")
-        property.nameProperty.bind(input)
+        property.metaProperty.nameProperty.bind(input)
 
         assertEquals("Bound Name", project.meta.name)
 
@@ -243,7 +243,7 @@ class ProjectPropertyTest {
 
         assertEquals("Another Name", project.meta.name)
 
-        property.nameProperty.unbind()
+        property.metaProperty.nameProperty.unbind()
     }
 
     /**
@@ -292,7 +292,7 @@ class ProjectPropertyTest {
         }
         project.putPart("custom", custom)
 
-        property.nameProperty.set("Renamed")
+        property.metaProperty.nameProperty.set("Renamed")
 
         assertSame(custom, project.part("custom"))
     }
@@ -344,7 +344,7 @@ class ProjectPropertyTest {
 
         property.set(otherProject())
 
-        assertEquals("Other Novel", property.nameProperty.get())
+        assertEquals("Other Novel", property.metaProperty.nameProperty.get())
         assertEquals("Another Start", bookProperty.prologProperty.titleProperty.get())
         assertEquals(12, designProperty.textDesignProperty.styleProperty.fontProperty.sizeProperty.get())
         assertEquals("Written elsewhere", notesProperty.noteProperty.get())
@@ -377,7 +377,7 @@ class ProjectPropertyTest {
 
         property.refresh()
 
-        assertEquals("Renamed Past The Property", property.nameProperty.get())
+        assertEquals("Renamed Past The Property", property.metaProperty.nameProperty.get())
         assertEquals("Retitled Past The Property", bookProperty.titleProperty.get())
         assertEquals(1, recorder.countOf("project.meta.name"))
         assertEquals(1, recorder.countOf("project.book.title"))

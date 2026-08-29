@@ -29,8 +29,11 @@ import org.pcsoft.app.aighost.model.common.FontData
  * The wrapped object may be absent - a style that is not there at all - so every field property
  * answers with a neutral value and drops what is written to it as long as no font sits behind this
  * property.
+ *
+ * This property model is handed out with its own type, so a caller reaches every field of the font
+ * directly; it is built by the object carrying it alone and therefore carries an internal constructor.
  */
-internal class FontDataProperty : SimpleObjectProperty<FontData?>() {
+class FontDataProperty internal constructor() : SimpleObjectProperty<FontData?>() {
 
     private val fields = BeanFields<FontData> { fireValueChangedEvent() }
 

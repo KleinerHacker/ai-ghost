@@ -45,7 +45,7 @@
                         <Insets top="10"/>
                     </VBox.margin>
                 </Label>
-                <AiPromptArea fx:id="txaContentPrompt" prefHeight="140"/>
+                <AiPromptArea fx:id="txaStoryPrompt" prefHeight="140"/>
 
                 <Label styleClass="book-editor-label" text="%component.bookEditor.prompt.style.label">
                     <VBox.margin>

@@ -32,8 +32,11 @@ import org.pcsoft.app.aighost.model.project.design.TitleDesign
  *
  * The version of the part is not offered as a property: it names the shape of the stored document,
  * is never written by the user and never changes while a project is open.
+ *
+ * This property model is handed out with its own type, so a caller reaches every design part below it
+ * directly; it is built by the project alone and therefore carries an internal constructor.
  */
-internal class DesignProperty : ProjectPartProperty<Design>() {
+class DesignProperty internal constructor() : ProjectPartProperty<Design>() {
 
     private val fields = BeanFields<Design> { fireValueChangedEvent() }
 

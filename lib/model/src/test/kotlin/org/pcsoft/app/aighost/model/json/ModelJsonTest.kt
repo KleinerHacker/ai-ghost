@@ -193,7 +193,7 @@ class ModelJsonTest {
      */
     @Test
     fun writesAndParsesPreferencesDocument() {
-        val preferences = Preferences(themeMode = ThemeMode.DARK)
+        val preferences = Preferences().apply { appearance.themeMode = ThemeMode.DARK }
 
         val json = mapper.writeValueAsString(preferences)
         val restored: Preferences = mapper.readValue(json)
@@ -208,7 +208,7 @@ class ModelJsonTest {
     @Test
     fun rejectsUnknownThemeMode() {
         assertThrows<InvalidFormatException> {
-            mapper.readValue<Preferences>("""{"themeMode":"NEON"}""")
+            mapper.readValue<Preferences>("""{"appearance":{"themeMode":"NEON"}}""")
         }
     }
 

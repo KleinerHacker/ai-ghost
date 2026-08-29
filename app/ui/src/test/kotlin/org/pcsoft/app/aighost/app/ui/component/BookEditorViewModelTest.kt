@@ -151,7 +151,7 @@ class BookEditorViewModelTest {
         viewModel.bind(property)
 
         property.title = "The Silent House"
-        property.contentPrompt = "A house nobody lives in"
+        property.promptsProperty.contentPrompt = "A house nobody lives in"
 
         assertEquals("The Silent House", viewModel.title.value)
         assertEquals("A house nobody lives in", viewModel.contentPrompt.value)

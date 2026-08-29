@@ -58,7 +58,7 @@ class MainWindowViewModel : ViewModel {
      * The name sits in the meta part of the project, which is a plain value object reporting nothing,
      * so it is taken from the property model instead of read off the project itself.
      */
-    val projectName: StringProperty = project.nameProperty
+    val projectName: StringProperty = project.metaProperty.nameProperty
     //endregion
 
     //region Preferences Part

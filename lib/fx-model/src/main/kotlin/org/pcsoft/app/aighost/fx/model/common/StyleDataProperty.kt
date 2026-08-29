@@ -25,8 +25,11 @@ import org.pcsoft.app.aighost.model.common.StyleData
  *
  * The wrapped object may be absent, so every field property answers with a neutral value and drops
  * what is written to it as long as no style sits behind this property.
+ *
+ * This property model is handed out with its own type, so a caller reaches every field of the style
+ * directly; it is built by the object carrying it alone and therefore carries an internal constructor.
  */
-internal class StyleDataProperty : SimpleObjectProperty<StyleData?>() {
+class StyleDataProperty internal constructor() : SimpleObjectProperty<StyleData?>() {
 
     private val fields = BeanFields<StyleData> { fireValueChangedEvent() }
 

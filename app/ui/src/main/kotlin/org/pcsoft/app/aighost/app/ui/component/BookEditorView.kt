@@ -45,7 +45,7 @@ class BookEditorView : FxmlView<BookEditorViewModel>, Initializable {
     private lateinit var lstTitleAppendix: AiTextFieldList
 
     @FXML
-    private lateinit var txaContentPrompt: AiPromptArea
+    private lateinit var txaStoryPrompt: AiPromptArea
 
     @FXML
     private lateinit var txaStylePrompt: AiPromptArea
@@ -63,10 +63,10 @@ class BookEditorView : FxmlView<BookEditorViewModel>, Initializable {
         txtTitle.text.bindBidirectional(viewModel.title)
         txtTitle.promptText.value = messages.getString(TITLE_PROMPT_KEY)
 
-        txaContentPrompt.text.bindBidirectional(viewModel.contentPrompt)
-        txaContentPrompt.maxCharacters.value = PROMPT_MAX_CHARACTERS
+        txaStoryPrompt.text.bindBidirectional(viewModel.contentPrompt)
+        txaStoryPrompt.maxCharacters.bind(viewModel.maxStoryPromptCharacters)
         txaStylePrompt.text.bindBidirectional(viewModel.stylePrompt)
-        txaStylePrompt.maxCharacters.value = PROMPT_MAX_CHARACTERS
+        txaStylePrompt.maxCharacters.bind(viewModel.maxStylePromptCharacters)
 
         // The list holds title lines, which it does not know by itself, so it is told here what an
         // empty list means and what adding and removing do.
@@ -95,9 +95,6 @@ class BookEditorView : FxmlView<BookEditorViewModel>, Initializable {
     }
 
     private companion object {
-        /** Number of characters a prompt of the manuscript may hold. */
-        const val PROMPT_MAX_CHARACTERS: Long = 2000L
-
         /** Key of the hint shown in the empty title field inside the resource bundle. */
         const val TITLE_PROMPT_KEY: String = "component.bookEditor.title.prompt"
 

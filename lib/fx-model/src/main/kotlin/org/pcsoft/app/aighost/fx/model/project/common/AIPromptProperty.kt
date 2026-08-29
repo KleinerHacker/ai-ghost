@@ -24,8 +24,11 @@ import org.pcsoft.app.aighost.model.project.common.AIPrompt
  *
  * The wrapped object may be absent as long as no part sits above this property, so every field
  * property answers with a neutral value and drops what is written to it until then.
+ *
+ * This property model is handed out with its own type, so a caller reaches both prompts directly; it
+ * is built by the part carrying them alone and therefore carries an internal constructor.
  */
-internal class AIPromptProperty : SimpleObjectProperty<AIPrompt?>() {
+class AIPromptProperty internal constructor() : SimpleObjectProperty<AIPrompt?>() {
 
     private val fields = BeanFields<AIPrompt> { fireValueChangedEvent() }
 

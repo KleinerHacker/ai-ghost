@@ -35,7 +35,7 @@ import org.pcsoft.app.aighost.app.ui.AiGhostDialog
  *
  * Start it on purpose with `gradlew :app:ai-ghost-ui:runDialogDemo`. The colour scheme is the one of
  * the preferences and is read while starting, so checking the other appearance means changing
- * `themeMode` in `preferences.json` and starting the demo again.
+ * `appearance.themeMode` in `preferences.json` and starting the demo again.
  */
 class DialogDemo : Application() {
 

@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import org.pcsoft.app.aighost.model.pref.Ai
 import org.pcsoft.app.aighost.model.pref.Preferences
 import org.pcsoft.app.aighost.model.pref.RecentOpened
 import org.pcsoft.app.aighost.model.pref.ThemeMode
@@ -130,13 +131,14 @@ class PreferencesStorageTest {
 
     /**
      * Use case: the user changes a setting and the application is restarted, so the preferences come
-     * back from disk exactly as they were saved.
+     * back from disk exactly as they were saved - every block of them, not only the topmost one.
      */
     @Test
     fun roundTripsPreferences() {
         val preferences = Preferences().apply {
             recentOpened = RecentOpened(max = 3).add("a.json").add("b.json")
-            themeMode = ThemeMode.DARK
+            appearance.themeMode = ThemeMode.DARK
+            ai = Ai(maxStoryCharacters = 4200, maxStyleCharacters = 750)
         }
 
         assertTrue(PreferencesStorage.save(preferences).isRight())
@@ -144,7 +146,8 @@ class PreferencesStorageTest {
 
         assertNotNull(loaded)
         assertEquals(RecentOpened(max = 3, entries = listOf("b.json", "a.json")), loaded?.recentOpened)
-        assertEquals(ThemeMode.DARK, loaded?.themeMode)
+        assertEquals(ThemeMode.DARK, loaded?.appearance?.themeMode)
+        assertEquals(Ai(maxStoryCharacters = 4200, maxStyleCharacters = 750), loaded?.ai)
     }
 
     /**
@@ -178,16 +181,18 @@ class PreferencesStorageTest {
 
     /**
      * Use case: the user opens the file to edit it by hand, so it is written as indented JSON rather
-     * than as a single line.
+     * than as a single line, with every block under the name the file format promises.
      */
     @Test
     fun writesIndentedJson() {
-        PreferencesStorage.save(Preferences().apply { themeMode = ThemeMode.LIGHT })
+        PreferencesStorage.save(Preferences().apply { appearance.themeMode = ThemeMode.LIGHT })
 
         val content = file.readText()
 
         assertTrue(content.contains("\n"), "expected indented JSON but was: $content")
+        assertTrue(content.contains("\"appearance\""))
         assertTrue(content.contains("\"themeMode\""))
+        assertTrue(content.contains("\"ai\""))
     }
 
     /**
@@ -196,10 +201,10 @@ class PreferencesStorageTest {
      */
     @Test
     fun overwritesPreviousFileWithoutLeavingTemporaries() {
-        PreferencesStorage.save(Preferences().apply { themeMode = ThemeMode.LIGHT })
-        PreferencesStorage.save(Preferences().apply { themeMode = ThemeMode.DARK })
+        PreferencesStorage.save(Preferences().apply { appearance.themeMode = ThemeMode.LIGHT })
+        PreferencesStorage.save(Preferences().apply { appearance.themeMode = ThemeMode.DARK })
 
-        assertEquals(ThemeMode.DARK, PreferencesStorage.load().getOrNull()?.themeMode)
+        assertEquals(ThemeMode.DARK, PreferencesStorage.load().getOrNull()?.appearance?.themeMode)
         assertEquals(listOf("preferences.json"), directory.list()?.sorted())
     }
 
@@ -223,7 +228,7 @@ class PreferencesStorageTest {
      */
     @Test
     fun reportsWrongDocumentAsError() {
-        file.writeText("""{"themeMode":"NEON"}""")
+        file.writeText("""{"appearance":{"themeMode":"NEON"}}""")
 
         val error = PreferencesStorage.load().leftOrNull()
 
@@ -236,13 +241,14 @@ class PreferencesStorageTest {
      */
     @Test
     fun readsPartialDocumentWithDefaults() {
-        file.writeText("""{"themeMode":"LIGHT"}""")
+        file.writeText("""{"appearance":{"themeMode":"LIGHT"}}""")
 
         val loaded = PreferencesStorage.load().getOrNull()
 
         assertNotNull(loaded)
-        assertEquals(ThemeMode.LIGHT, loaded?.themeMode)
+        assertEquals(ThemeMode.LIGHT, loaded?.appearance?.themeMode)
         assertEquals(RecentOpened(max = 10), loaded?.recentOpened)
+        assertEquals(Ai(), loaded?.ai)
     }
 
     /**
@@ -251,15 +257,15 @@ class PreferencesStorageTest {
      */
     @Test
     fun redirectingTheFileReadsTheNewOne() {
-        PreferencesStorage.save(Preferences().apply { themeMode = ThemeMode.LIGHT })
+        PreferencesStorage.save(Preferences().apply { appearance.themeMode = ThemeMode.LIGHT })
 
         val other = File(directory, "other.json")
         PreferencesStorage.defaultFile = other
-        PreferencesStorage.save(Preferences().apply { themeMode = ThemeMode.DARK })
+        PreferencesStorage.save(Preferences().apply { appearance.themeMode = ThemeMode.DARK })
 
-        assertEquals(ThemeMode.DARK, PreferencesStorage.load().getOrNull()?.themeMode)
+        assertEquals(ThemeMode.DARK, PreferencesStorage.load().getOrNull()?.appearance?.themeMode)
         PreferencesStorage.defaultFile = file
-        assertEquals(ThemeMode.LIGHT, PreferencesStorage.load().getOrNull()?.themeMode)
+        assertEquals(ThemeMode.LIGHT, PreferencesStorage.load().getOrNull()?.appearance?.themeMode)
     }
 
     /**

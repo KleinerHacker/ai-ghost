@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+* Preferences file groups its settings in blocks: the appearance is chosen under `appearance` with
+  `themeMode` inside it, and the limits of the AI stand under `ai` - a file still naming `themeMode`
+  at the top level is read with the default appearance, so the choice has to be made again once
+
 * Warning and error dialogs take the height their text needs: a message running over several lines
   is wrapped and shown completely instead of being cut off at the bottom
 

@@ -35,9 +35,10 @@ import org.pcsoft.app.aighost.model.project.common.AIPrompt
  * them carry no object until then and their field properties answer with neutral values. The chapters
  * are offered as a list of the plain objects, because the user arranges them as a whole.
  *
- * This is the one property model a user interface is handed, so what it needs is reachable from
- * outside: the title, the further title lines and the two prompts the manuscript is generated from.
- * The parts below the book stay inside this module and are reached through their own editors later.
+ * Every part nested in the manuscript is handed out with its own type, so a user interface reaches the
+ * fields of the prompts, of the prolog, of the epilog and of the blurb through the property standing
+ * for that part. The book itself is built by the project alone and therefore carries an internal
+ * constructor.
  */
 class BookProperty internal constructor() : ProjectPartProperty<Book>() {
 
@@ -65,7 +66,7 @@ class BookProperty internal constructor() : ProjectPartProperty<Book>() {
         }
 
     /** Prompts the manuscript as a whole is generated from, as a property of their own. */
-    internal val promptsProperty: AIPromptProperty = AIPromptProperty()
+    val promptsProperty: AIPromptProperty = AIPromptProperty()
 
     /** Prompts the manuscript as a whole is generated from. */
     var prompts: AIPrompt?
@@ -74,33 +75,8 @@ class BookProperty internal constructor() : ProjectPartProperty<Book>() {
             promptsProperty.set(value)
         }
 
-    // The two prompts are what a user interface reaches for, so they are offered here as well
-    // instead of handing the prompt object itself outside of this module.
-
-    /** Description of what the manuscript is about, as a property of its own. */
-    val contentPromptProperty: StringProperty
-        get() = promptsProperty.contentPromptProperty
-
-    /** Description of what the manuscript is about. */
-    var contentPrompt: String?
-        get() = promptsProperty.contentPromptProperty.get()
-        set(value) {
-            promptsProperty.contentPromptProperty.set(value)
-        }
-
-    /** Description of the tone the manuscript is written in, as a property of its own. */
-    val stylePromptProperty: StringProperty
-        get() = promptsProperty.stylePromptProperty
-
-    /** Description of the tone the manuscript is written in. */
-    var stylePrompt: String?
-        get() = promptsProperty.stylePromptProperty.get()
-        set(value) {
-            promptsProperty.stylePromptProperty.set(value)
-        }
-
     /** Prolog printed before the first chapter, as a property of its own. */
-    internal val prologProperty: PrologProperty = PrologProperty()
+    val prologProperty: PrologProperty = PrologProperty()
 
     /** Prolog printed before the first chapter. */
     var prolog: Prolog?
@@ -121,7 +97,7 @@ class BookProperty internal constructor() : ProjectPartProperty<Book>() {
         }
 
     /** Epilog printed after the last chapter, as a property of its own. */
-    internal val epilogProperty: EpilogProperty = EpilogProperty()
+    val epilogProperty: EpilogProperty = EpilogProperty()
 
     /** Epilog printed after the last chapter. */
     var epilog: Epilog?
@@ -131,7 +107,7 @@ class BookProperty internal constructor() : ProjectPartProperty<Book>() {
         }
 
     /** Advertising text printed on the cover, as a property of its own. */
-    internal val blurbProperty: BlurbProperty = BlurbProperty()
+    val blurbProperty: BlurbProperty = BlurbProperty()
 
     /** Advertising text printed on the cover. */
     var blurb: Blurb?

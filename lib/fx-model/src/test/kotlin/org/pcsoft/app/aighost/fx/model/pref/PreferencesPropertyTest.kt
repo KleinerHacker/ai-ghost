@@ -13,6 +13,7 @@
 package org.pcsoft.app.aighost.fx.model.pref
 
 import javafx.beans.binding.Bindings
+import javafx.beans.property.SimpleLongProperty
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.beans.property.StringProperty
@@ -21,6 +22,8 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.pcsoft.app.aighost.model.pref.Ai
+import org.pcsoft.app.aighost.model.pref.Appearance
 import org.pcsoft.app.aighost.model.pref.Preferences
 import org.pcsoft.app.aighost.model.pref.RecentOpened
 import org.pcsoft.app.aighost.model.pref.ThemeMode
@@ -31,23 +34,24 @@ import org.pcsoft.app.aighost.model.pref.ThemeMode
  * The property wraps the preferences of the user and offers every field of that object - and every
  * field of the objects nested in it - as a property of its own. Every test checks the object tree the
  * way the user interface uses it: a binding hangs on each property of the tree - the preferences
- * themselves, the recently opened files below them and every single field - and the tests assert that
- * a change reaches every binding that has to know about it, upwards to the root as well as downwards
- * into the fields of an exchanged object.
+ * themselves, the recently opened files, the appearance and the AI settings below them and every
+ * single field of those - and the tests assert that a change reaches every binding that has to know
+ * about it, upwards to the root as well as downwards into the fields of an exchanged object.
+ *
+ * Every block nested in the preferences is handed out with its own type, so the tests reach the fields
+ * of a block through the property standing for that block instead of through a cast.
  */
 class PreferencesPropertyTest {
 
     private lateinit var preferences: Preferences
     private lateinit var property: PreferencesProperty
     private lateinit var recentOpenedProperty: RecentOpenedProperty
+    private lateinit var appearanceProperty: AppearanceProperty
+    private lateinit var aiProperty: AiProperty
 
     /** Binding on the whole preferences, standing for a view bound to the root of the object tree. */
     private lateinit var rootView: StringProperty
     private var rootViewChanges = 0
-
-    /** Binding on the appearance, standing for a view bound to that single field. */
-    private lateinit var themeView: StringProperty
-    private var themeViewChanges = 0
 
     /** Binding on the recently opened files, standing for a view bound to that nested object. */
     private lateinit var recentOpenedView: StringProperty
@@ -61,14 +65,37 @@ class PreferencesPropertyTest {
     private lateinit var entriesView: StringProperty
     private var entriesViewChanges = 0
 
+    /** Binding on the appearance, standing for a view bound to that nested object. */
+    private lateinit var appearanceView: StringProperty
+    private var appearanceViewChanges = 0
+
+    /** Binding on the theme nested in the appearance. */
+    private lateinit var themeView: StringProperty
+    private var themeViewChanges = 0
+
+    /** Binding on the AI settings, standing for a view bound to that nested object. */
+    private lateinit var aiView: StringProperty
+    private var aiViewChanges = 0
+
+    /** Binding on the story limit nested in the AI settings. */
+    private lateinit var storyView: StringProperty
+    private var storyViewChanges = 0
+
+    /** Binding on the style limit nested in the AI settings. */
+    private lateinit var styleView: StringProperty
+    private var styleViewChanges = 0
+
     @BeforeEach
     fun setUp() {
         preferences = Preferences(
             recentOpened = RecentOpened(max = 10, entries = emptyList()),
-            themeMode = ThemeMode.SYSTEM
+            appearance = Appearance(themeMode = ThemeMode.SYSTEM),
+            ai = Ai(maxStoryCharacters = 5000, maxStyleCharacters = 1000)
         )
         property = PreferencesProperty(preferences)
-        recentOpenedProperty = property.recentOpenedProperty as RecentOpenedProperty
+        recentOpenedProperty = property.recentOpenedProperty
+        appearanceProperty = property.appearanceProperty
+        aiProperty = property.aiProperty
 
         rootView = SimpleStringProperty()
         val rootBinding = Bindings.createStringBinding({ state(property.value) }, property)
@@ -76,11 +103,6 @@ class PreferencesPropertyTest {
         // still shows up as a change.
         rootBinding.addListener { _, _, _ -> rootViewChanges++ }
         rootView.bind(rootBinding)
-
-        themeView = SimpleStringProperty()
-        val themeBinding = property.themeModeProperty.asString()
-        themeBinding.addListener { _, _, _ -> themeViewChanges++ }
-        themeView.bind(themeBinding)
 
         recentOpenedView = SimpleStringProperty()
         val recentOpenedBinding = Bindings.createStringBinding(
@@ -103,35 +125,78 @@ class PreferencesPropertyTest {
         entriesBinding.addListener { _, _, _ -> entriesViewChanges++ }
         entriesView.bind(entriesBinding)
 
+        appearanceView = SimpleStringProperty()
+        val appearanceBinding = Bindings.createStringBinding(
+            { state(appearanceProperty.value) },
+            appearanceProperty
+        )
+        appearanceBinding.addListener { _, _, _ -> appearanceViewChanges++ }
+        appearanceView.bind(appearanceBinding)
+
+        themeView = SimpleStringProperty()
+        val themeBinding = appearanceProperty.themeModeProperty.asString()
+        themeBinding.addListener { _, _, _ -> themeViewChanges++ }
+        themeView.bind(themeBinding)
+
+        aiView = SimpleStringProperty()
+        val aiBinding = Bindings.createStringBinding({ state(aiProperty.value) }, aiProperty)
+        aiBinding.addListener { _, _, _ -> aiViewChanges++ }
+        aiView.bind(aiBinding)
+
+        storyView = SimpleStringProperty()
+        val storyBinding = aiProperty.maxStoryCharactersProperty.asString()
+        storyBinding.addListener { _, _, _ -> storyViewChanges++ }
+        storyView.bind(storyBinding)
+
+        styleView = SimpleStringProperty()
+        val styleBinding = aiProperty.maxStyleCharactersProperty.asString()
+        styleBinding.addListener { _, _, _ -> styleViewChanges++ }
+        styleView.bind(styleBinding)
+
         rootViewChanges = 0
-        themeViewChanges = 0
         recentOpenedViewChanges = 0
         maxViewChanges = 0
         entriesViewChanges = 0
+        appearanceViewChanges = 0
+        themeViewChanges = 0
+        aiViewChanges = 0
+        storyViewChanges = 0
+        styleViewChanges = 0
     }
 
     /** Text form of the whole preferences, used as the value of the binding on the root. */
     private fun state(preferences: Preferences): String =
-        "${preferences.themeMode}|${state(preferences.recentOpened)}"
+        "${state(preferences.recentOpened)}|${state(preferences.appearance)}|${state(preferences.ai)}"
 
     /** Text form of the recently opened files, used as the value of the binding on that object. */
     private fun state(recentOpened: RecentOpened): String =
         "${recentOpened.max}|${recentOpened.entries.joinToString(";")}"
 
+    /** Text form of the appearance, used as the value of the binding on that object. */
+    private fun state(appearance: Appearance): String = appearance.themeMode.toString()
+
+    /** Text form of the AI settings, used as the value of the binding on that object. */
+    private fun state(ai: Ai): String = "${ai.maxStoryCharacters}|${ai.maxStyleCharacters}"
+
     /**
      * Asserts that every binding of the object tree delivers the given state, so no view keeps the
      * value of a previous object or of a previous field value.
      */
-    private fun assertTreeShows(themeMode: ThemeMode, max: Int, entries: List<String>) {
+    private fun assertTreeShows(
+        max: Int,
+        entries: List<String>,
+        themeMode: ThemeMode,
+        maxStoryCharacters: Long,
+        maxStyleCharacters: Long
+    ) {
         val entriesText = entries.joinToString(";")
+        val recentOpenedText = "$max|$entriesText"
+        val aiText = "$maxStoryCharacters|$maxStyleCharacters"
 
-        assertEquals("$themeMode|$max|$entriesText", rootView.get()) {
+        assertEquals("$recentOpenedText|$themeMode|$aiText", rootView.get()) {
             "the binding on the preferences delivers an outdated state"
         }
-        assertEquals(themeMode.toString(), themeView.get()) {
-            "the binding on the appearance delivers an outdated value"
-        }
-        assertEquals("$max|$entriesText", recentOpenedView.get()) {
+        assertEquals(recentOpenedText, recentOpenedView.get()) {
             "the binding on the recently opened files delivers an outdated state"
         }
         assertEquals(max.toString(), maxView.get()) {
@@ -139,6 +204,21 @@ class PreferencesPropertyTest {
         }
         assertEquals(entriesText, entriesView.get()) {
             "the binding on the entries delivers outdated entries"
+        }
+        assertEquals(themeMode.toString(), appearanceView.get()) {
+            "the binding on the appearance delivers an outdated state"
+        }
+        assertEquals(themeMode.toString(), themeView.get()) {
+            "the binding on the theme delivers an outdated value"
+        }
+        assertEquals(aiText, aiView.get()) {
+            "the binding on the AI settings delivers an outdated state"
+        }
+        assertEquals(maxStoryCharacters.toString(), storyView.get()) {
+            "the binding on the story limit delivers an outdated value"
+        }
+        assertEquals(maxStyleCharacters.toString(), styleView.get()) {
+            "the binding on the style limit delivers an outdated value"
         }
     }
 
@@ -148,37 +228,145 @@ class PreferencesPropertyTest {
      */
     @Test
     fun readsInitialValuesFromModel() {
-        assertTreeShows(ThemeMode.SYSTEM, max = 10, entries = emptyList())
+        assertTreeShows(
+            max = 10,
+            entries = emptyList(),
+            themeMode = ThemeMode.SYSTEM,
+            maxStoryCharacters = 5000,
+            maxStyleCharacters = 1000
+        )
     }
 
     /**
      * Use case: the user picks another appearance in the settings dialog, so the chosen mode lands in
-     * the preferences object and both the binding on that field and the binding on the root show it.
+     * the nested model object and the bindings on that field, on the appearance and on the root show it.
      */
     @Test
     fun writesThemeModeToModelAndNotifiesTree() {
-        property.themeMode = ThemeMode.DARK
+        appearanceProperty.themeMode = ThemeMode.DARK
 
-        assertEquals(ThemeMode.DARK, preferences.themeMode)
-        assertTreeShows(ThemeMode.DARK, max = 10, entries = emptyList())
-        assertTrue(themeViewChanges > 0) { "the binding on the appearance was not re-evaluated" }
+        assertEquals(ThemeMode.DARK, preferences.appearance.themeMode)
+        assertTreeShows(
+            max = 10,
+            entries = emptyList(),
+            themeMode = ThemeMode.DARK,
+            maxStoryCharacters = 5000,
+            maxStyleCharacters = 1000
+        )
+        assertTrue(themeViewChanges > 0) { "the binding on the theme was not re-evaluated" }
+        assertTrue(appearanceViewChanges > 0) { "the binding on the appearance was not re-evaluated" }
         assertTrue(rootViewChanges > 0) { "the binding on the preferences was not re-evaluated" }
     }
 
     /**
      * Use case: the appearance is bound to a choice box of the settings dialog, so every mode that
-     * choice box produces reaches the preferences object and both bindings above it show it.
+     * choice box produces reaches the nested model object and every binding above it shows it.
      */
     @Test
     fun writesBoundThemeModeToModelAndNotifiesTree() {
         val source = SimpleObjectProperty(ThemeMode.LIGHT)
-        property.themeModeProperty.bind(source)
+        appearanceProperty.themeModeProperty.bind(source)
 
         source.set(ThemeMode.DARK)
 
-        assertEquals(ThemeMode.DARK, preferences.themeMode)
-        assertTreeShows(ThemeMode.DARK, max = 10, entries = emptyList())
-        assertTrue(themeViewChanges > 0) { "the binding on the appearance was not re-evaluated" }
+        assertEquals(ThemeMode.DARK, preferences.appearance.themeMode)
+        assertTreeShows(
+            max = 10,
+            entries = emptyList(),
+            themeMode = ThemeMode.DARK,
+            maxStoryCharacters = 5000,
+            maxStyleCharacters = 1000
+        )
+        assertTrue(themeViewChanges > 0) { "the binding on the theme was not re-evaluated" }
+        assertTrue(appearanceViewChanges > 0) { "the binding on the appearance was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the preferences was not re-evaluated" }
+    }
+
+    /**
+     * Use case: the whole appearance block is replaced, so the field property below it belongs to
+     * another object afterwards and every binding of the object tree shows the value of that object.
+     */
+    @Test
+    fun writesAppearanceToModelAndNotifiesTree() {
+        property.appearance = Appearance(themeMode = ThemeMode.LIGHT)
+
+        assertEquals(Appearance(themeMode = ThemeMode.LIGHT), preferences.appearance)
+        assertTreeShows(
+            max = 10,
+            entries = emptyList(),
+            themeMode = ThemeMode.LIGHT,
+            maxStoryCharacters = 5000,
+            maxStyleCharacters = 1000
+        )
+        assertTrue(themeViewChanges > 0) { "the binding on the theme was not re-evaluated" }
+        assertTrue(appearanceViewChanges > 0) { "the binding on the appearance was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the preferences was not re-evaluated" }
+    }
+
+    /**
+     * Use case: the user raises the length a story may reach, so the new limit lands in the nested
+     * model object and the bindings on that field, on the AI settings and on the root show it.
+     */
+    @Test
+    fun writesMaxStoryCharactersToModelAndNotifiesTree() {
+        aiProperty.maxStoryCharacters = 12000
+
+        assertEquals(12000, preferences.ai.maxStoryCharacters)
+        assertTreeShows(
+            max = 10,
+            entries = emptyList(),
+            themeMode = ThemeMode.SYSTEM,
+            maxStoryCharacters = 12000,
+            maxStyleCharacters = 1000
+        )
+        assertTrue(storyViewChanges > 0) { "the binding on the story limit was not re-evaluated" }
+        assertTrue(aiViewChanges > 0) { "the binding on the AI settings was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the preferences was not re-evaluated" }
+    }
+
+    /**
+     * Use case: the style limit is bound to a spinner of the settings dialog, so every value that
+     * spinner produces reaches the nested model object and every binding above it shows it.
+     */
+    @Test
+    fun writesBoundMaxStyleCharactersToModelAndNotifiesTree() {
+        val source = SimpleLongProperty(500)
+        aiProperty.maxStyleCharactersProperty.bind(source)
+
+        source.set(750)
+
+        assertEquals(750, preferences.ai.maxStyleCharacters)
+        assertTreeShows(
+            max = 10,
+            entries = emptyList(),
+            themeMode = ThemeMode.SYSTEM,
+            maxStoryCharacters = 5000,
+            maxStyleCharacters = 750
+        )
+        assertTrue(styleViewChanges > 0) { "the binding on the style limit was not re-evaluated" }
+        assertTrue(aiViewChanges > 0) { "the binding on the AI settings was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the preferences was not re-evaluated" }
+    }
+
+    /**
+     * Use case: the whole AI block is replaced, so the field properties below it belong to another
+     * object afterwards and every binding of the object tree shows the values of that object.
+     */
+    @Test
+    fun writesAiToModelAndNotifiesTree() {
+        property.ai = Ai(maxStoryCharacters = 3000, maxStyleCharacters = 800)
+
+        assertEquals(Ai(maxStoryCharacters = 3000, maxStyleCharacters = 800), preferences.ai)
+        assertTreeShows(
+            max = 10,
+            entries = emptyList(),
+            themeMode = ThemeMode.SYSTEM,
+            maxStoryCharacters = 3000,
+            maxStyleCharacters = 800
+        )
+        assertTrue(storyViewChanges > 0) { "the binding on the story limit was not re-evaluated" }
+        assertTrue(styleViewChanges > 0) { "the binding on the style limit was not re-evaluated" }
+        assertTrue(aiViewChanges > 0) { "the binding on the AI settings was not re-evaluated" }
         assertTrue(rootViewChanges > 0) { "the binding on the preferences was not re-evaluated" }
     }
 
@@ -191,7 +379,13 @@ class PreferencesPropertyTest {
         recentOpenedProperty.max = 7
 
         assertEquals(7, preferences.recentOpened.max)
-        assertTreeShows(ThemeMode.SYSTEM, max = 7, entries = emptyList())
+        assertTreeShows(
+            max = 7,
+            entries = emptyList(),
+            themeMode = ThemeMode.SYSTEM,
+            maxStoryCharacters = 5000,
+            maxStyleCharacters = 1000
+        )
         assertTrue(maxViewChanges > 0) { "the binding on the maximum was not re-evaluated" }
         assertTrue(recentOpenedViewChanges > 0) { "the binding on the recently opened files was not re-evaluated" }
         assertTrue(rootViewChanges > 0) { "the binding on the preferences was not re-evaluated" }
@@ -207,7 +401,13 @@ class PreferencesPropertyTest {
         recentOpenedProperty.entriesProperty.add("/books/third.md")
 
         assertEquals(listOf("/books/third.md"), preferences.recentOpened.entries)
-        assertTreeShows(ThemeMode.SYSTEM, max = 10, entries = listOf("/books/third.md"))
+        assertTreeShows(
+            max = 10,
+            entries = listOf("/books/third.md"),
+            themeMode = ThemeMode.SYSTEM,
+            maxStoryCharacters = 5000,
+            maxStyleCharacters = 1000
+        )
         assertTrue(entriesViewChanges > 0) { "the binding on the entries was not re-evaluated" }
         assertTrue(recentOpenedViewChanges > 0) { "the binding on the recently opened files was not re-evaluated" }
         assertTrue(rootViewChanges > 0) { "the binding on the preferences was not re-evaluated" }
@@ -225,7 +425,13 @@ class PreferencesPropertyTest {
         source.set(FXCollections.observableArrayList("/books/second.md"))
 
         assertEquals(listOf("/books/second.md"), preferences.recentOpened.entries)
-        assertTreeShows(ThemeMode.SYSTEM, max = 10, entries = listOf("/books/second.md"))
+        assertTreeShows(
+            max = 10,
+            entries = listOf("/books/second.md"),
+            themeMode = ThemeMode.SYSTEM,
+            maxStoryCharacters = 5000,
+            maxStyleCharacters = 1000
+        )
         assertTrue(entriesViewChanges > 0) { "the binding on the entries was not re-evaluated" }
         assertTrue(recentOpenedViewChanges > 0) { "the binding on the recently opened files was not re-evaluated" }
         assertTrue(rootViewChanges > 0) { "the binding on the preferences was not re-evaluated" }
@@ -241,7 +447,13 @@ class PreferencesPropertyTest {
         property.recentOpened = RecentOpened(max = 5, entries = listOf("/books/second.md"))
 
         assertEquals(RecentOpened(max = 5, entries = listOf("/books/second.md")), preferences.recentOpened)
-        assertTreeShows(ThemeMode.SYSTEM, max = 5, entries = listOf("/books/second.md"))
+        assertTreeShows(
+            max = 5,
+            entries = listOf("/books/second.md"),
+            themeMode = ThemeMode.SYSTEM,
+            maxStoryCharacters = 5000,
+            maxStyleCharacters = 1000
+        )
         assertTrue(maxViewChanges > 0) { "the binding on the maximum was not re-evaluated" }
         assertTrue(entriesViewChanges > 0) { "the binding on the entries was not re-evaluated" }
         assertTrue(recentOpenedViewChanges > 0) { "the binding on the recently opened files was not re-evaluated" }
@@ -257,14 +469,25 @@ class PreferencesPropertyTest {
     fun writesReplacedPreferencesToModelAndNotifiesWholeTree() {
         property.value = Preferences(
             recentOpened = RecentOpened(max = 2, entries = listOf("/books/fourth.md")),
-            themeMode = ThemeMode.LIGHT
+            appearance = Appearance(themeMode = ThemeMode.LIGHT),
+            ai = Ai(maxStoryCharacters = 2500, maxStyleCharacters = 600)
         )
 
-        assertTreeShows(ThemeMode.LIGHT, max = 2, entries = listOf("/books/fourth.md"))
-        assertTrue(themeViewChanges > 0) { "the binding on the appearance was not re-evaluated" }
+        assertTreeShows(
+            max = 2,
+            entries = listOf("/books/fourth.md"),
+            themeMode = ThemeMode.LIGHT,
+            maxStoryCharacters = 2500,
+            maxStyleCharacters = 600
+        )
         assertTrue(maxViewChanges > 0) { "the binding on the maximum was not re-evaluated" }
         assertTrue(entriesViewChanges > 0) { "the binding on the entries was not re-evaluated" }
         assertTrue(recentOpenedViewChanges > 0) { "the binding on the recently opened files was not re-evaluated" }
+        assertTrue(themeViewChanges > 0) { "the binding on the theme was not re-evaluated" }
+        assertTrue(appearanceViewChanges > 0) { "the binding on the appearance was not re-evaluated" }
+        assertTrue(storyViewChanges > 0) { "the binding on the story limit was not re-evaluated" }
+        assertTrue(styleViewChanges > 0) { "the binding on the style limit was not re-evaluated" }
+        assertTrue(aiViewChanges > 0) { "the binding on the AI settings was not re-evaluated" }
         assertTrue(rootViewChanges > 0) { "the binding on the preferences was not re-evaluated" }
     }
 
@@ -276,30 +499,50 @@ class PreferencesPropertyTest {
     fun keepsFieldsQuietWhenReplacedPreferencesCarryTheSameValues() {
         property.value = Preferences(
             recentOpened = RecentOpened(max = 10, entries = emptyList()),
-            themeMode = ThemeMode.SYSTEM
+            appearance = Appearance(themeMode = ThemeMode.SYSTEM),
+            ai = Ai(maxStoryCharacters = 5000, maxStyleCharacters = 1000)
         )
 
-        assertTreeShows(ThemeMode.SYSTEM, max = 10, entries = emptyList())
-        assertEquals(0, themeViewChanges) { "the appearance was reported as changed although it did not change" }
+        assertTreeShows(
+            max = 10,
+            entries = emptyList(),
+            themeMode = ThemeMode.SYSTEM,
+            maxStoryCharacters = 5000,
+            maxStyleCharacters = 1000
+        )
         assertEquals(0, maxViewChanges) { "the maximum was reported as changed although it did not change" }
         assertEquals(0, entriesViewChanges) { "the entries were reported as changed although they did not change" }
+        assertEquals(0, themeViewChanges) { "the theme was reported as changed although it did not change" }
+        assertEquals(0, storyViewChanges) { "the story limit was reported as changed although it did not change" }
+        assertEquals(0, styleViewChanges) { "the style limit was reported as changed although it did not change" }
     }
 
     /**
      * Use case: a field of a nested object is changed by application code past the property, so the
      * property is told to read the preferences again and every field property delivers the current
-     * value afterwards - down into the nested object, which nothing else would reach.
+     * value afterwards - down into the nested objects, which nothing else would reach.
      */
     @Test
     fun readsFieldsChangedOnModel() {
-        preferences.themeMode = ThemeMode.DARK
+        preferences.appearance.themeMode = ThemeMode.DARK
+        preferences.ai.maxStoryCharacters = 2500
+        preferences.ai.maxStyleCharacters = 600
         preferences.recentOpened.max = 4
         preferences.recentOpened.entries = listOf("/books/third.md")
 
         property.refresh()
 
-        assertEquals(ThemeMode.DARK, property.themeMode)
+        assertEquals(ThemeMode.DARK, appearanceProperty.themeMode)
+        assertEquals(2500, aiProperty.maxStoryCharacters)
+        assertEquals(600, aiProperty.maxStyleCharacters)
         assertEquals(4, recentOpenedProperty.max)
         assertEquals(listOf("/books/third.md"), recentOpenedProperty.entries)
+        assertTreeShows(
+            max = 4,
+            entries = listOf("/books/third.md"),
+            themeMode = ThemeMode.DARK,
+            maxStoryCharacters = 2500,
+            maxStyleCharacters = 600
+        )
     }
 }

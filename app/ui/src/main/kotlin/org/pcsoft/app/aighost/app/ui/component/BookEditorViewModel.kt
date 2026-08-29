@@ -14,10 +14,12 @@ package org.pcsoft.app.aighost.app.ui.component
 
 import de.saxsys.mvvmfx.ViewModel
 import javafx.beans.binding.Bindings
+import javafx.beans.property.LongProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.beans.property.StringProperty
 import javafx.collections.FXCollections
 import javafx.collections.ObservableList
+import org.pcsoft.app.aighost.app.controller.IoController
 import org.pcsoft.app.aighost.fx.model.project.book.BookProperty
 
 /**
@@ -46,6 +48,24 @@ class BookEditorViewModel : ViewModel {
 
     /** Further title lines shown below the main title, in the order the user arranged them in. */
     val titleAppendix: ObservableList<String> = FXCollections.observableArrayList()
+
+    /**
+     * Represents the maximum number of characters allowed in the story prompt field.
+     *
+     * This property is bound to the user's preferences and reflects the configuration
+     * for the AI-assisted story creation feature. It ensures that the input into the
+     * story prompt does not exceed a predefined character limit.
+     */
+    val maxStoryPromptCharacters: LongProperty = IoController.preferences.aiProperty.maxStoryCharactersProperty
+
+    /**
+     * Represents the maximum number of characters allowed in the style prompt field.
+     *
+     * This property is tied to the user's AI preferences and restricts input to ensure
+     * that style prompts remain within acceptable limits for processing. Modifying
+     * this value impacts how much data can be input into style-related prompt fields.
+     */
+    val maxStylePromptCharacters: LongProperty = IoController.preferences.aiProperty.maxStyleCharactersProperty
 
     /**
      * Asks the user whether the title line holding the given text may be removed.
@@ -86,8 +106,8 @@ class BookEditorViewModel : ViewModel {
     internal fun bind(newBook: BookProperty?) {
         boundBook?.also { old ->
             title.unbindBidirectional(old.titleProperty)
-            contentPrompt.unbindBidirectional(old.contentPromptProperty)
-            stylePrompt.unbindBidirectional(old.stylePromptProperty)
+            contentPrompt.unbindBidirectional(old.promptsProperty.contentPromptProperty)
+            stylePrompt.unbindBidirectional(old.promptsProperty.stylePromptProperty)
             Bindings.unbindContentBidirectional(titleAppendix, old.titleAppendixProperty)
         }
         boundBook = newBook
@@ -103,12 +123,12 @@ class BookEditorViewModel : ViewModel {
         // The manuscript is the source of truth, so the fields take over its values instead of
         // writing their own into it: a bidirectional binding starts from the property it is called on.
         title.value = newBook.titleProperty.value
-        contentPrompt.value = newBook.contentPromptProperty.value
-        stylePrompt.value = newBook.stylePromptProperty.value
+        contentPrompt.value = newBook.promptsProperty.contentPromptProperty.value
+        stylePrompt.value = newBook.promptsProperty.stylePromptProperty.value
 
         title.bindBidirectional(newBook.titleProperty)
-        contentPrompt.bindBidirectional(newBook.contentPromptProperty)
-        stylePrompt.bindBidirectional(newBook.stylePromptProperty)
+        contentPrompt.bindBidirectional(newBook.promptsProperty.contentPromptProperty)
+        stylePrompt.bindBidirectional(newBook.promptsProperty.stylePromptProperty)
         Bindings.bindContentBidirectional(titleAppendix, newBook.titleAppendixProperty)
     }
 }

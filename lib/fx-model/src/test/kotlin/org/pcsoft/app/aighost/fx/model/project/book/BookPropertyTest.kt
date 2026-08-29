@@ -544,18 +544,19 @@ class BookPropertyTest {
     }
 
     /**
-     * Use case: a user interface reaches the two prompts of the manuscript through the short
-     * accessors the book offers, so writing through them lands in the model object just the same.
+     * Use case: a user interface reaches the two prompts of the manuscript through the property model
+     * the book hands out for them, so writing through that model lands in the model object just the
+     * same and is answered by it afterwards.
      */
     @Test
-    fun writesPromptsThroughTheShortAccessorsToModelAndNotifiesTree() {
-        property.contentPromptProperty.set("Tell a story of a way back.")
-        property.stylePromptProperty.set("Write it plainly.")
+    fun writesBothPromptsThroughTheNestedPropertyToModelAndNotifiesTree() {
+        property.promptsProperty.contentPromptProperty.set("Tell a story of a way back.")
+        property.promptsProperty.stylePromptProperty.set("Write it plainly.")
 
         assertEquals("Tell a story of a way back.", holder.book?.prompts?.contentPrompt)
         assertEquals("Write it plainly.", holder.book?.prompts?.stylePrompt)
-        assertEquals("Tell a story of a way back.", property.contentPrompt)
-        assertEquals("Write it plainly.", property.stylePrompt)
+        assertEquals("Tell a story of a way back.", property.promptsProperty.contentPrompt)
+        assertEquals("Write it plainly.", property.promptsProperty.stylePrompt)
         assertEquals(
             promptText(AIPrompt("Tell a story of a way back.", "Write it plainly.")),
             promptsView.get()

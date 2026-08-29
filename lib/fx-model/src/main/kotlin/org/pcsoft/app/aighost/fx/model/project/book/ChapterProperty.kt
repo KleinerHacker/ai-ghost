@@ -22,8 +22,11 @@ import org.pcsoft.app.aighost.model.project.book.Chapter
  *
  * The wrapped object may be absent as long as no chapter is picked, so every field property answers
  * with a neutral value and drops what is written to it until a chapter sits behind this property.
+ *
+ * This property model is handed out with its own type, so a caller reaches every field of the chapter
+ * directly; it is built by the book alone and therefore carries an internal constructor.
  */
-internal class ChapterProperty : BookPartProperty<Chapter?>() {
+class ChapterProperty internal constructor() : BookPartProperty<Chapter?>() {
 
     /** Name of the chapter as shown in the project tree, as a property of its own. */
     val nameProperty: StringProperty = SimpleStringProperty()

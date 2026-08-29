@@ -13,4 +13,11 @@ module org.pcsoft.app.aighost.fx.model {
 
     // The manuscript is edited in the user interface, so its property model is part of that surface.
     exports org.pcsoft.app.aighost.fx.model.project.book;
+
+    // Every nested property model is handed out with its own type, so the packages carrying those
+    // types belong to the public surface as well - otherwise the module system rejects them.
+    exports org.pcsoft.app.aighost.fx.model.common;
+    exports org.pcsoft.app.aighost.fx.model.project.common;
+    exports org.pcsoft.app.aighost.fx.model.project.design;
+    exports org.pcsoft.app.aighost.fx.model.project.meta;
 }

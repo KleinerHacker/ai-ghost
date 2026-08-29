@@ -27,8 +27,11 @@ import org.pcsoft.app.aighost.model.project.book.Blurb
  *
  * A book carries a blurb only after the user created it, so the wrapped object is absent until then
  * and the field properties answer with an empty prompt and with no paragraphs at all.
+ *
+ * This property model is handed out with its own type, so a caller reaches the prompt and the
+ * paragraphs directly; it is built by the book alone and therefore carries an internal constructor.
  */
-internal class BlurbProperty : SimpleObjectProperty<Blurb?>() {
+class BlurbProperty internal constructor() : SimpleObjectProperty<Blurb?>() {
 
     private val fields = BeanFields<Blurb> { fireValueChangedEvent() }
 
