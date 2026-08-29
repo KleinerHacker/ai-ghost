@@ -15,6 +15,7 @@
 /* The scroll pane above is transparent, so the editor is the surface the fields sit on. */
 .book-editor {
     -fx-background-color: -ghost-surface;
+    -fx-background-radius: 5px;
 }
 
 /* The name of a field stands above it and steps back from the text written into the field. */
