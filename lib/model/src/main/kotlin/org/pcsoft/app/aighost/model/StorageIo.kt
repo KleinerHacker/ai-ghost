@@ -27,6 +27,7 @@ import org.pcsoft.app.aighost.model.util.logger
 import org.pcsoft.app.aighost.plugin.api.model.project.ProjectPart
 import org.pcsoft.app.aighost.plugin.api.model.project.ProjectPartInfo
 import java.io.File
+import java.util.zip.Deflater
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
@@ -82,7 +83,7 @@ internal object StorageIo {
 
         project.meta.additionalParts = additionalPartsOf(project)
 
-        ZipOutputStream(file.outputStream()).use { stream ->
+        ZipOutputStream(file.outputStream()).apply { setLevel(Deflater.BEST_COMPRESSION) }.use { stream ->
             for ((identifier, part) in project.parts) {
                 val entryName = entryNameOf(identifier)
                 log.trace("> store part {} with entry name {}", part::class.simpleName, entryName)
