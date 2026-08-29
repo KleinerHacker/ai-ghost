@@ -45,14 +45,13 @@ class MetaPropertyTest {
     fun setUp() {
         holder = Holder(newMeta())
         parentEvents = 0
-        property = MetaProperty(
-            { holder.meta = it },
-            { holder.meta },
-            { parentEvents++ }
-        )
-        // A parent property aligns a nested one with the model object as soon as that object arrives,
-        // so the same alignment happens here before the views are built.
-        property.refresh()
+        property = MetaProperty()
+        // A parent property reports a change of a nested one as its own and writes an exchanged object
+        // back into the one carrying it, which is what these two listeners stand for.
+        property.addListener { _ -> parentEvents++ }
+        property.addListener { _, _, newValue -> holder.meta = newValue }
+        // A parent property hands the nested object to this property as soon as that object arrives.
+        property.set(holder.meta)
 
         recorder = ChangeRecorder()
         recorder.watch("meta", property)
@@ -166,8 +165,9 @@ class MetaPropertyTest {
      */
     @Test
     fun answersNeutrallyWithoutAModelObject() {
-        holder.meta = null
-        property.refresh()
+        // A parent property hands out nothing while it carries no project, which is what setting the
+        // property itself to nothing stands for.
+        property.set(null)
 
         assertNull(property.nameProperty.get())
 

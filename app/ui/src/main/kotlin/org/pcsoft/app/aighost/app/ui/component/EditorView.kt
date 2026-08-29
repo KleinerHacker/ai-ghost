@@ -16,8 +16,9 @@ import de.saxsys.mvvmfx.FxmlView
 import de.saxsys.mvvmfx.InjectViewModel
 import javafx.fxml.FXML
 import javafx.fxml.Initializable
+import javafx.scene.control.Label
 import java.net.URL
-import java.util.ResourceBundle
+import java.util.*
 
 /**
  * View of [Editor], holding the project tree and the editing area in a horizontal split.
@@ -26,6 +27,11 @@ import java.util.ResourceBundle
  * tree never reads the project from anywhere but its own property.
  */
 class EditorView : FxmlView<EditorViewModel>, Initializable {
+
+    @FXML
+    private lateinit var bookEditor: BookEditor
+    @FXML
+    private lateinit var lblNotImplemented: Label
 
     @FXML
     private lateinit var pnlProjectList: ProjectList

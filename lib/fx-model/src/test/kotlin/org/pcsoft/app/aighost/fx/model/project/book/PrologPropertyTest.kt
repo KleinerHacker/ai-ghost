@@ -77,14 +77,13 @@ class PrologPropertyTest {
             )
         )
         parentEvents = 0
-        property = PrologProperty(
-            { holder.prolog = it },
-            { holder.prolog },
-            { parentEvents++ }
-        )
-        // A parent property aligns a nested one with the model object as soon as that object arrives,
-        // so the same alignment happens here before the views are built.
-        property.refresh()
+        property = PrologProperty()
+        // A parent property reports a change of a nested one as its own and writes an exchanged object
+        // back into the one carrying it, which is what these two listeners stand for.
+        property.addListener { _ -> parentEvents++ }
+        property.addListener { _, _, newValue -> holder.prolog = newValue }
+        // A parent property hands the nested object to this property as soon as that object arrives.
+        property.set(holder.prolog)
 
         rootView = SimpleStringProperty()
         val rootBinding = Bindings.createStringBinding({ state(property.value) }, property)
@@ -346,8 +345,8 @@ class PrologPropertyTest {
     }
 
     /**
-     * Use case: a field of the prolog is changed by application code past the property, so every field
-     * property delivers the current value instead of a cached copy.
+     * Use case: a field of the prolog is changed by application code past the property, so the property
+     * is told to read the prolog again and every field property delivers the current value afterwards.
      */
     @Test
     fun readsFieldsChangedOnModel() {
@@ -355,6 +354,8 @@ class PrologPropertyTest {
         holder.prolog?.titleAppendix = listOf("Written in winter")
         holder.prolog?.prompts = AIPrompt("Tell what nobody saw coming.", "Dark and short.")
         holder.prolog?.paragraph = listOf("Then the wind came.")
+
+        property.refresh()
 
         assertEquals("After the storm", property.title)
         assertEquals(listOf("Written in winter"), property.titleAppendix)

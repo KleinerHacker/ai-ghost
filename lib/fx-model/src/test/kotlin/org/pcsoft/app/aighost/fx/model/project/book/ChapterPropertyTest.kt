@@ -82,14 +82,13 @@ class ChapterPropertyTest {
             )
         )
         parentEvents = 0
-        property = ChapterProperty(
-            { holder.chapter = it },
-            { holder.chapter },
-            { parentEvents++ }
-        )
-        // A parent property aligns a nested one with the model object as soon as that object arrives,
-        // so the same alignment happens here before the views are built.
-        property.refresh()
+        property = ChapterProperty()
+        // A parent property reports a change of a nested one as its own and writes an exchanged object
+        // back into the one carrying it, which is what these two listeners stand for.
+        property.addListener { _ -> parentEvents++ }
+        property.addListener { _, _, newValue -> holder.chapter = newValue }
+        // A parent property hands the nested object to this property as soon as that object arrives.
+        property.set(holder.chapter)
 
         rootView = SimpleStringProperty()
         val rootBinding = Bindings.createStringBinding({ state(property.value) }, property)
@@ -435,8 +434,9 @@ class ChapterPropertyTest {
     }
 
     /**
-     * Use case: a field of the chapter is changed by application code past the property, so every field
-     * property delivers the current value instead of a cached copy.
+     * Use case: a field of the chapter is changed by application code past the property, so the
+     * property is told to read the chapter again and every field property delivers the current value
+     * afterwards.
      */
     @Test
     fun readsFieldsChangedOnModel() {
@@ -445,6 +445,8 @@ class ChapterPropertyTest {
         holder.chapter?.titleAppendix = listOf("In the rain")
         holder.chapter?.prompts = AIPrompt("Tell how the two finally met.", "Dry and short.")
         holder.chapter?.paragraph = listOf("Nobody was waiting.")
+
+        property.refresh()
 
         assertEquals("Chapter two", property.name)
         assertEquals("The departure", property.title)

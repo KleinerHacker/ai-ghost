@@ -14,7 +14,4 @@ module org.pcsoft.app.aighost.fx.model {
 
     // The manuscript is edited in the user interface, so its property model is part of that surface.
     exports org.pcsoft.app.aighost.fx.model.project.book;
-
-    // A plugin builds the property model of its own project part on these wrappers.
-    exports org.pcsoft.app.aighost.fx.model.property.common;
 }

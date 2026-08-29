@@ -20,8 +20,4 @@ import org.pcsoft.app.aighost.model.project.book.Prolog
  * A book carries a prolog only after the user created it, so the wrapped object is absent until then
  * and every field property answers with a neutral value.
  */
-internal class PrologProperty(
-    setter: (Prolog?) -> Unit,
-    getter: () -> Prolog?,
-    fireEvent: () -> Unit
-) : BookPartProperty<Prolog?>(setter, getter, fireEvent)
+internal class PrologProperty : BookPartProperty<Prolog?>()

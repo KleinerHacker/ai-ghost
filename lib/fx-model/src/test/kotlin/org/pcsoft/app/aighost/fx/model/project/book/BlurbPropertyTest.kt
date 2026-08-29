@@ -66,14 +66,13 @@ class BlurbPropertyTest {
             )
         )
         parentEvents = 0
-        property = BlurbProperty(
-            { holder.blurb = it },
-            { holder.blurb },
-            { parentEvents++ }
-        )
-        // A parent property aligns a nested one with the model object as soon as that object arrives,
-        // so the same alignment happens here before the views are built.
-        property.refresh()
+        property = BlurbProperty()
+        // A parent property reports a change of a nested one as its own and writes an exchanged object
+        // back into the one carrying it, which is what these two listeners stand for.
+        property.addListener { _ -> parentEvents++ }
+        property.addListener { _, _, newValue -> holder.blurb = newValue }
+        // A parent property hands the nested object to this property as soon as that object arrives.
+        property.set(holder.blurb)
 
         rootView = SimpleStringProperty()
         val rootBinding = Bindings.createStringBinding({ state(property.value) }, property)
@@ -226,13 +225,15 @@ class BlurbPropertyTest {
     }
 
     /**
-     * Use case: a field of the blurb is changed by application code past the property, so every field
-     * property delivers the current value instead of a cached copy.
+     * Use case: a field of the blurb is changed by application code past the property, so the property
+     * is told to read the blurb again and every field property delivers the current value afterwards.
      */
     @Test
     fun readsFieldsChangedOnModel() {
         holder.blurb?.prompt = "Advertise a journey nobody forgets."
         holder.blurb?.paragraph = listOf("For everyone who ever left home.")
+
+        property.refresh()
 
         assertEquals("Advertise a journey nobody forgets.", property.prompt)
         assertEquals(listOf("For everyone who ever left home."), property.paragraph)

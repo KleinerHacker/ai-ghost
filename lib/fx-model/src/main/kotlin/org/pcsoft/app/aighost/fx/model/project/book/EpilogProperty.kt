@@ -20,8 +20,4 @@ import org.pcsoft.app.aighost.model.project.book.Epilog
  * A book carries an epilog only after the user created it, so the wrapped object is absent until then
  * and every field property answers with a neutral value.
  */
-internal class EpilogProperty(
-    setter: (Epilog?) -> Unit,
-    getter: () -> Epilog?,
-    fireEvent: () -> Unit
-) : BookPartProperty<Epilog?>(setter, getter, fireEvent)
+internal class EpilogProperty : BookPartProperty<Epilog?>()

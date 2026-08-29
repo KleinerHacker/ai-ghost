@@ -107,14 +107,13 @@ class BookPropertyTest {
     fun setUp() {
         holder = Holder(newBook())
         parentEvents = 0
-        property = BookProperty(
-            { holder.book = it },
-            { holder.book },
-            { parentEvents++ }
-        )
-        // A parent property aligns a nested one with the model object as soon as that object arrives,
-        // so the same alignment happens here before the views are built.
-        property.refresh()
+        property = BookProperty()
+        // A parent property reports a change of a nested one as its own and writes an exchanged object
+        // back into the one carrying it, which is what these two listeners stand for.
+        property.addListener { _ -> parentEvents++ }
+        property.addListener { _, _, newValue -> holder.book = newValue }
+        // A parent property hands the nested object to this property as soon as that object arrives.
+        property.set(holder.book)
 
         rootView = SimpleStringProperty()
         val rootBinding = Bindings.createStringBinding({ bookState(property.value) }, property)
@@ -709,7 +708,9 @@ class BookPropertyTest {
 
     /**
      * Use case: a field of the book or of an object nested in it is changed by application code past
-     * the property, so every field property delivers the current value instead of a cached copy.
+     * the property, so the property is told to read the book again and every field property delivers
+     * the current value afterwards - down into prolog, epilog and blurb, which nothing else would
+     * reach because those objects were not exchanged.
      */
     @Test
     fun readsFieldsChangedOnModel() {
@@ -720,6 +721,8 @@ class BookPropertyTest {
         holder.book?.chapters = listOf(Chapter(name = "Chapter two", title = "The departure"))
         holder.book?.epilog?.title = "The years after"
         holder.book?.blurb?.paragraph = listOf("For everyone who ever left home.")
+
+        property.refresh()
 
         assertEquals("The way back", property.title)
         assertEquals(listOf("In three parts"), property.titleAppendix)

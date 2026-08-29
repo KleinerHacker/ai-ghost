@@ -12,8 +12,10 @@
 
 package org.pcsoft.app.aighost.fx.model.project.common
 
-import org.pcsoft.app.aighost.fx.model.property.common.OverrideObjectProperty
-import org.pcsoft.app.aighost.fx.model.property.common.OverrideStringProperty
+import javafx.beans.property.SimpleObjectProperty
+import javafx.beans.property.SimpleStringProperty
+import javafx.beans.property.StringProperty
+import org.pcsoft.app.aighost.fx.model.internal.BeanFields
 import org.pcsoft.app.aighost.model.project.common.AIPrompt
 
 /**
@@ -23,18 +25,12 @@ import org.pcsoft.app.aighost.model.project.common.AIPrompt
  * The wrapped object may be absent as long as no part sits above this property, so every field
  * property answers with a neutral value and drops what is written to it until then.
  */
-internal class AIPromptProperty(
-    setter: (AIPrompt?) -> Unit,
-    getter: () -> AIPrompt?,
-    fireEvent: () -> Unit
-) : OverrideObjectProperty<AIPrompt?>(setter, getter, fireEvent) {
+internal class AIPromptProperty : SimpleObjectProperty<AIPrompt?>() {
+
+    private val fields = BeanFields<AIPrompt> { fireValueChangedEvent() }
 
     /** Description of what the generated text is about, as a property of its own. */
-    val contentPromptProperty: OverrideStringProperty = OverrideStringProperty(
-        { newValue -> value?.also { it.contentPrompt = newValue ?: "" } },
-        { value?.contentPrompt },
-        { fireValueChangedEvent() }
-    )
+    val contentPromptProperty: StringProperty = SimpleStringProperty()
 
     /** Description of what the generated text is about. */
     var contentPrompt: String?
@@ -44,11 +40,7 @@ internal class AIPromptProperty(
         }
 
     /** Description of the tone the generated text is written in, as a property of its own. */
-    val stylePromptProperty: OverrideStringProperty = OverrideStringProperty(
-        { newValue -> value?.also { it.stylePrompt = newValue ?: "" } },
-        { value?.stylePrompt },
-        { fireValueChangedEvent() }
-    )
+    val stylePromptProperty: StringProperty = SimpleStringProperty()
 
     /** Description of the tone the generated text is written in. */
     var stylePrompt: String?
@@ -57,28 +49,20 @@ internal class AIPromptProperty(
             stylePromptProperty.set(value)
         }
 
-    /**
-     * Called whenever the wrapped object itself is exchanged, so the properties of its fields belong
-     * to another object afterwards and have to take over its values.
-     */
-    override fun invalidated() {
-        super.invalidated()
-        refreshFields()
-    }
+    init {
+        fields.string(contentPromptProperty, "contentPrompt")
+        fields.string(stylePromptProperty, "stylePrompt")
 
-    override fun refresh() {
-        super.refresh()
-        refreshFields()
+        // The field properties belong to another object after every exchange, so they are tied to the
+        // one this property carries now.
+        addListener { _, _, newValue -> fields.rebind(newValue) }
+        fields.rebind(get())
     }
 
     /**
-     * Lets every field property take over the value of the object the property carries now. A field
-     * whose value did not change reports nothing, so an exchanged object is not announced as a change
-     * of every one of its fields.
+     * Reads both prompts of the wrapped object again and hands what changed to the field properties,
+     * for a caller that wrote on the object past this model.
      */
-    private fun refreshFields() {
-        contentPromptProperty.refresh()
-        stylePromptProperty.refresh()
-    }
+    fun refresh() = fields.refresh()
 
 }

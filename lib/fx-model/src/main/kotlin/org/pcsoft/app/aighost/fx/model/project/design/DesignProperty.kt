@@ -12,7 +12,9 @@
 
 package org.pcsoft.app.aighost.fx.model.project.design
 
-import org.pcsoft.app.aighost.fx.model.property.common.OverrideBooleanProperty
+import javafx.beans.property.BooleanProperty
+import javafx.beans.property.SimpleBooleanProperty
+import org.pcsoft.app.aighost.fx.model.internal.BeanFields
 import org.pcsoft.app.aighost.fx.model.project.ProjectPartProperty
 import org.pcsoft.app.aighost.model.project.design.AuthorDesign
 import org.pcsoft.app.aighost.model.project.design.ChapterDesign
@@ -31,18 +33,12 @@ import org.pcsoft.app.aighost.model.project.design.TitleDesign
  * The version of the part is not offered as a property: it names the shape of the stored document,
  * is never written by the user and never changes while a project is open.
  */
-internal class DesignProperty(
-    setter: (Design?) -> Unit,
-    getter: () -> Design?,
-    fireEvent: () -> Unit
-) : ProjectPartProperty<Design>(setter, getter, fireEvent) {
+internal class DesignProperty : ProjectPartProperty<Design>() {
+
+    private val fields = BeanFields<Design> { fireValueChangedEvent() }
 
     /** Typographic settings for the author name, as a property of its own. */
-    val authorDesignProperty: AuthorDesignProperty = AuthorDesignProperty(
-        { newValue -> value?.also { it.authorDesign = newValue ?: AuthorDesign() } },
-        { value?.authorDesign },
-        { fireValueChangedEvent() }
-    )
+    val authorDesignProperty: AuthorDesignProperty = AuthorDesignProperty()
 
     /** Typographic settings for the author name. */
     var authorDesign: AuthorDesign?
@@ -52,11 +48,7 @@ internal class DesignProperty(
         }
 
     /** Typographic settings for the copyright page, as a property of its own. */
-    val copyrightDesignProperty: CopyrightDesignProperty = CopyrightDesignProperty(
-        { newValue -> value?.also { it.copyrightDesign = newValue ?: CopyrightDesign() } },
-        { value?.copyrightDesign },
-        { fireValueChangedEvent() }
-    )
+    val copyrightDesignProperty: CopyrightDesignProperty = CopyrightDesignProperty()
 
     /** Typographic settings for the copyright page. */
     var copyrightDesign: CopyrightDesign?
@@ -66,11 +58,7 @@ internal class DesignProperty(
         }
 
     /** Typographic settings for the title page, as a property of its own. */
-    val titleDesignProperty: TitleDesignProperty = TitleDesignProperty(
-        { newValue -> value?.also { it.titleDesign = newValue ?: TitleDesign() } },
-        { value?.titleDesign },
-        { fireValueChangedEvent() }
-    )
+    val titleDesignProperty: TitleDesignProperty = TitleDesignProperty()
 
     /** Typographic settings for the title page. */
     var titleDesign: TitleDesign?
@@ -80,11 +68,7 @@ internal class DesignProperty(
         }
 
     /** Typographic settings for chapter headings, as a property of its own. */
-    val chapterDesignProperty: ChapterDesignProperty = ChapterDesignProperty(
-        { newValue -> value?.also { it.chapterDesign = newValue ?: ChapterDesign() } },
-        { value?.chapterDesign },
-        { fireValueChangedEvent() }
-    )
+    val chapterDesignProperty: ChapterDesignProperty = ChapterDesignProperty()
 
     /** Typographic settings for chapter headings. */
     var chapterDesign: ChapterDesign?
@@ -94,11 +78,7 @@ internal class DesignProperty(
         }
 
     /** Typographic settings for the body text, as a property of its own. */
-    val textDesignProperty: TextDesignProperty = TextDesignProperty(
-        { newValue -> value?.also { it.textDesign = newValue ?: TextDesign() } },
-        { value?.textDesign },
-        { fireValueChangedEvent() }
-    )
+    val textDesignProperty: TextDesignProperty = TextDesignProperty()
 
     /** Typographic settings for the body text. */
     var textDesign: TextDesign?
@@ -108,11 +88,7 @@ internal class DesignProperty(
         }
 
     /** Whether the manuscript starts with an empty page, as a property of its own. */
-    val startWithEmptyPageProperty: OverrideBooleanProperty = OverrideBooleanProperty(
-        { newValue -> value?.also { it.startWithEmptyPage = newValue } },
-        { value?.startWithEmptyPage ?: false },
-        { fireValueChangedEvent() }
-    )
+    val startWithEmptyPageProperty: BooleanProperty = SimpleBooleanProperty()
 
     /** Whether the manuscript starts with an empty page. */
     var startWithEmptyPage: Boolean
@@ -122,11 +98,7 @@ internal class DesignProperty(
         }
 
     /** Whether the manuscript ends with an empty page, as a property of its own. */
-    val endWithEmptyPageProperty: OverrideBooleanProperty = OverrideBooleanProperty(
-        { newValue -> value?.also { it.endWithEmptyPage = newValue } },
-        { value?.endWithEmptyPage ?: false },
-        { fireValueChangedEvent() }
-    )
+    val endWithEmptyPageProperty: BooleanProperty = SimpleBooleanProperty()
 
     /** Whether the manuscript ends with an empty page. */
     var endWithEmptyPage: Boolean
@@ -135,33 +107,21 @@ internal class DesignProperty(
             endWithEmptyPageProperty.set(value)
         }
 
-    /**
-     * Called whenever the wrapped object itself is exchanged, so the properties of its fields belong
-     * to another object afterwards and have to take over its values.
-     */
-    override fun invalidated() {
-        super.invalidated()
-        refreshFields()
+    init {
+        fields.model(authorDesignProperty, "authorDesign", authorDesignProperty::refresh)
+        fields.model(copyrightDesignProperty, "copyrightDesign", copyrightDesignProperty::refresh)
+        fields.model(titleDesignProperty, "titleDesign", titleDesignProperty::refresh)
+        fields.model(chapterDesignProperty, "chapterDesign", chapterDesignProperty::refresh)
+        fields.model(textDesignProperty, "textDesign", textDesignProperty::refresh)
+        fields.boolean(startWithEmptyPageProperty, "startWithEmptyPage")
+        fields.boolean(endWithEmptyPageProperty, "endWithEmptyPage")
+
+        // The field properties belong to another object after every exchange, so they are tied to the
+        // one this property carries now.
+        addListener { _, _, newValue -> fields.rebind(newValue) }
+        fields.rebind(get())
     }
 
-    override fun refresh() {
-        super.refresh()
-        refreshFields()
-    }
-
-    /**
-     * Lets every field property take over the value of the object the property carries now. A field
-     * whose value did not change reports nothing, so an exchanged object is not announced as a change
-     * of every one of its fields.
-     */
-    private fun refreshFields() {
-        authorDesignProperty.refresh()
-        copyrightDesignProperty.refresh()
-        titleDesignProperty.refresh()
-        chapterDesignProperty.refresh()
-        textDesignProperty.refresh()
-        startWithEmptyPageProperty.refresh()
-        endWithEmptyPageProperty.refresh()
-    }
+    override fun refresh() = fields.refresh()
 
 }

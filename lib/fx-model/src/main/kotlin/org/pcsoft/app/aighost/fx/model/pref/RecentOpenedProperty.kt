@@ -12,64 +12,61 @@
 
 package org.pcsoft.app.aighost.fx.model.pref
 
+import javafx.beans.property.IntegerProperty
+import javafx.beans.property.ListProperty
+import javafx.beans.property.SimpleIntegerProperty
+import javafx.beans.property.SimpleListProperty
+import javafx.beans.property.SimpleObjectProperty
 import javafx.collections.FXCollections
-import org.pcsoft.app.aighost.fx.model.property.common.OverrideIntegerProperty
-import org.pcsoft.app.aighost.fx.model.property.common.OverrideListProperty
-import org.pcsoft.app.aighost.fx.model.property.common.OverrideObjectProperty
+import org.pcsoft.app.aighost.fx.model.internal.BeanFields
 import org.pcsoft.app.aighost.model.pref.RecentOpened
 
-internal class RecentOpenedProperty(
-    setter: (RecentOpened) -> Unit,
-    getter: () -> RecentOpened,
-    fireEvent: () -> Unit
-) : OverrideObjectProperty<RecentOpened>(setter, getter, fireEvent) {
+/**
+ * Property wrapping the files the user opened last and offering every field of it as a property of
+ * its own.
+ *
+ * The preferences always carry such an object, so the field properties answer with the values of the
+ * one this property is tied to right now.
+ */
+internal class RecentOpenedProperty : SimpleObjectProperty<RecentOpened>() {
 
-    val maxProperty: OverrideIntegerProperty = OverrideIntegerProperty(
-        { value.max = it },
-        { value.max },
-        { fireValueChangedEvent() }
-    )
+    private val fields = BeanFields<RecentOpened> { fireValueChangedEvent() }
 
+    /** Number of entries that are kept at most, as a property of its own. */
+    val maxProperty: IntegerProperty = SimpleIntegerProperty()
+
+    /** Number of entries that are kept at most. */
     var max: Int
-        get() = maxProperty.value
+        get() = maxProperty.get()
         set(value) {
-            maxProperty.value = value
+            maxProperty.set(value)
         }
 
-    val entriesProperty: OverrideListProperty<String> = OverrideListProperty<String>(
-        { value.entries = it },
-        { value.entries },
-        { fireValueChangedEvent() }
-    )
+    /** Paths of the files the user opened last, as a property of their own. */
+    val entriesProperty: ListProperty<String> =
+        SimpleListProperty(FXCollections.observableArrayList())
 
+    /** Paths of the files the user opened last. */
     var entries: List<String>
-        get() = entriesProperty.value
+        get() = entriesProperty.get()
         set(value) {
-            entriesProperty.value = FXCollections.observableArrayList(value)
+            entriesProperty.setAll(value)
         }
 
-    /**
-     * Called whenever the wrapped object itself is exchanged, so the properties of its fields belong
-     * to another object afterwards and have to take over its values.
-     */
-    override fun invalidated() {
-        super.invalidated()
-        refreshFields()
-    }
+    init {
+        fields.integer(maxProperty, "max")
+        fields.list(entriesProperty, "entries")
 
-    override fun refresh() {
-        super.refresh()
-        refreshFields()
+        // The field properties belong to another object after every exchange, so they are tied to the
+        // one this property carries now.
+        addListener { _, _, newValue -> fields.rebind(newValue) }
+        fields.rebind(get())
     }
 
     /**
-     * Lets every field property take over the value of the object the property carries now. A field
-     * whose value did not change reports nothing, so an exchanged object is not announced as a change
-     * of every one of its fields.
+     * Reads every field of the wrapped object again and hands what changed to the field properties,
+     * for a caller that wrote on the object past this model.
      */
-    private fun refreshFields() {
-        maxProperty.refresh()
-        entriesProperty.refresh()
-    }
+    fun refresh() = fields.refresh()
 
 }

@@ -18,6 +18,7 @@
 <?import javafx.scene.layout.StackPane?>
 <?import org.pcsoft.app.aighost.app.ui.component.ProjectList?>
 <?import javafx.geometry.Insets?>
+<?import org.pcsoft.app.aighost.app.ui.component.BookEditor?>
 <fx:root type="BorderPane" xmlns="http://javafx.com/javafx"
          xmlns:fx="http://javafx.com/fxml"
          fx:controller="org.pcsoft.app.aighost.app.ui.component.EditorView">
@@ -30,7 +31,8 @@
             </ProjectList>
             <StackPane>
                 <!-- Hard coded on purpose: temporary placeholder until the editing parts exist. -->
-                <Label styleClass="editor-placeholder" text="Select an entry in the project tree to edit it."/>
+                <Label fx:id="lblNotImplemented" styleClass="editor-placeholder" text="Not implemented yet."/>
+                <BookEditor fx:id="bookEditor"/>
             </StackPane>
         </SplitPane>
     </center>

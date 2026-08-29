@@ -12,7 +12,8 @@
 
 package org.pcsoft.app.aighost.fx.model.project.book
 
-import org.pcsoft.app.aighost.fx.model.property.common.OverrideStringProperty
+import javafx.beans.property.SimpleStringProperty
+import javafx.beans.property.StringProperty
 import org.pcsoft.app.aighost.model.project.book.Chapter
 
 /**
@@ -22,18 +23,10 @@ import org.pcsoft.app.aighost.model.project.book.Chapter
  * The wrapped object may be absent as long as no chapter is picked, so every field property answers
  * with a neutral value and drops what is written to it until a chapter sits behind this property.
  */
-internal class ChapterProperty(
-    setter: (Chapter?) -> Unit,
-    getter: () -> Chapter?,
-    fireEvent: () -> Unit
-) : BookPartProperty<Chapter?>(setter, getter, fireEvent) {
+internal class ChapterProperty : BookPartProperty<Chapter?>() {
 
     /** Name of the chapter as shown in the project tree, as a property of its own. */
-    val nameProperty: OverrideStringProperty = OverrideStringProperty(
-        { newValue -> value?.also { it.name = newValue ?: "" } },
-        { value?.name },
-        { fireValueChangedEvent() }
-    )
+    val nameProperty: StringProperty = SimpleStringProperty()
 
     // A property carries a name of its own, so the accessors of the wrapped field are given another
     // name on the JVM side - otherwise they would silently replace the one of the base class.
@@ -44,9 +37,8 @@ internal class ChapterProperty(
             nameProperty.set(value)
         }
 
-    override fun refreshFields() {
-        super.refreshFields()
-        nameProperty.refresh()
+    init {
+        fields.string(nameProperty, "name")
     }
 
 }

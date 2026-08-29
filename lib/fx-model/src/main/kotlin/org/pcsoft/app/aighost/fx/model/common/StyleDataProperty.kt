@@ -12,7 +12,9 @@
 
 package org.pcsoft.app.aighost.fx.model.common
 
-import org.pcsoft.app.aighost.fx.model.property.common.OverrideObjectProperty
+import javafx.beans.property.ObjectProperty
+import javafx.beans.property.SimpleObjectProperty
+import org.pcsoft.app.aighost.fx.model.internal.BeanFields
 import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.FontData
 import org.pcsoft.app.aighost.model.common.StyleData
@@ -24,18 +26,12 @@ import org.pcsoft.app.aighost.model.common.StyleData
  * The wrapped object may be absent, so every field property answers with a neutral value and drops
  * what is written to it as long as no style sits behind this property.
  */
-internal class StyleDataProperty(
-    setter: (StyleData?) -> Unit,
-    getter: () -> StyleData?,
-    fireEvent: () -> Unit
-) : OverrideObjectProperty<StyleData?>(setter, getter, fireEvent) {
+internal class StyleDataProperty : SimpleObjectProperty<StyleData?>() {
+
+    private val fields = BeanFields<StyleData> { fireValueChangedEvent() }
 
     /** Font the text is rendered with, as a property of its own. */
-    val fontProperty: FontDataProperty = FontDataProperty(
-        { newValue -> value?.also { it.font = newValue ?: FontData() } },
-        { value?.font },
-        { fireValueChangedEvent() }
-    )
+    val fontProperty: FontDataProperty = FontDataProperty()
 
     /** Font the text is rendered with. */
     var font: FontData?
@@ -45,11 +41,7 @@ internal class StyleDataProperty(
         }
 
     /** Horizontal placement of the text, as a property of its own. */
-    val alignmentProperty: OverrideObjectProperty<Alignment?> = OverrideObjectProperty(
-        { newValue -> value?.also { it.alignment = newValue ?: Alignment.LEFT } },
-        { value?.alignment },
-        { fireValueChangedEvent() }
-    )
+    val alignmentProperty: ObjectProperty<Alignment?> = SimpleObjectProperty()
 
     /** Horizontal placement of the text. */
     var alignment: Alignment?
@@ -58,28 +50,21 @@ internal class StyleDataProperty(
             alignmentProperty.set(value)
         }
 
-    /**
-     * Called whenever the wrapped object itself is exchanged, so the properties of its fields belong
-     * to another object afterwards and have to take over its values.
-     */
-    override fun invalidated() {
-        super.invalidated()
-        refreshFields()
-    }
+    init {
+        fields.model(fontProperty, "font", fontProperty::refresh)
+        fields.reference(alignmentProperty, "alignment")
 
-    override fun refresh() {
-        super.refresh()
-        refreshFields()
+        // The field properties belong to another object after every exchange, so they are tied to the
+        // one this property carries now.
+        addListener { _, _, newValue -> fields.rebind(newValue) }
+        fields.rebind(get())
     }
 
     /**
-     * Lets every field property take over the value of the object the property carries now. A field
-     * whose value did not change reports nothing, so an exchanged object is not announced as a change
-     * of every one of its fields.
+     * Reads every field of the wrapped style again - and every field of the font nested in it - and
+     * hands what changed to the field properties, for a caller that wrote on the style past this
+     * model.
      */
-    private fun refreshFields() {
-        fontProperty.refresh()
-        alignmentProperty.refresh()
-    }
+    fun refresh() = fields.refresh()
 
 }

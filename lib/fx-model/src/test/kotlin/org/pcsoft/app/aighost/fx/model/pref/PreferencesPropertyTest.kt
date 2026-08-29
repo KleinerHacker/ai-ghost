@@ -286,14 +286,17 @@ class PreferencesPropertyTest {
     }
 
     /**
-     * Use case: a field of a nested object is changed by application code past the property, so every
-     * field property delivers the current value instead of a cached copy.
+     * Use case: a field of a nested object is changed by application code past the property, so the
+     * property is told to read the preferences again and every field property delivers the current
+     * value afterwards - down into the nested object, which nothing else would reach.
      */
     @Test
     fun readsFieldsChangedOnModel() {
         preferences.themeMode = ThemeMode.DARK
         preferences.recentOpened.max = 4
         preferences.recentOpened.entries = listOf("/books/third.md")
+
+        property.refresh()
 
         assertEquals(ThemeMode.DARK, property.themeMode)
         assertEquals(4, recentOpenedProperty.max)

@@ -12,8 +12,9 @@
 
 package org.pcsoft.app.aighost.fx.model.project.design
 
+import javafx.beans.property.SimpleObjectProperty
 import org.pcsoft.app.aighost.fx.model.common.StyleDataProperty
-import org.pcsoft.app.aighost.fx.model.property.common.OverrideObjectProperty
+import org.pcsoft.app.aighost.fx.model.internal.BeanFields
 import org.pcsoft.app.aighost.model.common.StyleData
 import org.pcsoft.app.aighost.model.project.design.AuthorDesign
 
@@ -24,18 +25,12 @@ import org.pcsoft.app.aighost.model.project.design.AuthorDesign
  * The wrapped object may be absent as long as no design sits above this property, so the style
  * property answers with a neutral value and drops what is written to it until then.
  */
-internal class AuthorDesignProperty(
-    setter: (AuthorDesign?) -> Unit,
-    getter: () -> AuthorDesign?,
-    fireEvent: () -> Unit
-) : OverrideObjectProperty<AuthorDesign?>(setter, getter, fireEvent) {
+internal class AuthorDesignProperty : SimpleObjectProperty<AuthorDesign?>() {
+
+    private val fields = BeanFields<AuthorDesign> { fireValueChangedEvent() }
 
     /** Appearance of the author name, as a property of its own. */
-    val styleProperty: StyleDataProperty = StyleDataProperty(
-        { newValue -> value?.also { it.style = newValue ?: StyleData() } },
-        { value?.style },
-        { fireValueChangedEvent() }
-    )
+    val styleProperty: StyleDataProperty = StyleDataProperty()
 
     /** Appearance of the author name. */
     var style: StyleData?
@@ -44,27 +39,19 @@ internal class AuthorDesignProperty(
             styleProperty.set(value)
         }
 
-    /**
-     * Called whenever the wrapped object itself is exchanged, so the properties of its fields belong
-     * to another object afterwards and have to take over its values.
-     */
-    override fun invalidated() {
-        super.invalidated()
-        refreshFields()
-    }
+    init {
+        fields.model(styleProperty, "style", styleProperty::refresh)
 
-    override fun refresh() {
-        super.refresh()
-        refreshFields()
+        // The field properties belong to another object after every exchange, so they are tied to the
+        // one this property carries now.
+        addListener { _, _, newValue -> fields.rebind(newValue) }
+        fields.rebind(get())
     }
 
     /**
-     * Lets every field property take over the value of the object the property carries now. A field
-     * whose value did not change reports nothing, so an exchanged object is not announced as a change
-     * of every one of its fields.
+     * Reads the style of the wrapped object again - and every field of that style - and hands what
+     * changed to the field properties, for a caller that wrote on the object past this model.
      */
-    private fun refreshFields() {
-        styleProperty.refresh()
-    }
+    fun refresh() = fields.refresh()
 
 }
