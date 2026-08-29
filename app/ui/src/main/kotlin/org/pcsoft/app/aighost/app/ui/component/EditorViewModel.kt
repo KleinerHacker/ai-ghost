@@ -13,6 +13,10 @@
 package org.pcsoft.app.aighost.app.ui.component
 
 import de.saxsys.mvvmfx.ViewModel
+import javafx.beans.binding.Bindings
+import javafx.beans.binding.BooleanBinding
+import javafx.beans.property.ObjectProperty
+import javafx.beans.property.SimpleObjectProperty
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
 
 /**
@@ -31,6 +35,13 @@ class EditorViewModel : ViewModel {
     /** The project being edited, absent until the surrounding window handed it over. */
     var project: ProjectProperty? = null
         private set
+
+    val selectedProjectTreeItem: ObjectProperty<ProjectListItem?> = SimpleObjectProperty()
+    val showBookEditor: BooleanBinding = Bindings.createBooleanBinding(
+        { selectedProjectTreeItem.value is ProjectListItem.Root },
+        selectedProjectTreeItem
+    )
+
 
     /**
      * Called with the project model as soon as it is handed over.

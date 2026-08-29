@@ -37,6 +37,7 @@ import java.io.File
  */
 class MainWindowViewModel : ViewModel {
 
+    //region Project Part
     /**
      * The project the user works on, with every part and field of it as a property of its own.
      *
@@ -58,7 +59,9 @@ class MainWindowViewModel : ViewModel {
      * so it is taken from the property model instead of read off the project itself.
      */
     val projectName: StringProperty = project.nameProperty
+    //endregion
 
+    //region Preferences Part
     /**
      * Files the user opened last, the most recent one first.
      *
@@ -66,17 +69,24 @@ class MainWindowViewModel : ViewModel {
      * preferences carry them instead of in the order of their hash values.
      */
     val openRecent: SetProperty<File> = SimpleSetProperty(FXCollections.observableSet(LinkedHashSet()))
+
+    /**
+     * A read-only Boolean property that indicates whether the "Open Recent" functionality
+     * is disabled. It is `true` when the list of recently opened files is empty.
+     */
     val openRecentDisabled: ReadOnlyBooleanProperty = openRecent.emptyProperty()
 
     // Whether the set was touched since it was last filled from the preferences. Only then is there
     // something of this window to write back; without it, leaving the window would overwrite the
     // stored list with an empty one whenever nothing was opened.
     private var openRecentChanged = false
+    //endregion
 
     init {
         openRecent.addListener { _: Observable -> openRecentChanged = true }
     }
 
+    //region Project Part
     /**
      * Closes the open project and starts a fresh one.
      *
@@ -127,6 +137,7 @@ class MainWindowViewModel : ViewModel {
 
         return true
     }
+    //endregion
 
     /**
      * Takes the recently opened files of the preferences over into [openRecent].

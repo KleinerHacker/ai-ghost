@@ -30,8 +30,11 @@
                 </padding>
             </ProjectList>
             <StackPane>
+                <padding>
+                    <Insets left="10"/>
+                </padding>
                 <!-- Hard coded on purpose: temporary placeholder until the editing parts exist. -->
-                <Label fx:id="lblNotImplemented" styleClass="editor-placeholder" text="Not implemented yet."/>
+                <Label styleClass="editor-placeholder" text="Not implemented yet."/>
                 <BookEditor fx:id="bookEditor"/>
             </StackPane>
         </SplitPane>

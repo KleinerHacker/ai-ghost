@@ -86,6 +86,8 @@ class MainWindowView : FxmlView<MainWindowViewModel>, Initializable {
         // The editor works on the property model of the window instead of on a project handed to it
         // through a property of its own, so a property never carries another property.
         editor.bindProject(viewModel.project)
+
+
     }
 
     /**
