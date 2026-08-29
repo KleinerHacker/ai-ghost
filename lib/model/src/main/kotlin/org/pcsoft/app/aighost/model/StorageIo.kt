@@ -20,6 +20,7 @@ import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.databind.json.JsonMapper
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
 import com.fasterxml.jackson.module.kotlin.kotlinModule
 import org.pcsoft.app.aighost.model.project.Project
 import org.pcsoft.app.aighost.model.project.meta.Meta
@@ -54,7 +55,16 @@ internal object StorageIo {
     private const val ENTRY_SUFFIX = ".json"
 
     /** The configured mapper, shared by all storages of this module. */
-    val mapper: JsonMapper = JsonMapper.builder()
+    val jsonMapper: JsonMapper = JsonMapper.builder()
+        .addModule(kotlinModule())
+        .enable(SerializationFeature.INDENT_OUTPUT)
+        // A project is a zip archive of several entries written through one and the same stream, so
+        // the mapper must not close it after a single entry - the next one would find it closed.
+        .disable(JsonGenerator.Feature.AUTO_CLOSE_TARGET)
+        .disable(JsonParser.Feature.AUTO_CLOSE_SOURCE)
+        .build()
+
+    val yamlMapper: YAMLMapper = YAMLMapper.builder()
         .addModule(kotlinModule())
         .enable(SerializationFeature.INDENT_OUTPUT)
         // A project is a zip archive of several entries written through one and the same stream, so
@@ -89,7 +99,7 @@ internal object StorageIo {
                 log.trace("> store part {} with entry name {}", part::class.simpleName, entryName)
 
                 stream.putNextEntry(ZipEntry(entryName))
-                mapper.writeValue(stream, part)
+                jsonMapper.writeValue(stream, part)
                 stream.closeEntry()
             }
 
@@ -154,7 +164,7 @@ internal object StorageIo {
                     } else {
                         log.trace("> read part {} from entry name {}", partClass.simpleName, entryName)
                         try {
-                            parts[identifier] = mapper.readValue(stream, partClass.java)
+                            parts[identifier] = jsonMapper.readValue(stream, partClass.java)
                         } catch (e: JacksonException) {
                             // A part that cannot be parsed is not there for whoever reads the
                             // document. Whether that is fatal is decided below, by what the part is.

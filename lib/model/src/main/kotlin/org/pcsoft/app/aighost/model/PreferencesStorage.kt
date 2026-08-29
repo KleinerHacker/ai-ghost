@@ -37,7 +37,7 @@ import java.nio.file.StandardCopyOption
  */
 object PreferencesStorage {
 
-    private const val FILE_NAME = ".ai-ghost/preferences.json"
+    private const val FILE_NAME = ".ai-ghost/preferences.yml"
 
     /**
      * The file the preferences are read from and written to.
@@ -84,7 +84,7 @@ object PreferencesStorage {
             return Error.NotAFile(file).left()
 
         return try {
-            StorageIo.mapper.readValue(file, Preferences::class.java).right()
+            StorageIo.yamlMapper.readValue(file, Preferences::class.java).right()
         } catch (e: JacksonException) {
             Error.Malformed(file, e).left()
         } catch (e: IOException) {
@@ -104,7 +104,7 @@ object PreferencesStorage {
 
             val temporary = File.createTempFile(file.name, ".tmp", file.parentFile)
             try {
-                StorageIo.mapper.writeValue(temporary, preferences)
+                StorageIo.jsonMapper.writeValue(temporary, preferences)
                 Files.move(
                     temporary.toPath(),
                     file.toPath(),

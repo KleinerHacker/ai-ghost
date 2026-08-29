@@ -31,7 +31,7 @@ class PreferencesStorageTest {
     @TempDir
     lateinit var directory: File
 
-    private val file: File get() = File(directory, "preferences.json")
+    private val file: File get() = File(directory, "preferences.yml")
 
     private lateinit var applicationFile: File
 
