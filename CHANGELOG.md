@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+* Warning and error dialogs take the height their text needs: a message running over several lines
+  is wrapped and shown completely instead of being cut off at the bottom
+
+* Button starting an AI action shows a bolder magic wand: a thick shaft with rounded ends and two
+  clear sparkles instead of the thin line with tiny dots, so it stays readable at small sizes
+
 * Title lines of a book are shown as a list and no longer as loose fields: the lines, the hint that
   there is none yet and the plus adding one stand together in an area of their own, and a line
   separates one entry from the next

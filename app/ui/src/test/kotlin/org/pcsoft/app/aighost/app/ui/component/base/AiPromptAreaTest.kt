@@ -174,13 +174,13 @@ class AiPromptAreaTest : ApplicationTest() {
         WaitForAsyncUtils.waitForFxEvents()
 
         assertEquals(2L, promptArea.tokens.get())
-        assertEquals("~2 tokens", tokens.text)
+        assertEquals("Tokens: ~2", tokens.text)
 
         interact { promptArea.text.value = "" }
         WaitForAsyncUtils.waitForFxEvents()
 
         assertEquals(0L, promptArea.tokens.get())
-        assertEquals("~0 tokens", tokens.text)
+        assertEquals("Tokens: ~0", tokens.text)
     }
 
     /**

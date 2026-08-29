@@ -14,7 +14,9 @@ package org.pcsoft.app.aighost.app.ui
 
 import javafx.scene.control.Alert
 import javafx.scene.control.ButtonBar
+import javafx.scene.control.Label
 import javafx.scene.image.ImageView
+import javafx.scene.layout.Region
 import javafx.stage.Stage
 import javafx.stage.Window
 import org.pcsoft.app.aighost.app.AiGhostIcons
@@ -31,6 +33,12 @@ import org.pcsoft.app.aighost.app.ui.dialog.DialogType
  * flavours exist per severity - a plain alert, and a dialog carrying a report the user unfolds.
  */
 object AiGhostDialog {
+
+    /**
+     * Width in pixels the text of a dialog is wrapped at, the same one the detailed dialog uses, so
+     * both flavours of a severity are equally wide.
+     */
+    private const val CONTENT_WIDTH: Double = 360.0
 
     /**
      * Reports a failure and waits until the user acknowledged it.
@@ -155,13 +163,24 @@ object AiGhostDialog {
     ): Boolean = Alert(type.alertType).apply {
         this.title = title
         headerText = caption
-        contentText = message
         graphic = ImageView(type.icon).apply {
             fitWidth = AiGhostIcons.DIALOG_ICON_SIZE
             fitHeight = AiGhostIcons.DIALOG_ICON_SIZE
             isPreserveRatio = true
             isSmooth = true
         }
+        // The message is carried by a label of our own: the one JavaFX builds from contentText is
+        // measured before it knows the width it is wrapped at, so a longer text is cut off. The
+        // label wears the style class of the content, so the stylesheet reaches it as before.
+        dialogPane.content = Label(message).apply {
+            styleClass += "content"
+            isWrapText = true
+            maxWidth = CONTENT_WIDTH
+            minHeight = Region.USE_PREF_SIZE
+        }
+        // The pane never falls below the height its content asks for, so caption and message are
+        // shown completely instead of being cut at the bottom.
+        dialogPane.minHeight = Region.USE_PREF_SIZE
         dialogPane.buttonTypes.setAll(buttons.buttonTypes)
         decorate(this, owner)
     }.let(::isConfirmed)
