@@ -19,7 +19,7 @@ import javafx.beans.property.StringProperty
 /**
  * View model of [AiTextFieldListItem].
  *
- * It knows the text of the entry, the hint shown while the entry is empty and the words the cross
+ * It knows the text of the entry, the hint shown while the entry is empty and the words the bin
  * explains itself with. Both requests the item publishes - creating a text and removing the entry -
  * are handed on from here to [AiTextFieldListItem], which turns them into the events the outside
  * world listens to.
@@ -36,7 +36,7 @@ class AiTextFieldListItemViewModel : ViewModel {
     val promptText: StringProperty = SimpleStringProperty(this, "promptText", null)
 
     /**
-     * Words the cross explains itself with, absent while the general wording is wanted.
+     * Words the bin explains itself with, absent while the general wording is wanted.
      *
      * A list of title lines removes a title line, a list of characters removes a character: the item
      * itself does not know what it holds, so whoever shows it says what removing means here.
@@ -74,7 +74,7 @@ class AiTextFieldListItemViewModel : ViewModel {
     /**
      * Passes the request to remove the entry on to [AiTextFieldListItem].
      *
-     * Whether the entry may really go is decided outside: the item only reports that the cross was
+     * Whether the entry may really go is decided outside: the item only reports that the bin was
      * pressed, it does not take itself out of the list.
      *
      * Called by [AiTextFieldListItemView] only.

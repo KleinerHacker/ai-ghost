@@ -20,12 +20,12 @@ import javafx.event.EventHandler
 import javafx.scene.layout.BorderPane
 
 /**
- * One entry of a list of texts: an [AiTextField] and, at its end, the cross taking the entry out
+ * One entry of a list of texts: an [AiTextField] and, at its end, the bin taking the entry out
  * again.
  *
  * The item is one line of a list that grows and shrinks with what the user writes. It holds a text
  * of its own and publishes two requests, one for each button it carries: [onCreateAiText] when the
- * wand asks the AI for a text, [onDeleteAction] when the cross asks for the entry to be removed.
+ * wand asks the AI for a text, [onDeleteAction] when the bin asks for the entry to be removed.
  *
  * Neither request is carried out here. Whoever shows the item owns the list, decides whether the
  * entry may really go and writes an AI text back into [text].
@@ -56,7 +56,7 @@ class AiTextFieldListItem : BorderPane() {
     val promptText: StringProperty by viewModel::promptText
 
     /**
-     * Words the cross explains itself with, absent while the general wording is wanted.
+     * Words the bin explains itself with, absent while the general wording is wanted.
      *
      * The item does not know what it holds, so a list of title lines says here that a title line is
      * removed.

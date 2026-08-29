@@ -65,6 +65,8 @@
     -fx-border-radius: 8px;
     -fx-text-fill: -ghost-primary;
     -fx-padding: 3px 8px 3px 8px;
+    /* A link lies in the dialog, so the toggle drops the shadow every other button is lifted by. */
+    -fx-effect: null;
 }
 
 .detail-dialog-toggle:hover {

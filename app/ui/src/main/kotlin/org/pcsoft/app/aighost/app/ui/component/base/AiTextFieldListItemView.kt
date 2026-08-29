@@ -24,10 +24,10 @@ import java.net.URL
 import java.util.ResourceBundle
 
 /**
- * View of [AiTextFieldListItem], holding the field of the entry and the cross removing it.
+ * View of [AiTextFieldListItem], holding the field of the entry and the bin removing it.
  *
  * Both controls report to the outside through the view model only, so the events of the field and of
- * the cross are stopped here: they would climb up to the item itself, where they would pass as the
+ * the bin are stopped here: they would climb up to the item itself, where they would pass as the
  * events the item publishes and reach the outside twice.
  */
 class AiTextFieldListItemView : FxmlView<AiTextFieldListItemViewModel>, Initializable {
@@ -45,7 +45,7 @@ class AiTextFieldListItemView : FxmlView<AiTextFieldListItemViewModel>, Initiali
     private lateinit var viewModel: AiTextFieldListItemViewModel
 
     override fun initialize(location: URL?, resources: ResourceBundle?) {
-        // The wording of the cross is read outside of the FXML, so it needs the same bundle the FXML
+        // The wording of the bin is read outside of the FXML, so it needs the same bundle the FXML
         // around it was resolved with.
         val messages = resources ?: Messages.bundle
         val defaultTooltip = messages.getString(DELETE_TOOLTIP_KEY)
@@ -53,7 +53,7 @@ class AiTextFieldListItemView : FxmlView<AiTextFieldListItemViewModel>, Initiali
         txtValue.text.bindBidirectional(viewModel.text)
         txtValue.promptText.bind(viewModel.promptText)
 
-        // Whoever shows the item names what removing means here; as long as nobody does, the cross
+        // Whoever shows the item names what removing means here; as long as nobody does, the bin
         // explains itself in general words.
         tipDelete.textProperty().bind(
             Bindings.createStringBinding(
@@ -73,7 +73,7 @@ class AiTextFieldListItemView : FxmlView<AiTextFieldListItemViewModel>, Initiali
     }
 
     private companion object {
-        /** Key of the general wording of the cross inside the resource bundle. */
+        /** Key of the general wording of the bin inside the resource bundle. */
         const val DELETE_TOOLTIP_KEY: String = "component.aiTextFieldListItem.delete.tooltip"
     }
 }

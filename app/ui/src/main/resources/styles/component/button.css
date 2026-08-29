@@ -12,32 +12,46 @@
 
 /* All button flavours: plain, toggle, menu and split menu button. */
 
+/*
+ * A button is a raised control and has to be recognised as one before it is pointed at: it carries
+ * the brightest paper tone of the scheme, a line around it and a soft shadow, so it stands off the
+ * surface it sits on instead of melting into it.
+ *
+ * The fill of a state is laid over that tone as a second background layer, so hovering and pressing
+ * only shade the button, they never take its fill away. Both layers therefore need their own radius.
+ *
+ * The buttons of the tool bar are the exception: that strip is a raised surface itself, so its
+ * buttons stay flat and are styled with it in styles/component/tool-bar.css.
+ */
 .button,
 .toggle-button,
 .menu-button,
 .split-menu-button {
-    -fx-background-color: transparent;
-    -fx-background-radius: 8px;
-    /* The focus border is always present, just invisible, so focusing never moves the control. */
-    -fx-border-color: transparent;
+    -fx-background-color: -ghost-surface-input, transparent;
+    -fx-background-radius: 8px, 8px;
+    /* The border is always present, focusing only recolours it, so the control never moves. */
+    -fx-border-color: -ghost-tint-line;
     -fx-border-width: 2px;
     -fx-border-radius: 8px;
     -fx-text-fill: -ghost-ink;
     -fx-padding: 3px 8px 3px 8px;
+    -fx-effect: dropshadow(gaussian, -ghost-shadow-soft, 6, 0.0, 0, 2);
 }
 
 .button:hover,
 .toggle-button:hover,
 .menu-button:hover,
 .split-menu-button:hover {
-    -fx-background-color: -ghost-tint-hover;
+    -fx-background-color: -ghost-surface-input, -ghost-tint-hover;
 }
 
+/* Pressed the button lies on the surface: the tint deepens and the shadow lifting it goes away. */
 .button:armed,
 .toggle-button:selected,
 .menu-button:showing,
 .split-menu-button:showing {
-    -fx-background-color: -ghost-tint-pressed;
+    -fx-background-color: -ghost-surface-input, -ghost-tint-pressed;
+    -fx-effect: null;
 }
 
 .button:focused,
@@ -47,13 +61,36 @@
     -fx-border-color: -ghost-accent;
 }
 
+/* A button that cannot be pressed keeps its shape and only steps back, shadow included. */
+.button:disabled,
+.toggle-button:disabled,
+.menu-button:disabled,
+.split-menu-button:disabled {
+    -fx-opacity: 0.5;
+    -fx-effect: null;
+}
+
+/*
+ * The default button answers the question it is placed in, so it carries the primary colour instead
+ * of the paper tone and darkens through its own shades on hover and press.
+ */
 .button:default {
-    -fx-background-color: -ghost-primary;
+    -fx-background-color: -ghost-primary, transparent;
+    -fx-border-color: -ghost-primary-dark;
     -fx-text-fill: -ghost-on-primary;
 }
 
 .button:default:hover {
-    -fx-background-color: -ghost-primary-light;
+    -fx-background-color: -ghost-primary-light, transparent;
+}
+
+.button:default:armed {
+    -fx-background-color: -ghost-primary-dark, transparent;
+    -fx-effect: null;
+}
+
+.button:default:focused {
+    -fx-border-color: -ghost-accent;
 }
 
 .menu-button > .arrow-button > .arrow,

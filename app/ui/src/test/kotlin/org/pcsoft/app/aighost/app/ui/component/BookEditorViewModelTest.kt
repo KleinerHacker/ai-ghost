@@ -86,24 +86,9 @@ class BookEditorViewModelTest {
         viewModel.bind(bookPropertyOf(book))
 
         viewModel.addTitleAppendix()
-        viewModel.setTitleAppendix(0, "A ghost story")
+        viewModel.titleAppendix[0] = "A ghost story"
 
         assertEquals(listOf("A ghost story"), viewModel.titleAppendix)
-        assertEquals(listOf("A ghost story"), book.titleAppendix)
-    }
-
-    /**
-     * Use case: a position beyond the title lines is written to, so nothing happens instead of an
-     * error.
-     */
-    @Test
-    fun titleLineBeyondTheListIsDropped() {
-        val book = Book(titleAppendix = listOf("A ghost story"))
-        viewModel.bind(bookPropertyOf(book))
-
-        viewModel.setTitleAppendix(5, "Book one")
-        viewModel.setTitleAppendix(-1, "Book one")
-
         assertEquals(listOf("A ghost story"), book.titleAppendix)
     }
 
@@ -188,7 +173,7 @@ class BookEditorViewModelTest {
         assertEquals(listOf("Book one", "Book two"), viewModel.titleAppendix)
 
         viewModel.title.value = "The Locked Door"
-        viewModel.setTitleAppendix(0, "Book three")
+        viewModel.titleAppendix[0] = "Book three"
 
         assertEquals("The Locked Door", second.title)
         assertEquals(listOf("Book three", "Book two"), second.titleAppendix)

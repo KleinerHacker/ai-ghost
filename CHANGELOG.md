@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+* Title lines of a book are shown as a list and no longer as loose fields: the lines, the hint that
+  there is none yet and the plus adding one stand together in an area of their own, and a line
+  separates one entry from the next
+
+* Buttons stand off the surface they sit on: each one carries a brighter fill of its own, a line
+  around it and a soft shadow, hovering and pressing shade that fill, and the button answering a
+  dialog carries the indigo of the application; only the buttons of the tool bar and of the menu bar
+  stay flat, because those strips lift them already
+
+* Button removing an entry of a list - a title line, for instance - shows a trash bin in the indigo
+  of the application instead of a red cross
+
 * Messages of the application are shown in dialogs of their own look, with an icon drawn for the
   light and for the dark appearance, and a report you unfold with "Show details" whenever there is
   more to say than one sentence - the parts an incomplete project lost, for instance

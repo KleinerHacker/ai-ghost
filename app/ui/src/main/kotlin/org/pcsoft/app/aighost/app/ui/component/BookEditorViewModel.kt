@@ -67,22 +67,6 @@ class BookEditorViewModel : ViewModel {
     }
 
     /**
-     * Writes the text of the title line at the given position.
-     *
-     * A position beyond the list and a text that is there already are dropped, so a field reporting
-     * what it was just given does not travel through the model a second time.
-     *
-     * @param index position of the title line
-     * @param value text the line carries
-     */
-    fun setTitleAppendix(index: Int, value: String) {
-        if (index < 0 || index >= titleAppendix.size) return
-        if (titleAppendix[index] == value) return
-
-        titleAppendix[index] = value
-    }
-
-    /**
      * Removes the title line at the given position, after the user agreed to lose it.
      *
      * @param index position of the title line

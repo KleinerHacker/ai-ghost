@@ -26,6 +26,7 @@ import javafx.scene.image.ImageView
 import javafx.scene.layout.VBox
 import javafx.stage.Stage
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -60,10 +61,14 @@ class BookEditorTest : ApplicationTest() {
         get() = editor.lookup("#txtTitle") as AiTextField
 
     private val appendixRows: List<Node>
-        get() = (editor.lookup("#boxTitleAppendix") as VBox).children.toList()
+        get() = (editor.lookup(".ai-list-entries") as VBox).children.toList()
 
     private val addButton: Button
-        get() = editor.lookup(".book-editor-add") as Button
+        get() = editor.lookup(".ai-list-add") as Button
+
+    /** The hint standing in for the title lines while there is none. */
+    private val appendixHint: Label
+        get() = editor.lookup(".ai-list-empty") as Label
 
     /** The area the content prompt is written in. */
     private val contentPromptArea: AiPromptArea
@@ -285,7 +290,7 @@ class BookEditorTest : ApplicationTest() {
     }
 
     /**
-     * Use case: the user presses the cross of a row and agrees to lose the line, so the row is gone,
+     * Use case: the user presses the bin of a row and agrees to lose the line, so the row is gone,
      * the manuscript no longer carries it and the rows left behind still write to their own line.
      */
     @Test
@@ -307,7 +312,7 @@ class BookEditorTest : ApplicationTest() {
     }
 
     /**
-     * Use case: the user presses the cross of a row and refuses to lose the line, so everything stays
+     * Use case: the user presses the bin of a row and refuses to lose the line, so everything stays
      * as it was.
      */
     @Test
@@ -419,6 +424,23 @@ class BookEditorTest : ApplicationTest() {
     }
 
     /**
+     * Use case: the manuscript carries no title line, so the list says so in place of the rows and
+     * hides that hint again as soon as a line stands there.
+     */
+    @Test
+    fun emptyAppendixExplainsItself() {
+        val property = show(Book())
+
+        assertTrue(appendixHint.isVisible, "the hint of the empty list is missing")
+        assertEquals("No title appendix yet", appendixHint.text)
+
+        interact { property.titleAppendix = listOf("A ghost story") }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        assertFalse(appendixHint.isVisible, "the hint stands beside a title line")
+    }
+
+    /**
      * Use case: the plus explains itself through a tooltip and carries its icon, so the user
      * recognises what pressing it does.
      */
@@ -429,7 +451,7 @@ class BookEditorTest : ApplicationTest() {
     }
 
     /**
-     * Use case: the cross of a row explains itself through a tooltip and carries its icon.
+     * Use case: the bin of a row explains itself through a tooltip and carries its icon.
      */
     @Test
     fun removeButtonCarriesIconAndTooltip() {
@@ -465,7 +487,7 @@ class BookEditorTest : ApplicationTest() {
     private fun removeButtonOfRow(index: Int): Button = fieldOfRow(index).lookup(".ai-delete") as Button
 
     /**
-     * Presses the cross of a row and waits until the question about the title line stands.
+     * Presses the bin of a row and waits until the question about the title line stands.
      *
      * The question blocks the JavaFX thread while it is open, so the button is pressed without
      * waiting for the press to be worked off.

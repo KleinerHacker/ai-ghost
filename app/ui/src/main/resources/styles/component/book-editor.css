@@ -24,14 +24,6 @@
 }
 
 /*
- * The plus carries its icon only, so it keeps the padding of a square button instead of the wider
- * one a labelled button needs. The cross of a title line belongs to the list entry and is styled
- * with it.
+ * The title lines are shown in an AiTextFieldList, which brings the area around them, the plus
+ * adding a line and the bin of a line along; all of that is styled with the list itself.
  */
-.book-editor-add {
-    -fx-padding: 3px 3px 3px 3px;
-}
-
-.book-editor-add:disabled {
-    -fx-opacity: 0.4;
-}

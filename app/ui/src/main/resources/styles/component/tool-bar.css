@@ -10,7 +10,12 @@
  * See the License for the specific language governing permissions and limitations.
  */
 
-/* Tool bar below the menu bar, a raised strip rounded off towards the content. */
+/*
+ * Tool bar below the menu bar, a raised strip rounded off towards the content.
+ *
+ * This stylesheet is applied after styles/component/button.css, because it takes the raised look
+ * off the buttons standing on the strip again.
+ */
 
 .tool-bar {
     -fx-background-color: -ghost-surface-raised;
@@ -24,4 +29,48 @@
 .tool-bar .separator:vertical .line {
     -fx-border-color: transparent -ghost-tint-line transparent transparent;
     -fx-border-width: 0 1px 0 0;
+}
+
+/* ------------------------------------------------------------- buttons ---- */
+
+/*
+ * The strip is the raised surface here and the separators already group its buttons, so a button on
+ * it stays flat: it carries the tint of its state and the focus ring only, never a fill, an edge or
+ * a shadow of its own. Geometry stays the one of a button, so the strip keeps its height.
+ */
+.tool-bar .button,
+.tool-bar .toggle-button,
+.tool-bar .menu-button,
+.tool-bar .split-menu-button {
+    -fx-background-color: transparent, transparent;
+    -fx-border-color: transparent;
+    -fx-effect: null;
+}
+
+.tool-bar .button:hover,
+.tool-bar .toggle-button:hover,
+.tool-bar .menu-button:hover,
+.tool-bar .split-menu-button:hover {
+    -fx-background-color: transparent, -ghost-tint-hover;
+}
+
+.tool-bar .button:armed,
+.tool-bar .toggle-button:selected,
+.tool-bar .menu-button:showing,
+.tool-bar .split-menu-button:showing {
+    -fx-background-color: transparent, -ghost-tint-pressed;
+}
+
+.tool-bar .button:focused,
+.tool-bar .toggle-button:focused,
+.tool-bar .menu-button:focused,
+.tool-bar .split-menu-button:focused {
+    -fx-border-color: -ghost-accent;
+}
+
+.tool-bar .button:disabled,
+.tool-bar .toggle-button:disabled,
+.tool-bar .menu-button:disabled,
+.tool-bar .split-menu-button:disabled {
+    -fx-opacity: 0.4;
 }

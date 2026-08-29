@@ -25,7 +25,7 @@ class AiTextFieldListItemViewModelTest {
 
     /**
      * Use case: a fresh entry carries no text, no hint and no wording of its own, so the item shows
-     * an empty line and a cross explaining itself in general words.
+     * an empty line and a bin explaining itself in general words.
      */
     @Test
     fun freshEntryIsEmpty() {
@@ -49,7 +49,7 @@ class AiTextFieldListItemViewModelTest {
     }
 
     /**
-     * Use case: the cross was pressed, so the request is handed on to the item without the entry
+     * Use case: the bin was pressed, so the request is handed on to the item without the entry
      * being changed - what happens with it is decided outside.
      */
     @Test
@@ -65,7 +65,7 @@ class AiTextFieldListItemViewModelTest {
     }
 
     /**
-     * Use case: nobody listens to the item, so pressing the wand or the cross is worked off without
+     * Use case: nobody listens to the item, so pressing the wand or the bin is worked off without
      * anything happening.
      */
     @Test
