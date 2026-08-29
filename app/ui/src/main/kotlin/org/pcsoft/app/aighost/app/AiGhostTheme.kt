@@ -63,6 +63,7 @@ object AiGhostTheme {
         "/styles/component/prompt-area.css",
         "/styles/component/text-field.css",
         "/styles/component/text-field-list-item.css",
+        "/styles/component/text-field-list.css",
         "/styles/component/book-editor.css",
         "/styles/component/dialog.css"
     )

@@ -13,16 +13,13 @@
   -->
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
-<?import org.pcsoft.app.aighost.app.AiGhostIcons?>
 <?import org.pcsoft.app.aighost.app.ui.component.base.AiPromptArea?>
 <?import org.pcsoft.app.aighost.app.ui.component.base.AiTextField?>
+<?import org.pcsoft.app.aighost.app.ui.component.base.AiTextFieldList?>
 <fx:root type="BorderPane" styleClass="book-editor" xmlns="http://javafx.com/javafx"
          xmlns:fx="http://javafx.com/fxml"
          fx:controller="org.pcsoft.app.aighost.app.ui.component.BookEditorView">
@@ -41,17 +38,7 @@
                         <Insets top="10"/>
                     </VBox.margin>
                 </Label>
-                <VBox fx:id="boxTitleAppendix" spacing="6"/>
-                <HBox>
-                    <Button fx:id="btnAddTitleAppendix" styleClass="book-editor-add">
-                        <graphic>
-                            <AiGhostIcons fx:factory="buttonAdd"/>
-                        </graphic>
-                        <tooltip>
-                            <Tooltip text="%component.bookEditor.titleAppendix.add.tooltip"/>
-                        </tooltip>
-                    </Button>
-                </HBox>
+                <AiTextFieldList fx:id="lstTitleAppendix"/>
 
                 <Label styleClass="book-editor-label" text="%component.bookEditor.prompt.content.label">
                     <VBox.margin>

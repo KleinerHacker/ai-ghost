@@ -26,6 +26,7 @@ import javafx.scene.image.ImageView
 import javafx.scene.layout.VBox
 import javafx.stage.Stage
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -60,10 +61,14 @@ class BookEditorTest : ApplicationTest() {
         get() = editor.lookup("#txtTitle") as AiTextField
 
     private val appendixRows: List<Node>
-        get() = (editor.lookup("#boxTitleAppendix") as VBox).children.toList()
+        get() = (editor.lookup(".ai-list-entries") as VBox).children.toList()
 
     private val addButton: Button
-        get() = editor.lookup(".book-editor-add") as Button
+        get() = editor.lookup(".ai-list-add") as Button
+
+    /** The hint standing in for the title lines while there is none. */
+    private val appendixHint: Label
+        get() = editor.lookup(".ai-list-empty") as Label
 
     /** The area the content prompt is written in. */
     private val contentPromptArea: AiPromptArea
@@ -416,6 +421,23 @@ class BookEditorTest : ApplicationTest() {
             labels.containsAll(listOf("Title", "Title appendix", "Content prompt", "Style prompt")),
             labels.toString()
         )
+    }
+
+    /**
+     * Use case: the manuscript carries no title line, so the list says so in place of the rows and
+     * hides that hint again as soon as a line stands there.
+     */
+    @Test
+    fun emptyAppendixExplainsItself() {
+        val property = show(Book())
+
+        assertTrue(appendixHint.isVisible, "the hint of the empty list is missing")
+        assertEquals("No title appendix yet", appendixHint.text)
+
+        interact { property.titleAppendix = listOf("A ghost story") }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        assertFalse(appendixHint.isVisible, "the hint stands beside a title line")
     }
 
     /**

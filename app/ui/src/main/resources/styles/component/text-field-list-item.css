@@ -12,9 +12,16 @@
 
 /* One entry of a list of AI texts: the field of the entry and the bin taking it out again. */
 
-/* The entry sits on the surface it was placed on, so a list carries no background of its own. */
+/*
+ * The entry sits in the area its list draws, so it carries no background of its own. A line at its
+ * foot tells one entry from the next and the last entry from the plus closing the list off, which is
+ * what makes a row of fields read as a list.
+ */
 .ai-list-item {
     -fx-background-color: transparent;
+    -fx-border-color: transparent transparent -ghost-tint-line transparent;
+    -fx-border-width: 0 0 1px 0;
+    -fx-padding: 4px 2px 4px 2px;
 }
 
 /*
