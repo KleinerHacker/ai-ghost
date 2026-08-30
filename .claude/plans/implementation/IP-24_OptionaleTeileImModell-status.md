@@ -13,10 +13,9 @@ Status: NOT_STARTED
 |----|---------|--------|
 | 1 | Schalter | NOT_STARTED |
 | 2 | Buch | NOT_STARTED |
-| 3 | Migration | NOT_STARTED |
-| 4 | FX-Modell | NOT_STARTED |
-| 5 | Tests | NOT_STARTED |
-| 6 | Abschluss | NOT_STARTED |
+| 3 | FX-Modell | NOT_STARTED |
+| 4 | Tests | NOT_STARTED |
+| 5 | Abschluss | NOT_STARTED |
 
 ## Fortschritt
 
@@ -25,3 +24,4 @@ Status: NOT_STARTED
 ## Notizen
 
 * Plan erstellt, keine Aufgabe begonnen.
+* Migrationsaufgabe entfällt: keine Kompatibilität zu älteren Dokumenten nötig.

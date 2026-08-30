@@ -8,7 +8,7 @@ Status: NOT_STARTED
 |-------|-------------------------------------------|-------------|
 | IP-01 | Font Discovery And Text Measuring         | COMPLETED   |
 | IP-22 | Font Identity And Substitution Reporting  | NOT_STARTED |
-| IP-02 | Design Page Format Model                  | NOT_STARTED |
+| IP-02 | Design Page Format Model                  | COMPLETED   |
 | IP-24 | Optional Parts In The Model               | NOT_STARTED |
 | IP-03 | Layout Core                               | NOT_STARTED |
 | IP-04 | Pagination And Page Break Policy          | NOT_STARTED |
@@ -58,7 +58,8 @@ No decision is left open. Page format and margins, the front matter, the place o
 behaviour of a switched off part and the reference set of the metrics fingerprint are recorded in
 section 9 of the plan under "Decisions taken".
 
-IP-24 is the only plan that migrates an existing user file; `Book` goes to version 2.
+No plan raises a model version or migrates an existing user file; a document carrying none of the
+new values is read with their defaults.
 
 The 23 implementation plans are written out under `.claude/plans/implementation`, each with its own
 status file and with its origin and its dependencies named in it; `000_Uebersicht.md` lists them in

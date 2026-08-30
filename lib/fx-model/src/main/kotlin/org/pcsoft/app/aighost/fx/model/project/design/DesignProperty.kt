@@ -13,19 +13,22 @@
 package org.pcsoft.app.aighost.fx.model.project.design
 
 import javafx.beans.property.BooleanProperty
+import javafx.beans.property.DoubleProperty
 import javafx.beans.property.SimpleBooleanProperty
+import javafx.beans.property.SimpleDoubleProperty
 import org.pcsoft.app.aighost.fx.model.internal.BeanFields
 import org.pcsoft.app.aighost.fx.model.project.ProjectPartProperty
 import org.pcsoft.app.aighost.model.project.design.AuthorDesign
 import org.pcsoft.app.aighost.model.project.design.ChapterDesign
 import org.pcsoft.app.aighost.model.project.design.CopyrightDesign
 import org.pcsoft.app.aighost.model.project.design.Design
+import org.pcsoft.app.aighost.model.project.design.PageFormat
 import org.pcsoft.app.aighost.model.project.design.TextDesign
 import org.pcsoft.app.aighost.model.project.design.TitleDesign
 
 /**
  * Property wrapping the typographic and page settings of a project and offering every field of it -
- * and every field of the design parts nested in it - as a property of its own.
+ * and every field of the page format and the design parts nested in it - as a property of its own.
  *
  * The wrapped object may be absent as long as no project sits above this property, so every field
  * property answers with a neutral value and drops what is written to it until then.
@@ -39,6 +42,16 @@ import org.pcsoft.app.aighost.model.project.design.TitleDesign
 class DesignProperty internal constructor() : ProjectPartProperty<Design>() {
 
     private val fields = BeanFields<Design> { fireValueChangedEvent() }
+
+    /** Size of a page and the empty space on its four sides, as a property of its own. */
+    val pageFormatProperty: PageFormatProperty = PageFormatProperty()
+
+    /** Size of a page and the empty space on its four sides. */
+    var pageFormat: PageFormat?
+        get() = pageFormatProperty.get()
+        set(value) {
+            pageFormatProperty.set(value)
+        }
 
     /** Typographic settings for the author name, as a property of its own. */
     val authorDesignProperty: AuthorDesignProperty = AuthorDesignProperty()
@@ -90,6 +103,56 @@ class DesignProperty internal constructor() : ProjectPartProperty<Design>() {
             textDesignProperty.set(value)
         }
 
+    /** Line spacing factor of the author name, as a property of its own. */
+    val authorLineSpacingProperty: DoubleProperty = SimpleDoubleProperty()
+
+    /** Line spacing factor of the author name. */
+    var authorLineSpacing: Double
+        get() = authorLineSpacingProperty.get()
+        set(value) {
+            authorLineSpacingProperty.set(value)
+        }
+
+    /** Line spacing factor of the copyright page, as a property of its own. */
+    val copyrightLineSpacingProperty: DoubleProperty = SimpleDoubleProperty()
+
+    /** Line spacing factor of the copyright page. */
+    var copyrightLineSpacing: Double
+        get() = copyrightLineSpacingProperty.get()
+        set(value) {
+            copyrightLineSpacingProperty.set(value)
+        }
+
+    /** Line spacing factor of the title page, as a property of its own. */
+    val titleLineSpacingProperty: DoubleProperty = SimpleDoubleProperty()
+
+    /** Line spacing factor of the title page. */
+    var titleLineSpacing: Double
+        get() = titleLineSpacingProperty.get()
+        set(value) {
+            titleLineSpacingProperty.set(value)
+        }
+
+    /** Line spacing factor of chapter headings, as a property of its own. */
+    val chapterLineSpacingProperty: DoubleProperty = SimpleDoubleProperty()
+
+    /** Line spacing factor of chapter headings. */
+    var chapterLineSpacing: Double
+        get() = chapterLineSpacingProperty.get()
+        set(value) {
+            chapterLineSpacingProperty.set(value)
+        }
+
+    /** Line spacing factor of the body text, as a property of its own. */
+    val textLineSpacingProperty: DoubleProperty = SimpleDoubleProperty()
+
+    /** Line spacing factor of the body text. */
+    var textLineSpacing: Double
+        get() = textLineSpacingProperty.get()
+        set(value) {
+            textLineSpacingProperty.set(value)
+        }
+
     /** Whether the manuscript starts with an empty page, as a property of its own. */
     val startWithEmptyPageProperty: BooleanProperty = SimpleBooleanProperty()
 
@@ -111,11 +174,17 @@ class DesignProperty internal constructor() : ProjectPartProperty<Design>() {
         }
 
     init {
+        fields.model(pageFormatProperty, "pageFormat", pageFormatProperty::refresh)
         fields.model(authorDesignProperty, "authorDesign", authorDesignProperty::refresh)
         fields.model(copyrightDesignProperty, "copyrightDesign", copyrightDesignProperty::refresh)
         fields.model(titleDesignProperty, "titleDesign", titleDesignProperty::refresh)
         fields.model(chapterDesignProperty, "chapterDesign", chapterDesignProperty::refresh)
         fields.model(textDesignProperty, "textDesign", textDesignProperty::refresh)
+        fields.double(authorLineSpacingProperty, "authorLineSpacing")
+        fields.double(copyrightLineSpacingProperty, "copyrightLineSpacing")
+        fields.double(titleLineSpacingProperty, "titleLineSpacing")
+        fields.double(chapterLineSpacingProperty, "chapterLineSpacing")
+        fields.double(textLineSpacingProperty, "textLineSpacing")
         fields.boolean(startWithEmptyPageProperty, "startWithEmptyPage")
         fields.boolean(endWithEmptyPageProperty, "endWithEmptyPage")
 

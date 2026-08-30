@@ -28,12 +28,6 @@
 * Alle Werte in Punkt als `Double`.
 * Standard A5, Ränder 20 innen, 15 außen, 15 oben, 20 unten.
 * Zeilenabstand als Faktor je Elementklasse ergänzen.
-* `Design.version` auf 2 heben.
-
-### 2. Kompatibilität
-
-* Standardwerte für Dokumente der Version 1 setzen.
-* Laden und Speichern eines Version-1-Dokuments prüfen.
 
 ### 3. FX-Modell
 
@@ -54,4 +48,4 @@
 ## Ergebnis
 
 * `Design` trägt Seitenformat, Ränder und Zeilenabstände.
-* Ältere Dokumente öffnen mit den Standardwerten.
+* Ein Dokument ohne diese Werte öffnet mit den Standardwerten.

@@ -208,7 +208,7 @@ replaced at once and taken back through undo.
 
 ### Model extension
 
-* `Design` version 1 -> 2: `PageFormat` (page size, inner/outer/top/bottom margins), line spacing
+* `Design` gains `PageFormat` (page size, inner/outer/top/bottom margins) and line spacing
   per element class, mirrored to `PageFormatProperty` and `DesignProperty`.
 * `FontData` gains the metrics fingerprint of the font actually used, so a substitution is
   detectable.
@@ -369,13 +369,13 @@ Give the design everything a page needs.
 **Scope**
 
 In scope: `PageFormat` POJO (page width and height, inner, outer, top and bottom margin), line
-spacing as a factor per element class, `Design.version` raised to 2, defaults for documents written
-by version 1, mirrored FX properties and their tests. Out of scope: any UI editing those values, any
-rendering.
+spacing as a factor per element class, defaults for a document carrying none of these values,
+mirrored FX properties and their tests. Out of scope: any UI editing those values, any rendering, any
+compatibility handling - `Design.version` stays as it is.
 
 **Affected Areas**
 
-`lib/model` (`project/design`, `common`), `lib/fx-model` (mirrored packages), storage compatibility.
+`lib/model` (`project/design`, `common`), `lib/fx-model` (mirrored packages).
 
 **Dependencies**
 
@@ -383,8 +383,8 @@ None.
 
 **Expected Result**
 
-An older document opens with the default page format; the values are readable and writable through
-`DesignProperty`.
+A document carrying no page format opens with the default one; the values are readable and writable
+through `DesignProperty`.
 
 **Technical Considerations**
 
@@ -402,14 +402,13 @@ Let an optional part keep its text while it is not part of the book.
 **Scope**
 
 In scope: `Book.prolog`, `Book.epilog` and `Book.blurb` becoming parts that are always there instead
-of `null`; a switch on each of them saying whether it belongs to the book; `Book.version` raised to 2;
-reading a version 1 document, where an absent part means switched off and a present one means switched
-on; mirrored FX properties and their tests. Out of scope: the tree checkbox, which is IP-23, and
-anything about how a switched off part is shown.
+of `null`; a switch on each of them saying whether it belongs to the book; mirrored FX properties and
+their tests. Out of scope: the tree checkbox, which is IP-23, anything about how a switched off part
+is shown, and any compatibility handling - `Book.version` stays as it is.
 
 **Affected Areas**
 
-`lib/model` (`project/book`), `lib/fx-model` (mirrored packages), `StorageIo` compatibility.
+`lib/model` (`project/book`), `lib/fx-model` (mirrored packages).
 
 **Dependencies**
 
@@ -418,7 +417,7 @@ None.
 **Expected Result**
 
 A prolog written, switched off and switched on again carries the same text it had before, and a
-document written by version 1 opens with exactly the parts it used to have.
+document carrying none of the optional parts opens with their defaults.
 
 **Technical Considerations**
 
@@ -430,9 +429,8 @@ switch it can never use.
 This is what makes the deferral of a part harmless: nothing is deleted, so IP-23 needs no confirmation
 dialog and no undo entry that restores lost text.
 
-Migration is the part to get right. A version 1 document stores an absent optional part as `null`;
-after this plan the same book carries the part switched off, with the defaults it would have been
-created with. The `fx-model` skill governs the mirroring and the tests.
+A document that carries none of the optional parts is read with their defaults, so no migration step
+is needed. The `fx-model` skill governs the mirroring and the tests.
 
 ### IP-03: Layout Core
 
@@ -1181,9 +1179,6 @@ begin at once.
   checkbox for the optional parts supersedes it for those three nodes. Everything else about the tree -
   its structure, its cells, its `selectedItem` API - stays as it is, and IP-23 is the only plan that
   touches it.
-* **`Book` gains a version.** IP-24 turns three nullable parts into parts that are always there, which
-  every existing document has to be migrated through on open. The migration is simple but it is the
-  one place in this feature where a mistake is written back into the user's file.
 * **Widows, orphans, hyphenation** are excluded; the hook exists, no implementation ships.
 * **Resolving a provisional AI part** on part change or project close (IP-19) is undecided.
 * **One new Gradle module** (`lib/layout`) requires a check against the `ci-pipeline` skill.

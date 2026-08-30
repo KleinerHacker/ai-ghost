@@ -13,6 +13,7 @@
 package org.pcsoft.app.aighost.fx.model.project.design
 
 import javafx.beans.property.SimpleBooleanProperty
+import javafx.beans.property.SimpleDoubleProperty
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
@@ -27,6 +28,7 @@ import org.pcsoft.app.aighost.model.project.design.AuthorDesign
 import org.pcsoft.app.aighost.model.project.design.ChapterDesign
 import org.pcsoft.app.aighost.model.project.design.CopyrightDesign
 import org.pcsoft.app.aighost.model.project.design.Design
+import org.pcsoft.app.aighost.model.project.design.PageFormat
 import org.pcsoft.app.aighost.model.project.design.TextDesign
 import org.pcsoft.app.aighost.model.project.design.TitleDesign
 
@@ -34,9 +36,10 @@ import org.pcsoft.app.aighost.model.project.design.TitleDesign
  * Developer tests for [DesignProperty].
  *
  * The property wraps the typographic and page settings of a project and offers every part of that
- * object - and every field of the styles nested in those parts - as a property of its own. The tests
- * watch the whole tree at once: every design part, the style below it, the font of that style and the
- * page flags, so a change that fails to travel through one of the levels is named by the assertion.
+ * object - the page format, every design part and every field of the styles nested in those parts -
+ * as a property of its own. The tests watch the whole tree at once: the page geometry, every design
+ * part, the style below it, the font of that style, the line spacings and the page flags, so a change
+ * that fails to travel through one of the levels is named by the assertion.
  */
 class DesignPropertyTest {
 
@@ -64,6 +67,8 @@ class DesignPropertyTest {
 
         recorder = ChangeRecorder()
         recorder.watch("design", property)
+        recorder.watch("design.pageFormat", property.pageFormatProperty)
+        recorder.watch("design.pageFormat.innerMargin", property.pageFormatProperty.innerMarginProperty)
         recorder.watch("design.author", property.authorDesignProperty)
         recorder.watch("design.author.style.font.name", property.authorDesignProperty.styleProperty.fontProperty.nameProperty)
         recorder.watch("design.copyright", property.copyrightDesignProperty)
@@ -75,6 +80,11 @@ class DesignPropertyTest {
         recorder.watch("design.chapter.titleAppendixStyle", property.chapterDesignProperty.titleAppendixStyleProperty)
         recorder.watch("design.text", property.textDesignProperty)
         recorder.watch("design.text.style.font.size", property.textDesignProperty.styleProperty.fontProperty.sizeProperty)
+        recorder.watch("design.authorLineSpacing", property.authorLineSpacingProperty)
+        recorder.watch("design.copyrightLineSpacing", property.copyrightLineSpacingProperty)
+        recorder.watch("design.titleLineSpacing", property.titleLineSpacingProperty)
+        recorder.watch("design.chapterLineSpacing", property.chapterLineSpacingProperty)
+        recorder.watch("design.textLineSpacing", property.textLineSpacingProperty)
         recorder.watch("design.startWithEmptyPage", property.startWithEmptyPageProperty)
         recorder.watch("design.endWithEmptyPage", property.endWithEmptyPageProperty)
 
@@ -83,6 +93,14 @@ class DesignPropertyTest {
 
     /** The design every test starts from, built fresh so no test sees the object of another. */
     private fun newDesign(): Design = Design(
+        pageFormat = PageFormat(
+            width = 400.0,
+            height = 600.0,
+            innerMargin = 25.0,
+            outerMargin = 18.0,
+            topMargin = 12.0,
+            bottomMargin = 22.0
+        ),
         authorDesign = AuthorDesign(StyleData(FontData("Author Serif", 16), Alignment.CENTER)),
         copyrightDesign = CopyrightDesign(StyleData(FontData("Copyright Serif", 8), Alignment.LEFT), show = true),
         titleDesign = TitleDesign(StyleData(FontData("Title Serif", 28, bold = true), Alignment.CENTER)),
@@ -91,6 +109,11 @@ class DesignPropertyTest {
             titleAppendixStyle = StyleData(FontData("Chapter Appendix Serif", 14, italic = true), Alignment.CENTER)
         ),
         textDesign = TextDesign(StyleData(FontData("Text Serif", 11), Alignment.BLOCK)),
+        authorLineSpacing = 1.1,
+        copyrightLineSpacing = 1.0,
+        titleLineSpacing = 1.5,
+        chapterLineSpacing = 1.3,
+        textLineSpacing = 1.4,
         startWithEmptyPage = true,
         endWithEmptyPage = false
     )
@@ -111,6 +134,22 @@ class DesignPropertyTest {
     }
 
     /**
+     * Use case: the project settings dialog is opened, so the page geometry and every line spacing
+     * answer with the value the wrapped design carries.
+     */
+    @Test
+    fun readsThePageLayoutFromTheModelObject() {
+        assertEquals(400.0, property.pageFormatProperty.widthProperty.get())
+        assertEquals(25.0, property.pageFormatProperty.innerMarginProperty.get())
+        assertEquals(22.0, property.pageFormatProperty.bottomMarginProperty.get())
+        assertEquals(1.1, property.authorLineSpacingProperty.get())
+        assertEquals(1.0, property.copyrightLineSpacingProperty.get())
+        assertEquals(1.5, property.titleLineSpacingProperty.get())
+        assertEquals(1.3, property.chapterLineSpacingProperty.get())
+        assertEquals(1.4, property.textLineSpacingProperty.get())
+    }
+
+    /**
      * Use case: the user picks another font for the body text, so the value reaches the model object
      * through every level of the tree and each of them reports the change up to the root.
      */
@@ -121,6 +160,35 @@ class DesignPropertyTest {
         assertEquals(13, holder.design?.textDesign?.style?.font?.size)
         assertEquals(1, recorder.countOf("design.text.style.font.size"))
         assertEquals(1, recorder.countOf("design.text"))
+        assertEquals(1, recorder.countOf("design"))
+        assertEquals(1, parentEvents)
+    }
+
+    /**
+     * Use case: the user widens the margin at the spine, so the value reaches the page format nested
+     * in the design and both levels report the change up to the root.
+     */
+    @Test
+    fun writingAMarginReachesTheModelObject() {
+        property.pageFormatProperty.innerMarginProperty.set(30.0)
+
+        assertEquals(30.0, holder.design?.pageFormat?.innerMargin)
+        assertEquals(1, recorder.countOf("design.pageFormat.innerMargin"))
+        assertEquals(1, recorder.countOf("design.pageFormat"))
+        assertEquals(1, recorder.countOf("design"))
+        assertEquals(1, parentEvents)
+    }
+
+    /**
+     * Use case: the user sets the lines of the body text further apart, so the factor reaches the
+     * model object and the design as a whole reports the change instead of the factor alone.
+     */
+    @Test
+    fun writingALineSpacingReachesTheModelObject() {
+        property.textLineSpacingProperty.set(1.8)
+
+        assertEquals(1.8, holder.design?.textLineSpacing)
+        assertEquals(1, recorder.countOf("design.textLineSpacing"))
         assertEquals(1, recorder.countOf("design"))
         assertEquals(1, parentEvents)
     }
@@ -158,17 +226,39 @@ class DesignPropertyTest {
     }
 
     /**
+     * Use case: a spinner of the design dialog is bound to the line spacing of the chapter headings,
+     * so what the user dials in arrives in the model object through the binding.
+     */
+    @Test
+    fun writingALineSpacingThroughABindingReachesTheModelObject() {
+        val input = SimpleDoubleProperty(1.6)
+        property.chapterLineSpacingProperty.bind(input)
+
+        assertEquals(1.6, holder.design?.chapterLineSpacing)
+
+        input.set(2.0)
+
+        assertEquals(2.0, holder.design?.chapterLineSpacing)
+
+        property.chapterLineSpacingProperty.unbind()
+    }
+
+    /**
      * Use case: something changes the model object directly - an imported design for instance - so
      * every property of the tree takes over the new values as soon as the design is refreshed.
      */
     @Test
     fun aChangeOnTheModelObjectBecomesVisible() {
         holder.design?.textDesign = TextDesign(StyleData(FontData("Imported Serif", 19), Alignment.LEFT))
+        holder.design?.pageFormat?.topMargin = 33.0
+        holder.design?.textLineSpacing = 1.9
         holder.design?.endWithEmptyPage = true
 
         property.refresh()
 
         assertEquals("Imported Serif", property.textDesignProperty.styleProperty.fontProperty.nameProperty.get())
+        assertEquals(33.0, property.pageFormatProperty.topMarginProperty.get())
+        assertEquals(1.9, property.textLineSpacingProperty.get())
         assertTrue(property.endWithEmptyPageProperty.get())
     }
 
@@ -183,6 +273,14 @@ class DesignPropertyTest {
 
         property.set(
             Design(
+                pageFormat = PageFormat(
+                    width = 300.0,
+                    height = 500.0,
+                    innerMargin = 21.0,
+                    outerMargin = 14.0,
+                    topMargin = 16.0,
+                    bottomMargin = 19.0
+                ),
                 authorDesign = AuthorDesign(StyleData(FontData("Other Author", 17), Alignment.LEFT)),
                 copyrightDesign = CopyrightDesign(StyleData(FontData("Other Copyright", 9), Alignment.RIGHT)),
                 titleDesign = TitleDesign(StyleData(FontData("Other Title", 29), Alignment.LEFT)),
@@ -191,6 +289,11 @@ class DesignPropertyTest {
                     titleAppendixStyle = StyleData(FontData("Other Appendix", 15), Alignment.LEFT)
                 ),
                 textDesign = TextDesign(StyleData(FontData("Other Text", 12), Alignment.LEFT)),
+                authorLineSpacing = 2.1,
+                copyrightLineSpacing = 2.2,
+                titleLineSpacing = 2.3,
+                chapterLineSpacing = 2.4,
+                textLineSpacing = 2.5,
                 startWithEmptyPage = false,
                 endWithEmptyPage = true
             )
@@ -199,6 +302,8 @@ class DesignPropertyTest {
         assertEquals("Other Author", property.authorDesignProperty.styleProperty.fontProperty.nameProperty.get())
         assertFalse(property.copyrightDesignProperty.showProperty.get())
         assertEquals(12, property.textDesignProperty.styleProperty.fontProperty.sizeProperty.get())
+        assertEquals(300.0, property.pageFormatProperty.widthProperty.get())
+        assertEquals(2.5, property.textLineSpacingProperty.get())
         recorder.assertAllFired("exchanging the design")
         assertEquals(1, parentEvents)
     }
@@ -228,9 +333,12 @@ class DesignPropertyTest {
 
         assertNull(property.authorDesignProperty.get())
         assertNull(property.textDesignProperty.get())
+        assertNull(property.pageFormatProperty.get())
+        assertEquals(0.0, property.textLineSpacingProperty.get())
         assertFalse(property.startWithEmptyPageProperty.get())
 
         property.startWithEmptyPageProperty.set(true)
+        property.textLineSpacingProperty.set(1.7)
 
         assertNull(holder.design)
     }

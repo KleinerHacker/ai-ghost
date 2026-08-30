@@ -26,6 +26,7 @@ import org.pcsoft.app.aighost.model.project.design.AuthorDesign
 import org.pcsoft.app.aighost.model.project.design.ChapterDesign
 import org.pcsoft.app.aighost.model.project.design.CopyrightDesign
 import org.pcsoft.app.aighost.model.project.design.Design
+import org.pcsoft.app.aighost.model.project.design.PageFormat
 import org.pcsoft.app.aighost.model.project.design.TextDesign
 import org.pcsoft.app.aighost.model.project.design.TitleDesign
 import org.pcsoft.app.aighost.model.project.meta.Meta
@@ -76,8 +77,24 @@ object TestData {
     /** The design of the body text, styled differently from every other design part. */
     fun textDesign(): TextDesign = TextDesign(style = style("Serif", 11, Alignment.BLOCK))
 
+    /** A page format whose measures all differ, so a swapped margin is caught by a round trip test. */
+    fun pageFormat(): PageFormat = PageFormat(
+        width = 400.0,
+        height = 600.0,
+        innerMargin = 25.0,
+        outerMargin = 18.0,
+        topMargin = 12.0,
+        bottomMargin = 22.0
+    )
+
     /** A design whose parts all differ, so a swapped property is caught by a round trip test. */
     fun design(): Design = Design(
+        pageFormat = pageFormat(),
+        authorLineSpacing = 1.1,
+        copyrightLineSpacing = 1.0,
+        titleLineSpacing = 1.5,
+        chapterLineSpacing = 1.3,
+        textLineSpacing = 1.4,
         authorDesign = authorDesign(),
         copyrightDesign = copyrightDesign(),
         titleDesign = titleDesign(),

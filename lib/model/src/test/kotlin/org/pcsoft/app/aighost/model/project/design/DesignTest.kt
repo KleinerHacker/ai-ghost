@@ -49,6 +49,22 @@ class DesignTest {
     }
 
     /**
+     * Use case: a fresh project is laid out before anybody chose a paper size, so the design carries
+     * the default page geometry and one line spacing per class of element.
+     */
+    @Test
+    fun defaultsToTheShippedPageLayout() {
+        val design = Design()
+
+        assertEquals(PageFormat(), design.pageFormat)
+        assertEquals(1.2, design.authorLineSpacing)
+        assertEquals(1.2, design.copyrightLineSpacing)
+        assertEquals(1.2, design.titleLineSpacing)
+        assertEquals(1.2, design.chapterLineSpacing)
+        assertEquals(1.2, design.textLineSpacing)
+    }
+
+    /**
      * Use case: the part is stored in an entry of its own, so it names the identifier the project
      * uses for its design instead of relying on the class name.
      */
@@ -78,6 +94,22 @@ class DesignTest {
     }
 
     /**
+     * Use case: the user chose a paper size of their own and set the lines of each element class
+     * apart differently, so the page geometry and every single spacing survive the round trip.
+     */
+    @Test
+    fun roundTripsPageFormatAndLineSpacings() {
+        val restored: Design = mapper.readValue(mapper.writeValueAsString(TestData.design()))
+
+        assertEquals(TestData.pageFormat(), restored.pageFormat)
+        assertEquals(1.1, restored.authorLineSpacing)
+        assertEquals(1.0, restored.copyrightLineSpacing)
+        assertEquals(1.5, restored.titleLineSpacing)
+        assertEquals(1.3, restored.chapterLineSpacing)
+        assertEquals(1.4, restored.textLineSpacing)
+    }
+
+    /**
      * Use case: the page options are stored as flags, so each one comes back with the value the user
      * selected instead of a shared default.
      */
@@ -100,6 +132,7 @@ class DesignTest {
 
         assertEquals(false, design.startWithEmptyPage)
         assertEquals(TextDesign(), design.textDesign)
+        assertEquals(PageFormat(), design.pageFormat)
         assertEquals(1, design.version)
     }
 
