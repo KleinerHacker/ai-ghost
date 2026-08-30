@@ -20,6 +20,8 @@ module org.pcsoft.app.aighost.ui {
     opens org.pcsoft.app.aighost.app.ui.component to javafx.fxml, de.saxsys.mvvmfx;
 
     exports org.pcsoft.app.aighost.app;
+    // The font catalogue, the resolution of a design font and the JavaFX backed text measuring.
+    exports org.pcsoft.app.aighost.app.font;
     exports org.pcsoft.app.aighost.app.ui;
     exports org.pcsoft.app.aighost.app.ui.window;
     exports org.pcsoft.app.aighost.app.ui.dialog;

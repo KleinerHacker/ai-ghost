@@ -6,7 +6,7 @@ Status: NOT_STARTED
 
 | ID    | Implementation Plan                       | Status      |
 |-------|-------------------------------------------|-------------|
-| IP-01 | Font Discovery And Text Measuring         | NOT_STARTED |
+| IP-01 | Font Discovery And Text Measuring         | COMPLETED   |
 | IP-22 | Font Identity And Substitution Reporting  | NOT_STARTED |
 | IP-02 | Design Page Format Model                  | NOT_STARTED |
 | IP-24 | Optional Parts In The Model               | NOT_STARTED |

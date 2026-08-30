@@ -1,6 +1,6 @@
 # Status: IP-01 - Font-Ermittlung und Textmessung
 
-Status: NOT_STARTED
+Status: COMPLETED
 
 ## Abhängigkeiten
 
@@ -11,17 +11,23 @@ Status: NOT_STARTED
 
 | Nr | Aufgabe | Status |
 |----|---------|--------|
-| 1 | Font-Katalog | NOT_STARTED |
-| 2 | Auflösung einer Schrift | NOT_STARTED |
-| 3 | Messung | NOT_STARTED |
-| 4 | Messcache | NOT_STARTED |
-| 5 | Tests | NOT_STARTED |
-| 6 | Abschluss | NOT_STARTED |
+| 1 | Font-Katalog | COMPLETED |
+| 2 | Auflösung einer Schrift | COMPLETED |
+| 3 | Messung | COMPLETED |
+| 4 | Messcache | COMPLETED |
+| 5 | Tests | COMPLETED |
+| 6 | Abschluss | COMPLETED |
 
 ## Fortschritt
 
-0%
+100%
 
 ## Notizen
 
-* Plan erstellt, keine Aufgabe begonnen.
+* Neues Paket `org.pcsoft.app.aighost.app.font` in `app/ui`.
+* `FontCatalog`, `FontResolution`, `FontResolver`, `LineMetrics`, `JavaFxTextMetrics` angelegt.
+* Tests: `FontCatalogTest`, `FontResolverTest`, `JavaFxTextMetricsTest` (headless TestFX).
+* `module-info.java` um Export des Font-Pakets ergänzt.
+* CHANGELOG, README und MkDocs unverändert: keine für Endnutzer sichtbare Änderung.
+* Gradle `build` erfolgreich.
+* Feature-Status auf COMPLETED gesetzt.
