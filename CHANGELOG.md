@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+* Preferences are stored as YAML in `preferences.yml` instead of as JSON in `preferences.json`, so
+  the settings read like plain lines of text when you open the file - a `preferences.json` left over
+  from an earlier version is not read any more and the settings have to be chosen again
+
 * Preferences file groups its settings in blocks: the appearance is chosen under `appearance` with
   `themeMode` inside it, and the limits of the AI stand under `ai` - a file still naming `themeMode`
   at the top level is read with the default appearance, so the choice has to be made again once

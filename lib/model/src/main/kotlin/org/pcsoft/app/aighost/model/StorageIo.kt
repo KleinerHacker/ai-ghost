@@ -35,13 +35,14 @@ import java.util.zip.ZipOutputStream
 import kotlin.reflect.KClass
 
 /**
- * The Jackson mapper every storage of this module reads and writes its documents with.
+ * The Jackson mappers every storage of this module reads and writes its documents with.
  *
- * Preferences and projects are stored the same way, so they share one mapper instead of configuring
- * their own: the Kotlin module makes the data classes readable with their default values, and the
- * indentation keeps every stored document editable by hand.
+ * A project is stored as JSON inside its archive, the preferences of the user as YAML, so this
+ * object holds one mapper per format instead of letting every storage configure its own: the Kotlin
+ * module makes the data classes readable with their default values, and the indentation keeps every
+ * stored document editable by hand.
  *
- * The mapper is thread safe once it is built, so the storages use it as it is.
+ * The mappers are thread safe once they are built, so the storages use them as they are.
  */
 internal object StorageIo {
     private val log = logger<StorageIo>()
@@ -54,7 +55,7 @@ internal object StorageIo {
      */
     private const val ENTRY_SUFFIX = ".json"
 
-    /** The configured mapper, shared by all storages of this module. */
+    /** The mapper the parts of a project archive are written with and read from again. */
     val jsonMapper: JsonMapper = JsonMapper.builder()
         .addModule(kotlinModule())
         .enable(SerializationFeature.INDENT_OUTPUT)
@@ -64,13 +65,10 @@ internal object StorageIo {
         .disable(JsonParser.Feature.AUTO_CLOSE_SOURCE)
         .build()
 
+    /** The mapper the preferences of the user are written with and read from again. */
     val yamlMapper: YAMLMapper = YAMLMapper.builder()
         .addModule(kotlinModule())
         .enable(SerializationFeature.INDENT_OUTPUT)
-        // A project is a zip archive of several entries written through one and the same stream, so
-        // the mapper must not close it after a single entry - the next one would find it closed.
-        .disable(JsonGenerator.Feature.AUTO_CLOSE_TARGET)
-        .disable(JsonParser.Feature.AUTO_CLOSE_SOURCE)
         .build()
 
     /**
