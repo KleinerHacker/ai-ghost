@@ -194,12 +194,19 @@ replaced at once and taken back through undo.
 
 ### Modules
 
-* **`lib/layouting` (`ai-ghost-layouting`)** - the typesetting engine and the only new library module.
-  Input: `Design` plus a `BookPart` or a whole `Book`. Output: a `DocumentLayout` - pages, each
-  holding placed lines with absolute `x`, `y`, baseline, text run, resolved style and the index of the
-  source paragraph. Decides line breaking, alignment, spacing and page breaks. Owns the `TextMetrics`
-  interface it measures through and ships a deterministic implementation for tests. Carries no toolkit
-  type at all.
+* **`lib/layouting` (`ai-ghost-layouting`)** - the typesetting engine, written as a general purpose
+  library. Input: text blocks carrying nothing but their text and a `TextStyle` of the module's own,
+  plus a column width. Output: a `DocumentLayout` - pages, each holding placed lines with absolute
+  `x`, `y`, baseline, text run, resolved style and the index of the source block. Decides line
+  breaking, alignment, spacing and page breaks. Owns the `TextMetrics` interface it measures through
+  and ships a deterministic implementation for tests. Knows neither a toolkit nor `ai-ghost-model`:
+  `Design`, `Book`, `BookPart` and `Meta` never reach it, which is what makes it reusable outside this
+  application.
+* **`lib/layouting-model` (`ai-ghost-layouting-model`)** - the bridge between the manuscript and the
+  engine, named and packaged after `lib/fx-model`. It holds the builders that turn `Book`, `Design`
+  and `Meta` into the engine's text blocks - the title page, the copyright page, a written part and
+  the blurb - and translates `StyleData` plus the line spacing of `Design` into a `TextStyle`. It is
+  the only module depending on both `ai-ghost-model` and `ai-ghost-layouting`.
 * **`lib/ai-ghost-ai`** - gains the action port the UI calls (`rewrite`, `expand`, `shorten`,
   `generatePart`), plus a stub implementation until a provider integration exists.
 * **`app/ui`** - the font side and the components. A small package holds the font catalogue, the
@@ -441,18 +448,21 @@ Turn design plus text into placed lines with absolute coordinates.
 
 **Scope**
 
-In scope: new module `lib/layouting`; the `TextMetrics` interface and a deterministic implementation for
-tests; the resolved style (family, size, weight, slant, alignment, line spacing, spacing before and
-after); block model for the title page, the copyright page, a heading, a heading line, a paragraph
-and the blurb; line breaking against a given column width; horizontal alignment including justified
-text; mapping of every placed line back to its source
-paragraph and character range; unit tests against the deterministic metrics. Out of scope: pages and
-page breaks, caching, any toolkit.
+In scope: new module `lib/layouting`; the `TextMetrics` interface and a deterministic implementation
+for tests; the module's own style type (family, size, weight, slant, alignment, line spacing, spacing
+before and after) and its own alignment enum; one generic text block carrying text and style, with no
+role and no notion of what it once was; line breaking against a given column width; horizontal
+alignment including justified text; mapping of every placed line back to its source block and
+character range; new module `lib/layouting-model` with the builders that turn `Book`, `Design` and
+`Meta` into those blocks - title page, copyright page, written part and blurb - and translate
+`StyleData` and the line spacing of `Design` into the style type; unit tests of both modules against
+the deterministic metrics. Out of scope: pages and page breaks, caching, any toolkit.
 
 **Affected Areas**
 
-`settings.gradle.kts`, new module `lib/layouting`, dependency on `lib/ai-ghost-model`, and the
-implementation of `TextMetrics` written in IP-01.
+`settings.gradle.kts`, new module `lib/layouting` without any dependency of its own, new module
+`lib/layouting-model` depending on `lib/ai-ghost-model` and `lib/layouting`, and the implementation of
+`TextMetrics` written in IP-01.
 
 **Dependencies**
 
@@ -465,8 +475,14 @@ the same numbers.
 
 **Technical Considerations**
 
-The module owns the measuring interface and knows nothing about who satisfies it - that is what keeps
+The engine owns the measuring interface and knows nothing about who satisfies it - that is what keeps
 JavaFX out of a library module while the only real implementation is a JavaFX one.
+
+The engine carries no knowledge of this application's model either. A block is text plus style; the
+title page, a heading and a paragraph differ only in which text and which style go in, so they need
+neither a type nor a role of their own. Everything that reads `Book`, `Design` or `Meta` lives in
+`lib/layouting-model`, which keeps the engine reusable and keeps the model out of the typesetting
+code.
 
 The mapping from placed line back to source character range is what lets IP-10 put a caret and IP-18
 address a paragraph - it is not an afterthought. Hyphenation is out of scope and changes line breaking
@@ -1182,7 +1198,8 @@ begin at once.
   touches it.
 * **Widows, orphans, hyphenation** are excluded; the hook exists, no implementation ships.
 * **Resolving a provisional AI part** on part change or project close (IP-19) is undecided.
-* **One new Gradle module** (`lib/layouting`) requires a check against the `ci-pipeline` skill.
+* **Two new Gradle modules** (`lib/layouting`, `lib/layouting-model`) require a check against the
+  `ci-pipeline` skill.
 
 ### Decisions taken
 

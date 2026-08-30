@@ -51,7 +51,14 @@ reaches the switch polymorphically, so the interface would have carried no weigh
 
 Text is measured with `javafx.scene.text.Font` through a reused hidden `Text` node, so the measuring
 implementation lives in `app/ui` and `lib/font` was dropped; `lib/layouting` owns the `TextMetrics`
-interface and stays free of any toolkit. IP-20 (PDF export) was removed from this feature: export
+interface and stays free of any toolkit.
+
+IP-03 was re-cut before implementation. `lib/layouting` is a general purpose typesetting library: it
+depends on nothing, not even on `ai-ghost-model`, carries its own style and alignment types and knows
+a single block of text plus style - no role, no title page, no heading type. Those blocks differ only
+in which text and which style go in, so separate types would have carried no weight. The builders that
+read `Book`, `Design` and `Meta` moved into the new module `lib/layouting-model`, named and packaged
+after `lib/fx-model`, which is therefore the only module depending on both sides. IP-20 (PDF export) was removed from this feature: export
 becomes an own feature, implemented as a plugin on Apache PDFBox, and needs the plugin infrastructure
 built first. IP-22 was added when it was decided that no manuscript font is shipped; it is listed with
 IP-01 because it belongs to the font foundation. The numbering was kept stable instead of renumbering
@@ -71,8 +78,8 @@ its own status file and with its origin and its dependencies named in it; `FP-00
 them in order. The files of a finished plan are removed, so the table above is the only record that
 it is done.
 
-The feature is expected to need no new third party dependency and adds one Gradle module
-(`lib/layouting`).
+The feature is expected to need no new third party dependency and adds two Gradle modules
+(`lib/layouting`, `lib/layouting-model`).
 
 The central technical risk is that measuring belongs to the FX thread. It has to be measured in
 IP-05, not first noticed in IP-16.

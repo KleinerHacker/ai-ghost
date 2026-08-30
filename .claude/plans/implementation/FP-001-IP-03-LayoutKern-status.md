@@ -9,15 +9,17 @@ Status: NOT_STARTED
 
 ## Aufgaben
 
-| Nr | Aufgabe | Status |
-|----|---------|--------|
-| 1 | Modul | NOT_STARTED |
-| 2 | Messschnittstelle | NOT_STARTED |
-| 3 | Aufgelöster Stil | NOT_STARTED |
-| 4 | Blockmodell | NOT_STARTED |
-| 5 | Zeilenumbruch | NOT_STARTED |
-| 6 | Tests | NOT_STARTED |
-| 7 | Abschluss | NOT_STARTED |
+| Nr | Aufgabe                    | Status      |
+|----|----------------------------|-------------|
+| 1  | Modul `lib/layouting`      | NOT_STARTED |
+| 2  | Messschnittstelle          | NOT_STARTED |
+| 3  | Stiltyp                    | NOT_STARTED |
+| 4  | Blockmodell                | NOT_STARTED |
+| 5  | Zeilenumbruch              | NOT_STARTED |
+| 6  | Modul `lib/layouting-model`| NOT_STARTED |
+| 7  | Builder                    | NOT_STARTED |
+| 8  | Tests                      | NOT_STARTED |
+| 9  | Abschluss                  | NOT_STARTED |
 
 ## Fortschritt
 
@@ -26,3 +28,5 @@ Status: NOT_STARTED
 ## Notizen
 
 * Plan erstellt, keine Aufgabe begonnen.
+* Schnitt geändert: `lib/layouting` bleibt frei von `ai-ghost-model`, ein Blocktyp ohne Rolle.
+* Neues Modul `lib/layouting-model` trägt die Builder aus `Book`, `Design` und `Meta`.
