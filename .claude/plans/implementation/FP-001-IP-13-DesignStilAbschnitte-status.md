@@ -4,7 +4,7 @@ Status: NOT_STARTED
 
 ## Abhängigkeiten
 
-* Voraussetzung: IP-01, IP-02, IP-12
+* Voraussetzung: IP-02, IP-12, IP-26
 * Blockiert: keinen weiteren Plan
 
 ## Aufgaben

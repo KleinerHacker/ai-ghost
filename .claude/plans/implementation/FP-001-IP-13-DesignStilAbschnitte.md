@@ -8,7 +8,7 @@
 
 ## Abhängigkeiten
 
-* Voraussetzung: IP-01, IP-02, IP-12
+* Voraussetzung: IP-02, IP-12, IP-26
 * Start erst, wenn jede Voraussetzung im Feature-Status `COMPLETED` ist.
 * Blockiert: keinen weiteren Plan
 * Reihenfolge und Graph stehen in Abschnitt 8 des Feature Plans.
@@ -29,7 +29,7 @@
 
 ### 2. Familienauswahl
 
-* Nur Familien aus dem Katalog von IP-01 anbieten.
+* Nur Familien aus dem Katalog der Bibliothek anbieten.
 * Beispieltext je Familie in deren Schnitt zeigen.
 * Beispiel je sichtbarer Zeile erst bei Bedarf erzeugen.
 * Nicht installierte Familie eines Projekts kennzeichnen.

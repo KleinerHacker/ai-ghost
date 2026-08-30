@@ -8,25 +8,24 @@
 
 ## Abhängigkeiten
 
-* Voraussetzung: IP-04
+* Voraussetzung: IP-04, IP-26
 * Start erst, wenn jede Voraussetzung im Feature-Status `COMPLETED` ist.
-* Blockiert: IP-06, IP-16
+* Blockiert: IP-06, IP-16, IP-27
 * Reihenfolge und Graph stehen in Abschnitt 8 des Feature Plans.
 
 ## Zu ladende Skills
 
-* `ui-styling`
 * `fx-component-lifecycle`
 * `testing`
-* `icons`
 * `project-docs`
 
 ## Aufgaben
 
 ### 1. Komponente
 
-* `PaperPageView` nach dem MVVM-FX-Muster mit FXML und View-Modell anlegen.
-* `DocumentLayout` über `bindDocument` entgegennehmen, keine eigenen Daten halten.
+* `PaperPageView` als Control mit Skin in `lib/layouting-fx` anlegen.
+* `DocumentLayout` über eine Property entgegennehmen, keine eigenen Daten halten.
+* Keinen Typ aus `ai-ghost-model` in einer Signatur führen.
 
 ### 2. Blattdarstellung
 
@@ -37,27 +36,33 @@
 
 ### 3. Zustände
 
-* Seiten eines ausgeschalteten Teils ausgegraut darstellen.
-* Harte Kante vor dem Klappentext zeichnen.
-* Seitenzahl nur auf aktiven Seiten zeigen.
+* Inaktive Seiten ausgegraut darstellen.
+* Harte Kante einer abgesetzten Seite zeichnen.
+* Seitenzahl nur auf nummerierten Seiten zeigen.
+* Jeden Zustand aus dem Layoutergebnis lesen, nichts herleiten.
 
 ### 4. Bedienung
 
 * Zoom und Breitenanpassung anbieten.
 * Zu einer Seite oder einem Block scrollen.
 
-### 5. Gestaltung
+### 5. Virtualisierung
 
-* `styles/component/paper-page.css` anlegen und in `base.css` einhängen.
-* Farben aus dem Farbschema beziehen, keine festen Werte.
-* Texte über das Message-Bundle führen.
+* Nur sichtbare Blätter im Szenengraph halten.
+* Blätter beim Scrollen ein- und aushängen.
 
-### 6. Tests
+### 6. Gestaltung
+
+* Neutrale Standarddarstellung ohne Farbe der Anwendung.
+* Stilklassen für die spätere Überschreibung vergeben.
+
+### 7. Tests
 
 * Darstellung und Scrollziel headless über TestFX prüfen.
 * Ausgegraute Seiten und fehlende Seitenzahl prüfen.
+* Virtualisierung an einem langen Dokument prüfen.
 
-### 7. Abschluss
+### 8. Abschluss
 
 * Build über Agent ausführen.
 * Dokumentation nach `project-docs` prüfen.
@@ -66,3 +71,4 @@
 
 * Ein `DocumentLayout` wird als Folge gedruckter Seiten gezeigt.
 * Nichts an der Darstellung ist bearbeitbar.
+* Der Knoten gehört der Bibliothek und kennt die Anwendung nicht.

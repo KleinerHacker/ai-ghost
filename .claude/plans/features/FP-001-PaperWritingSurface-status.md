@@ -12,10 +12,14 @@ Status: IN_PROGRESS
 | IP-24 | Optional Parts In The Model               | COMPLETED   |
 | IP-03 | Layout Core                               | COMPLETED   |
 | IP-04 | Pagination And Page Break Policy          | NOT_STARTED |
+| IP-25 | Renderer Library Module                   | BLOCKED     |
+| IP-26 | Font And Measuring Migration              | NOT_STARTED |
 | IP-05 | Incremental Layout And Caching            | NOT_STARTED |
 | IP-06 | Layout Regression Harness                 | NOT_STARTED |
 | IP-07 | Paper Page View                           | NOT_STARTED |
 | IP-08 | Paper Flow View                           | NOT_STARTED |
+| IP-27 | Library Styling And Theming API           | NOT_STARTED |
+| IP-28 | Standalone Reuse And Documentation        | NOT_STARTED |
 | IP-09 | Undo And Redo Infrastructure              | NOT_STARTED |
 | IP-10 | Book Part Writing Surface                 | NOT_STARTED |
 | IP-11 | Paragraph Structure Operations            | NOT_STARTED |
@@ -32,11 +36,29 @@ Status: IN_PROGRESS
 
 ## Overall Progress
 
-17%
+15%
 
 ## Notes
 
 IP-01, IP-02, IP-24 and IP-03 are implemented; IP-04 is unblocked and is the next plan.
+
+IP-25 is BLOCKED: JavaFX as a dependency of a library module, and the amendment of
+`.claude/rules/architecture.md` that allows it, need the user's decision before the module is created.
+No other plan is blocked by anything.
+
+The renderer became a library of its own after IP-03. Both surfaces and the JavaFX measuring live in
+the new module `lib/layouting-fx` (`ai-ghost-layouting-fx`), which depends on `ai-ghost-layouting` and
+JavaFX and on nothing else and carries no type of this application in any signature. It is a
+reusable JavaFX component library, exactly as `lib/layouting` is a reusable typesetting library.
+Four plans carry it: IP-25 creates the module and the rule, IP-26 moves the font and measuring classes
+of the completed IP-01 out of `app/ui`, IP-27 makes the appearance overridable, IP-28 proves and
+documents the independence. IP-07 and IP-08 were re-scoped onto the library rather than rewritten;
+IP-01 stays COMPLETED because IP-26 does the move.
+
+Two things moved between plans with it: page virtualisation from IP-16 into IP-07, because a library
+that cannot show a long document is not reusable, and the surface comparison of IP-06 into the
+library test source set. `app/ui` keeps the `FontData` translation, the metrics fingerprint of IP-22,
+the binding of book and design, undo, inspector and AI.
 
 The layout core is implemented as planned. `LaidOutLine` carries two fields the plan did not name:
 `width`, and `wordSpacing` as the gap a justified line is stretched by - without it a justified line
@@ -56,9 +78,9 @@ shared interface the plan of IP-24 once described was dropped before implementat
 reaches the switch polymorphically, so the interface would have carried no weight. `Prolog.title` and
 `Epilog.title` gained the default `""`, because `Book` now builds the three parts itself.
 
-Text is measured with `javafx.scene.text.Font` through a reused hidden `Text` node, so the measuring
-implementation lives in `app/ui` and `lib/font` was dropped; `lib/layouting` owns the `TextMetrics`
-interface and stays free of any toolkit.
+Text is measured with `javafx.scene.text.Font` through a reused hidden `Text` node. The implementation
+lives in `app/ui` today and moves into `lib/layouting-fx` with IP-26; `lib/layouting` owns the
+`TextMetrics` interface and stays free of any toolkit.
 
 IP-03 was re-cut before implementation. `lib/layouting` is a general purpose typesetting library: it
 depends on nothing, not even on `ai-ghost-model`, carries its own style and alignment types and knows
@@ -68,14 +90,18 @@ read `Book`, `Design` and `Meta` moved into the new module `lib/layouting-model`
 after `lib/fx-model`, which is therefore the only module depending on both sides. IP-20 (PDF export) was removed from this feature: export
 becomes an own feature, implemented as a plugin on Apache PDFBox, and needs the plugin infrastructure
 built first. IP-22 was added when it was decided that no manuscript font is shipped; it is listed with
-IP-01 because it belongs to the font foundation. The numbering was kept stable instead of renumbering
-the plans.
+IP-01 because it belongs to the font foundation. IP-25 to IP-28 were added when the renderer was
+decided to be an independent library. The numbering was kept stable instead of renumbering the plans.
 
-Independent starting points: IP-09, IP-12, IP-17.
+Independent starting points: IP-25 (once unblocked), IP-09, IP-12, IP-17.
 
-No decision is left open. Page format and margins, the front matter, the place of the blurb, the
-behaviour of a switched off part and the reference set of the metrics fingerprint are recorded in
-section 9 of the plan under "Decisions taken".
+Besides the JavaFX decision of IP-25, two questions of the renderer library are open and do not block
+it: the naming of module and package, which carries the application name into a reusable library, and
+whether the library is published as a real artifact or only built here.
+
+Page format and margins, the front matter, the place of the blurb, the behaviour of a switched off
+part and the reference set of the metrics fingerprint are recorded in section 9 of the plan under
+"Decisions taken".
 
 No plan raises a model version or migrates an existing user file; a document carrying none of the
 new values is read with their defaults.
@@ -83,10 +109,11 @@ new values is read with their defaults.
 The remaining implementation plans are written out under `.claude/plans/implementation`, each with
 its own status file and with its origin and its dependencies named in it; `FP-001-Overview.md` lists
 them in order. The files of a finished plan are removed, so the table above is the only record that
-it is done.
+it is done. The plans of IP-25 to IP-28 still have to be written out, and IP-07 and IP-08 have to be
+rewritten onto the library.
 
-The feature is expected to need no new third party dependency and adds two Gradle modules
-(`lib/layouting`, `lib/layouting-model`).
+The feature adds three Gradle modules (`lib/layouting`, `lib/layouting-model`, `lib/layouting-fx`) and
+needs one new third party dependency: JavaFX in a library module.
 
 The central technical risk is that measuring belongs to the FX thread. It has to be measured in
 IP-05, not first noticed in IP-16.

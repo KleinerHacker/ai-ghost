@@ -15,7 +15,6 @@
 
 ## Zu ladende Skills
 
-* `ui-styling`
 * `testing`
 * `project-docs`
 
@@ -27,20 +26,22 @@
 
 ### 2. Aufteilung
 
-* Textcontrol eines Absatzes am Umbruch in zwei Controls teilen.
-* Beide Controls bleiben logisch ein Absatz.
+* Änderung liegt in `PaperFlowView` der Bibliothek, nicht in `app/ui`.
+* Textcontrol eines Blocks am Umbruch in zwei Controls teilen.
+* Beide Controls bleiben logisch ein Block.
 * Teilstelle beim Tippen neu berechnen, ohne den Fokus zu verlieren.
 
 ### 3. Bedienung
 
 * Caret über die Teilstelle hinweg bewegen.
 * Auswahl über die Teilstelle hinweg führen.
-* Undo über die Teilstelle hinweg führen.
+* Ereignisse über die Teilstelle hinweg unverändert melden.
 
 ### 4. Tests
 
-* Caret, Auswahl und Undo über die Teilstelle prüfen.
+* Caret, Auswahl und Ereignisse über die Teilstelle prüfen.
 * Neuberechnung der Teilstelle beim Tippen prüfen.
+* Undo in `app/ui` über die Teilstelle prüfen.
 
 ### 5. Abschluss
 

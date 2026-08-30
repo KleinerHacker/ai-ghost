@@ -24,9 +24,9 @@
 
 ### 1. Komponente
 
-* `BookPartEditor` nach dem MVVM-FX-Muster anlegen.
-* Je Block ein mitwachsendes Textcontrol in `PaperFlowView` setzen.
-* Rahmen und Hintergrund des Controls entfernen.
+* `BookPartEditor` nach dem MVVM-FX-Muster in `app/ui` anlegen.
+* `PaperFlowView` der Bibliothek einsetzen und mit den Blöcken des Teils speisen.
+* Blöcke aus `BookPartProperty` über die Bauer aus `lib/layouting-model` erzeugen.
 
 ### 2. Bindung
 
@@ -34,11 +34,10 @@
 * Titelseite und Copyright-Seite an `BookProperty` und `MetaProperty` binden, nur lesend.
 * Klappentext-Variante ohne Überschrift und mit einem Prompt binden.
 
-### 3. Bedienung
+### 3. Ereignisse verarbeiten
 
-* Caret und Tippen im Block.
-* Fokuswechsel zwischen Blöcken über die Pfeiltasten.
-* Eingefügten Rich Text auf reinen Text reduzieren.
+* Textänderung der Flow-Ansicht in das Modell übertragen.
+* Fokuswechsel zwischen Blöcken über die Pfeiltasten anfordern.
 * Caret als Absatzindex und Zeichenversatz halten, nicht als Koordinate.
 
 ### 4. Ausgeschaltete Teile
@@ -52,7 +51,6 @@
 ### 6. Tests
 
 * Bindung, Tippen und Fokuswechsel headless prüfen.
-* Reduktion von Rich Text prüfen.
 * Erhalt des Carets über eine Designänderung prüfen.
 
 ### 7. Abschluss

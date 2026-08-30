@@ -34,11 +34,11 @@
 * Ganzes Buch über `PaperPageView` darstellen.
 * Caret und AI-Bedienelemente in der Vorschau ausblenden.
 
-### 3. Virtualisierung
+### 3. Erstes Layout
 
-* Nur sichtbare Blätter im Szenengraph halten.
 * Erstes Layout eines langen Buches mit Fortschrittsanzeige begleiten.
 * Messen auf dem FX-Thread, Anordnen außerhalb.
+* Virtualisierung der Bibliothek nutzen, nicht erneut bauen.
 
 ### 4. Position
 
@@ -52,7 +52,7 @@
 ### 6. Tests
 
 * Moduswechsel, Position und Seitenzahl headless prüfen.
-* Virtualisierung über ein langes Buch prüfen.
+* Antwortverhalten beim ersten Layout eines langen Buches prüfen.
 
 ### 7. Abschluss
 

@@ -21,6 +21,13 @@ What is shown while writing must be what the preview shows. The feature therefor
 preview beside an editor; it builds one layout engine that decides every line break, every position
 and every page break, and lets the writing surface and the preview consume that one result.
 
+That engine is a general purpose library, and **the renderer that draws its result is one too**. The
+sheets on screen - the exact rendering and the writable flow - are built as an independent JavaFX
+component library beside the layout core, together with the JavaFX measuring the core needs.
+Measuring and drawing are the two sides of one text stack and stay in one module; neither of them
+learns what a book, a chapter or a design is. `app/ui` becomes one consumer of that library and keeps
+everything that is specific to ai-ghost.
+
 The book is written on that surface in the shape the model already has: a **title page** built from
 the book title and its further title lines, and the **written parts** - prolog, chapters, epilog - each
 with its heading and its text, plus the **blurb**, which is cover text rather than a page.
@@ -48,10 +55,18 @@ consumes the same page structure instead of computing its own.
   (`Prolog`, `Chapter`, `Epilog`) carries `title`, `titleAppendix`, `prompts`, `paragraph`.
 * `lib/ai-ghost-fx-model` - mirrored JavaFX property models (`BookProperty`, `BookPartProperty`,
   `ChapterProperty`, `DesignProperty`, `StyleDataProperty`, `FontDataProperty`, ...).
+* `lib/ai-ghost-layouting` - the layout core, implemented: `TextBlock`, `TextStyle`, `TextMetrics`,
+  `FixedTextMetrics`, `LineBreaker`, `GreedyLineBreaker`, `LaidOutText`, `LineMetrics`. `java-library`,
+  JPMS, no dependency beyond the Kotlin standard library.
+* `lib/ai-ghost-layouting-model` - the bridge between manuscript and core, implemented; depends on
+  `ai-ghost-model` and `ai-ghost-layouting`. No JavaFX.
 * `lib/ai-ghost-ai` - currently only `TokenUtils`; no generation pipeline yet.
 * `app/ui` - the only JavaFX module, MVVM FX (`FluentViewLoader`, `FxmlView`, `ViewModel`),
   I18N through `messages/bundle*.properties`, CSS split per component under `styles/component`.
-  Modular (JPMS) and shipped as a jlink image.
+  Modular (JPMS) and shipped as a jlink image. Its package `...app.ui.app.font` carries the completed
+  work of IP-01: `FontCatalog`, `FontResolver`, `FontResolution` and `JavaFxTextMetrics`.
+* `.claude/rules/architecture.md` states that the JavaFX application lives in `app/ui` and that no
+  other module should contain JavaFX parts or frameworks.
 
 **UI**
 
@@ -68,10 +83,11 @@ consumes the same page structure instead of computing its own.
 
 * No editor for prolog, chapter, epilog or blurb - paragraphs cannot be written at all.
 * No rendering, no pagination, no preview.
+* No JavaFX renderer of a document layout, and no module that may contain one besides `app/ui`.
+* No TestFX setup outside `app/ui`.
 * No design editor; `Design` exists but nothing reads it.
-* `Design` carries no page format, no margins and no line spacing.
-* `FontData.name` is a free font family name (`Arial` by default); nothing checks whether that family
-  exists on the machine and nothing resolves it when it does not.
+* `FontData.name` is a free font family name (`Arial` by default); the resolution exists, the
+  fingerprint that would make a substitution visible does not.
 * No undo/redo of any kind.
 
 ## 3. Target State
@@ -105,6 +121,29 @@ The correspondence holds **for one project on machines carrying the same fonts**
 missing or measures differently elsewhere paginates differently - so the project records the metrics
 it was written with, and a mismatch is reported when the project is opened instead of silently
 producing different pages.
+
+**A reusable renderer.** The JavaFX side of that chain is a library of its own,
+`lib/layouting-fx` (`ai-ghost-layouting-fx`), as independent of the application as the layout core:
+
+* it depends on `ai-ghost-layouting` and on JavaFX, and on nothing else,
+* it never sees `ai-ghost-model`, `ai-ghost-layouting-model`, `Design`, `Book` or any project type,
+* it is a JavaFX component library - nodes, skins, a stylesheet of its own, a public API of properties
+  and events,
+* it holds the font catalogue, the font resolution and the JavaFX backed `TextMetrics`, because
+  measuring must not be separated from drawing,
+* it holds both surfaces: the exact read-only rendering of a document layout, and the writable flow
+  whose blocks are native text controls,
+* it is built and published as its own artifact and is usable in any JavaFX application that has a
+  layout result to show.
+
+The library owns no document, no model and no undo stack: the writable flow reports what changed and
+applies nothing itself. `app/ui` keeps everything the library refuses to know - the translation of
+`FontData` into the library's font description, the metrics fingerprint, the binding of book and
+design, undo, AI affordances and the ai-ghost palette.
+
+The architecture rule is amended accordingly: JavaFX is allowed in `app/ui` and in a library module
+that **is** a JavaFX component library, and forbidden everywhere else. The end user application stays
+the only JavaFX application.
 
 **Front matter.** The book opens with its title page - title, further title lines and the author -
 and directly behind it stands the copyright page carrying author and copyright. Both are styled by
@@ -162,18 +201,29 @@ replaced at once and taken back through undo.
 * The page a paragraph falls on is the same in the writing surface and in the preview.
 * Selecting a node in the tree opens or scrolls to that part; the tree keeps its current API.
 * Changing a design value changes the paper without reopening the project.
+* The renderer draws a document layout of the layout core without knowing anything about a book: a
+  sheet is greyed out, excluded from the numbering or set apart because the layout result says so.
+* The appearance of sheet, shadow, gap, marker and background is styled through the library's own
+  stylesheet and is overridden by the application.
+* A demo renders a document with the library without any ai-ghost module on its path.
 
 ### Technical Requirements
 
-* Kotlin, Gradle; JavaFX exclusively in `app/ui`.
+* Kotlin, Gradle; JavaFX exclusively in `app/ui` and in the JavaFX component library
+  `lib/layouting-fx`. No other module gains a JavaFX or an AWT dependency.
 * Pagination and typography live in a UI free library module that measures through an interface, so a
   later export reuses the engine unchanged.
 * **No font file is read, parsed or shipped.** Font families come from `javafx.scene.text.Font`, and
   text is measured with a hidden `javafx.scene.text.Text` node. `Font.loadFont` is not used. The
   Ghost Writer face stays what it is today, a display face of the user interface, and is not a
   manuscript font.
-* Because measuring is JavaFX, the measuring implementation lives in `app/ui`; the interface it
-  satisfies lives in the layout module. No library module gains a JavaFX or an AWT dependency.
+* Because measuring is JavaFX, the measuring implementation lives in `lib/layouting-fx` beside the
+  renderer, while the interface it satisfies stays in `lib/layouting`.
+* `lib/layouting-fx` depends on `ai-ghost-layouting` and JavaFX only. No type of the application
+  appears in a public signature of it, and it has no path to `ai-ghost-model`,
+  `ai-ghost-layouting-model` or `app/ui`. The build fails when it gains one.
+* Measuring is an FX thread operation; the library says so in its API and does not pretend to be
+  thread safe.
 * A project records the metrics fingerprint of the font it used - derived from measurements, not from
   a file - so a substitution is detectable.
 * All geometry is stored and computed in points (1/72 inch) as `Double`; millimetres exist only in
@@ -181,18 +231,30 @@ replaced at once and taken back through undo.
 * Model changes follow the `fx-model` rule: every POJO change under `lib/model` is mirrored in
   `lib/fx-model` including tests.
 * New UI work follows `ui-styling`, `fx-component-lifecycle`, `icons` and `font`.
-* No new third party dependency without asking the user. This feature is expected to need none.
+* No new third party dependency without asking the user. JavaFX as a dependency of a library module is
+  the one such decision this feature needs.
 * Text of a part stays `List<String>` paragraphs - the storage format of the manuscript is unchanged.
 * View state (zoom, split positions, inspector collapsed, mode) belongs to `Preferences`, never to
   the project document.
 * The layout result is a plain data structure with no toolkit type in it, so a later export plugin
   can consume it without depending on `app/ui`.
-* Headless TestFX tests for every new component, unit tests for engine and layout, golden file tests
-  for the page structure.
+* Headless TestFX tests for every new component - in the library for its nodes, in `app/ui` for the
+  application ones - unit tests for engine and layout, golden file tests for the page structure.
+* The library is documented and published like the other library modules: KDoc on its public API,
+  README, MkDocs and CHANGELOG per the `project-docs` skill, pipeline per the `ci-pipeline` skill.
 
 ## 5. Architecture
 
 ### Modules
+
+```
+lib/ai-ghost-layouting          (no toolkit, no app)
+        ▲                            ▲
+        │                            │
+lib/ai-ghost-layouting-model   lib/ai-ghost-layouting-fx   (JavaFX component library)
+        ▲                            ▲
+        └─────────── app/ui ─────────┘        (ai-ghost specific glue)
+```
 
 * **`lib/layouting` (`ai-ghost-layouting`)** - the typesetting engine, written as a general purpose
   library. Input: text blocks carrying nothing but their text and a `TextStyle` of the module's own,
@@ -207,11 +269,24 @@ replaced at once and taken back through undo.
   and `Meta` into the engine's text blocks - the title page, the copyright page, a written part and
   the blurb - and translates `StyleData` plus the line spacing of `Design` into a `TextStyle`. It is
   the only module depending on both `ai-ghost-model` and `ai-ghost-layouting`.
+* **`lib/layouting-fx` (`ai-ghost-layouting-fx`)** - the JavaFX side of the same chain, as a reusable
+  component library. It measures - font catalogue, font resolution, the `TextMetrics` implementation
+  backed by a reused hidden `Text` node - and it draws: the exact page view and the writable flow.
+  It depends on `ai-ghost-layouting` and JavaFX and on nothing else, and carries no type of this
+  application in any signature.
 * **`lib/ai-ghost-ai`** - gains the action port the UI calls (`rewrite`, `expand`, `shorten`,
   `generatePart`), plus a stub implementation until a provider integration exists.
-* **`app/ui`** - the font side and the components. A small package holds the font catalogue, the
-  resolution of a `FontData` to a `javafx.scene.text.Font`, the fallback chain and the JavaFX backed
-  `TextMetrics` implementation; JavaFX therefore stays where the architecture rule puts it.
+* **`app/ui`** - the application. It translates `FontData` into the library's font description, keeps
+  the metrics fingerprint and the substitution report, binds book and design to the library's nodes,
+  overrides the library's style classes with the ai-ghost palette, and owns undo, inspector and AI.
+
+### Packages of the renderer library
+
+* `...layouting.fx.font` - font description, catalogue, resolution, fallback result, the JavaFX
+  `TextMetrics` implementation and its cache.
+* `...layouting.fx.control` - the nodes: the exact page view, the writable flow, the sheet node.
+* `...layouting.fx.skin` - skins and the painting.
+* resources - the library stylesheet.
 
 ### Model extension
 
@@ -221,14 +296,20 @@ replaced at once and taken back through undo.
   detectable.
 * `Preferences` gains the view state of the editor.
 
-### UI components (`app/ui`, package `...app.ui.component`)
+### Components
+
+In `lib/layouting-fx`, knowing only the layout core:
 
 * `PaperPageView` - exact, read-only renderer. Paints a `DocumentLayout` sheet by sheet at the given
   coordinates. Used for preview.
 * `PaperFlowView` - the writing sheet. Same page geometry and margins, but the blocks are native
   JavaFX text controls; page breaks are drawn as a sheet gap between paragraphs or as a marker line
-  inside a paragraph, at the position the engine reports.
-* `BookPartEditor` - caret, typing and binding of headings and paragraphs on `PaperFlowView`.
+  inside a paragraph, at the position the engine reports. Reports every change instead of applying it.
+
+In `app/ui`, package `...app.ui.component`:
+
+* `BookPartEditor` - binding of headings and paragraphs of the model onto `PaperFlowView`, undo,
+  paragraph operations.
 * `Inspector` - context panel with fixed sections; absorbs the fields of today's `BookEditor`.
 * `AiActionBar` - floating action bar of the block in focus.
 * `Editor` - arranger of the three zones and of the mode switch; `EditorViewModel` routes
@@ -241,16 +322,17 @@ ProjectProperty
   ├─ designProperty ─┬─> Inspector (style sections)
   │                  └─> LayoutEngine ─┬─> PaperFlowView   (break positions)
   │                                    └─> PaperPageView   (exact painting)
-  ├─ bookProperty ──> BookPartEditor <──(bidirectional)──> headings / paragraphs
+  ├─ bookProperty ──> BookPartEditor <──(change events)──> PaperFlowView
   └─ (selection) ProjectList.selectedItem ──> EditorViewModel ──> shown part
                                                    ▲
-                                    TextMetrics ───┘ (JavaFX Text, on the FX thread)
+                                    TextMetrics ───┘ (layouting-fx, JavaFX Text, on the FX thread)
 ```
 
 ## 6. Implementation Plan Overview
 
-IP-22 belongs to the font foundation and is listed with IP-01; the numbering is kept stable rather
-than renumbered.
+IP-22 belongs to the font foundation and is listed with IP-01; IP-25 to IP-28 carry the renderer
+library and were added after IP-01 to IP-03 were completed. The numbering is kept stable rather than
+renumbered.
 
 | ID    | Implementation Plan                       | Objective                                                             | Dependencies         |
 |-------|-------------------------------------------|-----------------------------------------------------------------------|----------------------|
@@ -260,15 +342,19 @@ than renumbered.
 | IP-24 | Optional Parts In The Model               | `Book` v2 with prolog, epilog and blurb always present and switchable | -                    |
 | IP-03 | Layout Core                               | Resolved styles, line breaking, alignment, placed lines               | IP-01, IP-02, IP-24  |
 | IP-04 | Pagination And Page Break Policy          | Page filling, breaks, odd/even margins, policy hook                   | IP-03                |
+| IP-25 | Renderer Library Module                   | New JavaFX library module, JPMS, TestFX, CI, architecture rule        | -                    |
+| IP-26 | Font And Measuring Migration              | Catalogue, resolution and metrics move into the library               | IP-01, IP-25         |
 | IP-05 | Incremental Layout And Caching            | Per paragraph invalidation so typing stays responsive                 | IP-04                |
 | IP-06 | Layout Regression Harness                 | Golden page structures and the surface comparison                     | IP-04, IP-07, IP-08  |
-| IP-07 | Paper Page View                           | Exact read-only renderer of a document layout                         | IP-04                |
-| IP-08 | Paper Flow View                           | Writing sheet with page geometry and break marks                      | IP-04                |
+| IP-07 | Paper Page View                           | Exact read-only renderer of a document layout, in the library         | IP-04, IP-26         |
+| IP-08 | Paper Flow View                           | Writing sheet with page geometry and break marks, in the library      | IP-04, IP-26         |
+| IP-27 | Library Styling And Theming API           | Own stylesheet, style classes, override by the ai-ghost palette       | IP-07, IP-08         |
+| IP-28 | Standalone Reuse And Documentation        | Demo without ai-ghost, published artifact, docs, dependency check     | IP-27                |
 | IP-09 | Undo And Redo Infrastructure              | One undo stack over model changes of the editor                       | -                    |
 | IP-10 | Book Part Writing Surface                 | Caret, typing and binding of headings and paragraphs                  | IP-08, IP-09         |
 | IP-11 | Paragraph Structure Operations            | Split, join, delete and reorder paragraphs                            | IP-10                |
 | IP-12 | Inspector Shell And Content Sections      | Context panel with book and part sections, absorbs `BookEditor`       | -                    |
-| IP-13 | Design Style Sections                     | Editing the styles in the inspector with live effect                  | IP-01, IP-02, IP-12  |
+| IP-13 | Design Style Sections                     | Editing the styles in the inspector with live effect                  | IP-02, IP-12, IP-26  |
 | IP-14 | Project Settings Dialog                   | Page format, margins and empty pages in a dialog                      | IP-02                |
 | IP-15 | Editor Arrangement And Tree Routing       | Three zones, routing of every tree node, view state persisted         | IP-11, IP-12         |
 | IP-16 | Writing And Preview Modes                 | Mode switch, whole book preview, scrolling, virtualisation            | IP-05, IP-07, IP-15  |
@@ -329,6 +415,9 @@ The engine breaks lines itself, so what is measured are **words**, a space, and 
 not whole paragraphs. That keeps the cache small and reusable across paragraphs and is why the cache
 is part of this plan rather than an optimisation later.
 
+This plan is completed. Its result lands in `app/ui`; IP-26 moves the reusable part of it into the
+renderer library, which is why nothing here is rewritten.
+
 ### IP-22: Font Identity And Substitution Reporting
 
 **Objective**
@@ -345,7 +434,7 @@ properties and their tests.
 
 **Affected Areas**
 
-`lib/model` (`common/FontData`), `lib/fx-model`, `app/ui` font package and the report through the
+`lib/model` (`common/FontData`), `lib/fx-model`, `app/ui` font glue and the report through the
 existing dialogs, message bundles, storage compatibility.
 
 **Dependencies**
@@ -366,6 +455,10 @@ written before a change reports a false mismatch.
 
 `FontData` is written by every existing project, so the new field needs a default and an absent
 fingerprint must mean "not recorded", never "mismatch". The `fx-model` skill governs the mirroring.
+
+The fingerprint is ai-ghost's, not the library's: it is taken over the catalogue and the metrics the
+library provides, but it lives in `app/ui`, because a reusable renderer must not know that a project
+records what it was written with.
 
 ### IP-02: Design Page Format Model
 
@@ -476,7 +569,7 @@ the same numbers.
 **Technical Considerations**
 
 The engine owns the measuring interface and knows nothing about who satisfies it - that is what keeps
-JavaFX out of a library module while the only real implementation is a JavaFX one.
+the toolkit out of the core while the only real implementation is a JavaFX one.
 
 The engine carries no knowledge of this application's model either. A block is text plus style; the
 title page, a heading and a paragraph differ only in which text and which style go in, so they need
@@ -539,6 +632,95 @@ reflow the text of a neighbouring part, only renumber it.
 The blurb is cover text. It is laid out against the same design, is always the last sheet, and
 receives no page number at all.
 
+A page also carries what the renderer needs but must not deduce: whether it is inactive, whether it
+carries a number, and whether it stands apart from the sequence. The library learns "apart" from the
+result, never that "apart" means blurb.
+
+### IP-25: Renderer Library Module
+
+**Objective**
+
+Create the module the renderer and the measuring live in, and make a JavaFX library module legitimate
+in this project.
+
+**Scope**
+
+In scope: the Gradle module `lib/layouting-fx` named `ai-ghost-layouting-fx` and its registration in
+`settings.gradle.kts`; the build script with the JavaFX dependency and the `api` dependency on
+`ai-ghost-layouting`; the JPMS module descriptor with the Kotlin/Java output arrangement the sibling
+modules use; the headless TestFX setup for a library module; the amendment of
+`.claude/rules/architecture.md`; the pipeline check. Out of scope: every renderer and font class - the
+module carries no production code beyond its descriptor when this plan ends.
+
+**Affected Areas**
+
+`settings.gradle.kts`, `lib/layouting-fx` (new), the JavaFX version declaration, `build.gradle.kts`,
+`.claude/rules/architecture.md`, `.github` workflows.
+
+**Dependencies**
+
+None. It can start at once and is the prerequisite of IP-26.
+
+**Expected Result**
+
+The module builds and tests empty, JavaFX resolves inside a library module, and the architecture rule
+names the one case in which that is allowed.
+
+**Technical Considerations**
+
+JavaFX in a library module is the decision the renderer rests on and must be confirmed with the user
+before the dependency is added: a new dependency of a library module is not a free choice here.
+
+The rule is not deleted but sharpened - JavaFX belongs to `app/ui` and to a module that is itself a
+JavaFX component library. Without that sentence every following plan violates the rules.
+
+The jlink image of `app/ui` must keep working: the library is a JPMS module requiring the JavaFX
+modules it uses, and nothing else. The TestFX setup of `app/ui` is the model but has no precedent
+outside it, so it may not transfer unchanged.
+
+### IP-26: Font And Measuring Migration
+
+**Objective**
+
+Move the reusable half of IP-01 into the renderer library, so measuring and drawing stay in one
+module and neither knows the application.
+
+**Scope**
+
+In scope: `FontCatalog`, `FontResolver`, `FontResolution` and `JavaFxTextMetrics` moved with `git mv`
+into `lib/layouting-fx`; a font description of the library's own (family, size, weight, slant)
+replacing `FontData` in every signature; the translation of `FontData` into that description staying
+in `app/ui`; the tests moving with the classes; the imports and `module-info.java` of `app/ui`
+followed. Out of scope: the metrics fingerprint and the substitution report, which stay in `app/ui`
+and belong to IP-22; any renderer.
+
+**Affected Areas**
+
+`lib/layouting-fx` (font package), `app/ui` (`...app.ui.app.font`, `module-info.java`), both test
+source sets.
+
+**Dependencies**
+
+IP-01, IP-25.
+
+**Expected Result**
+
+Any JavaFX application can hand the layout core a metrics implementation backed by real JavaFX text
+measuring and ask which families exist - and `app/ui` uses exactly that one.
+
+**Technical Considerations**
+
+The split runs along `FontData`: everything that names the application's model stays behind, the rest
+moves. `FontResolver` is the class the seam runs through and is the reason this is a plan rather than
+a rename.
+
+The two deliberate departures of IP-01 survive the move unchanged: the helper node is created once and
+reused, and widths are not rounded up. The FX thread constraint travels with the class and must be
+stated in the library's API, because a consumer outside this repository has no IP-05 to read.
+
+Nothing about behaviour changes here. The tests that pass before the move must pass after it, which is
+what makes the move safe to do while later plans are already building on the classes.
+
 ### IP-05: Incremental Layout And Caching
 
 **Objective**
@@ -555,7 +737,7 @@ and IP-16.
 
 **Affected Areas**
 
-`lib/layouting`, `app/ui` font package.
+`lib/layouting`, the measuring side in `lib/layouting-fx`.
 
 **Dependencies**
 
@@ -596,7 +778,8 @@ regenerated.
 
 **Affected Areas**
 
-`lib/layouting` test source set, `app/ui` test source set, CI (`ci-pipeline` skill).
+`lib/layouting` test source set, `lib/layouting-fx` test source set for the surface comparison, CI
+(`ci-pipeline` skill).
 
 **Dependencies**
 
@@ -618,32 +801,35 @@ They are produced against the deterministic metrics, never against a font that h
 on the build machine; otherwise the build result differs per developer and per CI runner. That is why
 IP-03 ships that implementation, and it is also why this plan needs no font of its own.
 
+The surface comparison belongs to the library, because both surfaces do - and because a comparison
+that lives in the application would let the library ship a drift the application only notices later.
+
 ### IP-07: Paper Page View
 
 **Objective**
 
-Show a document layout as exactly rendered sheets.
+Show a document layout as exactly rendered sheets, as a node of the renderer library.
 
 **Scope**
 
-In scope: `PaperPageView` component (MVVM FX), sheet background, shadow, page gap, painting of every
-placed line at its coordinates, the greyed out look of a page belonging to a switched off part, the
-hard edge that sets the blurb off from the book, page numbers on the active pages only, zoom and fit
-to width, scrolling, scroll to a given page or block, CSS under `styles/component`, headless TestFX
-tests. Out of scope: editing, AI, virtualisation of a
-whole book, which belongs to IP-16.
+In scope: `PaperPageView` in `lib/layouting-fx`, sheet background, shadow, page gap, painting of every
+placed line at its coordinates, the greyed out look of an inactive page, the hard edge of a page
+standing apart from the sequence, page numbers on the numbered pages only, zoom and fit to width,
+scrolling, scroll to a given page or block, virtualisation so only visible sheets live in the scene
+graph, a neutral default appearance, headless TestFX tests. Out of scope: editing, AI, the styling API
+that makes the appearance overridable, which is IP-27, and the mode switch of IP-16.
 
 **Affected Areas**
 
-`app/ui` component package, styles, message bundles, `module-info.java`.
+`lib/layouting-fx` (control and skin packages, resources).
 
 **Dependencies**
 
-IP-04.
+IP-04, IP-26.
 
 **Expected Result**
 
-A document layout is displayed as printed pages; nothing on it is editable.
+A document layout is displayed as printed pages by a library node; nothing on it is editable.
 
 **Technical Considerations**
 
@@ -654,33 +840,44 @@ drawing interface so the same routine could later be driven by an export; that c
 It draws with the same `javafx.scene.text.Font` the engine measured with, so there is no second font
 implementation that could place a glyph elsewhere.
 
+Greyed out and apart are states of a page in the layout result, not knowledge of the renderer: the
+library never learns that apart means blurb and inactive means a part switched off.
+
+Virtualisation lands here rather than in IP-16, where it was originally planned: a library that cannot
+show a long document is not reusable, and the preview mode should not have to build it a second time.
+
 ### IP-08: Paper Flow View
 
 **Objective**
 
-Build the writing sheet: page geometry and true break positions around native text controls.
+Build the writing sheet as a library node: page geometry and true break positions around native text
+controls, without the library owning a document.
 
 **Scope**
 
-In scope: `PaperFlowView` with the page width, the margins and the sheet look of IP-07; a slot per
-block that a native control is placed into; the sheet gap where a break falls between two paragraphs;
-the marker line with the page number where a break falls inside a paragraph; the greyed out look of a
-switched off part; the hard edge before the blurb, which is a different thing from a page break and
-must not look like one; debounced recomputation of break positions; tests. Out of scope: the text controls and their behaviour, which belong to
-IP-10; splitting a control at a break, which is IP-21.
+In scope: `PaperFlowView` in `lib/layouting-fx` with the page width, the margins and the sheet look of
+IP-07; a slot per block that a native control is placed into; the sheet gap where a break falls between
+two paragraphs; the marker line with the page number where a break falls inside a paragraph; the greyed
+out look of an inactive page; the hard edge of a page standing apart, which is a different thing from a
+page break and must not look like one; caret, focus and selection per block; the event and property API
+reporting text change, caret movement, focus change and a request to split, join or remove a block;
+re-layout on a changed document layout without losing caret or focus; debounced recomputation of break
+positions; tests. Out of scope: applying any change to any model, undo, the binding to `BookPartProperty`
+and the ai-ghost specific behaviour, which belong to IP-10; splitting a control at a break, which is
+IP-21.
 
 **Affected Areas**
 
-`app/ui` component package, styles, message bundles, icons if the marker carries one.
+`lib/layouting-fx` (control and skin packages, resources).
 
 **Dependencies**
 
-IP-04.
+IP-04, IP-26.
 
 **Expected Result**
 
-A part is shown on sheets of the correct geometry with break positions taken from the engine, ready
-to receive editable blocks.
+A document layout is shown on sheets of the correct geometry with break positions taken from the
+engine, is written into, and reports every change instead of performing it.
 
 **Technical Considerations**
 
@@ -692,6 +889,85 @@ The native control wraps its own text, but it wraps it with the same JavaFX text
 measured with, so its line breaks and the engine's agree except for what the control's own insets and
 padding add. Those insets have to be taken out of the column width the engine is given, or the sheet
 wraps a word earlier than the printed page does.
+
+The component owns the caret, the consumer owns the text. Keeping the model out of the library is what
+makes the component reusable and is also what keeps undo (IP-09) working, because every change passes
+through the consumer.
+
+Inline character formatting is offered nowhere; pasted rich text is reduced to plain text - that is a
+property of a design owned appearance, not of ai-ghost, and therefore belongs to the library.
+
+### IP-27: Library Styling And Theming API
+
+**Objective**
+
+Let the appearance of the sheets be styled by the consuming application without patching the library.
+
+**Scope**
+
+In scope: the library's own stylesheet as the default; style classes and pseudo classes for sheet,
+shadow, gap, break marker, page number, inactive sheet, apart sheet and background; styleable
+properties where a value is chrome rather than text style; the ai-ghost palette overriding those
+classes under `styles/component` in `app/ui`; documentation of the styling API; tests that an override
+takes effect. Out of scope: the text on the sheet, whose appearance the layout result owns.
+
+**Affected Areas**
+
+`lib/layouting-fx` (resources, control package), `app/ui` styles, message bundles where a marker
+carries a text, icons where it carries one.
+
+**Dependencies**
+
+IP-07, IP-08.
+
+**Expected Result**
+
+The library looks complete on its own and takes on the appearance of ai-ghost inside the application.
+
+**Technical Considerations**
+
+The text on the sheet is styled by the layout result, not by CSS - a stylesheet must never be able to
+change a font size and thereby break the correspondence between measured and painted text. Only the
+chrome around the text is styleable. That boundary has to be explicit in the API documentation,
+otherwise the fidelity chain of this feature is quietly reopened.
+
+The `ui-styling` skill governs the ai-ghost side of it, the library ships a neutral default that names
+no colour of this application.
+
+### IP-28: Standalone Reuse And Documentation
+
+**Objective**
+
+Prove and document that the renderer library is usable without ai-ghost.
+
+**Scope**
+
+In scope: a demo showing a document layout built from plain text blocks in both nodes, without any
+ai-ghost module on its path; a build check failing when the library gains a dependency on
+`ai-ghost-model`, `ai-ghost-layouting-model` or `app/ui`; the publication of the artifact the way the
+other library modules are published; KDoc on the whole public API; README and MkDocs pages of the
+module including the styling API and the FX thread constraint; the CHANGELOG entry. Out of scope: an
+end user application - the demo is a sample, not a product.
+
+**Affected Areas**
+
+`lib/layouting-fx` (demo source set), `docs`, `README.md`, `CHANGELOG.md`, `.github` workflows,
+publication configuration.
+
+**Dependencies**
+
+IP-27.
+
+**Expected Result**
+
+The library is documented, published and demonstrably independent of the application.
+
+**Technical Considerations**
+
+The dependency check is worth automating: a library stays reusable only as long as something fails
+when it stops being so. A demo in its own source set keeps the sample out of the published artifact.
+
+The `project-docs` and `ci-pipeline` skills govern this plan end to end.
 
 ### IP-09: Undo And Redo Infrastructure
 
@@ -724,6 +1000,9 @@ It has to be built before the first surface records into it, otherwise editing a
 own mechanism. Structural operations (IP-11) and applied AI results (IP-18, IP-19) are ordinary
 entries on the same stack - that is the whole point of doing it separately.
 
+It stays in `app/ui`: the library reports changes and applies none, so the undo stack sits on the side
+that owns the model.
+
 ### IP-10: Book Part Writing Surface
 
 **Objective**
@@ -732,13 +1011,14 @@ Make the sheet the place the text is written.
 
 **Scope**
 
-In scope: `BookPartEditor` placing an auto-growing text control per block into `PaperFlowView`;
-caret and typing; focus movement between blocks with the arrow keys; bidirectional binding to
-`BookPartProperty` for heading, heading lines and paragraphs; plain text paste; recording into the
-undo stack; the title page and the copyright page bound to `BookProperty` and `MetaProperty`; the
-prolog, chapter and epilog variants through the one `BookPartProperty` they share; the blurb variant,
-which has no heading; writing on a part that is switched off; tests. Out of scope: the tree checkbox,
-which is IP-23; structural operations, AI, inspector.
+In scope: `BookPartEditor` driving the `PaperFlowView` of the library with the blocks of the selected
+part; consuming its change, caret and focus events; bidirectional binding to `BookPartProperty` for
+heading, heading lines and paragraphs; focus movement between blocks with the arrow keys; recording
+into the undo stack; the title page and the copyright page bound to `BookProperty` and `MetaProperty`;
+the prolog, chapter and epilog variants through the one `BookPartProperty` they share; the blurb
+variant, which has no heading; writing on a part that is switched off; tests. Out of scope: the tree
+checkbox, which is IP-23; structural operations, AI, inspector; caret and typing behaviour itself,
+which the library owns since IP-08.
 
 **Affected Areas**
 
@@ -754,9 +1034,8 @@ Selecting a chapter opens its text on the sheet and every keystroke lands in the
 
 **Technical Considerations**
 
-Rich text on the clipboard is reduced to plain text, otherwise the ownership of the appearance by the
-design breaks immediately. Editing must survive a design change while the caret sits inside a
-paragraph, so the caret is stored as a paragraph index plus a character offset, never as a coordinate.
+Editing must survive a design change while the caret sits inside a paragraph, so the caret is stored as
+a paragraph index plus a character offset, never as a coordinate.
 
 Prolog, chapter and epilog are one editor, not three: they are the same `BookPart`, so the editor
 binds `BookPartProperty` and the differences stay in what the tree hands it. The blurb is the
@@ -770,6 +1049,9 @@ half a feature.
 The title page and the copyright page are the one place the paper shows data that is not the
 manuscript: the author comes from `Meta`, and the two pages are read-only on the sheet, because both
 values are edited in the inspector.
+
+Everything ai-ghost specific that the flow view might have wanted has to be answered by an API of the
+library, never by a dependency back into the application.
 
 ### IP-11: Paragraph Structure Operations
 
@@ -802,6 +1084,9 @@ step.
 Every operation changes the block list, which changes the layout, which moves the caret target - the
 three have to be handled as one transaction. Splitting mid-paragraph is the case that exposes an
 off-by-one in the character range mapping of IP-03, so it deserves its own tests.
+
+The library requests the operation, the application performs it: the split, join and remove events of
+IP-08 are what this plan implements.
 
 ### IP-12: Inspector Shell And Content Sections
 
@@ -845,17 +1130,17 @@ Edit the typography of the book and see the effect while editing it.
 **Scope**
 
 In scope: inspector sections for the styles of title, chapter title, chapter title appendix and body
-text - family chosen from the families reported by IP-01, size, bold, italic, alignment, line
-spacing; a preview of a family in the picker; the marking of a family that is not installed here;
+text - family chosen from the families the library's catalogue reports, size, bold, italic, alignment,
+line spacing; a preview of a family in the picker; the marking of a family that is not installed here;
 live effect on the sheet; tests. Out of scope: page format and margins, which are IP-14.
 
 **Affected Areas**
 
-`app/ui` inspector and font package, `DesignProperty` binding, message bundles, styles.
+`app/ui` inspector and font glue, `DesignProperty` binding, message bundles, styles.
 
 **Dependencies**
 
-IP-01, IP-02, IP-12.
+IP-02, IP-12, IP-26.
 
 **Expected Result**
 
@@ -943,14 +1228,14 @@ Turn the same content into a preview of the whole book.
 **Scope**
 
 In scope: the `Schreiben` / `Vorschau` switch; preview rendering the whole book through
-`PaperPageView`; page virtualisation so only visible sheets exist in the scene graph; laying out a
-whole book without freezing the window; scrolling to the part selected in the tree and keeping the
-position across a mode change; page count and current page in the status bar; the mode remembered in
-`Preferences`; tests.
+`PaperPageView`; laying out a whole book without freezing the window; scrolling to the part selected in
+the tree and keeping the position across a mode change; page count and current page in the status bar;
+the mode remembered in `Preferences`; tests. Out of scope: page virtualisation, which the library
+brings with IP-07.
 
 **Affected Areas**
 
-`app/ui` `Editor*`, `PaperPageView`, `MainWindow` status bar and tool bar, icons, message bundles.
+`app/ui` `Editor*`, `MainWindow` status bar and tool bar, icons, message bundles.
 
 **Dependencies**
 
@@ -1034,6 +1319,9 @@ A paragraph level result replaces directly because undo already exists - a compa
 cost more than it protects. The action must not block the FX thread; only the affected block is
 marked busy while the rest of the sheet stays usable.
 
+The action bar is an overlay of the application above the library's node, and reaches the block it
+belongs to through the focus events of IP-08 - the library gains no notion of an AI.
+
 ### IP-19: AI Part Generation With Provisional State
 
 **Objective**
@@ -1085,7 +1373,7 @@ this plan is optional and is only started if the marker line of IP-08 proves ins
 
 **Affected Areas**
 
-`app/ui` `PaperFlowView`, `BookPartEditor`.
+`lib/layouting-fx` `PaperFlowView`, `app/ui` `BookPartEditor`.
 
 **Dependencies**
 
@@ -1101,6 +1389,8 @@ The split point moves with every keystroke, so controls are merged and split whi
 inside them - that, not the splitting itself, is the hard part. This is deliberately last: the feature
 is complete and usable without it, and the effort is only justified once the marker line has been
 lived with.
+
+It is a rendering concern and therefore lands in the library, not in the application.
 
 ### IP-23: Optional Book Parts In The Tree
 
@@ -1149,19 +1439,21 @@ a page's position and its page number; the paper has to follow without the proje
 
 ```text
 IP-01 ─┬─> IP-22
-       ├─> IP-13   (with IP-02, IP-12)
        └─┐
-IP-02 ─┬─┴─> IP-03 ──> IP-04 ─┬─> IP-05 ──────────────┐
-IP-24 ─┤    │                 │                       │
-       └─> IP-14              ├─> IP-07 ─┬────────────┤
-                              │          ├─> IP-06    │
-                              └─> IP-08 ─┘            │
-                                    │                 │
-                                    └─> IP-10 ────────┼──> IP-18   (with IP-17)
-                                    (with IP-09)      │
-                                              └─> IP-11 ─┬─> IP-15 ─┬─> IP-16
-                                                         │          └─> IP-23   (with IP-24)
-                                                         └─> IP-21
+IP-25 ─┬─┴─> IP-26 ─┬─> IP-07 ─┬─> IP-27 ──> IP-28
+                    ├─> IP-08 ─┘
+                    └─> IP-13   (with IP-02, IP-12)
+IP-02 ─┬─────> IP-03 ──> IP-04 ─┬─> IP-05 ──────────────┐
+IP-24 ─┤    │                   │                       │
+       └─> IP-14                ├─> IP-07 ─┬────────────┤
+                                │          ├─> IP-06    │
+                                └─> IP-08 ─┘            │
+                                      │                 │
+                                      └─> IP-10 ────────┼──> IP-18   (with IP-17)
+                                      (with IP-09)      │
+                                                └─> IP-11 ─┬─> IP-15 ─┬─> IP-16
+                                                           │          └─> IP-23   (with IP-24)
+                                                           └─> IP-21
 IP-09 ──> IP-10, IP-18, IP-19
 IP-12 ─┬─> IP-13
        ├─> IP-15
@@ -1169,20 +1461,34 @@ IP-12 ─┬─> IP-13
 IP-17 ─┬─> IP-18
        └─> IP-19
 IP-05, IP-07, IP-15 ──> IP-16
+IP-07, IP-08 ──> IP-06, IP-27
 ```
 
-Independent starting points: **IP-01**, **IP-02**, **IP-24**, **IP-09**, **IP-12**, **IP-17** can all
-begin at once.
+Independent starting points: **IP-25**, **IP-09**, **IP-12**, **IP-17** can all begin at once; IP-01,
+IP-02, IP-24 and IP-03 are done.
 
 ## 9. Risks and Open Questions
 
+* **JavaFX in a library module** contradicts `.claude/rules/architecture.md` as it stands today. The
+  rule amendment and the JavaFX dependency of a library module both need the user's confirmation
+  before IP-25 starts. This is the one open decision blocking a plan.
+* **Package and artifact naming of the renderer library.** `ai-ghost-layouting-fx` under
+  `org.pcsoft.app.aighost.layouting.fx` keeps the convention of the sibling modules but carries the
+  application name into a library meant for reuse. A neutral name would be more honest and would break
+  the convention. Open.
+* **Publication of the renderer library.** Whether it is published as a real artifact for outside
+  consumers or only built inside this repository is undecided; IP-28 assumes the way the other library
+  modules are handled.
+* **TestFX in a library module** has no precedent here; the headless setup of `app/ui` may not
+  transfer unchanged and is part of IP-25 for that reason.
+* **Scope of the reusable flow view.** `PaperFlowView` is a full text editing component and is the
+  part most likely to need ai-ghost specific behaviour later. Every such need must be answered by an
+  API of the library, never by a dependency back into the application.
 * **Measuring belongs to the FX thread.** A `javafx.scene.text.Text` node may only be used there, so
   every measurement the engine needs is an FX thread operation. IP-05 answers it by measuring words
   rather than paragraphs and by separating measuring from arranging, but laying out a long book for
   the first time stays a cost that IP-16 has to show rather than hide. This is the central technical
   risk of the feature and needs measuring early, in IP-05, not in IP-16.
-* **Default page format and margins** need a decision before IP-02; the proposal is A5 with presets
-  and 20 / 15 / 15 / 20 mm inner, outer, top, bottom.
 * **The default font of a new project** is open. `FontData` defaults to `Arial` today, which is not
   installed everywhere; a default resolving through the fallback chain of IP-01 is needed instead of
   a hard coded name.
@@ -1198,8 +1504,8 @@ begin at once.
   touches it.
 * **Widows, orphans, hyphenation** are excluded; the hook exists, no implementation ships.
 * **Resolving a provisional AI part** on part change or project close (IP-19) is undecided.
-* **Two new Gradle modules** (`lib/layouting`, `lib/layouting-model`) require a check against the
-  `ci-pipeline` skill.
+* **Three new Gradle modules** (`lib/layouting`, `lib/layouting-model`, `lib/layouting-fx`) require a
+  check against the `ci-pipeline` skill.
 
 ### Decisions taken
 
@@ -1218,6 +1524,9 @@ build on them.
   umlauts and the sharp s, measured at 12 pt, together with ascent, descent and leading. The set and
   the size are fixed from that point on - a later change would report a mismatch for every project
   written before it.
+* **The renderer is a library**, not a component of `app/ui`: both surfaces and the measuring live in
+  `lib/layouting-fx`, which depends on `ai-ghost-layouting` and JavaFX and on nothing else. The
+  application keeps everything that names its own model.
 
 ### Deliberately out of scope
 
@@ -1263,7 +1572,13 @@ build on them.
 * An AI action can be triggered for a paragraph, a heading and a whole part; a paragraph result is
   applied directly, a part result is accepted or discarded.
 * The layout result carries no toolkit type, so a later export plugin can consume it unchanged.
-* JavaFX appears in no module but `app/ui`.
+* `lib/layouting-fx` builds, tests and is covered as a JavaFX library module; its dependency set
+  contains `ai-ghost-layouting` and JavaFX and nothing else, and the build fails when it gains more.
+* Both surfaces and the JavaFX measuring live in that library, no such code exists twice in the
+  repository, and a demo renders a document with it without any ai-ghost module on its path.
+* The library ships its own stylesheet and takes on the ai-ghost palette through overridden style
+  classes.
+* JavaFX appears in no module but `app/ui` and `lib/layouting-fx`, and the architecture rule says so.
 * The project tree keeps its structure and its selection API; the checkbox on the three optional
   nodes is the only thing this feature added to it.
 * Build and tests are green, documentation and changelog are updated per the `project-docs` skill.

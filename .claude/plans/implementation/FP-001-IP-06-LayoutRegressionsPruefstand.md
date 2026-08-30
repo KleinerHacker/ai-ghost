@@ -32,11 +32,13 @@
 * Seitenstruktur als Zahlen einchecken, nicht als Bild.
 * Abweichung mit Angabe der betroffenen Zeile melden.
 * Weg zum Neuerzeugen einer Golden File dokumentieren.
+* Golden Files im Testsatz von `lib/layouting` führen.
 
 ### 3. Flächenvergleich
 
 * Umbruchpositionen von `PaperFlowView` gegen die Seiten von `PaperPageView` prüfen.
 * Test headless über TestFX ausführen.
+* Vergleich im Testsatz von `lib/layouting-fx` führen.
 
 ### 4. Gradle
 

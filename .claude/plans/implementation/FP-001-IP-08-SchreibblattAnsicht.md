@@ -8,63 +8,74 @@
 
 ## Abhängigkeiten
 
-* Voraussetzung: IP-04
+* Voraussetzung: IP-04, IP-26
 * Start erst, wenn jede Voraussetzung im Feature-Status `COMPLETED` ist.
-* Blockiert: IP-06, IP-10
+* Blockiert: IP-06, IP-10, IP-27
 * Reihenfolge und Graph stehen in Abschnitt 8 des Feature Plans.
 
 ## Zu ladende Skills
 
-* `ui-styling`
 * `fx-component-lifecycle`
 * `testing`
-* `icons`
 * `project-docs`
 
 ## Aufgaben
 
 ### 1. Komponente
 
-* `PaperFlowView` nach dem MVVM-FX-Muster anlegen.
+* `PaperFlowView` als Control mit Skin in `lib/layouting-fx` anlegen.
 * Seitenbreite, Ränder und Blattoptik aus IP-07 übernehmen.
-* Je Block einen Platz für ein natives Textcontrol anbieten.
+* Je Block ein natives Textcontrol einsetzen.
+* Keinen Typ aus `ai-ghost-model` in einer Signatur führen.
 
 ### 2. Umbruchdarstellung
 
-* Echte Blattlücke setzen, wenn der Umbruch zwischen zwei Absätzen fällt.
-* Gestrichelte Marke mit Seitenzahl zeichnen, wenn der Umbruch im Absatz fällt.
+* Echte Blattlücke setzen, wenn der Umbruch zwischen zwei Blöcken fällt.
+* Gestrichelte Marke mit Seitenzahl zeichnen, wenn der Umbruch im Block fällt.
 * Marke als Overlay über dem Block zeichnen, Control bleibt ein Stück.
-* Harte Kante vor dem Klappentext deutlich von der Marke unterscheiden.
+* Harte Kante einer abgesetzten Seite deutlich von der Marke unterscheiden.
 
 ### 3. Spaltenbreite
 
 * Insets und Padding des Textcontrols aus der Spaltenbreite herausrechnen.
-* Berechnete Spaltenbreite an die Layout-Engine übergeben.
+* Berechnete Spaltenbreite über die API nach außen melden.
 
-### 4. Zustände
+### 4. Bearbeitung
 
-* Blätter eines ausgeschalteten Teils ausgegraut darstellen.
+* Cursor, Fokus und Auswahl je Block führen.
+* Fremdformatierung beim Einfügen auf reinen Text reduzieren.
+* Keine Zeichenformatierung anbieten.
 
-### 5. Aktualisierung
+### 5. Ereignis-API
+
+* Textänderung, Cursorbewegung und Fokuswechsel als Ereignis melden.
+* Wunsch nach Teilen, Verbinden und Entfernen eines Blocks melden.
+* Keine Änderung selbst anwenden und kein Dokument halten.
+
+### 6. Aktualisierung
 
 * Neuberechnung der Umbruchpositionen entprellen, etwa 100 ms.
 * Textdarstellung nicht entprellen.
+* Bei neuem Layoutergebnis Cursor und Fokus behalten.
 
-### 6. Gestaltung
+### 7. Zustände
 
-* `styles/component/paper-flow.css` anlegen und einhängen.
-* Texte über das Message-Bundle führen.
+* Inaktive Blätter ausgegraut darstellen.
+* Ausgegraute Blätter beschreibbar lassen.
 
-### 7. Tests
+### 8. Tests
 
 * Umbruchmarke, Blattlücke und Spaltenbreite headless prüfen.
+* Ereignisse bei Tippen, Teilen und Verbinden prüfen.
+* Erhalt von Cursor und Fokus nach neuem Layout prüfen.
 
-### 8. Abschluss
+### 9. Abschluss
 
 * Build über Agent ausführen.
 * Dokumentation nach `project-docs` prüfen.
 
 ## Ergebnis
 
-* Ein Teil erscheint auf Blättern korrekter Geometrie mit Umbruchpositionen aus der Engine.
-* Die Blöcke sind bereit, bearbeitbare Controls aufzunehmen.
+* Ein Layoutergebnis erscheint auf Blättern korrekter Geometrie mit Umbrüchen aus der Engine.
+* In die Blöcke wird geschrieben, jede Änderung wird gemeldet statt angewendet.
+* Der Knoten gehört der Bibliothek und kennt die Anwendung nicht.

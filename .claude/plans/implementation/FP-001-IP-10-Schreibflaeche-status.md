@@ -13,7 +13,7 @@ Status: NOT_STARTED
 |----|---------|--------|
 | 1 | Komponente | NOT_STARTED |
 | 2 | Bindung | NOT_STARTED |
-| 3 | Bedienung | NOT_STARTED |
+| 3 | Ereignisse verarbeiten | NOT_STARTED |
 | 4 | Ausgeschaltete Teile | NOT_STARTED |
 | 5 | Undo | NOT_STARTED |
 | 6 | Tests | NOT_STARTED |
