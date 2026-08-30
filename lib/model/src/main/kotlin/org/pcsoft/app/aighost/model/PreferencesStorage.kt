@@ -23,17 +23,17 @@ import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
 /**
- * Reads and writes the [Preferences] of the current user as a JSON file.
+ * Reads and writes the [Preferences] of the current user as a YAML file.
  *
  * The storage holds nothing: [load] hands the preferences of the file to its caller and [save] writes
  * the preferences it is given. Whoever works with the preferences keeps them - in this application
  * that is the user interface, which offers them as a property model of `ai-ghost-fx-model`. A file
  * changed from outside while the application runs therefore takes effect on an explicit [load].
  *
- * The file lives in the user's home directory and is written with indentation, so it can be edited
- * by hand. Nothing throws for an expected failure: [load] and [save] return an [Either] carrying an
- * [Error] on the left, so a caller can tell the user about a file that cannot be read or written -
- * and decide for itself whether the defaults take the place of what could not be read.
+ * The file lives in the user's home directory and is written as an indented YAML document, so it can
+ * be edited by hand. Nothing throws for an expected failure: [load] and [save] return an [Either]
+ * carrying an [Error] on the left, so a caller can tell the user about a file that cannot be read or
+ * written - and decide for itself whether the defaults take the place of what could not be read.
  */
 object PreferencesStorage {
 
@@ -55,7 +55,7 @@ object PreferencesStorage {
      * failure means is its decision - the defaults of [Preferences] are one answer to it.
      *
      * Returns [Error.NotFound] when nothing is stored yet, [Error.NotAFile] when the path exists but
-     * is not a regular file, [Error.Malformed] when the content is not the expected JSON document,
+     * is not a regular file, [Error.Malformed] when the content is not the expected YAML document,
      * and [Error.Unreadable] when the file cannot be read at all.
      */
     fun load(): Either<Error, Preferences> = read()
@@ -161,7 +161,7 @@ object PreferencesStorage {
         data class Unreadable(override val file: File, val cause: Throwable) : Error
 
         /**
-         * The file was read, but its content is not the JSON document that was expected.
+         * The file was read, but its content is not the YAML document that was expected.
          *
          * @property file The file that was read.
          * @property cause The underlying parse failure.

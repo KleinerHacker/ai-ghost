@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder
  * The preferences are a plain mutable value object: a setting is changed on the object itself and
  * nobody is notified about it, so whoever needs a setting reads it when it is needed.
  *
- * The preferences are persisted as JSON. Unknown properties are ignored so a file written by a newer
+ * The preferences are persisted as YAML. Unknown properties are ignored so a file written by a newer
  * version of the application can still be read, and every property carries a default so an older
  * file stays readable as well.
  *
