@@ -104,7 +104,7 @@ object PreferencesStorage {
 
             val temporary = File.createTempFile(file.name, ".tmp", file.parentFile)
             try {
-                StorageIo.jsonMapper.writeValue(temporary, preferences)
+                StorageIo.yamlMapper.writeValue(temporary, preferences)
                 Files.move(
                     temporary.toPath(),
                     file.toPath(),
