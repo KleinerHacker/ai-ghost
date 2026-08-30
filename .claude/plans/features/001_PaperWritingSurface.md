@@ -194,7 +194,7 @@ replaced at once and taken back through undo.
 
 ### Modules
 
-* **`lib/layout` (`ai-ghost-layout`)** - the typesetting engine and the only new library module.
+* **`lib/layouting` (`ai-ghost-layouting`)** - the typesetting engine and the only new library module.
   Input: `Design` plus a `BookPart` or a whole `Book`. Output: a `DocumentLayout` - pages, each
   holding placed lines with absolute `x`, `y`, baseline, text run, resolved style and the index of the
   source paragraph. Decides line breaking, alignment, spacing and page breaks. Owns the `TextMetrics`
@@ -440,7 +440,7 @@ Turn design plus text into placed lines with absolute coordinates.
 
 **Scope**
 
-In scope: new module `lib/layout`; the `TextMetrics` interface and a deterministic implementation for
+In scope: new module `lib/layouting`; the `TextMetrics` interface and a deterministic implementation for
 tests; the resolved style (family, size, weight, slant, alignment, line spacing, spacing before and
 after); block model for the title page, the copyright page, a heading, a heading line, a paragraph
 and the blurb; line breaking against a given column width; horizontal alignment including justified
@@ -450,7 +450,7 @@ page breaks, caching, any toolkit.
 
 **Affected Areas**
 
-`settings.gradle.kts`, new module `lib/layout`, dependency on `lib/ai-ghost-model`, and the
+`settings.gradle.kts`, new module `lib/layouting`, dependency on `lib/ai-ghost-model`, and the
 implementation of `TextMetrics` written in IP-01.
 
 **Dependencies**
@@ -493,7 +493,7 @@ the resulting page structure. Out of scope: widow and orphan handling
 
 **Affected Areas**
 
-`lib/layout`.
+`lib/layouting`.
 
 **Dependencies**
 
@@ -538,7 +538,7 @@ and IP-16.
 
 **Affected Areas**
 
-`lib/layout`, `app/ui` font package.
+`lib/layouting`, `app/ui` font package.
 
 **Dependencies**
 
@@ -579,7 +579,7 @@ regenerated.
 
 **Affected Areas**
 
-`lib/layout` test source set, `app/ui` test source set, CI (`ci-pipeline` skill).
+`lib/layouting` test source set, `app/ui` test source set, CI (`ci-pipeline` skill).
 
 **Dependencies**
 
@@ -1181,7 +1181,7 @@ begin at once.
   touches it.
 * **Widows, orphans, hyphenation** are excluded; the hook exists, no implementation ships.
 * **Resolving a provisional AI part** on part change or project close (IP-19) is undecided.
-* **One new Gradle module** (`lib/layout`) requires a check against the `ci-pipeline` skill.
+* **One new Gradle module** (`lib/layouting`) requires a check against the `ci-pipeline` skill.
 
 ### Decisions taken
 
