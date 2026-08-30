@@ -20,7 +20,7 @@ plugins {
 val jacksonVersion = "2.22.2"
 
 // Arrow's Either appears in the signatures of the storage, so it is part of the API as well.
-val arrowVersion = "2.1.2"
+val arrowVersion = "2.2.3"
 
 dependencies {
     // The plugin API is exposed through the model API, so consumers of the model see the plugin types.

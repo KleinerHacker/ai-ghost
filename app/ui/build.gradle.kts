@@ -40,7 +40,7 @@ dependencies {
     implementation(project(":lib:ai-ghost-fx-model"))
     implementation(project(":lib:ai-ghost-ai"))
 
-    implementation("io.arrow-kt:arrow-core:2.1.2")
+    implementation("io.arrow-kt:arrow-core:2.2.3")
     implementation("org.apache.commons:commons-lang3:3.20.0")
 
     implementation("org.controlsfx:controlsfx:11.2.4")
