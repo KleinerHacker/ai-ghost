@@ -31,9 +31,11 @@ import org.pcsoft.app.aighost.model.project.common.AIPrompt
  * Property wrapping the manuscript of a project and offering every field of it - and every field of
  * the objects nested in it - as a property of its own.
  *
- * Prolog, epilog and blurb exist only after the user created them, so the properties standing for
- * them carry no object until then and their field properties answer with neutral values. The chapters
- * are offered as a list of the plain objects, because the user arranges them as a whole.
+ * Prolog, epilog and blurb are always part of the manuscript, each of them carrying a switch that
+ * tells whether it belongs to the book. The properties standing for them carry no object only as long
+ * as no manuscript sits behind this property, and their field properties answer with neutral values
+ * until then. The chapters are offered as a list of the plain objects, because the user arranges them
+ * as a whole.
  *
  * Every part nested in the manuscript is handed out with its own type, so a user interface reaches the
  * fields of the prompts, of the prolog, of the epilog and of the blurb through the property standing

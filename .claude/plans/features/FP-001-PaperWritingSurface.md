@@ -421,10 +421,11 @@ document carrying none of the optional parts opens with their defaults.
 
 **Technical Considerations**
 
-The switch belongs on the part, not on the book, so the state travels with the text it describes.
-`Prolog` and `Epilog` are `BookPart` and `Blurb` is not, so the three share a small interface of their
-own for the switch rather than widening `BookPart` - a chapter is not optional and must not gain a
-switch it can never use.
+The switch belongs on the part, not on the book, so the state travels with the text it describes. It
+is the field `included` on `Prolog`, `Epilog` and `Blurb`, declared on each of them rather than in a
+shared interface: no caller reaches it polymorphically, and `BookPart` must not gain a switch a
+chapter can never use. `Prolog.title` and `Epilog.title` gain the default `""`, because `Book` builds
+the three parts itself from now on.
 
 This is what makes the deferral of a part harmless: nothing is deleted, so IP-23 needs no confirmation
 dialog and no undo entry that restores lost text.

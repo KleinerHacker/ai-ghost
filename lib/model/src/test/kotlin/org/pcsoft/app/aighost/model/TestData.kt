@@ -107,26 +107,38 @@ object TestData {
     /** The prompts of the whole manuscript, different from those of every single part. */
     fun bookPrompts(): AIPrompt = prompt("Tell a story in two parts.", "Warm and calm.")
 
-    /** A prolog with an appendix line, prompts and text, so a dropped property shows up. */
+    /**
+     * A prolog with an appendix line, prompts and text, belonging to the book, so a dropped property
+     * shows up.
+     */
     fun prolog(): Prolog = Prolog(
         title = "Before It All",
         titleAppendix = listOf("A word up front"),
         prompts = prompt("Tell what happened before the story.", "Quiet and slow."),
-        paragraph = listOf("Long before the story started.")
+        paragraph = listOf("Long before the story started."),
+        included = true
     )
 
-    /** An epilog with an appendix line, prompts and text, so a dropped property shows up. */
+    /**
+     * An epilog with an appendix line, prompts and text, belonging to the book, so a dropped property
+     * shows up.
+     */
     fun epilog(): Epilog = Epilog(
         title = "After It All",
         titleAppendix = listOf("A last word"),
         prompts = prompt("Tell how everybody went on.", "Quiet and slow."),
-        paragraph = listOf("And that was that.")
+        paragraph = listOf("And that was that."),
+        included = true
     )
 
-    /** A blurb with a prompt and two paragraphs, so a lost order shows up in a round trip. */
+    /**
+     * A blurb with a prompt and two paragraphs, belonging to the book, so a lost order shows up in a
+     * round trip.
+     */
     fun blurb(): Blurb = Blurb(
         prompt = "Advertise a tale of two chapters.",
-        paragraph = listOf("A gripping tale of two chapters.", "You will not put it down.")
+        paragraph = listOf("A gripping tale of two chapters.", "You will not put it down."),
+        included = true
     )
 
     /** A book with prolog, epilog, blurb and two chapters, the second one still without text. */

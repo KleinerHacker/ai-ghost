@@ -18,14 +18,18 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
  * The blurb of a [Book], the advertising text printed on the cover.
  *
  * Unlike the written parts of the manuscript the blurb carries no heading of its own: it is text
- * only. A book has at most one blurb, and only if the user created it, so [Book.blurb] stays empty
- * until then.
+ * only. Every book carries its blurb, [Book.blurb] is never empty. Whether the blurb belongs to the
+ * book is told by [included] alone; what was written into it stays untouched while it does not, so
+ * switching it off and on again gives the text back unchanged.
  *
  * @property prompt Prompt for the blurb, empty by default.
  * @property paragraph Paragraphs of the blurb in their order, empty by default.
+ * @property included Whether the blurb belongs to the book, `false` by default.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Blurb(
     var prompt: String = "",
-    var paragraph: List<String> = emptyList()
+    var paragraph: List<String> = emptyList(),
+
+    var included: Boolean = false
 )

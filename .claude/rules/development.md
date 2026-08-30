@@ -23,7 +23,13 @@ name: development
     * The status MUST ALWAYS be kept up to date
 * When restarting an existing plan after an interruption, plan mode MUST be entered
     * The remaining items are laid out again according to the prescribed scheme
-* After plan is finished cleanup `.claude/plans/implementation` folder
+* As soon as a plan is finished, its two files MUST be removed from
+  `.claude/plans/implementation` immediately, with `git rm`
+    * Removed are EXACTLY `<Name>.md` and `<Name>-status.md` of the finished plan
+    * FORBIDDEN: emptying the directory - every other plan and status file stays untouched
+    * FORBIDDEN: removing a plan that is not finished yet
+    * The removal happens in the same change set as the last task of the plan
+    * The feature status file records the plan as `COMPLETED` before its files are removed
 
 ## Implementation
 

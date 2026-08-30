@@ -16,7 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.model.TestData
 import org.pcsoft.app.aighost.model.project.common.AIPrompt
@@ -59,21 +59,24 @@ class BookTest {
     }
 
     /**
-     * Use case: prolog, epilog and blurb are created on demand through the menu, so a fresh book
-     * carries none of them instead of empty placeholders the user never asked for.
+     * Use case: prolog, epilog and blurb are switched on through the menu, so a fresh book already
+     * carries all three of them, empty and not yet part of the book.
      */
     @Test
-    fun defaultsToNoPrologEpilogAndBlurb() {
+    fun defaultsToEmptyPrologEpilogAndBlurbThatAreNotIncluded() {
         val book = Book(title = "My Novel")
 
-        assertNull(book.prolog)
-        assertNull(book.epilog)
-        assertNull(book.blurb)
+        assertEquals(Prolog(), book.prolog)
+        assertEquals(Epilog(), book.epilog)
+        assertEquals(Blurb(), book.blurb)
+        assertFalse(book.prolog.included)
+        assertFalse(book.epilog.included)
+        assertFalse(book.blurb.included)
     }
 
     /**
-     * Use case: a book is written to disk, so title, appendix lines, prompts and chapters appear in
-     * the JSON under the stable property names the file format promises.
+     * Use case: a book is written to disk, so title, appendix lines, prompts, chapters and the three
+     * switchable parts appear in the JSON under the stable property names the file format promises.
      */
     @Test
     fun serialisesTitleAppendixPromptsAndChapters() {
@@ -89,9 +92,13 @@ class BookTest {
         assertEquals(
             """{"version":1,"title":"My Novel","titleAppendix":["A Story"],""" +
                 """"prompts":{"contentPrompt":"Tell a story in two parts.","stylePrompt":"Warm and calm."},""" +
-                """"prolog":null,"chapters":[{"name":"prologue","title":"Prologue","titleAppendix":[],""" +
+                """"prolog":{"title":"","titleAppendix":[],""" +
+                """"prompts":{"contentPrompt":"","stylePrompt":""},"paragraph":[],"included":false},""" +
+                """"chapters":[{"name":"prologue","title":"Prologue","titleAppendix":[],""" +
                 """"prompts":{"contentPrompt":"","stylePrompt":""},"paragraph":[]}],""" +
-                """"epilog":null,"blurb":null}""",
+                """"epilog":{"title":"","titleAppendix":[],""" +
+                """"prompts":{"contentPrompt":"","stylePrompt":""},"paragraph":[],"included":false},""" +
+                """"blurb":{"prompt":"","paragraph":[],"included":false}}""",
             json
         )
     }
@@ -112,7 +119,7 @@ class BookTest {
 
     /**
      * Use case: a book with prolog, epilog and blurb is stored and opened again, so all three parts
-     * come back with their content instead of being dropped.
+     * come back with their content and with their switch instead of being dropped.
      */
     @Test
     fun roundTripsPrologEpilogAndBlurb() {
@@ -139,8 +146,8 @@ class BookTest {
     }
 
     /**
-     * Use case: a book file holds only the title, so it is read back as a book without chapters
-     * instead of failing.
+     * Use case: a book file holds only the title, so it is read back as a book without chapters and
+     * with the three switchable parts in their default shape instead of failing.
      */
     @Test
     fun readsDocumentWithTitleOnly() {

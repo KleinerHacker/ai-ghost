@@ -31,17 +31,17 @@ private const val VERSION = 1
  *
  * Every project holds a book, even an empty one that has not been written yet. The chapter order is
  * part of the data: the list is stored and read back in exactly the order the user arranged it in.
- * [prolog], [epilog] and [blurb] exist at most once and only after the user created them, so they
- * are empty until then.
+ * [prolog], [epilog] and [blurb] are always there as well; each of them carries a switch of its own
+ * that tells whether it belongs to the book, and its text is kept no matter how that switch stands.
  *
  * @property version Version of the project metadata structure.
  * @property title Main title of the book.
  * @property titleAppendix Further title lines shown below the main title, empty by default.
  * @property prompts Prompts for the book, empty by default.
- * @property prolog Prolog printed before the first chapter, absent by default.
+ * @property prolog Prolog printed before the first chapter, empty and not included by default.
  * @property chapters Chapters of the book in their user defined order, empty by default.
- * @property epilog Epilog printed after the last chapter, absent by default.
- * @property blurb Advertising text printed on the cover, absent by default.
+ * @property epilog Epilog printed after the last chapter, empty and not included by default.
+ * @property blurb Advertising text printed on the cover, empty and not included by default.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ProjectPartInfo(identifier = Project.PART_BOOK)
@@ -52,8 +52,8 @@ data class Book(
     var titleAppendix: List<String> = listOf(),
     var prompts: AIPrompt = AIPrompt(),
 
-    var prolog: Prolog? = null,
+    var prolog: Prolog = Prolog(),
     var chapters: List<Chapter> = emptyList(),
-    var epilog: Epilog? = null,
-    var blurb: Blurb? = null
+    var epilog: Epilog = Epilog(),
+    var blurb: Blurb = Blurb()
 ) : ProjectPart

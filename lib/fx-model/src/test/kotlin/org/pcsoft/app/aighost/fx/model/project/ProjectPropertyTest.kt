@@ -165,7 +165,7 @@ class ProjectPropertyTest {
     fun writingDeepInsideTheBookReachesTheProject() {
         bookProperty.prologProperty.titleProperty.set("A New Start")
 
-        assertEquals("A New Start", project.book.prolog?.title)
+        assertEquals("A New Start", project.book.prolog.title)
         assertEquals(1, recorder.countOf("project.book.prolog.title"))
         assertEquals(1, recorder.countOf("project.book.prolog"))
         assertEquals(1, recorder.countOf("project.book"))

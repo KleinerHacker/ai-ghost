@@ -13,11 +13,13 @@
 package org.pcsoft.app.aighost.fx.model.project.book
 
 import javafx.beans.binding.Bindings
+import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.beans.property.StringProperty
 import javafx.collections.FXCollections
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -32,8 +34,9 @@ import org.pcsoft.app.aighost.model.project.common.AIPrompt
  * own. Every test checks the object tree the way the user interface uses it: a binding hangs on the
  * epilog itself and on every single field of it, and the tests assert that a change reaches every
  * binding that has to know about it - upwards to the parent the property reports to as well as
- * downwards into the fields of an exchanged epilog. A book carries an epilog only after the user
- * created it, so the behaviour without any epilog is checked as well.
+ * downwards into the fields of an exchanged epilog. A book always carries its epilog, but the property
+ * carries no object as long as no book sits behind the one standing for it, so that state is checked
+ * as well.
  */
 class EpilogPropertyTest {
 
@@ -65,6 +68,10 @@ class EpilogPropertyTest {
     /** Binding on the paragraphs of the epilog. */
     private lateinit var paragraphView: StringProperty
     private var paragraphViewChanges = 0
+
+    /** Binding on the switch telling whether the epilog belongs to the book. */
+    private lateinit var includedView: StringProperty
+    private var includedViewChanges = 0
 
     @BeforeEach
     fun setUp() {
@@ -124,6 +131,14 @@ class EpilogPropertyTest {
         paragraphBinding.addListener { _, _, _ -> paragraphViewChanges++ }
         paragraphView.bind(paragraphBinding)
 
+        includedView = SimpleStringProperty()
+        val includedBinding = Bindings.createStringBinding(
+            { property.includedProperty.get().toString() },
+            property.includedProperty
+        )
+        includedBinding.addListener { _, _, _ -> includedViewChanges++ }
+        includedView.bind(includedBinding)
+
         resetCounters()
     }
 
@@ -134,6 +149,7 @@ class EpilogPropertyTest {
         titleAppendixViewChanges = 0
         promptsViewChanges = 0
         paragraphViewChanges = 0
+        includedViewChanges = 0
     }
 
     /** Text form of a prompt pair, used as the value of the binding on the prompts. */
@@ -144,7 +160,8 @@ class EpilogPropertyTest {
     private fun state(epilog: Epilog?): String =
         "${epilog?.title ?: MISSING}|${epilog?.titleAppendix.orEmpty().joinToString(";")}|" +
                 "${promptText(epilog?.prompts)}|" +
-                epilog?.paragraph.orEmpty().joinToString(";")
+                "${epilog?.paragraph.orEmpty().joinToString(";")}|" +
+                "${epilog?.included ?: false}"
 
     /**
      * Asserts that every binding of the object tree delivers the given state, so no view keeps the
@@ -154,14 +171,15 @@ class EpilogPropertyTest {
         title: String?,
         titleAppendix: List<String>,
         paragraph: List<String>,
-        prompts: AIPrompt? = INITIAL_PROMPTS
+        prompts: AIPrompt? = INITIAL_PROMPTS,
+        included: Boolean = false
     ) {
         val titleAppendixText = titleAppendix.joinToString(";")
         val paragraphText = paragraph.joinToString(";")
         val promptsText = promptText(prompts)
 
         assertEquals(
-            "${title ?: MISSING}|$titleAppendixText|$promptsText|$paragraphText",
+            "${title ?: MISSING}|$titleAppendixText|$promptsText|$paragraphText|$included",
             rootView.get()
         ) {
             "the binding on the epilog delivers an outdated state"
@@ -177,6 +195,9 @@ class EpilogPropertyTest {
         }
         assertEquals(paragraphText, paragraphView.get()) {
             "the binding on the paragraphs delivers outdated paragraphs"
+        }
+        assertEquals(included.toString(), includedView.get()) {
+            "the binding on the switch delivers an outdated value"
         }
     }
 
@@ -345,6 +366,51 @@ class EpilogPropertyTest {
     }
 
     /**
+     * Use case: the user takes the epilog into the book, so the switch lands in the model object and
+     * both the binding on that field and the binding on the epilog show it.
+     */
+    @Test
+    fun writesIncludedToModelAndNotifiesTree() {
+        property.included = true
+
+        assertEquals(true, holder.epilog?.included)
+        assertTreeShows(
+            "What remains",
+            listOf("A last word"),
+            listOf("The house stood empty."),
+            included = true
+        )
+        assertTrue(includedViewChanges > 0) { "the binding on the switch was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the epilog was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+    }
+
+    /**
+     * Use case: the switch is bound to the check box of the editor, so every state that box produces
+     * reaches the model object and every binding above it shows it.
+     */
+    @Test
+    fun writesBoundIncludedToModelAndNotifiesTree() {
+        val source = SimpleBooleanProperty(false)
+        property.includedProperty.bind(source)
+
+        source.set(true)
+
+        assertEquals(true, holder.epilog?.included)
+        assertTreeShows(
+            "What remains",
+            listOf("A last word"),
+            listOf("The house stood empty."),
+            included = true
+        )
+        assertTrue(includedViewChanges > 0) { "the binding on the switch was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the epilog was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+
+        property.includedProperty.unbind()
+    }
+
+    /**
      * Use case: a field of the epilog is changed by application code past the property, so the property
      * is told to read the epilog again and every field property delivers the current value afterwards.
      */
@@ -354,6 +420,7 @@ class EpilogPropertyTest {
         holder.epilog?.titleAppendix = listOf("Written in spring")
         holder.epilog?.prompts = AIPrompt("Tell what nobody expected.", "Dark and short.")
         holder.epilog?.paragraph = listOf("Nobody came back.")
+        holder.epilog?.included = true
 
         property.refresh()
 
@@ -361,6 +428,7 @@ class EpilogPropertyTest {
         assertEquals(listOf("Written in spring"), property.titleAppendix)
         assertEquals(AIPrompt("Tell what nobody expected.", "Dark and short."), property.prompts)
         assertEquals(listOf("Nobody came back."), property.paragraph)
+        assertTrue(property.included)
     }
 
     /**
@@ -374,7 +442,8 @@ class EpilogPropertyTest {
             title = "The years after",
             titleAppendix = listOf("Written in spring"),
             prompts = AIPrompt("Tell what nobody expected.", "Dark and short."),
-            paragraph = listOf("Nobody came back.")
+            paragraph = listOf("Nobody came back."),
+            included = true
         )
 
         assertEquals("The years after", holder.epilog?.title)
@@ -382,12 +451,14 @@ class EpilogPropertyTest {
             "The years after",
             listOf("Written in spring"),
             listOf("Nobody came back."),
-            AIPrompt("Tell what nobody expected.", "Dark and short.")
+            AIPrompt("Tell what nobody expected.", "Dark and short."),
+            included = true
         )
         assertTrue(titleViewChanges > 0) { "the binding on the heading was not re-evaluated" }
         assertTrue(titleAppendixViewChanges > 0) { "the binding on the further heading lines was not re-evaluated" }
         assertTrue(promptsViewChanges > 0) { "the binding on the prompts was not re-evaluated" }
         assertTrue(paragraphViewChanges > 0) { "the binding on the paragraphs was not re-evaluated" }
+        assertTrue(includedViewChanges > 0) { "the binding on the switch was not re-evaluated" }
         assertTrue(rootViewChanges > 0) { "the binding on the epilog was not re-evaluated" }
         assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
     }
@@ -416,11 +487,14 @@ class EpilogPropertyTest {
         assertEquals(0, paragraphViewChanges) {
             "the paragraphs were reported as changed although they did not change"
         }
+        assertEquals(0, includedViewChanges) {
+            "the switch was reported as changed although it did not change"
+        }
     }
 
     /**
-     * Use case: the book carries no epilog at all because the user never created one, so every field
-     * property answers with a neutral value and the editor can be built nevertheless.
+     * Use case: no book sits behind the property standing for the epilog because no project is open,
+     * so every field property answers with a neutral value and the editor can be built nevertheless.
      */
     @Test
     fun readsNeutralValuesWhenEpilogIsAbsent() {
@@ -430,11 +504,12 @@ class EpilogPropertyTest {
         assertEquals(emptyList<String>(), property.titleAppendix)
         assertNull(property.prompts)
         assertEquals(emptyList<String>(), property.paragraph)
+        assertFalse(property.included)
         assertTreeShows(null, emptyList(), emptyList(), null)
     }
 
     /**
-     * Use case: the editor writes into the property while the book carries no epilog, so the values are
+     * Use case: the editor writes into the property while no epilog sits behind it, so the values are
      * dropped instead of creating an epilog nobody asked for.
      */
     @Test
@@ -445,6 +520,7 @@ class EpilogPropertyTest {
         property.titleAppendix = listOf("Written in spring")
         property.prompts = AIPrompt("Tell what nobody expected.", "Dark and short.")
         property.paragraph = listOf("Nobody came back.")
+        property.included = true
 
         assertNull(holder.epilog)
     }

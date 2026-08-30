@@ -2,9 +2,9 @@
 
 ## Herkunft
 
-* Feature Plan: `.claude/plans/features/001_PaperWritingSurface.md`
+* Feature Plan: `.claude/plans/features/FP-001-PaperWritingSurface.md`
 * Plan-ID im Feature Plan: IP-19
-* Status-Datei des Features: `.claude/plans/features/001_PaperWritingSurface_status.md`
+* Status-Datei des Features: `.claude/plans/features/FP-001-PaperWritingSurface-status.md`
 
 ## Abhängigkeiten
 

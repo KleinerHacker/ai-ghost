@@ -16,6 +16,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.model.project.common.AIPrompt
 
@@ -40,6 +42,18 @@ class EpilogTest {
     }
 
     /**
+     * Use case: a book is created before the user decided about its epilog, so the epilog is already
+     * there, without a heading and without belonging to the book yet.
+     */
+    @Test
+    fun defaultsToEmptyTitleAndNotIncluded() {
+        val epilog = Epilog()
+
+        assertEquals("", epilog.title)
+        assertFalse(epilog.included)
+    }
+
+    /**
      * Use case: the epilog is rendered like any other written part, so it can be handed over as a
      * [org.pcsoft.app.aighost.model.project.book.BookPart] together with chapters and the prolog.
      */
@@ -59,11 +73,34 @@ class EpilogTest {
     }
 
     /**
-     * Use case: the epilog is written to disk, so heading, appendix lines, prompts and paragraphs
-     * appear in the JSON under the stable property names the file format promises.
+     * Use case: the user takes the epilog out of the book and puts it back in later on, so everything
+     * written into it is still there instead of having been thrown away with the switch.
      */
     @Test
-    fun serialisesTitleAppendixPromptsAndParagraphs() {
+    fun keepsTextWhenSwitchedOffAndOnAgain() {
+        val epilog = Epilog(
+            "After It All",
+            listOf("A last word"),
+            AIPrompt("Tell how it ended.", "Calm and slow."),
+            listOf("And that was that.", "Nobody came back."),
+            included = true
+        )
+
+        epilog.included = false
+        epilog.included = true
+
+        assertEquals("After It All", epilog.title)
+        assertEquals(listOf("A last word"), epilog.titleAppendix)
+        assertEquals(AIPrompt("Tell how it ended.", "Calm and slow."), epilog.prompts)
+        assertEquals(listOf("And that was that.", "Nobody came back."), epilog.paragraph)
+    }
+
+    /**
+     * Use case: the epilog is written to disk, so heading, appendix lines, prompts, paragraphs and the
+     * switch appear in the JSON under the stable property names the file format promises.
+     */
+    @Test
+    fun serialisesTitleAppendixPromptsParagraphsAndSwitch() {
         val epilog = Epilog(
             "After It All",
             listOf("A last word"),
@@ -76,14 +113,14 @@ class EpilogTest {
         assertEquals(
             """{"title":"After It All","titleAppendix":["A last word"],""" +
                 """"prompts":{"contentPrompt":"Tell how it ended.","stylePrompt":"Calm and slow."},""" +
-                """"paragraph":["And that was that."]}""",
+                """"paragraph":["And that was that."],"included":false}""",
             json
         )
     }
 
     /**
-     * Use case: a stored epilog is read back, so heading, prompts and all paragraphs survive the
-     * round trip unchanged and keep their order.
+     * Use case: a stored epilog is read back, so heading, prompts, all paragraphs and the switch
+     * survive the round trip unchanged and keep their order.
      */
     @Test
     fun roundTripsParagraphsInOrder() {
@@ -91,7 +128,8 @@ class EpilogTest {
             "After It All",
             listOf("A last word", "and another"),
             AIPrompt("Tell how it ended.", "Calm and slow."),
-            listOf("First paragraph.", "Second paragraph.")
+            listOf("First paragraph.", "Second paragraph."),
+            included = true
         )
 
         val restored: Epilog = mapper.readValue(mapper.writeValueAsString(epilog))
@@ -99,11 +137,12 @@ class EpilogTest {
         assertEquals(epilog, restored)
         assertEquals(AIPrompt("Tell how it ended.", "Calm and slow."), restored.prompts)
         assertEquals(listOf("First paragraph.", "Second paragraph."), restored.paragraph)
+        assertTrue(restored.included)
     }
 
     /**
-     * Use case: a project file holds an epilog with its title only, so it is read back as an
-     * outlined epilog instead of failing.
+     * Use case: a project file holds an epilog with its title only, so it is read back as an outlined
+     * epilog that does not belong to the book yet instead of failing.
      */
     @Test
     fun readsDocumentWithTitleOnly() {

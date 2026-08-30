@@ -12,7 +12,9 @@
 
 package org.pcsoft.app.aighost.fx.model.project.book
 
+import javafx.beans.property.BooleanProperty
 import javafx.beans.property.ListProperty
+import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleListProperty
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
@@ -22,11 +24,12 @@ import org.pcsoft.app.aighost.fx.model.internal.BeanFields
 import org.pcsoft.app.aighost.model.project.book.Blurb
 
 /**
- * Property wrapping the blurb of a book and offering its prompt and its text as properties of their
- * own.
+ * Property wrapping the blurb of a book and offering its prompt, its text and its switch as
+ * properties of their own.
  *
- * A book carries a blurb only after the user created it, so the wrapped object is absent until then
- * and the field properties answer with an empty prompt and with no paragraphs at all.
+ * A book always carries its blurb; whether that blurb belongs to the book is told by the switch
+ * alone. The wrapped object is absent only as long as no book sits behind the property standing for
+ * it, and the field properties answer with an empty prompt and with no paragraphs at all until then.
  *
  * This property model is handed out with its own type, so a caller reaches the prompt and the
  * paragraphs directly; it is built by the book alone and therefore carries an internal constructor.
@@ -56,9 +59,20 @@ class BlurbProperty internal constructor() : SimpleObjectProperty<Blurb?>() {
             paragraphProperty.setAll(value)
         }
 
+    /** Whether the blurb belongs to the book, as a property of its own. */
+    val includedProperty: BooleanProperty = SimpleBooleanProperty()
+
+    /** Whether the blurb belongs to the book. */
+    var included: Boolean
+        get() = includedProperty.get()
+        set(value) {
+            includedProperty.set(value)
+        }
+
     init {
         fields.string(promptProperty, "prompt")
         fields.list(paragraphProperty, "paragraph")
+        fields.boolean(includedProperty, "included")
 
         // The field properties belong to another object after every exchange, so they are tied to the
         // one this property carries now.
@@ -67,8 +81,8 @@ class BlurbProperty internal constructor() : SimpleObjectProperty<Blurb?>() {
     }
 
     /**
-     * Reads the prompt and the paragraphs of the wrapped blurb again and hands what changed to the
-     * field properties, for a caller that wrote on the blurb past this model.
+     * Reads the prompt, the paragraphs and the switch of the wrapped blurb again and hands what
+     * changed to the field properties, for a caller that wrote on the blurb past this model.
      */
     fun refresh() = fields.refresh()
 

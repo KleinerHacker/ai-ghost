@@ -16,6 +16,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.model.project.common.AIPrompt
 
@@ -40,6 +42,18 @@ class PrologTest {
     }
 
     /**
+     * Use case: a book is created before the user decided about its prolog, so the prolog is already
+     * there, without a heading and without belonging to the book yet.
+     */
+    @Test
+    fun defaultsToEmptyTitleAndNotIncluded() {
+        val prolog = Prolog()
+
+        assertEquals("", prolog.title)
+        assertFalse(prolog.included)
+    }
+
+    /**
      * Use case: the prolog is rendered like any other written part, so it can be handed over as a
      * [org.pcsoft.app.aighost.model.project.book.BookPart] together with chapters and the epilog.
      */
@@ -59,11 +73,34 @@ class PrologTest {
     }
 
     /**
-     * Use case: the prolog is written to disk, so heading, appendix lines, prompts and paragraphs
-     * appear in the JSON under the stable property names the file format promises.
+     * Use case: the user takes the prolog out of the book and puts it back in later on, so everything
+     * written into it is still there instead of having been thrown away with the switch.
      */
     @Test
-    fun serialisesTitleAppendixPromptsAndParagraphs() {
+    fun keepsTextWhenSwitchedOffAndOnAgain() {
+        val prolog = Prolog(
+            "Before It All",
+            listOf("A word up front"),
+            AIPrompt("Tell what happened before.", "Calm and slow."),
+            listOf("Long before.", "And even earlier."),
+            included = true
+        )
+
+        prolog.included = false
+        prolog.included = true
+
+        assertEquals("Before It All", prolog.title)
+        assertEquals(listOf("A word up front"), prolog.titleAppendix)
+        assertEquals(AIPrompt("Tell what happened before.", "Calm and slow."), prolog.prompts)
+        assertEquals(listOf("Long before.", "And even earlier."), prolog.paragraph)
+    }
+
+    /**
+     * Use case: the prolog is written to disk, so heading, appendix lines, prompts, paragraphs and the
+     * switch appear in the JSON under the stable property names the file format promises.
+     */
+    @Test
+    fun serialisesTitleAppendixPromptsParagraphsAndSwitch() {
         val prolog = Prolog(
             "Before It All",
             listOf("A word up front"),
@@ -76,14 +113,14 @@ class PrologTest {
         assertEquals(
             """{"title":"Before It All","titleAppendix":["A word up front"],""" +
                 """"prompts":{"contentPrompt":"Tell what happened before.","stylePrompt":"Calm and slow."},""" +
-                """"paragraph":["Long before."]}""",
+                """"paragraph":["Long before."],"included":false}""",
             json
         )
     }
 
     /**
-     * Use case: a stored prolog is read back, so heading, prompts and all paragraphs survive the
-     * round trip unchanged and keep their order.
+     * Use case: a stored prolog is read back, so heading, prompts, all paragraphs and the switch
+     * survive the round trip unchanged and keep their order.
      */
     @Test
     fun roundTripsParagraphsInOrder() {
@@ -91,7 +128,8 @@ class PrologTest {
             "Before It All",
             listOf("A word up front", "and another"),
             AIPrompt("Tell what happened before.", "Calm and slow."),
-            listOf("First paragraph.", "Second paragraph.")
+            listOf("First paragraph.", "Second paragraph."),
+            included = true
         )
 
         val restored: Prolog = mapper.readValue(mapper.writeValueAsString(prolog))
@@ -99,11 +137,12 @@ class PrologTest {
         assertEquals(prolog, restored)
         assertEquals(AIPrompt("Tell what happened before.", "Calm and slow."), restored.prompts)
         assertEquals(listOf("First paragraph.", "Second paragraph."), restored.paragraph)
+        assertTrue(restored.included)
     }
 
     /**
      * Use case: a project file holds a prolog with its title only, so it is read back as an outlined
-     * prolog instead of failing.
+     * prolog that does not belong to the book yet instead of failing.
      */
     @Test
     fun readsDocumentWithTitleOnly() {

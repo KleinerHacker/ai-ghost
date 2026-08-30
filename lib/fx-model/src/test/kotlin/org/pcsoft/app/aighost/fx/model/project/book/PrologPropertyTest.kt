@@ -13,11 +13,13 @@
 package org.pcsoft.app.aighost.fx.model.project.book
 
 import javafx.beans.binding.Bindings
+import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.beans.property.StringProperty
 import javafx.collections.FXCollections
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -32,8 +34,9 @@ import org.pcsoft.app.aighost.model.project.common.AIPrompt
  * own. Every test checks the object tree the way the user interface uses it: a binding hangs on the
  * prolog itself and on every single field of it, and the tests assert that a change reaches every
  * binding that has to know about it - upwards to the parent the property reports to as well as
- * downwards into the fields of an exchanged prolog. A book carries a prolog only after the user
- * created it, so the behaviour without any prolog is checked as well.
+ * downwards into the fields of an exchanged prolog. A book always carries its prolog, but the property
+ * carries no object as long as no book sits behind the one standing for it, so that state is checked
+ * as well.
  */
 class PrologPropertyTest {
 
@@ -65,6 +68,10 @@ class PrologPropertyTest {
     /** Binding on the paragraphs of the prolog. */
     private lateinit var paragraphView: StringProperty
     private var paragraphViewChanges = 0
+
+    /** Binding on the switch telling whether the prolog belongs to the book. */
+    private lateinit var includedView: StringProperty
+    private var includedViewChanges = 0
 
     @BeforeEach
     fun setUp() {
@@ -124,6 +131,14 @@ class PrologPropertyTest {
         paragraphBinding.addListener { _, _, _ -> paragraphViewChanges++ }
         paragraphView.bind(paragraphBinding)
 
+        includedView = SimpleStringProperty()
+        val includedBinding = Bindings.createStringBinding(
+            { property.includedProperty.get().toString() },
+            property.includedProperty
+        )
+        includedBinding.addListener { _, _, _ -> includedViewChanges++ }
+        includedView.bind(includedBinding)
+
         resetCounters()
     }
 
@@ -134,6 +149,7 @@ class PrologPropertyTest {
         titleAppendixViewChanges = 0
         promptsViewChanges = 0
         paragraphViewChanges = 0
+        includedViewChanges = 0
     }
 
     /** Text form of a prompt pair, used as the value of the binding on the prompts. */
@@ -144,7 +160,8 @@ class PrologPropertyTest {
     private fun state(prolog: Prolog?): String =
         "${prolog?.title ?: MISSING}|${prolog?.titleAppendix.orEmpty().joinToString(";")}|" +
                 "${promptText(prolog?.prompts)}|" +
-                prolog?.paragraph.orEmpty().joinToString(";")
+                "${prolog?.paragraph.orEmpty().joinToString(";")}|" +
+                "${prolog?.included ?: false}"
 
     /**
      * Asserts that every binding of the object tree delivers the given state, so no view keeps the
@@ -154,14 +171,15 @@ class PrologPropertyTest {
         title: String?,
         titleAppendix: List<String>,
         paragraph: List<String>,
-        prompts: AIPrompt? = INITIAL_PROMPTS
+        prompts: AIPrompt? = INITIAL_PROMPTS,
+        included: Boolean = false
     ) {
         val titleAppendixText = titleAppendix.joinToString(";")
         val paragraphText = paragraph.joinToString(";")
         val promptsText = promptText(prompts)
 
         assertEquals(
-            "${title ?: MISSING}|$titleAppendixText|$promptsText|$paragraphText",
+            "${title ?: MISSING}|$titleAppendixText|$promptsText|$paragraphText|$included",
             rootView.get()
         ) {
             "the binding on the prolog delivers an outdated state"
@@ -177,6 +195,9 @@ class PrologPropertyTest {
         }
         assertEquals(paragraphText, paragraphView.get()) {
             "the binding on the paragraphs delivers outdated paragraphs"
+        }
+        assertEquals(included.toString(), includedView.get()) {
+            "the binding on the switch delivers an outdated value"
         }
     }
 
@@ -345,6 +366,51 @@ class PrologPropertyTest {
     }
 
     /**
+     * Use case: the user takes the prolog into the book, so the switch lands in the model object and
+     * both the binding on that field and the binding on the prolog show it.
+     */
+    @Test
+    fun writesIncludedToModelAndNotifiesTree() {
+        property.included = true
+
+        assertEquals(true, holder.prolog?.included)
+        assertTreeShows(
+            "Before the storm",
+            listOf("A short note"),
+            listOf("The night was calm."),
+            included = true
+        )
+        assertTrue(includedViewChanges > 0) { "the binding on the switch was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the prolog was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+    }
+
+    /**
+     * Use case: the switch is bound to the check box of the editor, so every state that box produces
+     * reaches the model object and every binding above it shows it.
+     */
+    @Test
+    fun writesBoundIncludedToModelAndNotifiesTree() {
+        val source = SimpleBooleanProperty(false)
+        property.includedProperty.bind(source)
+
+        source.set(true)
+
+        assertEquals(true, holder.prolog?.included)
+        assertTreeShows(
+            "Before the storm",
+            listOf("A short note"),
+            listOf("The night was calm."),
+            included = true
+        )
+        assertTrue(includedViewChanges > 0) { "the binding on the switch was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the prolog was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+
+        property.includedProperty.unbind()
+    }
+
+    /**
      * Use case: a field of the prolog is changed by application code past the property, so the property
      * is told to read the prolog again and every field property delivers the current value afterwards.
      */
@@ -354,6 +420,7 @@ class PrologPropertyTest {
         holder.prolog?.titleAppendix = listOf("Written in winter")
         holder.prolog?.prompts = AIPrompt("Tell what nobody saw coming.", "Dark and short.")
         holder.prolog?.paragraph = listOf("Then the wind came.")
+        holder.prolog?.included = true
 
         property.refresh()
 
@@ -361,6 +428,7 @@ class PrologPropertyTest {
         assertEquals(listOf("Written in winter"), property.titleAppendix)
         assertEquals(AIPrompt("Tell what nobody saw coming.", "Dark and short."), property.prompts)
         assertEquals(listOf("Then the wind came."), property.paragraph)
+        assertTrue(property.included)
     }
 
     /**
@@ -374,7 +442,8 @@ class PrologPropertyTest {
             title = "After the storm",
             titleAppendix = listOf("Written in winter"),
             prompts = AIPrompt("Tell what nobody saw coming.", "Dark and short."),
-            paragraph = listOf("Then the wind came.")
+            paragraph = listOf("Then the wind came."),
+            included = true
         )
 
         assertEquals("After the storm", holder.prolog?.title)
@@ -382,12 +451,14 @@ class PrologPropertyTest {
             "After the storm",
             listOf("Written in winter"),
             listOf("Then the wind came."),
-            AIPrompt("Tell what nobody saw coming.", "Dark and short.")
+            AIPrompt("Tell what nobody saw coming.", "Dark and short."),
+            included = true
         )
         assertTrue(titleViewChanges > 0) { "the binding on the heading was not re-evaluated" }
         assertTrue(titleAppendixViewChanges > 0) { "the binding on the further heading lines was not re-evaluated" }
         assertTrue(promptsViewChanges > 0) { "the binding on the prompts was not re-evaluated" }
         assertTrue(paragraphViewChanges > 0) { "the binding on the paragraphs was not re-evaluated" }
+        assertTrue(includedViewChanges > 0) { "the binding on the switch was not re-evaluated" }
         assertTrue(rootViewChanges > 0) { "the binding on the prolog was not re-evaluated" }
         assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
     }
@@ -416,11 +487,14 @@ class PrologPropertyTest {
         assertEquals(0, paragraphViewChanges) {
             "the paragraphs were reported as changed although they did not change"
         }
+        assertEquals(0, includedViewChanges) {
+            "the switch was reported as changed although it did not change"
+        }
     }
 
     /**
-     * Use case: the book carries no prolog at all because the user never created one, so every field
-     * property answers with a neutral value and the editor can be built nevertheless.
+     * Use case: no book sits behind the property standing for the prolog because no project is open,
+     * so every field property answers with a neutral value and the editor can be built nevertheless.
      */
     @Test
     fun readsNeutralValuesWhenPrologIsAbsent() {
@@ -430,11 +504,12 @@ class PrologPropertyTest {
         assertEquals(emptyList<String>(), property.titleAppendix)
         assertNull(property.prompts)
         assertEquals(emptyList<String>(), property.paragraph)
+        assertFalse(property.included)
         assertTreeShows(null, emptyList(), emptyList(), null)
     }
 
     /**
-     * Use case: the editor writes into the property while the book carries no prolog, so the values are
+     * Use case: the editor writes into the property while no prolog sits behind it, so the values are
      * dropped instead of creating a prolog nobody asked for.
      */
     @Test
@@ -445,6 +520,7 @@ class PrologPropertyTest {
         property.titleAppendix = listOf("Written in winter")
         property.prompts = AIPrompt("Tell what nobody saw coming.", "Dark and short.")
         property.paragraph = listOf("Then the wind came.")
+        property.included = true
 
         assertNull(holder.prolog)
     }

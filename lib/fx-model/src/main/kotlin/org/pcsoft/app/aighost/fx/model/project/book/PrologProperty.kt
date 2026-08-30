@@ -12,15 +12,34 @@
 
 package org.pcsoft.app.aighost.fx.model.project.book
 
+import javafx.beans.property.BooleanProperty
+import javafx.beans.property.SimpleBooleanProperty
 import org.pcsoft.app.aighost.model.project.book.Prolog
 
 /**
  * Property wrapping the prolog of a book and offering every field of it as a property of its own.
  *
- * A book carries a prolog only after the user created it, so the wrapped object is absent until then
- * and every field property answers with a neutral value.
+ * A book always carries its prolog; whether that prolog belongs to the book is told by the switch
+ * alone. The wrapped object is absent only as long as no book sits behind the property standing for
+ * it, and every field property answers with a neutral value until then.
  *
  * This property model is handed out with its own type, so a caller reaches every field of the prolog
  * directly; it is built by the book alone and therefore carries an internal constructor.
  */
-class PrologProperty internal constructor() : BookPartProperty<Prolog?>()
+class PrologProperty internal constructor() : BookPartProperty<Prolog?>() {
+
+    /** Whether the prolog belongs to the book, as a property of its own. */
+    val includedProperty: BooleanProperty = SimpleBooleanProperty()
+
+    /** Whether the prolog belongs to the book. */
+    var included: Boolean
+        get() = includedProperty.get()
+        set(value) {
+            includedProperty.set(value)
+        }
+
+    init {
+        fields.boolean(includedProperty, "included")
+    }
+
+}

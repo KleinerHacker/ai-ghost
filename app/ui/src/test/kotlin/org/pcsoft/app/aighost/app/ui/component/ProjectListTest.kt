@@ -108,18 +108,18 @@ class ProjectListTest : ApplicationTest() {
         tree.root.children.first { it.value is ProjectListItem.Chapters }
 
     /**
-     * Use case: the user looks at the project without having opened one, so the tree already shows
-     * the project with its four branches instead of staying empty.
+     * Use case: the user looks at a project that has not been written yet, so the tree shows the
+     * project with its four branches and hands on the empty parts every book carries.
      */
     @Test
     fun showsTheFixedBranchesBelowTheProject() {
         assertEquals(ProjectListItem.Root, tree.root.value)
         assertEquals(
             listOf(
-                ProjectListItem.PrologItem(null),
+                ProjectListItem.PrologItem(Prolog()),
                 ProjectListItem.Chapters,
-                ProjectListItem.EpilogItem(null),
-                ProjectListItem.BlurbItem(null)
+                ProjectListItem.EpilogItem(Epilog()),
+                ProjectListItem.BlurbItem(Blurb())
             ),
             tree.root.children.map { it.value }
         )
@@ -229,7 +229,7 @@ class ProjectListTest : ApplicationTest() {
     fun reportsASelectedFixedBranch() {
         interact { tree.selectionModel.select(tree.root.children.last()) }
 
-        assertEquals(ProjectListItem.BlurbItem(null), projectList.selectedItem.value)
+        assertEquals(ProjectListItem.BlurbItem(Blurb()), projectList.selectedItem.value)
     }
 
     /**

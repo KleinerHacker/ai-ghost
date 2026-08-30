@@ -19,7 +19,7 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.pcsoft.app.aighost.model.TestData
@@ -114,8 +114,9 @@ class ModelJsonTest {
     }
 
     /**
-     * Use case: a project is opened whose book was never given a prolog, an epilog or a blurb, so
-     * the missing properties are read back as absent parts instead of failing the parse.
+     * Use case: a project is opened whose book carries no prolog, epilog or blurb property at all, so
+     * the missing properties are read back as the empty parts every book has, each of them switched
+     * off, instead of failing the parse.
      */
     @Test
     fun parsesBookDocumentWithoutOptionalParts() {
@@ -128,9 +129,12 @@ class ModelJsonTest {
 
         val book: Book = mapper.readValue(json)
 
-        assertNull(book.prolog)
-        assertNull(book.epilog)
-        assertNull(book.blurb)
+        assertEquals(Prolog(), book.prolog)
+        assertEquals(Epilog(), book.epilog)
+        assertEquals(Blurb(), book.blurb)
+        assertFalse(book.prolog.included)
+        assertFalse(book.epilog.included)
+        assertFalse(book.blurb.included)
         assertEquals(listOf("first"), book.chapters.map(Chapter::name))
     }
 
