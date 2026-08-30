@@ -25,13 +25,12 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.app.AiGhostIcons
 import org.pcsoft.app.aighost.app.AiGhostTheme
 import org.pcsoft.app.aighost.app.Messages
-import org.pcsoft.app.aighost.model.PreferencesStorage
+import org.pcsoft.app.aighost.app.controller.IoController
 import org.pcsoft.app.aighost.model.pref.RecentOpened
 import org.testfx.framework.junit5.ApplicationTest
 import org.testfx.util.WaitForAsyncUtils
@@ -41,28 +40,16 @@ import org.testfx.util.WaitForAsyncUtils
  */
 class MainWindowIT : ApplicationTest() {
 
-    companion object {
-        /**
-         * The storage hands out no preferences before they were established, and the window reads
-         * them while it is built, so a test starts from the defaults.
-         */
-        @JvmStatic
-        @BeforeAll
-        fun establishPreferences() {
-            PreferencesStorage.reset()
-        }
-    }
-
     private lateinit var window: MainWindow
 
-    // The storage is a singleton holding the preferences of the current user, so the recent files a
-    // test sets are put back afterwards. Nothing is written to disk, because only an explicit save
-    // touches the file of the developer running the build.
+    // The controller holds the preferences of the current user for the whole process, so the recent
+    // files a test sets are put back afterwards. Nothing is written to disk, because only an explicit
+    // save touches the file of the developer running the build.
     private var storedRecentOpened: RecentOpened = RecentOpened()
 
     @BeforeEach
     fun keepRecentOpened() {
-        storedRecentOpened = PreferencesStorage.current.recentOpened
+        storedRecentOpened = IoController.preferences.recentOpened
     }
 
     override fun start(stage: Stage) {
@@ -76,7 +63,7 @@ class MainWindowIT : ApplicationTest() {
     fun releaseWindow() {
         interact { window.hide() }
 
-        PreferencesStorage.current.recentOpened = storedRecentOpened
+        IoController.preferences.recentOpened = storedRecentOpened
     }
 
     /** Texts of the entries the "open recent" menu currently offers. */
@@ -104,7 +91,7 @@ class MainWindowIT : ApplicationTest() {
 
     /** Stores [paths] as the recently opened files of the current user. */
     private fun storeRecentlyOpened(vararg paths: String) {
-        PreferencesStorage.current.recentOpened = RecentOpened(entries = paths.toList())
+        IoController.preferences.recentOpened = RecentOpened(entries = paths.toList())
     }
 
     /** Takes the window off screen and back on, so its content reads the preferences again. */

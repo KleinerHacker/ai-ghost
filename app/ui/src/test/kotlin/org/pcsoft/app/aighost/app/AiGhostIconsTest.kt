@@ -51,6 +51,7 @@ class AiGhostIconsTest {
             arrayOf("projectSettings", AiGhostIcons.projectSettings),
             arrayOf("export", AiGhostIcons.export),
             arrayOf("helpOnline", AiGhostIcons.helpOnline),
+            arrayOf("aiAction", AiGhostIcons.aiAction),
         )
 
         /**

@@ -21,6 +21,7 @@ import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.book.Chapter
 import org.pcsoft.app.aighost.model.project.book.Epilog
 import org.pcsoft.app.aighost.model.project.book.Prolog
+import org.pcsoft.app.aighost.model.project.common.AIPrompt
 import org.pcsoft.app.aighost.model.project.design.AuthorDesign
 import org.pcsoft.app.aighost.model.project.design.ChapterDesign
 import org.pcsoft.app.aighost.model.project.design.CopyrightDesign
@@ -45,6 +46,10 @@ object TestData {
     /** A style around [font], aligned to the given [alignment]. */
     fun style(name: String = "Serif", size: Int = 12, alignment: Alignment = Alignment.LEFT): StyleData =
         StyleData(font = font(name, size), alignment = alignment)
+
+    /** A prompt pair whose two texts differ, so a swapped one shows up in a round trip. */
+    fun prompt(content: String, style: String = "Warm and calm."): AIPrompt =
+        AIPrompt(contentPrompt = content, stylePrompt = style)
 
     /** Meta data with all three texts filled, so a dropped one shows up in a round trip. */
     fun meta(): Meta = Meta(
@@ -82,22 +87,28 @@ object TestData {
         endWithEmptyPage = false
     )
 
-    /** A prolog with an appendix line and text, so a dropped property shows up in a round trip. */
+    /** The prompts of the whole manuscript, different from those of every single part. */
+    fun bookPrompts(): AIPrompt = prompt("Tell a story in two parts.", "Warm and calm.")
+
+    /** A prolog with an appendix line, prompts and text, so a dropped property shows up. */
     fun prolog(): Prolog = Prolog(
         title = "Before It All",
         titleAppendix = listOf("A word up front"),
+        prompts = prompt("Tell what happened before the story.", "Quiet and slow."),
         paragraph = listOf("Long before the story started.")
     )
 
-    /** An epilog with an appendix line and text, so a dropped property shows up in a round trip. */
+    /** An epilog with an appendix line, prompts and text, so a dropped property shows up. */
     fun epilog(): Epilog = Epilog(
         title = "After It All",
         titleAppendix = listOf("A last word"),
+        prompts = prompt("Tell how everybody went on.", "Quiet and slow."),
         paragraph = listOf("And that was that.")
     )
 
-    /** A blurb with two paragraphs, so a lost order shows up in a round trip. */
+    /** A blurb with a prompt and two paragraphs, so a lost order shows up in a round trip. */
     fun blurb(): Blurb = Blurb(
+        prompt = "Advertise a tale of two chapters.",
         paragraph = listOf("A gripping tale of two chapters.", "You will not put it down.")
     )
 
@@ -105,10 +116,17 @@ object TestData {
     fun book(): Book = Book(
         title = "My Novel",
         titleAppendix = listOf("A Story in Two Parts"),
+        prompts = bookPrompts(),
         prolog = prolog(),
         chapters = listOf(
-            Chapter("first", "The First Part", listOf("How it started"), listOf("Once upon a time.", "And then.")),
-            Chapter("second", "The Second Part")
+            Chapter(
+                name = "first",
+                title = "The First Part",
+                titleAppendix = listOf("How it started"),
+                prompts = prompt("Tell how the journey started.", "Lively and warm."),
+                paragraph = listOf("Once upon a time.", "And then.")
+            ),
+            Chapter(name = "second", title = "The Second Part")
         ),
         epilog = epilog(),
         blurb = blurb()

@@ -31,6 +31,7 @@ import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.book.Chapter
 import org.pcsoft.app.aighost.model.project.book.Epilog
 import org.pcsoft.app.aighost.model.project.book.Prolog
+import org.pcsoft.app.aighost.model.project.common.AIPrompt
 import org.pcsoft.app.aighost.model.project.design.Design
 import org.pcsoft.app.aighost.model.project.meta.Meta
 
@@ -57,6 +58,7 @@ class ModelJsonTest {
         val json = """
             {
               "title" : "My Novel",
+              "prompts" : { "contentPrompt" : "Tell a story in two parts.", "stylePrompt" : "Warm and calm." },
               "prolog" : { "title" : "Before It All", "paragraph" : [ "Long before." ] },
               "chapters" : [
                 { "name" : "first", "title" : "Prologue", "paragraph" : [ "Once upon a time." ] },
@@ -70,11 +72,12 @@ class ModelJsonTest {
         val book: Book = mapper.readValue(json)
 
         assertEquals("My Novel", book.title)
+        assertEquals(AIPrompt("Tell a story in two parts.", "Warm and calm."), book.prompts)
         assertEquals(listOf("first", "second"), book.chapters.map(Chapter::name))
         assertEquals(listOf("The beginning.", "And on it went."), book.chapters[1].paragraph)
         assertEquals(Prolog("Before It All", paragraph = listOf("Long before.")), book.prolog)
         assertEquals(Epilog("After It All", paragraph = listOf("And that was that.")), book.epilog)
-        assertEquals(Blurb(listOf("A gripping tale.")), book.blurb)
+        assertEquals(Blurb(paragraph = listOf("A gripping tale.")), book.blurb)
     }
 
     /**
@@ -177,7 +180,7 @@ class ModelJsonTest {
             chapters = listOf(
                 Chapter("naïve", "Naïve Beginnings", paragraph = listOf("A café, a résumé – ok."))
             ),
-            blurb = Blurb(listOf("Crème de la crème – a novel."))
+            blurb = Blurb(paragraph = listOf("Crème de la crème – a novel."))
         )
 
         assertEquals(meta, mapper.readValue<Meta>(mapper.writeValueAsString(meta)))
@@ -190,7 +193,7 @@ class ModelJsonTest {
      */
     @Test
     fun writesAndParsesPreferencesDocument() {
-        val preferences = Preferences(themeMode = ThemeMode.DARK)
+        val preferences = Preferences().apply { appearance.themeMode = ThemeMode.DARK }
 
         val json = mapper.writeValueAsString(preferences)
         val restored: Preferences = mapper.readValue(json)
@@ -205,7 +208,7 @@ class ModelJsonTest {
     @Test
     fun rejectsUnknownThemeMode() {
         assertThrows<InvalidFormatException> {
-            mapper.readValue<Preferences>("""{"themeMode":"NEON"}""")
+            mapper.readValue<Preferences>("""{"appearance":{"themeMode":"NEON"}}""")
         }
     }
 

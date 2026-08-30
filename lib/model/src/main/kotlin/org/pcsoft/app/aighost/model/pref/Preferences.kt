@@ -21,16 +21,19 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder
  * The preferences are a plain mutable value object: a setting is changed on the object itself and
  * nobody is notified about it, so whoever needs a setting reads it when it is needed.
  *
- * The preferences are persisted as JSON. Unknown properties are ignored so a file written by a newer
+ * The preferences are persisted as YAML. Unknown properties are ignored so a file written by a newer
  * version of the application can still be read, and every property carries a default so an older
  * file stays readable as well.
  *
  * @property recentOpened Files the user opened last, ten at most by default.
- * @property themeMode Visual appearance of the application, [ThemeMode.SYSTEM] by default.
+ * @property appearance Visual appearance of the application, [ThemeMode.SYSTEM] by default.
+ * @property ai Configuration settings related to AI functionality in the application.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonPropertyOrder("recentOpened", "themeMode")
+@JsonPropertyOrder("recentOpened", "appearance", "ai")
 data class Preferences(
     var recentOpened: RecentOpened = RecentOpened(max = 10),
-    var themeMode: ThemeMode = ThemeMode.SYSTEM
+
+    var appearance: Appearance = Appearance(),
+    var ai: Ai = Ai()
 )

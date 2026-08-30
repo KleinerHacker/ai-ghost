@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.model.project.book.Chapter
+import org.pcsoft.app.aighost.model.project.common.AIPrompt
 
 /**
  * Developer tests for [ChapterProperty].
@@ -61,6 +62,10 @@ class ChapterPropertyTest {
     private lateinit var titleAppendixView: StringProperty
     private var titleAppendixViewChanges = 0
 
+    /** Binding on the prompts the chapter is generated from. */
+    private lateinit var promptsView: StringProperty
+    private var promptsViewChanges = 0
+
     /** Binding on the paragraphs of the chapter. */
     private lateinit var paragraphView: StringProperty
     private var paragraphViewChanges = 0
@@ -72,18 +77,18 @@ class ChapterPropertyTest {
                 name = "Chapter one",
                 title = "The arrival",
                 titleAppendix = listOf("An early morning"),
+                prompts = INITIAL_PROMPTS,
                 paragraph = listOf("The train was late.")
             )
         )
         parentEvents = 0
-        property = ChapterProperty(
-            { holder.chapter = it },
-            { holder.chapter },
-            { parentEvents++ }
-        )
-        // A parent property aligns a nested one with the model object as soon as that object arrives,
-        // so the same alignment happens here before the views are built.
-        property.refresh()
+        property = ChapterProperty()
+        // A parent property reports a change of a nested one as its own and writes an exchanged object
+        // back into the one carrying it, which is what these two listeners stand for.
+        property.addListener { _ -> parentEvents++ }
+        property.addListener { _, _, newValue -> holder.chapter = newValue }
+        // A parent property hands the nested object to this property as soon as that object arrives.
+        property.set(holder.chapter)
 
         rootView = SimpleStringProperty()
         val rootBinding = Bindings.createStringBinding({ state(property.value) }, property)
@@ -116,6 +121,14 @@ class ChapterPropertyTest {
         titleAppendixBinding.addListener { _, _, _ -> titleAppendixViewChanges++ }
         titleAppendixView.bind(titleAppendixBinding)
 
+        promptsView = SimpleStringProperty()
+        val promptsBinding = Bindings.createStringBinding(
+            { promptText(property.promptsProperty.get()) },
+            property.promptsProperty
+        )
+        promptsBinding.addListener { _, _, _ -> promptsViewChanges++ }
+        promptsView.bind(promptsBinding)
+
         paragraphView = SimpleStringProperty()
         val paragraphBinding = Bindings.createStringBinding(
             { property.paragraphProperty.joinToString(";") },
@@ -133,13 +146,19 @@ class ChapterPropertyTest {
         nameViewChanges = 0
         titleViewChanges = 0
         titleAppendixViewChanges = 0
+        promptsViewChanges = 0
         paragraphViewChanges = 0
     }
+
+    /** Text form of a prompt pair, used as the value of the binding on the prompts. */
+    private fun promptText(prompts: AIPrompt?): String =
+        "${prompts?.contentPrompt ?: MISSING}/${prompts?.stylePrompt ?: MISSING}"
 
     /** Text form of the whole chapter, used as the value of the binding on the root. */
     private fun state(chapter: Chapter?): String =
         "${chapter?.name ?: MISSING}|${chapter?.title ?: MISSING}|" +
                 "${chapter?.titleAppendix.orEmpty().joinToString(";")}|" +
+                "${promptText(chapter?.prompts)}|" +
                 chapter?.paragraph.orEmpty().joinToString(";")
 
     /**
@@ -150,13 +169,15 @@ class ChapterPropertyTest {
         name: String?,
         title: String?,
         titleAppendix: List<String>,
-        paragraph: List<String>
+        paragraph: List<String>,
+        prompts: AIPrompt? = INITIAL_PROMPTS
     ) {
         val titleAppendixText = titleAppendix.joinToString(";")
         val paragraphText = paragraph.joinToString(";")
+        val promptsText = promptText(prompts)
 
         assertEquals(
-            "${name ?: MISSING}|${title ?: MISSING}|$titleAppendixText|$paragraphText",
+            "${name ?: MISSING}|${title ?: MISSING}|$titleAppendixText|$promptsText|$paragraphText",
             rootView.get()
         ) { "the binding on the chapter delivers an outdated state" }
         assertEquals(name ?: MISSING, nameView.get()) {
@@ -167,6 +188,9 @@ class ChapterPropertyTest {
         }
         assertEquals(titleAppendixText, titleAppendixView.get()) {
             "the binding on the further heading lines delivers outdated lines"
+        }
+        assertEquals(promptsText, promptsView.get()) {
+            "the binding on the prompts delivers outdated prompts"
         }
         assertEquals(paragraphText, paragraphView.get()) {
             "the binding on the paragraphs delivers outdated paragraphs"
@@ -317,6 +341,56 @@ class ChapterPropertyTest {
     }
 
     /**
+     * Use case: the user describes what the chapter is about, so the single prompt field lands in the
+     * model object and every binding above it shows it.
+     */
+    @Test
+    fun writesContentPromptToModelAndNotifiesTree() {
+        property.promptsProperty.contentPromptProperty.set("Tell how the two finally met.")
+
+        assertEquals("Tell how the two finally met.", holder.chapter?.prompts?.contentPrompt)
+        assertTreeShows(
+            "Chapter one",
+            "The arrival",
+            listOf("An early morning"),
+            listOf("The train was late."),
+            AIPrompt("Tell how the two finally met.", INITIAL_PROMPTS.stylePrompt)
+        )
+        assertTrue(promptsViewChanges > 0) { "the binding on the prompts was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the chapter was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+    }
+
+    /**
+     * Use case: the prompt editor is bound to the prompts of the chapter, so every prompt pair that
+     * editor produces reaches the model object and every binding above it shows it.
+     */
+    @Test
+    fun writesBoundPromptsToModelAndNotifiesTree() {
+        val source = SimpleObjectProperty(AIPrompt("A first draft.", "Neutral."))
+        property.promptsProperty.bind(source)
+
+        source.set(AIPrompt("Tell how the two finally met.", "Dry and short."))
+
+        assertEquals(
+            AIPrompt("Tell how the two finally met.", "Dry and short."),
+            holder.chapter?.prompts
+        )
+        assertTreeShows(
+            "Chapter one",
+            "The arrival",
+            listOf("An early morning"),
+            listOf("The train was late."),
+            AIPrompt("Tell how the two finally met.", "Dry and short.")
+        )
+        assertTrue(promptsViewChanges > 0) { "the binding on the prompts was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the chapter was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+
+        property.promptsProperty.unbind()
+    }
+
+    /**
      * Use case: the user writes a further paragraph into the chapter, so the content change alone
      * reaches the model object and every binding above it shows it.
      */
@@ -360,19 +434,24 @@ class ChapterPropertyTest {
     }
 
     /**
-     * Use case: a field of the chapter is changed by application code past the property, so every field
-     * property delivers the current value instead of a cached copy.
+     * Use case: a field of the chapter is changed by application code past the property, so the
+     * property is told to read the chapter again and every field property delivers the current value
+     * afterwards.
      */
     @Test
     fun readsFieldsChangedOnModel() {
         holder.chapter?.name = "Chapter two"
         holder.chapter?.title = "The departure"
         holder.chapter?.titleAppendix = listOf("In the rain")
+        holder.chapter?.prompts = AIPrompt("Tell how the two finally met.", "Dry and short.")
         holder.chapter?.paragraph = listOf("Nobody was waiting.")
+
+        property.refresh()
 
         assertEquals("Chapter two", property.name)
         assertEquals("The departure", property.title)
         assertEquals(listOf("In the rain"), property.titleAppendix)
+        assertEquals(AIPrompt("Tell how the two finally met.", "Dry and short."), property.prompts)
         assertEquals(listOf("Nobody was waiting."), property.paragraph)
     }
 
@@ -387,6 +466,7 @@ class ChapterPropertyTest {
             name = "Chapter two",
             title = "The departure",
             titleAppendix = listOf("In the rain"),
+            prompts = AIPrompt("Tell how the two finally met.", "Dry and short."),
             paragraph = listOf("Nobody was waiting.")
         )
 
@@ -395,9 +475,11 @@ class ChapterPropertyTest {
             "Chapter two",
             "The departure",
             listOf("In the rain"),
-            listOf("Nobody was waiting.")
+            listOf("Nobody was waiting."),
+            AIPrompt("Tell how the two finally met.", "Dry and short.")
         )
         assertTrue(nameViewChanges > 0) { "the binding on the name was not re-evaluated" }
+        assertTrue(promptsViewChanges > 0) { "the binding on the prompts was not re-evaluated" }
         assertTrue(titleViewChanges > 0) { "the binding on the heading was not re-evaluated" }
         assertTrue(titleAppendixViewChanges > 0) { "the binding on the further heading lines was not re-evaluated" }
         assertTrue(paragraphViewChanges > 0) { "the binding on the paragraphs was not re-evaluated" }
@@ -415,6 +497,7 @@ class ChapterPropertyTest {
             name = "Chapter one",
             title = "The arrival",
             titleAppendix = listOf("An early morning"),
+            prompts = INITIAL_PROMPTS,
             paragraph = listOf("The train was late.")
         )
 
@@ -428,6 +511,9 @@ class ChapterPropertyTest {
         assertEquals(0, titleViewChanges) { "the heading was reported as changed although it did not change" }
         assertEquals(0, titleAppendixViewChanges) {
             "the further heading lines were reported as changed although they did not change"
+        }
+        assertEquals(0, promptsViewChanges) {
+            "the prompts were reported as changed although they did not change"
         }
         assertEquals(0, paragraphViewChanges) {
             "the paragraphs were reported as changed although they did not change"
@@ -445,8 +531,9 @@ class ChapterPropertyTest {
         assertNull(property.name)
         assertNull(property.title)
         assertEquals(emptyList<String>(), property.titleAppendix)
+        assertNull(property.prompts)
         assertEquals(emptyList<String>(), property.paragraph)
-        assertTreeShows(null, null, emptyList(), emptyList())
+        assertTreeShows(null, null, emptyList(), emptyList(), null)
     }
 
     /**
@@ -460,6 +547,7 @@ class ChapterPropertyTest {
         property.name = "Chapter two"
         property.title = "The departure"
         property.titleAppendix = listOf("In the rain")
+        property.prompts = AIPrompt("Tell how the two finally met.", "Dry and short.")
         property.paragraph = listOf("Nobody was waiting.")
 
         assertNull(holder.chapter)
@@ -468,5 +556,9 @@ class ChapterPropertyTest {
     private companion object {
         /** Stands for a value the model object does not carry at all. */
         const val MISSING = "-"
+
+        /** The prompts every test starts from, so a changed pair shows up in an assertion. */
+        val INITIAL_PROMPTS: AIPrompt
+            get() = AIPrompt("Tell how the journey started.", "Lively and warm.")
     }
 }

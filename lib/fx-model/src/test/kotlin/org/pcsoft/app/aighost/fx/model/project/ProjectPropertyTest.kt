@@ -14,6 +14,9 @@ package org.pcsoft.app.aighost.fx.model.project
 
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
+import javafx.beans.property.StringProperty
+import javafx.beans.property.adapter.JavaBeanStringProperty
+import javafx.beans.property.adapter.JavaBeanStringPropertyBuilder
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
@@ -26,7 +29,6 @@ import org.pcsoft.app.aighost.fx.model.ChangeRecorder
 import org.pcsoft.app.aighost.fx.model.project.book.BookProperty
 import org.pcsoft.app.aighost.fx.model.project.design.DesignProperty
 import org.pcsoft.app.aighost.fx.model.project.meta.MetaProperty
-import org.pcsoft.app.aighost.fx.model.property.common.OverrideStringProperty
 import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.FontData
 import org.pcsoft.app.aighost.model.common.StyleData
@@ -62,9 +64,9 @@ class ProjectPropertyTest {
         project = newProject()
         property = ProjectProperty(project)
 
-        metaProperty = property.metaProperty as MetaProperty
-        designProperty = property.designProperty as DesignProperty
-        bookProperty = property.bookProperty as BookProperty
+        metaProperty = property.metaProperty
+        designProperty = property.designProperty
+        bookProperty = property.bookProperty
         notesProperty = property.attachPart(NOTES, NotesPart::class, ::NotesProperty)
 
         recorder = ChangeRecorder()
@@ -127,8 +129,8 @@ class ProjectPropertyTest {
         assertSame(project.meta, property.metaProperty.get())
         assertSame(project.design, property.designProperty.get())
         assertSame(project.book, property.bookProperty.get())
-        assertEquals("My Novel", property.nameProperty.get())
-        assertEquals("Jane Doe", property.authorProperty.get())
+        assertEquals("My Novel", property.metaProperty.nameProperty.get())
+        assertEquals("Jane Doe", property.metaProperty.authorProperty.get())
     }
 
     /**
@@ -147,7 +149,7 @@ class ProjectPropertyTest {
      */
     @Test
     fun writingTheNameReachesTheProject() {
-        property.nameProperty.set("Renamed")
+        property.metaProperty.nameProperty.set("Renamed")
 
         assertEquals("Renamed", project.meta.name)
         assertEquals(1, recorder.countOf("project.meta.name"))
@@ -233,7 +235,7 @@ class ProjectPropertyTest {
     @Test
     fun writingThroughABindingReachesTheProject() {
         val input = SimpleStringProperty("Bound Name")
-        property.nameProperty.bind(input)
+        property.metaProperty.nameProperty.bind(input)
 
         assertEquals("Bound Name", project.meta.name)
 
@@ -241,7 +243,7 @@ class ProjectPropertyTest {
 
         assertEquals("Another Name", project.meta.name)
 
-        property.nameProperty.unbind()
+        property.metaProperty.nameProperty.unbind()
     }
 
     /**
@@ -290,7 +292,7 @@ class ProjectPropertyTest {
         }
         project.putPart("custom", custom)
 
-        property.nameProperty.set("Renamed")
+        property.metaProperty.nameProperty.set("Renamed")
 
         assertSame(custom, project.part("custom"))
     }
@@ -342,7 +344,7 @@ class ProjectPropertyTest {
 
         property.set(otherProject())
 
-        assertEquals("Other Novel", property.nameProperty.get())
+        assertEquals("Other Novel", property.metaProperty.nameProperty.get())
         assertEquals("Another Start", bookProperty.prologProperty.titleProperty.get())
         assertEquals(12, designProperty.textDesignProperty.styleProperty.fontProperty.sizeProperty.get())
         assertEquals("Written elsewhere", notesProperty.noteProperty.get())
@@ -360,6 +362,25 @@ class ProjectPropertyTest {
         property.set(newProject())
 
         recorder.assertNoneFired("opening an equal project")
+    }
+
+    /**
+     * Use case: a field of the open project is written by application code past the property tree, so
+     * the property is told to read the project again and every view shows the current value afterwards.
+     */
+    @Test
+    fun readsFieldsChangedOnTheProject() {
+        recorder.reset()
+
+        project.meta.name = "Renamed Past The Property"
+        project.book.title = "Retitled Past The Property"
+
+        property.refresh()
+
+        assertEquals("Renamed Past The Property", property.metaProperty.nameProperty.get())
+        assertEquals("Retitled Past The Property", bookProperty.titleProperty.get())
+        assertEquals(1, recorder.countOf("project.meta.name"))
+        assertEquals(1, recorder.countOf("project.book.title"))
     }
 
     /**
@@ -415,28 +436,75 @@ class ProjectPropertyTest {
      * The property model a plugin builds for its own part: it derives from [ProjectPartProperty] and
      * offers the field of the part as a property of its own, exactly like the models of the parts the
      * application ships with.
+     *
+     * A plugin does not reach the helper this module uses internally, so it ties its field to the part
+     * with the builders of `javafx.beans.property.adapter` directly - which is what this class shows.
      */
-    class NotesProperty(
-        setter: (NotesPart?) -> Unit,
-        getter: () -> NotesPart?,
-        fireEvent: () -> Unit
-    ) : ProjectPartProperty<NotesPart>(setter, getter, fireEvent) {
+    class NotesProperty : ProjectPartProperty<NotesPart>() {
 
         /** The note the part carries, as a property of its own. */
-        val noteProperty: OverrideStringProperty = OverrideStringProperty(
-            { newValue -> value?.also { it.note = newValue ?: "" } },
-            { value?.note },
-            { fireValueChangedEvent() }
-        )
+        val noteProperty: StringProperty = SimpleStringProperty()
 
-        override fun invalidated() {
-            super.invalidated()
-            noteProperty.refresh()
+        private var beanNote: JavaBeanStringProperty? = null
+
+        // Guards the part while the field property takes over what it carries, so such an alignment is
+        // not reported as a change of the part.
+        private var aligning = false
+
+        init {
+            noteProperty.addListener { _ ->
+                // Reading marks the property valid again, so the next change is reported as well.
+                val current = noteProperty.value
+
+                if (aligning) return@addListener
+
+                // The note reaches the part BEFORE the part reports the change. A bidirectional
+                // binding would write it from a change listener, which Java FX runs only after every
+                // invalidation listener - the part would then report a value it does not carry yet.
+                beanNote?.also { if (it.value != current) it.value = current }
+
+                fireValueChangedEvent()
+            }
+            addListener { _, _, newValue -> bindNote(newValue) }
         }
 
         override fun refresh() {
-            super.refresh()
-            noteProperty.refresh()
+            aligned {
+                beanNote?.also {
+                    it.fireValueChangedEvent()
+                    noteProperty.value = it.value
+                }
+            }
+
+            // The field stayed quiet while reading, so the part reports the whole reading exactly once
+            // here - otherwise a view bound to the part as a whole would keep the previous value.
+            fireValueChangedEvent()
+        }
+
+        /** Ties the field property to the note of [part], or empties it when there is no part. */
+        private fun bindNote(part: NotesPart?) = aligned {
+            beanNote = null
+
+            if (part == null) {
+                noteProperty.value = null
+                return@aligned
+            }
+
+            val bean = JavaBeanStringPropertyBuilder.create()
+                .bean(part)
+                .name("note")
+                .build()
+            beanNote = bean
+            noteProperty.value = bean.value
+        }
+
+        private inline fun aligned(block: () -> Unit) {
+            aligning = true
+            try {
+                block()
+            } finally {
+                aligning = false
+            }
         }
     }
 }

@@ -44,6 +44,10 @@
     /* Ink used on top of a primary coloured fill, where the regular ink would vanish */
     -ghost-on-primary: #f7f9fd;
 
+    /* Signal colours: a value running towards its limit, and a value that reached it */
+    -ghost-warn: #b26a00;
+    -ghost-danger: #c62828;
+
     /* Derived tints used for hover and pressed states */
     -ghost-tint-hover: rgba(63, 81, 181, 0.12);
     -ghost-tint-pressed: rgba(63, 81, 181, 0.22);

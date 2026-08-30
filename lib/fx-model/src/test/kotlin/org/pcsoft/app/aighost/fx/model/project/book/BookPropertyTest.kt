@@ -28,6 +28,7 @@ import org.pcsoft.app.aighost.model.project.book.BookPart
 import org.pcsoft.app.aighost.model.project.book.Chapter
 import org.pcsoft.app.aighost.model.project.book.Epilog
 import org.pcsoft.app.aighost.model.project.book.Prolog
+import org.pcsoft.app.aighost.model.project.common.AIPrompt
 
 /**
  * Developer tests for [BookProperty].
@@ -62,6 +63,10 @@ class BookPropertyTest {
     private lateinit var titleAppendixView: StringProperty
     private var titleAppendixViewChanges = 0
 
+    /** Binding on the prompts of the whole manuscript. */
+    private lateinit var promptsView: StringProperty
+    private var promptsViewChanges = 0
+
     /** Binding on the prolog, standing for a view bound to that nested object. */
     private lateinit var prologView: StringProperty
     private var prologViewChanges = 0
@@ -73,6 +78,10 @@ class BookPropertyTest {
     /** Binding on the paragraphs nested in the prolog. */
     private lateinit var prologParagraphView: StringProperty
     private var prologParagraphViewChanges = 0
+
+    /** Binding on the prompts nested in the prolog. */
+    private lateinit var prologPromptsView: StringProperty
+    private var prologPromptsViewChanges = 0
 
     /** Binding on the chapters of the book. */
     private lateinit var chaptersView: StringProperty
@@ -98,14 +107,13 @@ class BookPropertyTest {
     fun setUp() {
         holder = Holder(newBook())
         parentEvents = 0
-        property = BookProperty(
-            { holder.book = it },
-            { holder.book },
-            { parentEvents++ }
-        )
-        // A parent property aligns a nested one with the model object as soon as that object arrives,
-        // so the same alignment happens here before the views are built.
-        property.refresh()
+        property = BookProperty()
+        // A parent property reports a change of a nested one as its own and writes an exchanged object
+        // back into the one carrying it, which is what these two listeners stand for.
+        property.addListener { _ -> parentEvents++ }
+        property.addListener { _, _, newValue -> holder.book = newValue }
+        // A parent property hands the nested object to this property as soon as that object arrives.
+        property.set(holder.book)
 
         rootView = SimpleStringProperty()
         val rootBinding = Bindings.createStringBinding({ bookState(property.value) }, property)
@@ -130,6 +138,14 @@ class BookPropertyTest {
         titleAppendixBinding.addListener { _, _, _ -> titleAppendixViewChanges++ }
         titleAppendixView.bind(titleAppendixBinding)
 
+        promptsView = SimpleStringProperty()
+        val promptsBinding = Bindings.createStringBinding(
+            { promptText(property.promptsProperty.get()) },
+            property.promptsProperty
+        )
+        promptsBinding.addListener { _, _, _ -> promptsViewChanges++ }
+        promptsView.bind(promptsBinding)
+
         prologView = SimpleStringProperty()
         val prologBinding = Bindings.createStringBinding(
             { partState(property.prologProperty.value) },
@@ -153,6 +169,14 @@ class BookPropertyTest {
         )
         prologParagraphBinding.addListener { _, _, _ -> prologParagraphViewChanges++ }
         prologParagraphView.bind(prologParagraphBinding)
+
+        prologPromptsView = SimpleStringProperty()
+        val prologPromptsBinding = Bindings.createStringBinding(
+            { promptText(property.prologProperty.promptsProperty.get()) },
+            property.prologProperty.promptsProperty
+        )
+        prologPromptsBinding.addListener { _, _, _ -> prologPromptsViewChanges++ }
+        prologPromptsView.bind(prologPromptsBinding)
 
         chaptersView = SimpleStringProperty()
         val chaptersBinding = Bindings.createStringBinding(
@@ -202,9 +226,11 @@ class BookPropertyTest {
         rootViewChanges = 0
         titleViewChanges = 0
         titleAppendixViewChanges = 0
+        promptsViewChanges = 0
         prologViewChanges = 0
         prologTitleViewChanges = 0
         prologParagraphViewChanges = 0
+        prologPromptsViewChanges = 0
         chaptersViewChanges = 0
         epilogViewChanges = 0
         epilogTitleViewChanges = 0
@@ -216,9 +242,11 @@ class BookPropertyTest {
     private fun newBook(): Book = Book(
         title = "The long journey",
         titleAppendix = listOf("A novel"),
+        prompts = INITIAL_PROMPTS,
         prolog = Prolog(
             title = "Before the storm",
             titleAppendix = listOf("A short note"),
+            prompts = INITIAL_PROLOG_PROMPTS,
             paragraph = listOf("The night was calm.")
         ),
         chapters = listOf(
@@ -232,19 +260,26 @@ class BookPropertyTest {
         blurb = Blurb(paragraph = listOf("A story about a long journey."))
     )
 
+    /** Text form of a prompt pair, used as the value of a binding on prompts. */
+    private fun promptText(prompts: AIPrompt?): String =
+        "${prompts?.contentPrompt ?: MISSING}/${prompts?.stylePrompt ?: MISSING}"
+
     /** Text form of the whole book, used as the value of the binding on the root. */
     private fun bookState(book: Book?): String =
         "${book?.title ?: MISSING}|${book?.titleAppendix.orEmpty().joinToString(";")}|" +
+                "${promptText(book?.prompts)}|" +
                 "${partState(book?.prolog)}|${book?.chapters.orEmpty().joinToString(";") { it.name }}|" +
                 "${partState(book?.epilog)}|${blurbState(book?.blurb)}"
 
     /** Text form of a written part of the book, used as the value of the binding on that object. */
     private fun partState(part: BookPart?): String =
         "${part?.title ?: MISSING}|${part?.titleAppendix.orEmpty().joinToString(";")}|" +
+                "${promptText(part?.prompts)}|" +
                 part?.paragraph.orEmpty().joinToString(";")
 
     /** Text form of the blurb, used as the value of the binding on that object. */
-    private fun blurbState(blurb: Blurb?): String = blurb?.paragraph.orEmpty().joinToString(";")
+    private fun blurbState(blurb: Blurb?): String =
+        "${blurb?.prompt ?: MISSING}|" + blurb?.paragraph.orEmpty().joinToString(";")
 
     /**
      * Asserts that every binding of the object tree delivers the given state, so no view keeps the
@@ -256,13 +291,15 @@ class BookPropertyTest {
         prolog: Prolog?,
         chapters: List<Chapter>,
         epilog: Epilog?,
-        blurb: Blurb?
+        blurb: Blurb?,
+        prompts: AIPrompt? = INITIAL_PROMPTS
     ) {
         val titleAppendixText = titleAppendix.joinToString(";")
         val chaptersText = chapters.joinToString(";") { it.name }
 
         assertEquals(
-            "${title ?: MISSING}|$titleAppendixText|${partState(prolog)}|$chaptersText|" +
+            "${title ?: MISSING}|$titleAppendixText|${promptText(prompts)}|" +
+                    "${partState(prolog)}|$chaptersText|" +
                     "${partState(epilog)}|${blurbState(blurb)}",
             rootView.get()
         ) { "the binding on the book delivers an outdated state" }
@@ -271,6 +308,12 @@ class BookPropertyTest {
         }
         assertEquals(titleAppendixText, titleAppendixView.get()) {
             "the binding on the further title lines delivers outdated lines"
+        }
+        assertEquals(promptText(prompts), promptsView.get()) {
+            "the binding on the prompts of the book delivers outdated prompts"
+        }
+        assertEquals(promptText(prolog?.prompts), prologPromptsView.get()) {
+            "the binding on the prompts of the prolog delivers outdated prompts"
         }
         assertEquals(partState(prolog), prologView.get()) {
             "the binding on the prolog delivers an outdated state"
@@ -307,7 +350,8 @@ class BookPropertyTest {
             book.prolog,
             book.chapters,
             book.epilog,
-            book.blurb
+            book.blurb,
+            book.prompts
         )
     }
 
@@ -482,6 +526,68 @@ class BookPropertyTest {
     }
 
     /**
+     * Use case: the user describes what the whole manuscript is about, so the single prompt field
+     * lands in the model object and every binding above it shows it.
+     */
+    @Test
+    fun writesContentPromptToModelAndNotifiesTree() {
+        property.promptsProperty.contentPromptProperty.set("Tell a story of a way back.")
+
+        assertEquals("Tell a story of a way back.", holder.book?.prompts?.contentPrompt)
+        assertEquals(
+            promptText(AIPrompt("Tell a story of a way back.", INITIAL_PROMPTS.stylePrompt)),
+            promptsView.get()
+        )
+        assertTrue(promptsViewChanges > 0) { "the binding on the prompts of the book was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+    }
+
+    /**
+     * Use case: a user interface reaches the two prompts of the manuscript through the property model
+     * the book hands out for them, so writing through that model lands in the model object just the
+     * same and is answered by it afterwards.
+     */
+    @Test
+    fun writesBothPromptsThroughTheNestedPropertyToModelAndNotifiesTree() {
+        property.promptsProperty.contentPromptProperty.set("Tell a story of a way back.")
+        property.promptsProperty.stylePromptProperty.set("Write it plainly.")
+
+        assertEquals("Tell a story of a way back.", holder.book?.prompts?.contentPrompt)
+        assertEquals("Write it plainly.", holder.book?.prompts?.stylePrompt)
+        assertEquals("Tell a story of a way back.", property.promptsProperty.contentPrompt)
+        assertEquals("Write it plainly.", property.promptsProperty.stylePrompt)
+        assertEquals(
+            promptText(AIPrompt("Tell a story of a way back.", "Write it plainly.")),
+            promptsView.get()
+        )
+        assertTrue(promptsViewChanges > 0) { "the binding on the prompts of the book was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+    }
+
+    /**
+     * Use case: the user describes what the prolog is about, so the prompt of that nested object is
+     * written through the tree and every binding above it - up to the book - shows it.
+     */
+    @Test
+    fun writesPrologContentPromptToModelAndNotifiesTree() {
+        property.prologProperty.promptsProperty.contentPromptProperty.set("Tell what nobody saw coming.")
+
+        assertEquals("Tell what nobody saw coming.", holder.book?.prolog?.prompts?.contentPrompt)
+        assertEquals(
+            promptText(AIPrompt("Tell what nobody saw coming.", INITIAL_PROLOG_PROMPTS.stylePrompt)),
+            prologPromptsView.get()
+        )
+        assertTrue(prologPromptsViewChanges > 0) {
+            "the binding on the prompts of the prolog was not re-evaluated"
+        }
+        assertTrue(prologViewChanges > 0) { "the binding on the prolog was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+    }
+
+    /**
      * Use case: the user adds a chapter to the manuscript, so the content change alone reaches the model
      * object and every binding above it shows it.
      */
@@ -603,19 +709,25 @@ class BookPropertyTest {
 
     /**
      * Use case: a field of the book or of an object nested in it is changed by application code past
-     * the property, so every field property delivers the current value instead of a cached copy.
+     * the property, so the property is told to read the book again and every field property delivers
+     * the current value afterwards - down into prolog, epilog and blurb, which nothing else would
+     * reach because those objects were not exchanged.
      */
     @Test
     fun readsFieldsChangedOnModel() {
         holder.book?.title = "The way back"
         holder.book?.titleAppendix = listOf("In three parts")
+        holder.book?.prompts = AIPrompt("Tell a story of a way back.", "Dry and short.")
         holder.book?.prolog?.title = "After the storm"
         holder.book?.chapters = listOf(Chapter(name = "Chapter two", title = "The departure"))
         holder.book?.epilog?.title = "The years after"
         holder.book?.blurb?.paragraph = listOf("For everyone who ever left home.")
 
+        property.refresh()
+
         assertEquals("The way back", property.title)
         assertEquals(listOf("In three parts"), property.titleAppendix)
+        assertEquals(AIPrompt("Tell a story of a way back.", "Dry and short."), property.prompts)
         assertEquals("After the storm", property.prologProperty.title)
         assertEquals(listOf("Chapter two"), property.chapters.map { it.name })
         assertEquals("The years after", property.epilogProperty.title)
@@ -643,8 +755,20 @@ class BookPropertyTest {
             blurb = blurb
         )
 
-        assertTreeShows("The way back", listOf("In three parts"), prolog, chapters, epilog, blurb)
+        assertTreeShows(
+            "The way back",
+            listOf("In three parts"),
+            prolog,
+            chapters,
+            epilog,
+            blurb,
+            AIPrompt()
+        )
         assertTrue(titleViewChanges > 0) { "the binding on the main title was not re-evaluated" }
+        assertTrue(promptsViewChanges > 0) { "the binding on the prompts of the book was not re-evaluated" }
+        assertTrue(prologPromptsViewChanges > 0) {
+            "the binding on the prompts of the prolog was not re-evaluated"
+        }
         assertTrue(titleAppendixViewChanges > 0) { "the binding on the further title lines was not re-evaluated" }
         assertTrue(prologTitleViewChanges > 0) { "the binding on the heading of the prolog was not re-evaluated" }
         assertTrue(prologParagraphViewChanges > 0) {
@@ -675,6 +799,12 @@ class BookPropertyTest {
         assertEquals(0, titleAppendixViewChanges) {
             "the further title lines were reported as changed although they did not change"
         }
+        assertEquals(0, promptsViewChanges) {
+            "the prompts of the book were reported as changed although they did not change"
+        }
+        assertEquals(0, prologPromptsViewChanges) {
+            "the prompts of the prolog were reported as changed although they did not change"
+        }
         assertEquals(0, prologTitleViewChanges) {
             "the heading of the prolog was reported as changed although it did not change"
         }
@@ -704,6 +834,7 @@ class BookPropertyTest {
 
         assertNull(property.title)
         assertEquals(emptyList<String>(), property.titleAppendix)
+        assertNull(property.prompts)
         assertNull(property.prolog)
         assertNull(property.prologProperty.title)
         assertEquals(emptyList<Chapter>(), property.chapters)
@@ -711,7 +842,7 @@ class BookPropertyTest {
         assertNull(property.epilogProperty.title)
         assertNull(property.blurb)
         assertEquals(emptyList<String>(), property.blurbProperty.paragraph)
-        assertTreeShows(null, emptyList(), null, emptyList(), null, null)
+        assertTreeShows(null, emptyList(), null, emptyList(), null, null, null)
     }
 
     /**
@@ -724,6 +855,7 @@ class BookPropertyTest {
 
         property.title = "The way back"
         property.titleAppendix = listOf("In three parts")
+        property.prompts = AIPrompt("Tell a story of a way back.", "Dry and short.")
         property.prolog = Prolog(title = "After the storm")
         property.chapters = listOf(Chapter(name = "Chapter two", title = "The departure"))
         property.epilog = Epilog(title = "The years after")
@@ -735,5 +867,13 @@ class BookPropertyTest {
     private companion object {
         /** Stands for a value the model object does not carry at all. */
         const val MISSING = "-"
+
+        /** The prompts of the manuscript every test starts from. */
+        val INITIAL_PROMPTS: AIPrompt
+            get() = AIPrompt("Tell a story in two parts.", "Warm and calm.")
+
+        /** The prompts of the prolog every test starts from, different from those of the book. */
+        val INITIAL_PROLOG_PROMPTS: AIPrompt
+            get() = AIPrompt("Tell what happened before the story.", "Quiet and slow.")
     }
 }

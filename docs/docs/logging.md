@@ -7,7 +7,7 @@ file is what a bug report is best written from.
 ## Where the log file is
 
 The log is written into the folder `.ai-ghost/logs` of your home directory, next to your
-`preferences.json`:
+`preferences.yml`:
 
 | System  | Path                                          |
 |---------|-----------------------------------------------|

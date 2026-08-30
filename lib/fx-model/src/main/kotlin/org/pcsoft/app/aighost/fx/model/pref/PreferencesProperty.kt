@@ -12,12 +12,12 @@
 
 package org.pcsoft.app.aighost.fx.model.pref
 
-import javafx.beans.property.ObjectProperty
 import javafx.beans.property.SimpleObjectProperty
-import org.pcsoft.app.aighost.fx.model.property.common.OverrideObjectProperty
+import org.pcsoft.app.aighost.fx.model.internal.BeanFields
+import org.pcsoft.app.aighost.model.pref.Ai
+import org.pcsoft.app.aighost.model.pref.Appearance
 import org.pcsoft.app.aighost.model.pref.Preferences
 import org.pcsoft.app.aighost.model.pref.RecentOpened
-import org.pcsoft.app.aighost.model.pref.ThemeMode
 
 /**
  * Property holding the preferences of the user and offering every field of that object - and every
@@ -28,6 +28,10 @@ import org.pcsoft.app.aighost.model.pref.ThemeMode
  * loaded again for instance - is passed down to the properties of its fields, so a control bound to
  * any level shows the current value.
  *
+ * Every block nested in the preferences is handed out with its own type, so a user interface reaches
+ * the fields of the recently opened files, of the appearance and of the AI settings through the
+ * property standing for that block.
+ *
  * The preferences object stays the same instance while one of its fields changes, so such a change
  * reaches a listener registered here as an invalidation. A `ChangeListener` registered directly on
  * this property compares the old value with the new one and therefore only sees the exchange of the
@@ -35,57 +39,57 @@ import org.pcsoft.app.aighost.model.pref.ThemeMode
  */
 class PreferencesProperty(preferences: Preferences) : SimpleObjectProperty<Preferences>(preferences) {
 
-    private val overrideThemeMode = OverrideObjectProperty(
-        { value.themeMode = it },
-        { value.themeMode },
-        { fireValueChangedEvent() }
-    )
-
-    /** Visual appearance of the application, as a property of its own. */
-    val themeModeProperty: ObjectProperty<ThemeMode>
-        get() = overrideThemeMode
-
-    /** Visual appearance of the application. */
-    var themeMode: ThemeMode
-        get() = themeModeProperty.value
-        set(value) {
-            themeModeProperty.value = value
-        }
-
-    private val overrideRecentOpened = RecentOpenedProperty(
-        setter = { value.recentOpened = it },
-        getter = { value.recentOpened },
-        fireEvent = { fireValueChangedEvent() }
-    )
+    private val fields = BeanFields<Preferences> { fireValueChangedEvent() }
 
     /** Files the user opened last, as a property of its own. */
-    val recentOpenedProperty: ObjectProperty<RecentOpened>
-        get() = overrideRecentOpened
+    val recentOpenedProperty: RecentOpenedProperty = RecentOpenedProperty()
 
     /** Files the user opened last. */
     var recentOpened: RecentOpened
-        get() = recentOpenedProperty.value
+        get() = recentOpenedProperty.get()
         set(value) {
-            recentOpenedProperty.value = value
+            recentOpenedProperty.set(value)
+        }
+
+    /** Visual appearance of the application, as a property of its own. */
+    val appearanceProperty: AppearanceProperty = AppearanceProperty()
+
+    /** Visual appearance of the application. */
+    var appearance: Appearance
+        get() = appearanceProperty.get()
+        set(value) {
+            appearanceProperty.set(value)
+        }
+
+    /** Settings of the AI functionality, as a property of its own. */
+    val aiProperty: AiProperty = AiProperty()
+
+    /** Settings of the AI functionality. */
+    var ai: Ai
+        get() = aiProperty.get()
+        set(value) {
+            aiProperty.set(value)
         }
 
     init {
-        // The constructor of the base class stores the object without announcing it, so the field
-        // properties have to take over its values here - otherwise they would only align on the
-        // first exchange and report the initial values as a change of their own.
-        invalidated()
+        fields.model(recentOpenedProperty, "recentOpened", recentOpenedProperty::refresh)
+        fields.model(appearanceProperty, "appearance", appearanceProperty::refresh)
+        fields.model(aiProperty, "ai", aiProperty::refresh)
+
+        // The field properties belong to another object after every exchange, so they are tied to the
+        // one this property carries now. The constructor of the base class stored the object without
+        // announcing it, so they are tied to it right here as well.
+        addListener { _, _, newValue -> fields.rebind(newValue) }
+        fields.rebind(get())
     }
 
     /**
-     * Called whenever the preferences object itself is exchanged - a freshly loaded settings file for
-     * instance - so the properties of its fields belong to another object afterwards and have to take
-     * over its values.
+     * Reads every field of the preferences again - and every field of the objects nested in them - and
+     * hands what changed to the field properties.
+     *
+     * This is what a caller uses after writing on the preferences object past this model: a plain
+     * object reports nothing, so nobody would notice such a write otherwise.
      */
-    override fun invalidated() {
-        if (get() == null) return
-
-        overrideThemeMode.refresh()
-        overrideRecentOpened.refresh()
-    }
+    fun refresh() = fields.refresh()
 
 }

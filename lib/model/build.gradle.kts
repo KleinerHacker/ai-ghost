@@ -28,6 +28,7 @@ dependencies {
 
     api("com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}")
     api("com.fasterxml.jackson.module:jackson-module-kotlin:${jacksonVersion}")
+    api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:${jacksonVersion}")
     api("io.arrow-kt:arrow-core:${arrowVersion}")
 
     implementation("org.slf4j:slf4j-api:2.0.17")

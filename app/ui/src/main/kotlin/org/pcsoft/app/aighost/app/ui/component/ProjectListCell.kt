@@ -40,12 +40,12 @@ internal class ProjectListCell(private val messages: ResourceBundle) : TreeCell<
         }
 
         text = when (item) {
-            is ProjectListItem.Root -> messages.getString("projectList.root")
-            is ProjectListItem.PrologItem -> messages.getString("projectList.prolog")
-            is ProjectListItem.Chapters -> messages.getString("projectList.chapter")
+            is ProjectListItem.Root -> messages.getString("component.projectList.root")
+            is ProjectListItem.PrologItem -> messages.getString("component.projectList.prolog")
+            is ProjectListItem.Chapters -> messages.getString("component.projectList.chapter")
             is ProjectListItem.ChapterItem -> item.chapter.name
-            is ProjectListItem.EpilogItem -> messages.getString("projectList.epilog")
-            is ProjectListItem.BlurbItem -> messages.getString("projectList.blurb")
+            is ProjectListItem.EpilogItem -> messages.getString("component.projectList.epilog")
+            is ProjectListItem.BlurbItem -> messages.getString("component.projectList.blurb")
         }
 
         graphic = when (item) {
@@ -61,12 +61,12 @@ internal class ProjectListCell(private val messages: ResourceBundle) : TreeCell<
             is ProjectListItem.Root -> null
             is ProjectListItem.PrologItem -> null
             is ProjectListItem.Chapters -> ContextMenu(
-                MenuItem(messages.getString("projectList.menu.addChapter"), AiGhostIcons.treeChapter())
+                MenuItem(messages.getString("component.projectList.menu.addChapter"), AiGhostIcons.treeChapter())
             )
 
             is ProjectListItem.ChapterItem -> ContextMenu(
-                MenuItem(messages.getString("projectList.menu.addChapter"), AiGhostIcons.treeChapter()),
-                MenuItem(messages.getString("projectList.menu.deleteChapter"))
+                MenuItem(messages.getString("component.projectList.menu.addChapter"), AiGhostIcons.treeChapter()),
+                MenuItem(messages.getString("component.projectList.menu.deleteChapter"))
             )
 
             is ProjectListItem.EpilogItem -> null

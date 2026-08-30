@@ -14,6 +14,7 @@ package org.pcsoft.app.aighost.app.ui.dialog
 
 import de.saxsys.mvvmfx.FluentViewLoader
 import javafx.scene.control.Alert
+import javafx.scene.layout.Region
 
 /**
  * Dialog reporting something that carries more than one line of explanation.
@@ -56,6 +57,9 @@ class DetailDialog(
             this@DetailDialog.viewModel = this.viewModel
         }
 
+        // The pane never falls below the height its content asks for, so a caption or a message
+        // running over several lines is shown completely instead of being cut at the bottom.
+        dialogPane.minHeight = Region.USE_PREF_SIZE
         dialogPane.styleClass += STYLE_CLASS
         dialogPane.buttonTypes.setAll(buttons.buttonTypes)
 

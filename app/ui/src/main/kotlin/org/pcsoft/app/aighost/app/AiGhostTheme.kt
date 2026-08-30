@@ -16,7 +16,7 @@ import javafx.application.Application
 import javafx.application.ColorScheme
 import javafx.application.Platform
 import javafx.scene.Scene
-import org.pcsoft.app.aighost.model.PreferencesStorage
+import org.pcsoft.app.aighost.app.controller.IoController
 import org.pcsoft.app.aighost.model.pref.ThemeMode
 
 /**
@@ -43,13 +43,16 @@ object AiGhostTheme {
      * Resource paths of the component stylesheets, one per styled control.
      *
      * Styling another control means adding a stylesheet next to the existing ones and listing it
-     * here; the order inside the list does not matter, because the selectors do not overlap.
+     * here. The order inside the list only matters where a stylesheet takes a look off a control
+     * that another one gave it: the tool bar keeps its buttons flat against the raised look of
+     * `button.css` and is therefore listed after it.
      */
     val COMPONENT_PATHS: List<String> = listOf(
         "/styles/component/menu-bar.css",
         "/styles/component/context-menu.css",
-        "/styles/component/tool-bar.css",
+        "/styles/component/status-bar.css",
         "/styles/component/button.css",
+        "/styles/component/tool-bar.css",
         "/styles/component/tooltip.css",
         "/styles/component/text-input.css",
         "/styles/component/tree-view.css",
@@ -57,6 +60,11 @@ object AiGhostTheme {
         "/styles/component/tab-pane.css",
         "/styles/component/split-pane.css",
         "/styles/component/editor.css",
+        "/styles/component/prompt-area.css",
+        "/styles/component/text-field.css",
+        "/styles/component/text-field-list-item.css",
+        "/styles/component/text-field-list.css",
+        "/styles/component/book-editor.css",
         "/styles/component/dialog.css"
     )
 
@@ -84,7 +92,7 @@ object AiGhostTheme {
     fun install() {
         Application.setUserAgentStylesheet(Application.STYLESHEET_MODENA)
         AiGhostFonts.install()
-        colorScheme = resolve(PreferencesStorage.current.themeMode)
+        colorScheme = resolve(IoController.preferences.appearanceProperty.themeMode)
     }
 
     /**

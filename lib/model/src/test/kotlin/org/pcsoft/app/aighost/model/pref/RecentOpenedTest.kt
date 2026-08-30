@@ -192,7 +192,7 @@ class RecentOpenedTest {
     fun roundTripsInsidePreferences() {
         val preferences = Preferences(
             recentOpened = RecentOpened(max = 3).add("a.json"),
-            themeMode = ThemeMode.DARK
+            appearance = Appearance(themeMode = ThemeMode.DARK)
         )
 
         val restored: Preferences = mapper.readValue(mapper.writeValueAsString(preferences))

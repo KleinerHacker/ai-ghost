@@ -12,11 +12,16 @@
 
 package org.pcsoft.app.aighost.fx.model.project.book
 
+import javafx.beans.property.ListProperty
+import javafx.beans.property.SimpleListProperty
+import javafx.beans.property.SimpleObjectProperty
+import javafx.beans.property.SimpleStringProperty
+import javafx.beans.property.StringProperty
 import javafx.collections.FXCollections
-import org.pcsoft.app.aighost.fx.model.property.common.OverrideListProperty
-import org.pcsoft.app.aighost.fx.model.property.common.OverrideObjectProperty
-import org.pcsoft.app.aighost.fx.model.property.common.OverrideStringProperty
+import org.pcsoft.app.aighost.fx.model.internal.BeanFields
+import org.pcsoft.app.aighost.fx.model.project.common.AIPromptProperty
 import org.pcsoft.app.aighost.model.project.book.BookPart
+import org.pcsoft.app.aighost.model.project.common.AIPrompt
 
 /**
  * Property wrapping a written part of a book - a prolog, a chapter or an epilog - and offering the
@@ -25,19 +30,22 @@ import org.pcsoft.app.aighost.model.project.book.BookPart
  * The wrapped object may be absent - a prolog the book does not carry - so every field property
  * answers with a neutral value and drops what is written to it as long as no part sits behind this
  * property.
+ *
+ * A part carrying further fields of its own registers them in [fields] and is then treated exactly
+ * like the shared ones.
+ *
+ * A part built on this class is handed out with its own type, so a caller reaches every field of it
+ * directly; such a part is built by the book carrying it alone and therefore carries an internal
+ * constructor.
  */
-internal abstract class BookPartProperty<T : BookPart?>(
-    setter: (T) -> Unit,
-    getter: () -> T,
-    fireEvent: () -> Unit
-) : OverrideObjectProperty<T>(setter, getter, fireEvent) {
+abstract class BookPartProperty<T : BookPart?> internal constructor() : SimpleObjectProperty<T>() {
+
+    // The fields of the wrapped part, the shared ones and the ones a derived class adds. They are
+    // registered inside this module only, so they stay behind the public surface of the part.
+    internal val fields: BeanFields<BookPart> = BeanFields { fireValueChangedEvent() }
 
     /** Heading of the part, as a property of its own. */
-    val titleProperty: OverrideStringProperty = OverrideStringProperty(
-        { newValue -> value?.also { it.title = newValue ?: "" } },
-        { value?.title },
-        { fireValueChangedEvent() }
-    )
+    val titleProperty: StringProperty = SimpleStringProperty()
 
     /** Heading of the part. */
     var title: String?
@@ -47,58 +55,53 @@ internal abstract class BookPartProperty<T : BookPart?>(
         }
 
     /** Further heading lines shown below the title, as a property of their own. */
-    val titleAppendixProperty: OverrideListProperty<String> = OverrideListProperty(
-        { newValue -> value?.also { it.titleAppendix = newValue } },
-        { value?.titleAppendix },
-        { fireValueChangedEvent() }
-    )
+    val titleAppendixProperty: ListProperty<String> =
+        SimpleListProperty(FXCollections.observableArrayList())
 
     /** Further heading lines shown below the title. */
     var titleAppendix: List<String>
         get() = titleAppendixProperty.get()
         set(value) {
-            titleAppendixProperty.set(FXCollections.observableArrayList(value))
+            titleAppendixProperty.setAll(value)
+        }
+
+    /** Prompts the text of the part is generated from, as a property of their own. */
+    val promptsProperty: AIPromptProperty = AIPromptProperty()
+
+    /** Prompts the text of the part is generated from. */
+    var prompts: AIPrompt?
+        get() = promptsProperty.get()
+        set(value) {
+            promptsProperty.set(value)
         }
 
     /** Paragraphs of the part in their order, as a property of their own. */
-    val paragraphProperty: OverrideListProperty<String> = OverrideListProperty(
-        { newValue -> value?.also { it.paragraph = newValue } },
-        { value?.paragraph },
-        { fireValueChangedEvent() }
-    )
+    val paragraphProperty: ListProperty<String> =
+        SimpleListProperty(FXCollections.observableArrayList())
 
     /** Paragraphs of the part in their order. */
     var paragraph: List<String>
         get() = paragraphProperty.get()
         set(value) {
-            paragraphProperty.set(FXCollections.observableArrayList(value))
+            paragraphProperty.setAll(value)
         }
 
-    /**
-     * Called whenever the wrapped object itself is exchanged, so the properties of its fields belong
-     * to another object afterwards and have to take over its values.
-     */
-    override fun invalidated() {
-        super.invalidated()
-        refreshFields()
-    }
+    init {
+        fields.string(titleProperty, "title")
+        fields.list(titleAppendixProperty, "titleAppendix")
+        fields.model(promptsProperty, "prompts", promptsProperty::refresh)
+        fields.list(paragraphProperty, "paragraph")
 
-    override fun refresh() {
-        super.refresh()
-        refreshFields()
+        // The field properties belong to another object after every exchange, so they are tied to the
+        // one this property carries now. A derived class registers its own fields before the first
+        // part arrives, so they are rebound along with the shared ones.
+        addListener { _, _, newValue -> fields.rebind(newValue) }
     }
 
     /**
-     * Lets every field property take over the value of the object the property carries now. A field
-     * whose value did not change reports nothing, so an exchanged object is not announced as a change
-     * of every one of its fields.
-     *
-     * A part carrying further fields of its own extends this and refreshes them as well.
+     * Reads every field of the wrapped part again - and both prompts nested in it - and hands what
+     * changed to the field properties, for a caller that wrote on the part past this model.
      */
-    protected open fun refreshFields() {
-        titleProperty.refresh()
-        titleAppendixProperty.refresh()
-        paragraphProperty.refresh()
-    }
+    open fun refresh() = fields.refresh()
 
 }

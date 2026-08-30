@@ -13,13 +13,13 @@
 package org.pcsoft.app.aighost.app.ui.component
 
 import de.saxsys.mvvmfx.ViewModel
-import javafx.beans.property.ObjectProperty
+import javafx.beans.value.ChangeListener
 import javafx.beans.property.ReadOnlyListProperty
 import javafx.beans.property.ReadOnlyListWrapper
 import javafx.beans.property.ReadOnlyObjectProperty
 import javafx.beans.property.ReadOnlyObjectWrapper
-import javafx.beans.property.SimpleObjectProperty
 import javafx.collections.FXCollections
+import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
 import org.pcsoft.app.aighost.model.project.book.Blurb
 import org.pcsoft.app.aighost.model.project.book.Chapter
 import org.pcsoft.app.aighost.model.project.book.Epilog
@@ -29,15 +29,17 @@ import org.pcsoft.app.aighost.model.project.book.Prolog
 /**
  * View model of [ProjectList].
  *
- * [project] is the single input of the component and is bound by whoever shows it. Everything the
- * tree needs is derived from it: a project always carries its book, so only the project itself can
- * be absent, which is the state before the user opened or created one. [selectedItem] is the single
- * output and reports which node the user picked.
+ * The property model of the project is the single input of the component and is handed over through
+ * [bind]; it is taken as the model itself and not as the value of a property of its own, so a
+ * property never carries another property. Everything the tree needs is derived from the project
+ * inside it: a project always carries its book, so only the project itself can be absent, which is
+ * the state before the user opened or created one. [selectedItem] is the single output and reports
+ * which node the user picked.
+ *
+ * The tree follows the exchange of the project and not every write inside it: a rewritten chapter
+ * title leaves the nodes where they are, so the user does not lose the selection while typing.
  */
 class ProjectListViewModel : ViewModel {
-
-    /** The project shown by the tree, absent while no project is open. */
-    val project: ObjectProperty<Project?> = SimpleObjectProperty(this, "project", null)
 
     private val chaptersWrapper: ReadOnlyListWrapper<Chapter> =
         ReadOnlyListWrapper(this, "chapters", FXCollections.observableArrayList())
@@ -48,6 +50,11 @@ class ProjectListViewModel : ViewModel {
 
     private val selectedItemWrapper: ReadOnlyObjectWrapper<ProjectListItem?> =
         ReadOnlyObjectWrapper(this, "selectedItem", null)
+
+    // The model the tree follows right now and the listener it follows it with, so both can be
+    // released again when another model takes its place.
+    private var project: ProjectProperty? = null
+    private val projectListener = ChangeListener<Project> { _, _, newValue -> onProjectChanged(newValue) }
 
     /** Chapters of the open project in the order the user arranged them, empty without a project. */
     val chapters: ReadOnlyListProperty<Chapter> get() = chaptersWrapper.readOnlyProperty
@@ -64,8 +71,17 @@ class ProjectListViewModel : ViewModel {
     /** The node the user picked in the tree, absent while nothing is selected. */
     val selectedItem: ReadOnlyObjectProperty<ProjectListItem?> get() = selectedItemWrapper.readOnlyProperty
 
-    init {
-        project.addListener { _, _, new -> onProjectChanged(new) }
+    /**
+     * Lets the tree follow [project] and releases the model it followed before.
+     *
+     * @param project the project model of the surrounding window
+     */
+    internal fun bind(project: ProjectProperty) {
+        this.project?.removeListener(projectListener)
+        this.project = project
+        project.addListener(projectListener)
+
+        onProjectChanged(project.value)
     }
 
     /**

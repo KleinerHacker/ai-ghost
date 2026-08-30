@@ -26,27 +26,31 @@ class BlurbTest {
     private val mapper: ObjectMapper = ObjectMapper().registerKotlinModule()
 
     /**
-     * Use case: the user creates the blurb before writing it, so it starts without text instead of
-     * forcing a paragraph up front.
+     * Use case: the user creates the blurb before writing it, so it starts without a prompt and
+     * without text instead of forcing a paragraph up front.
      */
     @Test
-    fun defaultsToEmptyText() {
+    fun defaultsToEmptyPromptAndText() {
         val blurb = Blurb()
 
+        assertEquals("", blurb.prompt)
         assertEquals(emptyList<String>(), blurb.paragraph)
     }
 
     /**
-     * Use case: the blurb is written to disk, so its paragraphs appear in the JSON under the stable
-     * property name the file format promises.
+     * Use case: the blurb is written to disk, so its prompt and its paragraphs appear in the JSON
+     * under the stable property names the file format promises.
      */
     @Test
-    fun serialisesParagraphs() {
-        val blurb = Blurb(listOf("A gripping tale."))
+    fun serialisesPromptAndParagraphs() {
+        val blurb = Blurb("Advertise a tale of two chapters.", listOf("A gripping tale."))
 
         val json = mapper.writeValueAsString(blurb)
 
-        assertEquals("""{"paragraph":["A gripping tale."]}""", json)
+        assertEquals(
+            """{"prompt":"Advertise a tale of two chapters.","paragraph":["A gripping tale."]}""",
+            json
+        )
     }
 
     /**
@@ -55,7 +59,9 @@ class BlurbTest {
      */
     @Test
     fun roundTripsParagraphsInOrder() {
-        val blurb = Blurb(listOf("First paragraph.", "Second paragraph.", "Third paragraph."))
+        val blurb = Blurb(
+            paragraph = listOf("First paragraph.", "Second paragraph.", "Third paragraph.")
+        )
 
         val restored: Blurb = mapper.readValue(mapper.writeValueAsString(blurb))
 
@@ -67,14 +73,38 @@ class BlurbTest {
     }
 
     /**
+     * Use case: the user lets the blurb be written by the assistant, so the prompt behind it is
+     * stored with the blurb and comes back unchanged when the project is opened again.
+     */
+    @Test
+    fun roundTripsPrompt() {
+        val blurb = Blurb("Advertise a tale of two chapters.", listOf("A gripping tale."))
+
+        val restored: Blurb = mapper.readValue(mapper.writeValueAsString(blurb))
+
+        assertEquals("Advertise a tale of two chapters.", restored.prompt)
+    }
+
+    /**
      * Use case: a project file holds an empty blurb object, so it is read back as a blurb without
-     * text instead of failing.
+     * prompt and without text instead of failing.
      */
     @Test
     fun readsEmptyDocument() {
         val blurb: Blurb = mapper.readValue("{}")
 
         assertEquals(Blurb(), blurb)
+    }
+
+    /**
+     * Use case: a blurb of an older project carries no prompt yet, so it is read back with an empty
+     * prompt instead of failing.
+     */
+    @Test
+    fun readsDocumentWithoutPrompt() {
+        val blurb: Blurb = mapper.readValue("""{"paragraph":["A tale."]}""")
+
+        assertEquals(Blurb(paragraph = listOf("A tale.")), blurb)
     }
 
     /**
@@ -85,6 +115,6 @@ class BlurbTest {
     fun ignoresUnknownProperties() {
         val blurb: Blurb = mapper.readValue("""{"paragraph":["A tale."],"language":"en"}""")
 
-        assertEquals(Blurb(listOf("A tale.")), blurb)
+        assertEquals(Blurb(paragraph = listOf("A tale.")), blurb)
     }
 }

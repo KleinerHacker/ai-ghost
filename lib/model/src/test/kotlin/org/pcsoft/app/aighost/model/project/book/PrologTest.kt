@@ -17,6 +17,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.pcsoft.app.aighost.model.project.common.AIPrompt
 
 /**
  * Developer tests for [org.pcsoft.app.aighost.model.project.book.Prolog].
@@ -26,14 +27,15 @@ class PrologTest {
     private val mapper: ObjectMapper = ObjectMapper().registerKotlinModule()
 
     /**
-     * Use case: the user creates the prolog and only titles it, so it starts without appendix lines
-     * and without text instead of forcing content up front.
+     * Use case: the user creates the prolog and only titles it, so it starts without appendix lines,
+     * without prompts and without text instead of forcing content up front.
      */
     @Test
-    fun defaultsToEmptyAppendixAndText() {
+    fun defaultsToEmptyAppendixPromptsAndText() {
         val prolog = Prolog("Before It All")
 
         assertEquals(emptyList<String>(), prolog.titleAppendix)
+        assertEquals(AIPrompt(), prolog.prompts)
         assertEquals(emptyList<String>(), prolog.paragraph)
     }
 
@@ -43,45 +45,59 @@ class PrologTest {
      */
     @Test
     fun isABookPart() {
-        val part: BookPart = Prolog("Before It All", listOf("A word up front"), listOf("Text."))
+        val part: BookPart = Prolog(
+            "Before It All",
+            listOf("A word up front"),
+            AIPrompt("Tell what happened before.", "Calm and slow."),
+            listOf("Text.")
+        )
 
         assertEquals("Before It All", part.title)
         assertEquals(listOf("A word up front"), part.titleAppendix)
+        assertEquals(AIPrompt("Tell what happened before.", "Calm and slow."), part.prompts)
         assertEquals(listOf("Text."), part.paragraph)
     }
 
     /**
-     * Use case: the prolog is written to disk, so heading, appendix lines and paragraphs appear in
-     * the JSON under the stable property names the file format promises.
+     * Use case: the prolog is written to disk, so heading, appendix lines, prompts and paragraphs
+     * appear in the JSON under the stable property names the file format promises.
      */
     @Test
-    fun serialisesTitleAppendixAndParagraphs() {
-        val prolog = Prolog("Before It All", listOf("A word up front"), listOf("Long before."))
+    fun serialisesTitleAppendixPromptsAndParagraphs() {
+        val prolog = Prolog(
+            "Before It All",
+            listOf("A word up front"),
+            AIPrompt("Tell what happened before.", "Calm and slow."),
+            listOf("Long before.")
+        )
 
         val json = mapper.writeValueAsString(prolog)
 
         assertEquals(
             """{"title":"Before It All","titleAppendix":["A word up front"],""" +
+                """"prompts":{"contentPrompt":"Tell what happened before.","stylePrompt":"Calm and slow."},""" +
                 """"paragraph":["Long before."]}""",
             json
         )
     }
 
     /**
-     * Use case: a stored prolog is read back, so heading and all paragraphs survive the round trip
-     * unchanged and keep their order.
+     * Use case: a stored prolog is read back, so heading, prompts and all paragraphs survive the
+     * round trip unchanged and keep their order.
      */
     @Test
     fun roundTripsParagraphsInOrder() {
         val prolog = Prolog(
             "Before It All",
             listOf("A word up front", "and another"),
+            AIPrompt("Tell what happened before.", "Calm and slow."),
             listOf("First paragraph.", "Second paragraph.")
         )
 
         val restored: Prolog = mapper.readValue(mapper.writeValueAsString(prolog))
 
         assertEquals(prolog, restored)
+        assertEquals(AIPrompt("Tell what happened before.", "Calm and slow."), restored.prompts)
         assertEquals(listOf("First paragraph.", "Second paragraph."), restored.paragraph)
     }
 

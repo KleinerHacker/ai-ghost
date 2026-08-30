@@ -13,16 +13,14 @@
 package org.pcsoft.app.aighost.app.ui.component
 
 import de.saxsys.mvvmfx.FluentViewLoader
-import javafx.beans.property.ObjectProperty
 import javafx.scene.layout.BorderPane
-import org.pcsoft.app.aighost.model.project.Project
+import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
 
 /**
  * Puts the project tree and the editing area side by side, separated by a splitter the user moves.
  *
- * The component owns no data of its own. [project] is bound by whoever shows the component and is
- * handed on to the [ProjectList] on the left; the area on the right shows a placeholder until the
- * editing parts exist.
+ * The component owns no data of its own: [bindProject] hands it the property model of the project,
+ * which it passes on to the [ProjectList] on the left and to the [BookEditor] on the right.
  */
 class Editor : BorderPane() {
 
@@ -37,6 +35,10 @@ class Editor : BorderPane() {
         }
     }
 
-    /** The project being edited, absent while no project is open. */
-    val project: ObjectProperty<Project?> by viewModel::project
+    /**
+     * Hands the property model of the project to the editor and to everything below it.
+     *
+     * @param project the project model of the surrounding window
+     */
+    fun bindProject(project: ProjectProperty) = viewModel.bind(project)
 }

@@ -58,11 +58,13 @@ class RecentOpenedPropertyTest {
     fun setUp() {
         preferences = Preferences(recentOpened = RecentOpened(max = 10, entries = emptyList()))
         parentEvents = 0
-        property = RecentOpenedProperty(
-            setter = { preferences.recentOpened = it },
-            getter = { preferences.recentOpened },
-            fireEvent = { parentEvents++ }
-        )
+        property = RecentOpenedProperty()
+        // A parent property reports a change of a nested one as its own and writes an exchanged object
+        // back into the one carrying it, which is what these two listeners stand for.
+        property.addListener { _ -> parentEvents++ }
+        property.addListener { _, _, newValue -> preferences.recentOpened = newValue }
+        // A parent property hands the nested object to this property as soon as that object arrives.
+        property.set(preferences.recentOpened)
 
         objectView = SimpleStringProperty()
         val objectBinding = Bindings.createStringBinding({ state(property.value) }, property)
@@ -239,13 +241,16 @@ class RecentOpenedPropertyTest {
     }
 
     /**
-     * Use case: a field of the wrapped object is changed by application code past the property, so
-     * reading a field property delivers the current value instead of a cached copy.
+     * Use case: a field of the wrapped object is changed by application code past the property, so the
+     * property is told to read that object again and every field property delivers the current value
+     * afterwards.
      */
     @Test
     fun readsFieldsChangedOnModel() {
         preferences.recentOpened.max = 4
         preferences.recentOpened.entries = listOf("/books/third.md")
+
+        property.refresh()
 
         assertEquals(4, property.max)
         assertEquals(listOf("/books/third.md"), property.entries)

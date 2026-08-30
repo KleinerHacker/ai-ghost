@@ -48,14 +48,13 @@ class CopyrightDesignPropertyTest {
     fun setUp() {
         holder = Holder(newDesign())
         parentEvents = 0
-        property = CopyrightDesignProperty(
-            { holder.design = it },
-            { holder.design },
-            { parentEvents++ }
-        )
-        // A parent property aligns a nested one with the model object as soon as that object arrives,
-        // so the same alignment happens here before the views are built.
-        property.refresh()
+        property = CopyrightDesignProperty()
+        // A parent property reports a change of a nested one as its own and writes an exchanged object
+        // back into the one carrying it, which is what these two listeners stand for.
+        property.addListener { _ -> parentEvents++ }
+        property.addListener { _, _, newValue -> holder.design = newValue }
+        // A parent property hands the nested object to this property as soon as that object arrives.
+        property.set(holder.design)
 
         recorder = ChangeRecorder()
         recorder.watch("design", property)
@@ -171,8 +170,9 @@ class CopyrightDesignPropertyTest {
      */
     @Test
     fun answersNeutrallyWithoutAModelObject() {
-        holder.design = null
-        property.refresh()
+        // A parent property hands out nothing while it carries no design, which is what setting the
+        // property itself to nothing stands for.
+        property.set(null)
 
         assertNull(property.styleProperty.get())
         assertFalse(property.showProperty.get())

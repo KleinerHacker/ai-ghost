@@ -12,9 +12,11 @@
 
 package org.pcsoft.app.aighost.fx.model.project.design
 
+import javafx.beans.property.BooleanProperty
+import javafx.beans.property.SimpleBooleanProperty
+import javafx.beans.property.SimpleObjectProperty
 import org.pcsoft.app.aighost.fx.model.common.StyleDataProperty
-import org.pcsoft.app.aighost.fx.model.property.common.OverrideBooleanProperty
-import org.pcsoft.app.aighost.fx.model.property.common.OverrideObjectProperty
+import org.pcsoft.app.aighost.fx.model.internal.BeanFields
 import org.pcsoft.app.aighost.model.common.StyleData
 import org.pcsoft.app.aighost.model.project.design.CopyrightDesign
 
@@ -24,19 +26,16 @@ import org.pcsoft.app.aighost.model.project.design.CopyrightDesign
  *
  * The wrapped object may be absent as long as no design sits above this property, so every field
  * property answers with a neutral value and drops what is written to it until then.
+ *
+ * This property model is handed out with its own type, so a caller reaches every field of it
+ * directly; it is built by the design carrying it alone and therefore carries an internal constructor.
  */
-internal class CopyrightDesignProperty(
-    setter: (CopyrightDesign?) -> Unit,
-    getter: () -> CopyrightDesign?,
-    fireEvent: () -> Unit
-) : OverrideObjectProperty<CopyrightDesign?>(setter, getter, fireEvent) {
+class CopyrightDesignProperty internal constructor() : SimpleObjectProperty<CopyrightDesign?>() {
+
+    private val fields = BeanFields<CopyrightDesign> { fireValueChangedEvent() }
 
     /** Appearance of the copyright page, as a property of its own. */
-    val styleProperty: StyleDataProperty = StyleDataProperty(
-        { newValue -> value?.also { it.style = newValue ?: StyleData() } },
-        { value?.style },
-        { fireValueChangedEvent() }
-    )
+    val styleProperty: StyleDataProperty = StyleDataProperty()
 
     /** Appearance of the copyright page. */
     var style: StyleData?
@@ -46,11 +45,7 @@ internal class CopyrightDesignProperty(
         }
 
     /** Whether a separate copyright page is printed, as a property of its own. */
-    val showProperty: OverrideBooleanProperty = OverrideBooleanProperty(
-        { newValue -> value?.also { it.show = newValue } },
-        { value?.show ?: false },
-        { fireValueChangedEvent() }
-    )
+    val showProperty: BooleanProperty = SimpleBooleanProperty()
 
     /** Whether a separate copyright page is printed. */
     var show: Boolean
@@ -59,28 +54,21 @@ internal class CopyrightDesignProperty(
             showProperty.set(value)
         }
 
-    /**
-     * Called whenever the wrapped object itself is exchanged, so the properties of its fields belong
-     * to another object afterwards and have to take over its values.
-     */
-    override fun invalidated() {
-        super.invalidated()
-        refreshFields()
-    }
+    init {
+        fields.model(styleProperty, "style", styleProperty::refresh)
+        fields.boolean(showProperty, "show")
 
-    override fun refresh() {
-        super.refresh()
-        refreshFields()
+        // The field properties belong to another object after every exchange, so they are tied to the
+        // one this property carries now.
+        addListener { _, _, newValue -> fields.rebind(newValue) }
+        fields.rebind(get())
     }
 
     /**
-     * Lets every field property take over the value of the object the property carries now. A field
-     * whose value did not change reports nothing, so an exchanged object is not announced as a change
-     * of every one of its fields.
+     * Reads every field of the wrapped object again - and every field of the style nested in it - and
+     * hands what changed to the field properties, for a caller that wrote on the object past this
+     * model.
      */
-    private fun refreshFields() {
-        styleProperty.refresh()
-        showProperty.refresh()
-    }
+    fun refresh() = fields.refresh()
 
 }

@@ -12,8 +12,9 @@
 
 package org.pcsoft.app.aighost.fx.model.project.design
 
+import javafx.beans.property.SimpleObjectProperty
 import org.pcsoft.app.aighost.fx.model.common.StyleDataProperty
-import org.pcsoft.app.aighost.fx.model.property.common.OverrideObjectProperty
+import org.pcsoft.app.aighost.fx.model.internal.BeanFields
 import org.pcsoft.app.aighost.model.common.StyleData
 import org.pcsoft.app.aighost.model.project.design.ChapterDesign
 
@@ -23,19 +24,16 @@ import org.pcsoft.app.aighost.model.project.design.ChapterDesign
  *
  * The wrapped object may be absent as long as no design sits above this property, so every field
  * property answers with a neutral value and drops what is written to it until then.
+ *
+ * This property model is handed out with its own type, so a caller reaches both styles directly; it
+ * is built by the design carrying it alone and therefore carries an internal constructor.
  */
-internal class ChapterDesignProperty(
-    setter: (ChapterDesign?) -> Unit,
-    getter: () -> ChapterDesign?,
-    fireEvent: () -> Unit
-) : OverrideObjectProperty<ChapterDesign?>(setter, getter, fireEvent) {
+class ChapterDesignProperty internal constructor() : SimpleObjectProperty<ChapterDesign?>() {
+
+    private val fields = BeanFields<ChapterDesign> { fireValueChangedEvent() }
 
     /** Appearance of a chapter heading, as a property of its own. */
-    val titleStyleProperty: StyleDataProperty = StyleDataProperty(
-        { newValue -> value?.also { it.titleStyle = newValue ?: StyleData() } },
-        { value?.titleStyle },
-        { fireValueChangedEvent() }
-    )
+    val titleStyleProperty: StyleDataProperty = StyleDataProperty()
 
     /** Appearance of a chapter heading. */
     var titleStyle: StyleData?
@@ -45,11 +43,7 @@ internal class ChapterDesignProperty(
         }
 
     /** Appearance of the further chapter heading lines, as a property of its own. */
-    val titleAppendixStyleProperty: StyleDataProperty = StyleDataProperty(
-        { newValue -> value?.also { it.titleAppendixStyle = newValue ?: StyleData() } },
-        { value?.titleAppendixStyle },
-        { fireValueChangedEvent() }
-    )
+    val titleAppendixStyleProperty: StyleDataProperty = StyleDataProperty()
 
     /** Appearance of the further chapter heading lines. */
     var titleAppendixStyle: StyleData?
@@ -58,28 +52,20 @@ internal class ChapterDesignProperty(
             titleAppendixStyleProperty.set(value)
         }
 
-    /**
-     * Called whenever the wrapped object itself is exchanged, so the properties of its fields belong
-     * to another object afterwards and have to take over its values.
-     */
-    override fun invalidated() {
-        super.invalidated()
-        refreshFields()
-    }
+    init {
+        fields.model(titleStyleProperty, "titleStyle", titleStyleProperty::refresh)
+        fields.model(titleAppendixStyleProperty, "titleAppendixStyle", titleAppendixStyleProperty::refresh)
 
-    override fun refresh() {
-        super.refresh()
-        refreshFields()
+        // The field properties belong to another object after every exchange, so they are tied to the
+        // one this property carries now.
+        addListener { _, _, newValue -> fields.rebind(newValue) }
+        fields.rebind(get())
     }
 
     /**
-     * Lets every field property take over the value of the object the property carries now. A field
-     * whose value did not change reports nothing, so an exchanged object is not announced as a change
-     * of every one of its fields.
+     * Reads both styles of the wrapped object again - and every field of them - and hands what changed
+     * to the field properties, for a caller that wrote on the object past this model.
      */
-    private fun refreshFields() {
-        titleStyleProperty.refresh()
-        titleAppendixStyleProperty.refresh()
-    }
+    fun refresh() = fields.refresh()
 
 }

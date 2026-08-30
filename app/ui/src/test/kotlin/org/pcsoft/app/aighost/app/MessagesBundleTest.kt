@@ -65,7 +65,7 @@ class MessagesBundleTest {
      */
     @Test
     fun germanTranslationKeepsUmlauts() {
-        assertEquals("Öffnen...", german.getProperty("menu.file.open"))
-        assertEquals("Veröffentlichen", german.getProperty("menu.publish"))
+        assertEquals("Öffnen...", german.getProperty("window.main.menu.file.open"))
+        assertEquals("Veröffentlichen", german.getProperty("window.main.menu.publish"))
     }
 }

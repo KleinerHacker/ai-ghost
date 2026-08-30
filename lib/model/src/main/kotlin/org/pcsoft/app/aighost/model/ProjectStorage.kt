@@ -26,16 +26,11 @@ import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
 /**
- * Holds the project the user is working on and reads and writes it as an archive of its parts.
+ * Reads and writes a project as an archive of its parts.
  *
- * Exactly one project is open at a time: [current] is the project in effect, [currentFile] the file
- * it belongs to. A project that was never saved has no file yet, so [currentFile] is `null` until
- * [save] wrote it somewhere. The storage starts with a fresh [Project], so the application always
- * has something to show.
- *
- * [new] and [load] put another project object into [current], so whoever wants to follow the open
- * project watches that field instead of holding on to the object behind it. The project itself is a
- * plain mutable value object and reports nothing, so a reader takes the values when it needs them.
+ * The storage holds nothing: [load] hands the project of a file to its caller and [save] writes the
+ * project it is given to the file it is given. Which project is open, and which file it belongs to,
+ * is a question of the application - in this application the main window answers it.
  *
  * A part of the document this application cannot read is kept as the text it was stored as and is
  * written back unchanged on the next save, so opening a project never loses what it does not know.
@@ -45,64 +40,34 @@ import java.nio.file.StandardCopyOption
  */
 object ProjectStorage {
 
-    /** The project currently open, a fresh one until another is loaded. */
-    var current: Project = createEmptyProject()
-        private set
-
-    /** The file [current] was read from or written to, `null` while it was never saved. */
-    var currentFile: File? = null
-        private set
-
     /**
-     * Indicates whether the current file has already been saved.
-     *
-     * This property returns `true` if there is an existing file associated with the current state,
-     * meaning the current state has already been saved to persistent storage. It returns `false`
-     * if no file is associated, implying the current state is unsaved or new.
-     */
-    val alreadySaved: Boolean
-        get() = currentFile != null
-
-    /**
-     * Closes the open project and starts a fresh one.
-     *
-     * The fresh project carries the three standard parts with their defaults and no part beyond them.
-     * It has no file, so the next [save] needs an explicit one.
-     */
-    fun new() {
-        current = createEmptyProject()
-        currentFile = null
-    }
-
-    /**
-     * Reads the project from [file] and opens it.
-     *
-     * On success the document becomes [current] and [currentFile] points at [file]. A failure leaves
-     * the open project untouched, so a broken file never closes what the user is working on.
+     * Reads the project from [file] and hands it out.
      *
      * A part the document carries but no class is named for is kept as text. A document missing one
-     * of the three standard parts is not opened with defaults in their place - it is corrupt.
+     * of the three standard parts is not read with defaults in their place - it is corrupt.
      *
      * A document that lost only a part beyond the standard ones is not lost itself: it is answered
      * with [Error.Incomplete], which carries the project that could be read and the identifiers of
-     * what it lost, so the caller can tell the user what a rescue costs and open the project through
-     * [open] afterwards. Nothing of that happens behind the user's back - [load] itself does not
-     * open such a document.
+     * what it lost, so the caller can tell the user what a rescue costs and take the project over
+     * afterwards. Nothing of that happens behind the user's back - [load] itself hands out only a
+     * complete document.
      *
      * Returns [Error.NotFound] when the file does not exist, [Error.NotAFile] when the path exists but
      * is not a regular file, [Error.Corrupt] when the file was read but does not hold every standard
      * part, [Error.Incomplete] when only parts beyond the standard ones got lost, [Error.Malformed]
      * when the content is not the expected document, and [Error.Unreadable] when the file cannot be
      * read at all.
+     *
+     * @param file The file to read the project from.
      */
-    fun load(file: File): Either<Error, Unit> {
+    fun load(file: File): Either<Error, Project> {
         if (!file.exists())
             return Error.NotFound(file).left()
         if (!file.isFile)
             return Error.NotAFile(file).left()
 
         val result = try {
-            StorageIO.loadFromZip(file, Meta::class, Design::class, Book::class)
+            StorageIo.loadFromZip(file, Meta::class, Design::class, Book::class)
                 .fold({ return errorOf(it, file).left() }, { it })
         } catch (e: JacksonException) {
             return Error.Malformed(file, e).left()
@@ -113,81 +78,48 @@ object ProjectStorage {
         if (result.lostParts.isNotEmpty())
             return Error.Incomplete(file, result.lostParts, result.project).left()
 
-        open(result.project, file)
-
-        return Unit.right()
+        return result.project.right()
     }
 
     /**
-     * Opens [project] as the project of [file], whatever it took to read it.
-     *
-     * This is what [load] does itself for a complete document and what a caller does for a document
-     * [Error.Incomplete] reported on: the project it carries is opened only when the user accepted
-     * the loss, which is a decision this storage does not make.
-     *
-     * The lost parts are gone from the moment the project is opened - the next [save] writes the
-     * document without them.
-     *
-     * @param project The project to open.
-     * @param file The file the project was read from.
-     */
-    fun open(project: Project, file: File) {
-        current = project
-        currentFile = file
-    }
-
-    /**
-     * Writes the open project to [file], creating the parent directories if they do not exist yet.
+     * Writes [project] to [file], creating the parent directories if they do not exist yet.
      *
      * Every part of the project is written, the three standard ones and everything stored beside
      * them, so a part this application cannot read still survives the save.
      *
      * The document is written to a temporary file next to the target and moved into place afterwards,
      * so a crash during the write leaves the previous document intact instead of a half written file.
-     * A successful write makes [file] the file of the open project, which turns the first save of a
-     * fresh project into a "save as".
      *
-     * Returns [Error.NoFile] when neither [file] nor [currentFile] names a target, [Error.NotAFile]
-     * when the path exists but is not a regular file, so an existing directory is never replaced, and
-     * [Error.Unreadable] when the file cannot be written.
+     * Returns [Error.NotAFile] when the path exists but is not a regular file, so an existing
+     * directory is never replaced, and [Error.Unreadable] when the file cannot be written.
+     *
+     * @param project The project to store.
+     * @param file The file to store it in.
      */
-    fun save(file: File? = currentFile): Either<Error, Unit> {
-        val target = file ?: return Error.NoFile.left()
-
-        if (target.exists() && !target.isFile)
-            return Error.NotAFile(target).left()
+    fun save(project: Project, file: File): Either<Error, Unit> {
+        if (file.exists() && !file.isFile)
+            return Error.NotAFile(file).left()
 
         return try {
-            target.parentFile?.mkdirs()
+            file.parentFile?.mkdirs()
 
-            val temporary = File.createTempFile(target.name, ".tmp", target.parentFile)
+            val temporary = File.createTempFile(file.name, ".tmp", file.parentFile)
             try {
-                StorageIO.saveToZip(temporary, current)
+                StorageIo.saveToZip(temporary, project)
                 Files.move(
                     temporary.toPath(),
-                    target.toPath(),
+                    file.toPath(),
                     StandardCopyOption.REPLACE_EXISTING
                 )
             } finally {
                 temporary.delete()
             }
 
-            currentFile = target
             Unit.right()
         } catch (e: IOException) {
-            Error.Unreadable(target, e).left()
+            Error.Unreadable(file, e).left()
         }
     }
-
-    /**
-     * Creates and returns a new instance of an empty project.
-     *
-     * The created project contains default initializations for its three standard parts: metadata,
-     * design settings and manuscript content.
-     *
-     * @return A new instance of the `Project` class, initialized with default metadata, design, and book content.
-     */
-    private fun createEmptyProject(): Project = Project()
 
     /**
      * The failure this storage reports for a failure of the archive.
@@ -195,34 +127,24 @@ object ProjectStorage {
      * @param error The failure the archive reported.
      * @param file The file that was read.
      */
-    private fun errorOf(error: StorageIO.Error, file: File): Error = when (error) {
-        is StorageIO.Error.Corrupt -> Error.Corrupt(file, error.missing)
+    private fun errorOf(error: StorageIo.Error, file: File): Error = when (error) {
+        is StorageIo.Error.Corrupt -> Error.Corrupt(file, error.missing)
     }
 
     /**
-     * Reason why opening or storing a project failed.
+     * Reason why reading or storing a project failed.
      *
      * The storage never throws for these cases, it returns them as the left side of an [Either], so a
-     * caller has to decide what to do: [NoFile] and [NotFound] are answered by asking the user for a
-     * path, [Incomplete] by asking whether the project may be opened without what it lost, while
+     * caller has to decide what to do: [NotFound] is answered by asking the user for another path,
+     * [Incomplete] by asking whether the project may be opened without what it lost, while
      * [NotAFile], [Unreadable], [Corrupt] and [Malformed] point at something the user should be told
      * about.
      *
-     * @property file The file the failing operation worked on, `null` when there was none.
+     * @property file The file the failing operation worked on.
      */
     sealed interface Error {
 
-        val file: File?
-
-        /**
-         * No file was named for the operation and no project file is known yet.
-         *
-         * This is the answer to saving a project that was never stored, so the application asks the
-         * user where it should go.
-         */
-        data object NoFile : Error {
-            override val file: File? = null
-        }
+        val file: File
 
         /**
          * No file is stored at the given path.
@@ -270,7 +192,7 @@ object ProjectStorage {
          *
          * The project can still be worked with, which is why [recovered] carries it: opening it is a
          * decision of the user, because the lost parts are written out of the document on the next
-         * save. The project is opened through [ProjectStorage.open] once the user agreed.
+         * save.
          *
          * @property file The file that was read.
          * @property lostParts The identifiers of the parts that got lost.

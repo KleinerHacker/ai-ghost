@@ -12,10 +12,14 @@
 
 package org.pcsoft.app.aighost.fx.model.common
 
-import org.pcsoft.app.aighost.fx.model.property.common.OverrideBooleanProperty
-import org.pcsoft.app.aighost.fx.model.property.common.OverrideIntegerProperty
-import org.pcsoft.app.aighost.fx.model.property.common.OverrideObjectProperty
-import org.pcsoft.app.aighost.fx.model.property.common.OverrideStringProperty
+import javafx.beans.property.BooleanProperty
+import javafx.beans.property.IntegerProperty
+import javafx.beans.property.SimpleBooleanProperty
+import javafx.beans.property.SimpleIntegerProperty
+import javafx.beans.property.SimpleObjectProperty
+import javafx.beans.property.SimpleStringProperty
+import javafx.beans.property.StringProperty
+import org.pcsoft.app.aighost.fx.model.internal.BeanFields
 import org.pcsoft.app.aighost.model.common.FontData
 
 /**
@@ -25,19 +29,16 @@ import org.pcsoft.app.aighost.model.common.FontData
  * The wrapped object may be absent - a style that is not there at all - so every field property
  * answers with a neutral value and drops what is written to it as long as no font sits behind this
  * property.
+ *
+ * This property model is handed out with its own type, so a caller reaches every field of the font
+ * directly; it is built by the object carrying it alone and therefore carries an internal constructor.
  */
-internal class FontDataProperty(
-    setter: (FontData?) -> Unit,
-    getter: () -> FontData?,
-    fireEvent: () -> Unit
-) : OverrideObjectProperty<FontData?>(setter, getter, fireEvent) {
+class FontDataProperty internal constructor() : SimpleObjectProperty<FontData?>() {
+
+    private val fields = BeanFields<FontData> { fireValueChangedEvent() }
 
     /** Family name of the font, as a property of its own. */
-    val nameProperty: OverrideStringProperty = OverrideStringProperty(
-        { newValue -> value?.also { it.name = newValue ?: "" } },
-        { value?.name },
-        { fireValueChangedEvent() }
-    )
+    val nameProperty: StringProperty = SimpleStringProperty()
 
     // A property carries a name of its own, so the accessors of the wrapped field are given another
     // name on the JVM side - otherwise they would silently replace the one of the base class.
@@ -49,11 +50,7 @@ internal class FontDataProperty(
         }
 
     /** Font size in points, as a property of its own. */
-    val sizeProperty: OverrideIntegerProperty = OverrideIntegerProperty(
-        { newValue -> value?.also { it.size = newValue } },
-        { value?.size ?: 0 },
-        { fireValueChangedEvent() }
-    )
+    val sizeProperty: IntegerProperty = SimpleIntegerProperty()
 
     /** Font size in points. */
     var size: Int
@@ -63,11 +60,7 @@ internal class FontDataProperty(
         }
 
     /** Whether the text is drawn in a bold weight, as a property of its own. */
-    val boldProperty: OverrideBooleanProperty = OverrideBooleanProperty(
-        { newValue -> value?.also { it.bold = newValue } },
-        { value?.bold ?: false },
-        { fireValueChangedEvent() }
-    )
+    val boldProperty: BooleanProperty = SimpleBooleanProperty()
 
     /** Whether the text is drawn in a bold weight. */
     var bold: Boolean
@@ -77,11 +70,7 @@ internal class FontDataProperty(
         }
 
     /** Whether the text is drawn slanted, as a property of its own. */
-    val italicProperty: OverrideBooleanProperty = OverrideBooleanProperty(
-        { newValue -> value?.also { it.italic = newValue } },
-        { value?.italic ?: false },
-        { fireValueChangedEvent() }
-    )
+    val italicProperty: BooleanProperty = SimpleBooleanProperty()
 
     /** Whether the text is drawn slanted. */
     var italic: Boolean
@@ -90,30 +79,22 @@ internal class FontDataProperty(
             italicProperty.set(value)
         }
 
-    /**
-     * Called whenever the wrapped object itself is exchanged, so the properties of its fields belong
-     * to another object afterwards and have to take over its values.
-     */
-    override fun invalidated() {
-        super.invalidated()
-        refreshFields()
-    }
+    init {
+        fields.string(nameProperty, "name")
+        fields.integer(sizeProperty, "size")
+        fields.boolean(boldProperty, "bold")
+        fields.boolean(italicProperty, "italic")
 
-    override fun refresh() {
-        super.refresh()
-        refreshFields()
+        // The field properties belong to another object after every exchange, so they are tied to the
+        // one this property carries now.
+        addListener { _, _, newValue -> fields.rebind(newValue) }
+        fields.rebind(get())
     }
 
     /**
-     * Lets every field property take over the value of the object the property carries now. A field
-     * whose value did not change reports nothing, so an exchanged object is not announced as a change
-     * of every one of its fields.
+     * Reads every field of the wrapped font again and hands what changed to the field properties, for
+     * a caller that wrote on the font past this model.
      */
-    private fun refreshFields() {
-        nameProperty.refresh()
-        sizeProperty.refresh()
-        boldProperty.refresh()
-        italicProperty.refresh()
-    }
+    fun refresh() = fields.refresh()
 
 }

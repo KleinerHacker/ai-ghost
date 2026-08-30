@@ -12,9 +12,10 @@
 
 package org.pcsoft.app.aighost.fx.model.project
 
+import javafx.beans.InvalidationListener
 import javafx.beans.property.ObjectProperty
 import javafx.beans.property.SimpleObjectProperty
-import javafx.beans.property.StringProperty
+import org.pcsoft.app.aighost.fx.model.internal.BeanFields
 import org.pcsoft.app.aighost.fx.model.project.book.BookProperty
 import org.pcsoft.app.aighost.fx.model.project.design.DesignProperty
 import org.pcsoft.app.aighost.fx.model.project.meta.MetaProperty
@@ -49,118 +50,88 @@ import kotlin.reflect.KClass
  */
 class ProjectProperty(project: Project) : SimpleObjectProperty<Project>(project) {
 
+    private val fields = BeanFields<Project> { fireValueChangedEvent() }
+
     // The parts a plugin attached, in the order they were attached. Declared before everything that
     // may reach it, because the properties of this class are initialized from top to bottom.
-    private val attachedParts = LinkedHashMap<String, ProjectPartProperty<*>>()
+    private val attachedParts = LinkedHashMap<String, Attachment>()
 
-    private val overrideMeta = MetaProperty(
-        setter = { newValue -> value?.also { it.meta = newValue ?: Meta() } },
-        getter = { value?.meta },
-        fireEvent = { fireValueChangedEvent() }
-    )
+    // Guards the project object while an attached part takes over what it carries, so such an
+    // alignment is not written back into it.
+    private var attaching = false
 
     /** Meta data of the project - its name, its author and its copyright notice. */
-    val metaProperty: ObjectProperty<Meta?>
-        get() = overrideMeta
+    val metaProperty: MetaProperty = MetaProperty()
 
     /** Meta data of the project. */
     var meta: Meta?
-        get() = overrideMeta.get()
+        get() = metaProperty.get()
         set(value) {
-            overrideMeta.set(value)
+            metaProperty.set(value)
         }
-
-    // The meta data is what a user interface reaches for most, so the three texts it carries are
-    // offered here as well instead of forcing every caller through the part property.
-
-    /** Name of the project as shown to the user, as a property of its own. */
-    val nameProperty: StringProperty
-        get() = overrideMeta.nameProperty
-
-    // A property carries a name of its own, so the accessors of the wrapped field are given another
-    // name on the JVM side - otherwise they would silently replace the one of the base class.
-    /** Name of the project as shown to the user. */
-    var name: String?
-        @JvmName("getProjectName") get() = overrideMeta.nameProperty.get()
-        @JvmName("setProjectName") set(value) {
-            overrideMeta.nameProperty.set(value)
-        }
-
-    /** Author printed in the manuscript, as a property of its own. */
-    val authorProperty: StringProperty
-        get() = overrideMeta.authorProperty
-
-    /** Author printed in the manuscript. */
-    var author: String?
-        get() = overrideMeta.authorProperty.get()
-        set(value) {
-            overrideMeta.authorProperty.set(value)
-        }
-
-    /** Copyright notice printed in the manuscript, as a property of its own. */
-    val copyrightProperty: StringProperty
-        get() = overrideMeta.copyrightProperty
-
-    /** Copyright notice printed in the manuscript. */
-    var copyright: String?
-        get() = overrideMeta.copyrightProperty.get()
-        set(value) {
-            overrideMeta.copyrightProperty.set(value)
-        }
-
-    private val overrideDesign = DesignProperty(
-        setter = { newValue -> value?.also { it.design = newValue ?: Design() } },
-        getter = { value?.design },
-        fireEvent = { fireValueChangedEvent() }
-    )
 
     /** Typographic and page settings of the manuscript, as a property of its own. */
-    val designProperty: ObjectProperty<Design?>
-        get() = overrideDesign
+    val designProperty: DesignProperty = DesignProperty()
 
     /** Typographic and page settings of the manuscript. */
     var design: Design?
-        get() = overrideDesign.get()
+        get() = designProperty.get()
         set(value) {
-            overrideDesign.set(value)
+            designProperty.set(value)
         }
 
-    private val overrideBook = BookProperty(
-        setter = { newValue -> value?.also { it.book = newValue ?: Book() } },
-        getter = { value?.book },
-        fireEvent = { fireValueChangedEvent() }
-    )
-
     /** The manuscript with its title and chapters, as a property of its own. */
-    val bookProperty: ObjectProperty<Book?>
-        get() = overrideBook
+    val bookProperty: BookProperty = BookProperty()
 
     /** The manuscript with its title and chapters. */
     var book: Book?
-        get() = overrideBook.get()
+        get() = bookProperty.get()
         set(value) {
-            overrideBook.set(value)
+            bookProperty.set(value)
         }
 
     init {
-        // The constructor of the base class stores the object without announcing it, so the part
-        // properties have to take over its values here - otherwise they would only align on the
-        // first exchange and report the initial values as a change of their own.
-        invalidated()
+        fields.model(metaProperty, "meta", metaProperty::refresh)
+        fields.model(designProperty, "design", designProperty::refresh)
+        fields.model(bookProperty, "book", bookProperty::refresh)
+
+        // The properties of the parts belong to another object after every exchange, so they are tied
+        // to the one this property carries now. The constructor of the base class stored the project
+        // without announcing it, so they are tied to it right here as well.
+        addListener { _, _, newValue ->
+            fields.rebind(newValue)
+            refreshAttachedParts()
+        }
+        fields.rebind(get())
+    }
+
+    /**
+     * Reads every part of the project again - and every field of the objects nested in those parts -
+     * and hands what changed to the properties standing for them.
+     *
+     * This is what a caller uses after writing on the project object past this model: a plain project
+     * reports nothing, so nobody would notice such a write otherwise.
+     */
+    fun refresh() {
+        // The three standard parts are registered as models, so reading the fields reaches into them
+        // as well. An attached part is not a field of the project and is read separately.
+        fields.refresh()
+        refreshAttachedParts()
     }
 
     /**
      * Attaches the property model of a part beyond the three standard ones and hands it out.
      *
-     * [factory] builds that model from the three accessors it is given: the setter puts the part into
-     * the project - or takes it out again when it is set to `null` - the getter reads it back, and the
-     * event lets a change of the part be reported by this property as its own. From then on the part
-     * is treated like a standard one: an exchanged project reaches it, and a change of it reaches
-     * everyone listening to the project.
+     * [factory] builds that model, which is empty when it is built: an attached part is not a field of
+     * the project but an entry of its map of parts, so this property is the one keeping the two in
+     * step. It hands the part of the open project to the model right away, writes back what is set on
+     * it, and reports a change of it as a change of its own. From then on the part is treated like a
+     * standard one: an exchanged project reaches it, and a change of it reaches everyone listening to
+     * the project.
      *
      * @param identifier The identifier the part is stored under, the one it declares through `ProjectPartInfo`.
      * @param partClass The type of the part, so an entry of another type is read as absent.
-     * @param factory Builds the property model of the part from setter, getter and change event.
+     * @param factory Builds the property model of the part.
      * @return The property model that was built.
      * @throws IllegalArgumentException When [identifier] names one of the three standard parts.
      * @throws IllegalStateException When a part is already attached under that identifier.
@@ -168,7 +139,7 @@ class ProjectProperty(project: Project) : SimpleObjectProperty<Project>(project)
     fun <P : ProjectPart, M : ProjectPartProperty<P>> attachPart(
         identifier: String,
         partClass: KClass<P>,
-        factory: (setter: (P?) -> Unit, getter: () -> P?, fireEvent: () -> Unit) -> M
+        factory: () -> M
     ): M {
         require(identifier !in Project.STANDARD_IDENTIFIERS) {
             "The standard project part '$identifier' is reached through its own property."
@@ -177,25 +148,33 @@ class ProjectProperty(project: Project) : SimpleObjectProperty<Project>(project)
             "A property is already attached for the project part '$identifier'."
         }
 
-        val property = factory(
-            { newValue ->
+        val property = factory()
+
+        property.addListener(
+            InvalidationListener {
+                // A property that was detached in the meantime stops following the project, and an
+                // alignment with a freshly opened project is not written back into it.
+                if (attaching || attachedParts[identifier]?.property !== property) {
+                    return@InvalidationListener
+                }
+
                 value?.also { project ->
+                    val newValue = property.get()
                     if (newValue == null) project.removePart(identifier)
                     else project.putPart(identifier, newValue)
                 }
-            },
-            {
-                value?.part(identifier)
-                    ?.takeIf { partClass.java.isInstance(it) }
-                    ?.let { partClass.java.cast(it) }
-            },
-            { fireValueChangedEvent() }
+
+                fireValueChangedEvent()
+            }
         )
 
-        attachedParts[identifier] = property
+        attachedParts[identifier] = Attachment(property) { project ->
+            property.set(partOf(project, identifier, partClass))
+        }
+
         // The property was built empty, so it takes over what the open project carries right now
         // without announcing that as a change of the project.
-        property.refresh()
+        refreshAttachedPart(attachedParts.getValue(identifier))
 
         return property
     }
@@ -209,9 +188,7 @@ class ProjectProperty(project: Project) : SimpleObjectProperty<Project>(project)
      * @return The property the part is reached through.
      */
     fun <P : ProjectPart> attachPart(identifier: String, partClass: KClass<P>): ObjectProperty<P?> =
-        attachPart(identifier, partClass) { setter, getter, fireEvent ->
-            ProjectPartProperty(setter, getter, fireEvent)
-        }
+        attachPart(identifier, partClass) { ProjectPartProperty<P>() }
 
     /**
      * Detaches the property attached under [identifier], for instance when a plugin is unloaded.
@@ -229,21 +206,44 @@ class ProjectProperty(project: Project) : SimpleObjectProperty<Project>(project)
      *
      * @param identifier The identifier the part is stored under.
      */
-    fun attachedPart(identifier: String): ProjectPartProperty<*>? = attachedParts[identifier]
+    fun attachedPart(identifier: String): ProjectPartProperty<*>? = attachedParts[identifier]?.property
 
     /**
-     * Called whenever the project object itself is exchanged - a freshly loaded project file for
-     * instance - so the properties of its parts belong to another object afterwards and have to take
-     * over its values.
+     * The part [identifier] names in [project], read as absent when the project carries none or one of
+     * another type.
      */
-    override fun invalidated() {
-        overrideMeta.refresh()
-        overrideDesign.refresh()
-        overrideBook.refresh()
+    private fun <P : ProjectPart> partOf(project: Project?, identifier: String, partClass: KClass<P>): P? =
+        project?.part(identifier)
+            ?.takeIf { partClass.java.isInstance(it) }
+            ?.let { partClass.java.cast(it) }
 
-        for (part in attachedParts.values) {
-            part.refresh()
+    /** Lets every attached property take over the part of the project this property carries now. */
+    private fun refreshAttachedParts() {
+        for (attachment in attachedParts.values) {
+            refreshAttachedPart(attachment)
         }
     }
+
+    /**
+     * Lets [attachment] take over the part of the project this property carries now, without writing
+     * that alignment back into the project.
+     */
+    private fun refreshAttachedPart(attachment: Attachment) {
+        attaching = true
+        try {
+            attachment.refresh(get())
+        } finally {
+            attaching = false
+        }
+    }
+
+    /**
+     * An attached part: the property it is reached through and the way it takes over the part of a
+     * project, which needs the type the part was attached with.
+     */
+    private class Attachment(
+        val property: ProjectPartProperty<*>,
+        val refresh: (Project?) -> Unit
+    )
 
 }

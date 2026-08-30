@@ -21,6 +21,7 @@ module org.pcsoft.app.aighost.model {
     exports org.pcsoft.app.aighost.model.pref;
     exports org.pcsoft.app.aighost.model.project;
     exports org.pcsoft.app.aighost.model.project.book;
+    exports org.pcsoft.app.aighost.model.project.common;
     exports org.pcsoft.app.aighost.model.project.design;
     exports org.pcsoft.app.aighost.model.project.meta;
 
@@ -29,6 +30,7 @@ module org.pcsoft.app.aighost.model {
     opens org.pcsoft.app.aighost.model.pref to com.fasterxml.jackson.databind, com.fasterxml.jackson.kotlin;
     opens org.pcsoft.app.aighost.model.project to com.fasterxml.jackson.databind, com.fasterxml.jackson.kotlin;
     opens org.pcsoft.app.aighost.model.project.book to com.fasterxml.jackson.databind, com.fasterxml.jackson.kotlin;
+    opens org.pcsoft.app.aighost.model.project.common to com.fasterxml.jackson.databind, com.fasterxml.jackson.kotlin;
     opens org.pcsoft.app.aighost.model.project.design to com.fasterxml.jackson.databind, com.fasterxml.jackson.kotlin;
     opens org.pcsoft.app.aighost.model.project.meta to com.fasterxml.jackson.databind, com.fasterxml.jackson.kotlin;
 }

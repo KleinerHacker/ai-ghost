@@ -16,65 +16,89 @@ import javafx.application.Application
 import org.pcsoft.app.aighost.app.Messages
 import org.pcsoft.app.aighost.app.ui.AiGhostDialog
 import org.pcsoft.app.aighost.app.util.logger
-import org.pcsoft.app.aighost.fx.model.FXPreferencesStorage
-import org.pcsoft.app.aighost.fx.model.FXProjectStorage
+import org.pcsoft.app.aighost.fx.model.pref.PreferencesProperty
 import org.pcsoft.app.aighost.model.PreferencesStorage
 import org.pcsoft.app.aighost.model.ProjectStorage
+import org.pcsoft.app.aighost.model.pref.Preferences
+import org.pcsoft.app.aighost.model.project.Project
 import java.io.File
 
+/**
+ * Reads and writes the documents of the application and tells the user when that did not work.
+ *
+ * The storages of `ai-ghost-model` keep nothing, so the settings of the user live here: [preferences]
+ * is the one instance the application works on, offered as a property model so a control follows a
+ * setting that was changed elsewhere. The settings belong to the process and not to a window - they
+ * are read before the first window exists and are read by the theme - which is why they sit here and
+ * not in the view model of a window.
+ *
+ * The open project is not kept here: it belongs to the window showing it, so
+ * [org.pcsoft.app.aighost.app.ui.window.MainWindowViewModel] holds it and asks this controller to
+ * read and write it.
+ */
 object IoController {
     private val log = logger<IoController>()
 
+    /**
+     * The settings the application works on, with every field of them as a property of its own.
+     *
+     * Carries the defaults until [loadPreferences] read the file of the user.
+     */
+    val preferences: PreferencesProperty = PreferencesProperty(Preferences())
+
     //region Project
     /**
-     * Saves the current project to persistent storage or to a specified file.
+     * Writes [project] to [file] and tells the user when that did not work.
      *
-     * If no file is provided, the project is saved to the default persistent storage.
-     * If a file is provided, the project is saved to the specified file.
-     *
-     * @param file The file to save the project to. If `null`, defaults to saving to persistent storage.
+     * @param project The project to store.
+     * @param file The file to store it in.
+     * @return `true` when the project was written.
      */
-    fun saveProject(file: File? = null): Boolean {
-        log.debug("Saving project {}", file?.absolutePath ?: FXProjectStorage.currentFile?.absolutePath ?: "")
+    fun saveProject(project: Project, file: File): Boolean {
+        log.debug("Saving project {}", file.absolutePath)
 
-        return (if (file == null) FXProjectStorage.save() else FXProjectStorage.save(file)).onLeft { error ->
+        return ProjectStorage.save(project, file).onLeft { error ->
             log.warn("Failed to save project: {}", error::class.simpleName)
             showFailure(
-                Messages["project.error.save.title"],
-                Messages["project.error.save.header"],
+                Messages["text.project.error.save.title"],
+                Messages["text.project.error.save.header"],
                 reasonOfProjectError(error),
             )
-        }.fold({false}, {true})
+        }.fold({ false }, { true })
     }
 
     /**
-     * Loads a project from the specified file and attempts to process it.
-     * If loading fails, a warning is logged and the user is told what went wrong.
+     * Reads the project of [file] and hands it out.
      *
-     * @param file The file from which the project will be loaded.
+     * A document that lost a part beyond the standard ones is only handed out once the user accepted
+     * that loss, which [rescueProject] asks about. Every other failure is reported and answered with
+     * nothing, so the project the window shows stays where it is.
+     *
+     * @param file The file to read the project from.
+     * @return The project that was read, `null` when it was not.
      */
-    fun loadProject(file: File): Boolean {
+    fun loadProject(file: File): Project? {
         log.debug("Loading project {}", file.absolutePath)
 
-        return FXProjectStorage.load(file).fold({ error ->
+        return ProjectStorage.load(file).fold({ error ->
             when (error) {
                 is ProjectStorage.Error.Incomplete -> rescueProject(error)
                 else -> {
                     log.warn("Failed to load project: {}", error::class.simpleName)
                     showFailure(
-                        Messages["project.error.load.title"],
-                        Messages["project.error.load.header"],
+                        Messages["text.project.error.load.title"],
+                        Messages["text.project.error.load.header"],
                         reasonOfProjectError(error),
                     )
-                    false
+                    null
                 }
             }
-        }, { true })
+        }, { it })
     }
 
     /**
-     * Opens a project that lost parts beyond the standard ones, but only when the user accepts the
-     * loss.
+     * Hands out a project that lost parts beyond the standard ones, but only when the user accepts
+     * the loss.
      *
      * The user is told plainly what the document lost and that the loss becomes final with the next
      * save, because the project is written without those parts from then on. The parts themselves
@@ -82,28 +106,27 @@ object IoController {
      * sight.
      *
      * @param error The failure that carries the project that could still be read.
-     * @return `true` when the project was opened, `false` when the user did not accept the loss.
+     * @return The project when the user accepted the loss, `null` when not.
      */
-    private fun rescueProject(error: ProjectStorage.Error.Incomplete): Boolean {
+    private fun rescueProject(error: ProjectStorage.Error.Incomplete): Project? {
         log.warn("Project {} lost the part(s) {}", error.file.absolutePath, error.lostParts)
 
         val confirmed = AiGhostDialog.showWarningConfirmDetails(
-            Messages["project.incomplete.title"],
-            Messages["project.incomplete.header"],
+            Messages["text.project.incomplete.title"],
+            Messages["text.project.incomplete.header"],
             listOf(
-                Messages["project.incomplete.content"],
-                Messages["project.incomplete.hint"]
+                Messages["text.project.incomplete.content"],
+                Messages["text.project.incomplete.hint"]
             ).joinToString(System.lineSeparator() + System.lineSeparator()),
             error.lostParts.sorted().joinToString(System.lineSeparator()) { "- $it" },
         )
 
         if (!confirmed) {
             log.info("The incomplete project was not opened")
-            return false
+            return null
         }
 
-        FXProjectStorage.open(error.recovered, error.file)
-        return true
+        return error.recovered
     }
 
     /**
@@ -113,35 +136,35 @@ object IoController {
      * @return A localized string explaining the reason for the error.
      */
     internal fun reasonOfProjectError(error: ProjectStorage.Error): String = when (error) {
-        is ProjectStorage.Error.NoFile -> Messages["project.error.noFile"]
-        is ProjectStorage.Error.NotFound -> Messages["project.error.notFound"]
-        is ProjectStorage.Error.NotAFile -> Messages["project.error.notAFile"]
-        is ProjectStorage.Error.Unreadable -> Messages["project.error.unreadable"]
-        is ProjectStorage.Error.Malformed -> Messages["project.error.malformed"]
-        is ProjectStorage.Error.Corrupt -> Messages["project.error.corrupt"]
-        is ProjectStorage.Error.Incomplete -> Messages["project.error.incomplete"]
+        is ProjectStorage.Error.NotFound -> Messages["text.project.error.notFound"]
+        is ProjectStorage.Error.NotAFile -> Messages["text.project.error.notAFile"]
+        is ProjectStorage.Error.Unreadable -> Messages["text.project.error.unreadable"]
+        is ProjectStorage.Error.Malformed -> Messages["text.project.error.malformed"]
+        is ProjectStorage.Error.Corrupt -> Messages["text.project.error.corrupt"]
+        is ProjectStorage.Error.Incomplete -> Messages["text.project.error.incomplete"]
     }
     //endregion
 
     //region Preferences
     /**
-     * Loads the preferences and handles a failure according to [handlePreferencesError].
-     *
-     * A successful read needs no further work, because the storage keeps the loaded preferences.
+     * Reads the settings of the user into [preferences] and handles a failure according to
+     * [handlePreferencesError].
      *
      * @param app the running application, stopped when a failure leaves nothing to work with
      */
     fun loadPreferences(app: Application) {
         log.debug("Loading preferences")
 
-        FXPreferencesStorage.load().onLeft { error ->
+        PreferencesStorage.load().fold({ error ->
             log.warn("Failed to load preferences: {}", error::class.simpleName)
             handlePreferencesError(error, app)
-        }
+        }, { loaded ->
+            preferences.value = loaded
+        })
     }
 
     /**
-     * Writes the preferences to their file and tells the user when that did not work.
+     * Writes [preferences] to their file and tells the user when that did not work.
      *
      * A failed write is reported but leaves the application running, because the settings the user
      * made are still in memory and another attempt may succeed.
@@ -151,14 +174,14 @@ object IoController {
     fun savePreferences(): Boolean {
         log.debug("Saving preferences")
 
-        return FXPreferencesStorage.save().onLeft { error ->
+        return PreferencesStorage.save(preferences.value).onLeft { error ->
             log.warn("Failed to save preferences: {}", error::class.simpleName)
             showFailure(
-                Messages["preferences.error.title"],
-                Messages["preferences.error.save.header"],
+                Messages["text.preferences.error.title"],
+                Messages["text.preferences.error.save.header"],
                 reasonOfPreferencesError(error),
             )
-        }.fold({false}, {true})
+        }.fold({ false }, { true })
     }
 
     /**
@@ -190,10 +213,10 @@ object IoController {
      * @return A localized string explaining the reason for the error.
      */
     internal fun reasonOfPreferencesError(error: PreferencesStorage.Error): String = when (error) {
-        is PreferencesStorage.Error.NotAFile -> Messages["preferences.error.notAFile"]
-        is PreferencesStorage.Error.Malformed -> Messages["preferences.error.malformed"]
-        is PreferencesStorage.Error.NotFound -> Messages["preferences.error.notFound"]
-        is PreferencesStorage.Error.Unreadable -> Messages["preferences.error.unreadable"]
+        is PreferencesStorage.Error.NotAFile -> Messages["text.preferences.error.notAFile"]
+        is PreferencesStorage.Error.Malformed -> Messages["text.preferences.error.malformed"]
+        is PreferencesStorage.Error.NotFound -> Messages["text.preferences.error.notFound"]
+        is PreferencesStorage.Error.Unreadable -> Messages["text.preferences.error.unreadable"]
     }
 
     /**
@@ -208,9 +231,9 @@ object IoController {
         log.debug("Asking for reset preferences")
 
         val confirmed = AiGhostDialog.showWarningConfirm(
-            Messages["preferences.reset.title"],
-            Messages["preferences.reset.header"],
-            Messages["preferences.reset.content"],
+            Messages["text.preferences.reset.title"],
+            Messages["text.preferences.reset.header"],
+            Messages["text.preferences.reset.content"],
         )
 
         if (confirmed) {
@@ -220,12 +243,12 @@ object IoController {
         }
     }
 
-    /** Replaces the preferences by their defaults. */
+    /** Replaces the preferences by their defaults and writes them. */
     private fun resetPreferences(app: Application) {
         log.info("Resetting preferences")
 
-        FXPreferencesStorage.reset()
-        FXPreferencesStorage.save().onLeft {
+        preferences.value = Preferences()
+        PreferencesStorage.save(preferences.value).onLeft {
             handleComplexFailure(reasonOfPreferencesError(it), app)
         }
     }
@@ -239,7 +262,7 @@ object IoController {
     private fun handleComplexFailure(reason: String, app: Application) {
         log.debug("Inform about complex error")
 
-        showFailure(Messages["preferences.error.title"], Messages["preferences.error.header"], reason)
+        showFailure(Messages["text.preferences.error.title"], Messages["text.preferences.error.header"], reason)
 
         exitingApp(app)
     }

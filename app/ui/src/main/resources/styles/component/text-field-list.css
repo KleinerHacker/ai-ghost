@@ -1,0 +1,60 @@
+/*
+ * Copyright (c) KleinerHacker alias Pfeiffer C Soft 2026.
+ * This work is licensed under the Apache License, Version 2.0.
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at:
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, this software is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations.
+ */
+
+/*
+ * A list of AI texts: the area holding its entries, the hint of the empty list and the plus.
+ *
+ * The entries would stand on the surface of the view as loose lines, which reads as a stack of
+ * fields and not as a list. The area gives them an edge of their own, so the list is recognised as
+ * one: everything belonging to it - the entries, the hint and the plus adding an entry - stands
+ * inside that edge, and the entries are told apart by a line between them.
+ *
+ * This stylesheet is applied after styles/component/button.css, because the plus is an icon button
+ * and keeps the narrow padding of one.
+ */
+
+.ai-list {
+    -fx-background-color: -ghost-surface-raised;
+    -fx-background-radius: 8px;
+    -fx-border-color: -ghost-tint-line;
+    -fx-border-width: 2px;
+    -fx-border-radius: 8px;
+    -fx-padding: 4px;
+}
+
+/* The entries follow each other without a gap, so the line between them is what separates them. */
+.ai-list-entries {
+    -fx-spacing: 0;
+}
+
+/* While the list is empty the hint takes the place of the entries and steps back from their text. */
+.ai-list-empty {
+    -fx-text-fill: -ghost-ink-soft;
+    -fx-padding: 6px 6px 6px 6px;
+}
+
+/* The plus closes the area off downwards, so it keeps a little air against the last entry. */
+.ai-list-actions {
+    -fx-padding: 4px 2px 2px 2px;
+}
+
+/*
+ * The plus carries its icon only, so it keeps the padding of a square button instead of the wider
+ * one a labelled button needs.
+ */
+.ai-list-add {
+    -fx-padding: 3px 3px 3px 3px;
+}
+
+.ai-list-add:disabled {
+    -fx-opacity: 0.4;
+}

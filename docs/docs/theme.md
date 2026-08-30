@@ -6,13 +6,12 @@ this documentation site, so application and documentation stay in step.
 
 ## Choosing the appearance
 
-The appearance is part of your preferences, stored in `preferences.json` inside the folder
+The appearance is part of your preferences, stored in `preferences.yml` inside the folder
 `.ai-ghost` of your home directory:
 
-```json
-{
-  "themeMode": "SYSTEM"
-}
+```yaml
+appearance:
+  themeMode: "SYSTEM"
 ```
 
 | Value    | Appearance                                              |
@@ -35,7 +34,7 @@ nothing in the window moves when you switch the appearance.
 
 ## When the preferences cannot be read
 
-AI Ghost reads `preferences.json` before the first window appears and tells you when that fails:
+AI Ghost reads `preferences.yml` before the first window appears and tells you when that fails:
 
 * **The file does not exist yet** - the defaults are used and the file is written again. This is the
   normal case of a first start, so nothing is asked.

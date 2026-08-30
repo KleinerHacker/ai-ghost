@@ -17,9 +17,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.extension.ExtendWith
-import org.pcsoft.app.aighost.model.PreferencesStorage
 import org.testfx.framework.junit5.ApplicationExtension
 
 /**
@@ -27,18 +25,6 @@ import org.testfx.framework.junit5.ApplicationExtension
  */
 @ExtendWith(ApplicationExtension::class)
 class AiGhostFontsTest {
-
-    companion object {
-        /**
-         * The storage hands out no preferences before they were established, and installing the
-         * theme reads the appearance the user selected, so a test starts from the defaults.
-         */
-        @JvmStatic
-        @BeforeAll
-        fun establishPreferences() {
-            PreferencesStorage.reset()
-        }
-    }
 
     /**
      * Use case: the shipped type face is packaged as a resource and can be resolved, so the

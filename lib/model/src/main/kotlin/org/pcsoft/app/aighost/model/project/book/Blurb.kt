@@ -21,9 +21,11 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
  * only. A book has at most one blurb, and only if the user created it, so [Book.blurb] stays empty
  * until then.
  *
+ * @property prompt Prompt for the blurb, empty by default.
  * @property paragraph Paragraphs of the blurb in their order, empty by default.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Blurb(
+    var prompt: String = "",
     var paragraph: List<String> = emptyList()
 )

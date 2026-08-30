@@ -14,6 +14,7 @@ package org.pcsoft.app.aighost.model.project.book
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.pcsoft.app.aighost.model.project.Project
+import org.pcsoft.app.aighost.model.project.common.AIPrompt
 import org.pcsoft.app.aighost.plugin.api.model.project.ProjectPart
 import org.pcsoft.app.aighost.plugin.api.model.project.ProjectPartInfo
 
@@ -36,6 +37,7 @@ private const val VERSION = 1
  * @property version Version of the project metadata structure.
  * @property title Main title of the book.
  * @property titleAppendix Further title lines shown below the main title, empty by default.
+ * @property prompts Prompts for the book, empty by default.
  * @property prolog Prolog printed before the first chapter, absent by default.
  * @property chapters Chapters of the book in their user defined order, empty by default.
  * @property epilog Epilog printed after the last chapter, absent by default.
@@ -48,6 +50,7 @@ data class Book(
 
     var title: String = "My Book",
     var titleAppendix: List<String> = listOf(),
+    var prompts: AIPrompt = AIPrompt(),
 
     var prolog: Prolog? = null,
     var chapters: List<Chapter> = emptyList(),

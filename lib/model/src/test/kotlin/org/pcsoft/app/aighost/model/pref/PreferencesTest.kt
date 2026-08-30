@@ -21,7 +21,7 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 
 /**
- * Developer tests for [Preferences] and [ThemeMode].
+ * Developer tests for [Preferences].
  */
 class PreferencesTest {
 
@@ -33,7 +33,16 @@ class PreferencesTest {
      */
     @Test
     fun defaultsToSystemThemeMode() {
-        assertEquals(ThemeMode.SYSTEM, Preferences().themeMode)
+        assertEquals(Appearance(themeMode = ThemeMode.SYSTEM), Preferences().appearance)
+    }
+
+    /**
+     * Use case: a user who never touched the settings gets the shipped limits of the AI, so a
+     * generation is bounded without any setup.
+     */
+    @Test
+    fun defaultsToShippedAiLimits() {
+        assertEquals(Ai(maxStoryCharacters = 5000, maxStyleCharacters = 1000), Preferences().ai)
     }
 
     /**
@@ -50,27 +59,30 @@ class PreferencesTest {
      * copy of the preferences having to be handed around.
      */
     @Test
-    fun changesThemeModeInPlace() {
+    fun changesAppearanceInPlace() {
         val preferences = Preferences()
 
-        preferences.themeMode = ThemeMode.DARK
+        preferences.appearance = Appearance(themeMode = ThemeMode.DARK)
 
-        assertEquals(ThemeMode.DARK, preferences.themeMode)
+        assertEquals(ThemeMode.DARK, preferences.appearance.themeMode)
     }
 
     /**
-     * Use case: any setting may change, so the recent files list is taken over on the object itself
-     * just like the appearance is.
+     * Use case: any setting may change, so every block of the preferences is taken over on the object
+     * itself instead of forcing a new preferences object.
      */
     @Test
     fun changesEveryPropertyInPlace() {
         val preferences = Preferences()
 
         preferences.recentOpened = preferences.recentOpened.add("a.json")
-        preferences.themeMode = ThemeMode.DARK
+        preferences.appearance = Appearance(themeMode = ThemeMode.DARK)
+        preferences.ai = Ai(maxStoryCharacters = 200, maxStyleCharacters = 100)
 
         assertEquals(listOf("a.json"), preferences.recentOpened.entries)
-        assertEquals(ThemeMode.DARK, preferences.themeMode)
+        assertEquals(ThemeMode.DARK, preferences.appearance.themeMode)
+        assertEquals(200, preferences.ai.maxStoryCharacters)
+        assertEquals(100, preferences.ai.maxStyleCharacters)
     }
 
     /**
@@ -79,12 +91,12 @@ class PreferencesTest {
      */
     @Test
     fun copiesWithASingleChangedProperty() {
-        val preferences = Preferences(themeMode = ThemeMode.DARK)
+        val preferences = Preferences(appearance = Appearance(themeMode = ThemeMode.DARK))
 
-        val copy = preferences.copy(themeMode = ThemeMode.LIGHT)
+        val copy = preferences.copy(appearance = Appearance(themeMode = ThemeMode.LIGHT))
 
-        assertEquals(ThemeMode.LIGHT, copy.themeMode)
-        assertEquals(ThemeMode.DARK, preferences.themeMode)
+        assertEquals(ThemeMode.LIGHT, copy.appearance.themeMode)
+        assertEquals(ThemeMode.DARK, preferences.appearance.themeMode)
     }
 
     /**
@@ -93,22 +105,29 @@ class PreferencesTest {
      */
     @Test
     fun comparesByItsSettings() {
-        val one = Preferences(themeMode = ThemeMode.DARK)
-        val other = Preferences(themeMode = ThemeMode.DARK)
+        val one = Preferences(appearance = Appearance(themeMode = ThemeMode.DARK))
+        val other = Preferences(appearance = Appearance(themeMode = ThemeMode.DARK))
 
         assertEquals(one, other)
         assertEquals(one.hashCode(), other.hashCode())
     }
 
     /**
-     * Use case: the preferences are written to disk, so the theme selection and the recent files
-     * appear in the JSON under the stable property names the file format promises.
+     * Use case: the preferences are written to disk, so every block appears in the JSON under the
+     * stable property names and in the stable order the file format promises.
      */
     @Test
-    fun serialisesThemeModeByName() {
-        val json = mapper.writeValueAsString(Preferences(themeMode = ThemeMode.DARK))
+    fun serialisesEveryBlockInTheDocumentedOrder() {
+        val json = mapper.writeValueAsString(
+            Preferences(appearance = Appearance(themeMode = ThemeMode.DARK))
+        )
 
-        assertEquals("""{"recentOpened":{"max":10,"entries":[]},"themeMode":"DARK"}""", json)
+        assertEquals(
+            """{"recentOpened":{"max":10,"entries":[]},""" +
+                """"appearance":{"themeMode":"DARK"},""" +
+                """"ai":{"maxStoryCharacters":5000,"maxStyleCharacters":1000}}""",
+            json
+        )
     }
 
     /**
@@ -118,7 +137,7 @@ class PreferencesTest {
     @ParameterizedTest
     @EnumSource(ThemeMode::class)
     fun roundTripsEveryThemeMode(themeMode: ThemeMode) {
-        val preferences = Preferences(themeMode = themeMode)
+        val preferences = Preferences(appearance = Appearance(themeMode = themeMode))
 
         val restored: Preferences = mapper.readValue(mapper.writeValueAsString(preferences))
 
@@ -126,14 +145,14 @@ class PreferencesTest {
     }
 
     /**
-     * Use case: a preferences file written by an older version does not contain the theme yet, so
-     * reading it falls back to the default instead of failing.
+     * Use case: a preferences file written by an older version does not contain the newer blocks yet,
+     * so reading it falls back to the defaults instead of failing.
      */
     @Test
     fun readsEmptyDocumentWithDefault() {
         val preferences: Preferences = mapper.readValue("{}")
 
-        assertEquals(ThemeMode.SYSTEM, preferences.themeMode)
+        assertEquals(Preferences(), preferences)
     }
 
     /**
@@ -142,8 +161,9 @@ class PreferencesTest {
      */
     @Test
     fun ignoresUnknownProperties() {
-        val preferences: Preferences = mapper.readValue("""{"themeMode":"LIGHT","language":"en"}""")
+        val preferences: Preferences =
+            mapper.readValue("""{"appearance":{"themeMode":"LIGHT"},"language":"en"}""")
 
-        assertEquals(Preferences(themeMode = ThemeMode.LIGHT), preferences)
+        assertEquals(Preferences(appearance = Appearance(themeMode = ThemeMode.LIGHT)), preferences)
     }
 }

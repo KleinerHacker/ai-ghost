@@ -17,6 +17,8 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import org.pcsoft.app.aighost.model.pref.Ai
+import org.pcsoft.app.aighost.model.pref.Preferences
 import org.pcsoft.app.aighost.model.pref.RecentOpened
 import org.pcsoft.app.aighost.model.pref.ThemeMode
 import java.io.File
@@ -29,22 +31,18 @@ class PreferencesStorageTest {
     @TempDir
     lateinit var directory: File
 
-    private val file: File get() = File(directory, "preferences.json")
+    private val file: File get() = File(directory, "preferences.yml")
 
     private lateinit var applicationFile: File
 
     /**
-     * The storage is a singleton working on the file of the current user, so a test points it at a
-     * file of its own instead of at the preferences of whoever runs the build.
-     *
-     * The temporary directory carries no file yet, so the load fails and the defaults are put in
-     * place the way the application answers a missing file.
+     * The storage works on the file of the current user, so a test points it at a file of its own
+     * instead of at the preferences of whoever runs the build.
      */
     @BeforeEach
     fun redirectStorage() {
         applicationFile = PreferencesStorage.defaultFile
         PreferencesStorage.defaultFile = file
-        establishPreferences()
     }
 
     /**
@@ -54,19 +52,11 @@ class PreferencesStorageTest {
     @AfterEach
     fun restoreStorage() {
         PreferencesStorage.defaultFile = applicationFile
-        establishPreferences()
-    }
-
-    /** Loads the preferences and answers a failure with the defaults, the way the application does. */
-    private fun establishPreferences() {
-        if (PreferencesStorage.load().isLeft()) {
-            PreferencesStorage.reset()
-        }
     }
 
     /**
      * Use case: the application starts on a fresh installation, so loading reports that nothing is
-     * stored yet instead of failing, and leaves the storage unloaded.
+     * stored yet instead of failing, and the caller answers that with the defaults.
      */
     @Test
     fun reportsNotFoundWithoutStoredFile() {
@@ -81,7 +71,7 @@ class PreferencesStorageTest {
      */
     @Test
     fun reportsNotAFileForDirectory() {
-        val asDirectory = File(directory, "preferences.json").apply { mkdirs() }
+        val asDirectory = File(directory, "preferences.yml").apply { mkdirs() }
         PreferencesStorage.defaultFile = asDirectory
 
         val result = PreferencesStorage.load()
@@ -97,7 +87,7 @@ class PreferencesStorageTest {
     @Test
     fun separatesMissingPathFromWrongPath() {
         val asDirectory = File(directory, "config-directory").apply { mkdirs() }
-        val missing = File(directory, "missing.json")
+        val missing = File(directory, "missing.yml")
 
         PreferencesStorage.defaultFile = asDirectory
         val onDirectory = PreferencesStorage.load().leftOrNull()
@@ -115,7 +105,7 @@ class PreferencesStorageTest {
     @Test
     fun everyErrorCarriesItsFile() {
         val asDirectory = File(directory, "config-directory").apply { mkdirs() }
-        val broken = File(directory, "broken.json").apply { writeText("{ this is not json") }
+        val broken = File(directory, "broken.yml").apply { writeText("{ this is not yaml") }
 
         assertEquals(file, PreferencesStorage.load().leftOrNull()?.file)
         PreferencesStorage.defaultFile = asDirectory
@@ -125,26 +115,15 @@ class PreferencesStorageTest {
     }
 
     /**
-     * Use case: the stored file cannot be read, so the storage stays unloaded and the caller has to
-     * decide what happens to the file before any settings are handed out again.
-     */
-    @Test
-    fun failedLoadLeavesTheStorageUnloaded() {
-        PreferencesStorage.current.themeMode = ThemeMode.DARK
-
-        assertTrue(PreferencesStorage.load().isLeft())
-    }
-
-    /**
      * Use case: the target path is a directory, so saving reports it as not a file and leaves the
      * directory untouched instead of replacing it with the preferences document.
      */
     @Test
     fun reportsNotAFileWhenSavingOntoDirectory() {
-        val asDirectory = File(directory, "preferences.json").apply { mkdirs() }
+        val asDirectory = File(directory, "preferences.yml").apply { mkdirs() }
         PreferencesStorage.defaultFile = asDirectory
 
-        val result = PreferencesStorage.save()
+        val result = PreferencesStorage.save(Preferences())
 
         assertEquals(PreferencesStorage.Error.NotAFile(asDirectory), result.leftOrNull())
         assertTrue(asDirectory.isDirectory)
@@ -152,21 +131,39 @@ class PreferencesStorageTest {
 
     /**
      * Use case: the user changes a setting and the application is restarted, so the preferences come
-     * back from disk exactly as they were saved.
+     * back from disk exactly as they were saved - every block of them, not only the topmost one.
      */
     @Test
     fun roundTripsPreferences() {
-        PreferencesStorage.current.recentOpened = RecentOpened(max = 3).add("a.json").add("b.json")
-        PreferencesStorage.current.themeMode = ThemeMode.DARK
+        val preferences = Preferences().apply {
+            recentOpened = RecentOpened(max = 3).add("a.aih").add("b.aih")
+            appearance.themeMode = ThemeMode.DARK
+            ai = Ai(maxStoryCharacters = 4200, maxStyleCharacters = 750)
+        }
 
-        assertTrue(PreferencesStorage.save().isRight())
-        assertTrue(PreferencesStorage.load().isRight())
+        assertTrue(PreferencesStorage.save(preferences).isRight())
+        val loaded = PreferencesStorage.load().getOrNull()
 
-        assertEquals(
-            RecentOpened(max = 3, entries = listOf("b.json", "a.json")),
-            PreferencesStorage.current.recentOpened
-        )
-        assertEquals(ThemeMode.DARK, PreferencesStorage.current.themeMode)
+        assertNotNull(loaded)
+        assertEquals(RecentOpened(max = 3, entries = listOf("b.aih", "a.aih")), loaded?.recentOpened)
+        assertEquals(ThemeMode.DARK, loaded?.appearance?.themeMode)
+        assertEquals(Ai(maxStoryCharacters = 4200, maxStyleCharacters = 750), loaded?.ai)
+    }
+
+    /**
+     * Use case: the preferences are handed out to the caller, so every load builds an instance of its
+     * own and two callers never write into the same object by accident.
+     */
+    @Test
+    fun handsOutANewInstancePerLoad() {
+        PreferencesStorage.save(Preferences())
+
+        val first = PreferencesStorage.load().getOrNull()
+        val second = PreferencesStorage.load().getOrNull()
+
+        assertNotNull(first)
+        assertNotNull(second)
+        assertNotSame(first, second)
     }
 
     /**
@@ -175,26 +172,27 @@ class PreferencesStorageTest {
      */
     @Test
     fun createsMissingParentDirectory() {
-        val nested = File(directory, "config/nested/preferences.json")
+        val nested = File(directory, "config/nested/preferences.yml")
         PreferencesStorage.defaultFile = nested
 
-        assertTrue(PreferencesStorage.save().isRight())
+        assertTrue(PreferencesStorage.save(Preferences()).isRight())
         assertTrue(nested.isFile)
     }
 
     /**
-     * Use case: the user opens the file to edit it by hand, so it is written as indented JSON rather
-     * than as a single line.
+     * Use case: the user opens the file to edit it by hand, so it is written as a YAML document with
+     * one setting per line, with every block under the name the file format promises.
      */
     @Test
-    fun writesIndentedJson() {
-        PreferencesStorage.current.themeMode = ThemeMode.LIGHT
-        PreferencesStorage.save()
+    fun writesIndentedYaml() {
+        PreferencesStorage.save(Preferences().apply { appearance.themeMode = ThemeMode.LIGHT })
 
         val content = file.readText()
 
-        assertTrue(content.contains("\n"), "expected indented JSON but was: $content")
-        assertTrue(content.contains("\"themeMode\""))
+        assertTrue(content.contains("\n"), "expected an indented YAML document but was: $content")
+        assertTrue(content.contains("appearance:"))
+        assertTrue(content.contains("themeMode:"))
+        assertTrue(content.contains("ai:"))
     }
 
     /**
@@ -203,14 +201,11 @@ class PreferencesStorageTest {
      */
     @Test
     fun overwritesPreviousFileWithoutLeavingTemporaries() {
-        PreferencesStorage.current.themeMode = ThemeMode.LIGHT
-        PreferencesStorage.save()
-        PreferencesStorage.current.themeMode = ThemeMode.DARK
-        PreferencesStorage.save()
+        PreferencesStorage.save(Preferences().apply { appearance.themeMode = ThemeMode.LIGHT })
+        PreferencesStorage.save(Preferences().apply { appearance.themeMode = ThemeMode.DARK })
 
-        assertTrue(PreferencesStorage.load().isRight())
-        assertEquals(ThemeMode.DARK, PreferencesStorage.current.themeMode)
-        assertEquals(listOf("preferences.json"), directory.list()?.sorted())
+        assertEquals(ThemeMode.DARK, PreferencesStorage.load().getOrNull()?.appearance?.themeMode)
+        assertEquals(listOf("preferences.yml"), directory.list()?.sorted())
     }
 
     /**
@@ -219,7 +214,7 @@ class PreferencesStorageTest {
      */
     @Test
     fun reportsMalformedFileAsError() {
-        file.writeText("{ this is not json")
+        file.writeText("{ this is not yaml")
 
         val error = PreferencesStorage.load().leftOrNull()
 
@@ -228,12 +223,12 @@ class PreferencesStorageTest {
     }
 
     /**
-     * Use case: the file holds valid JSON that is not a preferences document, so loading reports it
-     * as malformed rather than putting half filled preferences in effect.
+     * Use case: the file holds a valid YAML document that is not a preferences document, so loading
+     * reports it as malformed rather than handing out half filled preferences.
      */
     @Test
     fun reportsWrongDocumentAsError() {
-        file.writeText("""{"themeMode":"NEON"}""")
+        file.writeText("appearance:\n  themeMode: \"NEON\"\n")
 
         val error = PreferencesStorage.load().leftOrNull()
 
@@ -246,12 +241,31 @@ class PreferencesStorageTest {
      */
     @Test
     fun readsPartialDocumentWithDefaults() {
-        file.writeText("""{"themeMode":"LIGHT"}""")
+        file.writeText("appearance:\n  themeMode: \"LIGHT\"\n")
 
-        assertTrue(PreferencesStorage.load().isRight())
+        val loaded = PreferencesStorage.load().getOrNull()
 
-        assertEquals(ThemeMode.LIGHT, PreferencesStorage.current.themeMode)
-        assertEquals(RecentOpened(max = 10), PreferencesStorage.current.recentOpened)
+        assertNotNull(loaded)
+        assertEquals(ThemeMode.LIGHT, loaded?.appearance?.themeMode)
+        assertEquals(RecentOpened(max = 10), loaded?.recentOpened)
+        assertEquals(Ai(), loaded?.ai)
+    }
+
+    /**
+     * Use case: the file is redirected to another document while the application runs, so the next
+     * load reads that document and not the one read before.
+     */
+    @Test
+    fun redirectingTheFileReadsTheNewOne() {
+        PreferencesStorage.save(Preferences().apply { appearance.themeMode = ThemeMode.LIGHT })
+
+        val other = File(directory, "other.yml")
+        PreferencesStorage.defaultFile = other
+        PreferencesStorage.save(Preferences().apply { appearance.themeMode = ThemeMode.DARK })
+
+        assertEquals(ThemeMode.DARK, PreferencesStorage.load().getOrNull()?.appearance?.themeMode)
+        PreferencesStorage.defaultFile = file
+        assertEquals(ThemeMode.LIGHT, PreferencesStorage.load().getOrNull()?.appearance?.themeMode)
     }
 
     /**
@@ -262,6 +276,6 @@ class PreferencesStorageTest {
     fun defaultFileLivesInUserHome() {
         val home = File(System.getProperty("user.home"))
 
-        assertEquals(File(home, ".ai-ghost/preferences.json"), applicationFile)
+        assertEquals(File(home, ".ai-ghost/preferences.yml"), applicationFile)
     }
 }

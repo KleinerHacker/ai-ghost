@@ -15,6 +15,19 @@ description: Rules for writing tests - JUnit, TestFX for headless Java FX UI tes
 * ALL test data MUST be written in ENGLISH
     * This covers sample texts, names, JSON fixtures and expected values
     * Exception: a test that verifies a specific language or locale on purpose
+* A UI component bound to an FX property model MUST prove the binding in BOTH directions
+    * The proof MUST be made on the real controls the user works with - the `TextField`, the
+      `TextArea`, the button - NOT on the properties of the view model alone
+    * Direction "UI -> model": what is written into EVERY control MUST stand in the POJO of
+      `lib/model` afterwards, read from the POJO itself, not from a property
+    * Direction "model -> UI": a value written through the FX property model MUST stand in the
+      control afterwards
+    * A value written on the POJO past the property model, followed by `refresh()`, MUST reach the
+      control as well
+    * Adding, removing and exchanging entries of a list MUST be proven in both directions, including
+      that the remaining controls still write to their own entry
+    * Exchanging the bound model object MUST be proven: the controls show the new object and write
+      into it only, the object left behind stays untouched
 * Tests are to be split into two categories
     * **Developer tests** - Simple unit tests covering individual pieces of functionality
       * All Test Classes without suffix of "IT"

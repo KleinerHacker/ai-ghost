@@ -12,15 +12,20 @@
 
 package org.pcsoft.app.aighost.fx.model.project.book
 
+import javafx.beans.property.ListProperty
+import javafx.beans.property.SimpleListProperty
+import javafx.beans.property.SimpleStringProperty
+import javafx.beans.property.StringProperty
 import javafx.collections.FXCollections
-import org.pcsoft.app.aighost.fx.model.property.common.OverrideListProperty
+import org.pcsoft.app.aighost.fx.model.internal.BeanFields
 import org.pcsoft.app.aighost.fx.model.project.ProjectPartProperty
-import org.pcsoft.app.aighost.fx.model.property.common.OverrideStringProperty
+import org.pcsoft.app.aighost.fx.model.project.common.AIPromptProperty
 import org.pcsoft.app.aighost.model.project.book.Blurb
 import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.book.Chapter
 import org.pcsoft.app.aighost.model.project.book.Epilog
 import org.pcsoft.app.aighost.model.project.book.Prolog
+import org.pcsoft.app.aighost.model.project.common.AIPrompt
 
 /**
  * Property wrapping the manuscript of a project and offering every field of it - and every field of
@@ -29,19 +34,18 @@ import org.pcsoft.app.aighost.model.project.book.Prolog
  * Prolog, epilog and blurb exist only after the user created them, so the properties standing for
  * them carry no object until then and their field properties answer with neutral values. The chapters
  * are offered as a list of the plain objects, because the user arranges them as a whole.
+ *
+ * Every part nested in the manuscript is handed out with its own type, so a user interface reaches the
+ * fields of the prompts, of the prolog, of the epilog and of the blurb through the property standing
+ * for that part. The book itself is built by the project alone and therefore carries an internal
+ * constructor.
  */
-internal class BookProperty(
-    setter: (Book?) -> Unit,
-    getter: () -> Book?,
-    fireEvent: () -> Unit
-) : ProjectPartProperty<Book>(setter, getter, fireEvent) {
+class BookProperty internal constructor() : ProjectPartProperty<Book>() {
+
+    private val fields = BeanFields<Book> { fireValueChangedEvent() }
 
     /** Main title of the book, as a property of its own. */
-    val titleProperty: OverrideStringProperty = OverrideStringProperty(
-        { newValue -> value?.also { it.title = newValue ?: "" } },
-        { value?.title },
-        { fireValueChangedEvent() }
-    )
+    val titleProperty: StringProperty = SimpleStringProperty()
 
     /** Main title of the book. */
     var title: String?
@@ -51,25 +55,28 @@ internal class BookProperty(
         }
 
     /** Further title lines shown below the main title, as a property of their own. */
-    val titleAppendixProperty: OverrideListProperty<String> = OverrideListProperty(
-        { newValue -> value?.also { it.titleAppendix = newValue } },
-        { value?.titleAppendix },
-        { fireValueChangedEvent() }
-    )
+    val titleAppendixProperty: ListProperty<String> =
+        SimpleListProperty(FXCollections.observableArrayList())
 
     /** Further title lines shown below the main title. */
     var titleAppendix: List<String>
         get() = titleAppendixProperty.get()
         set(value) {
-            titleAppendixProperty.set(FXCollections.observableArrayList(value))
+            titleAppendixProperty.setAll(value)
+        }
+
+    /** Prompts the manuscript as a whole is generated from, as a property of their own. */
+    val promptsProperty: AIPromptProperty = AIPromptProperty()
+
+    /** Prompts the manuscript as a whole is generated from. */
+    var prompts: AIPrompt?
+        get() = promptsProperty.get()
+        set(value) {
+            promptsProperty.set(value)
         }
 
     /** Prolog printed before the first chapter, as a property of its own. */
-    val prologProperty: PrologProperty = PrologProperty(
-        { newValue -> value?.also { it.prolog = newValue } },
-        { value?.prolog },
-        { fireValueChangedEvent() }
-    )
+    val prologProperty: PrologProperty = PrologProperty()
 
     /** Prolog printed before the first chapter. */
     var prolog: Prolog?
@@ -79,25 +86,18 @@ internal class BookProperty(
         }
 
     /** Chapters of the book in their user defined order, as a property of their own. */
-    val chaptersProperty: OverrideListProperty<Chapter> = OverrideListProperty(
-        { newValue -> value?.also { it.chapters = newValue } },
-        { value?.chapters },
-        { fireValueChangedEvent() }
-    )
+    val chaptersProperty: ListProperty<Chapter> =
+        SimpleListProperty(FXCollections.observableArrayList())
 
     /** Chapters of the book in their user defined order. */
     var chapters: List<Chapter>
         get() = chaptersProperty.get()
         set(value) {
-            chaptersProperty.set(FXCollections.observableArrayList(value))
+            chaptersProperty.setAll(value)
         }
 
     /** Epilog printed after the last chapter, as a property of its own. */
-    val epilogProperty: EpilogProperty = EpilogProperty(
-        { newValue -> value?.also { it.epilog = newValue } },
-        { value?.epilog },
-        { fireValueChangedEvent() }
-    )
+    val epilogProperty: EpilogProperty = EpilogProperty()
 
     /** Epilog printed after the last chapter. */
     var epilog: Epilog?
@@ -107,11 +107,7 @@ internal class BookProperty(
         }
 
     /** Advertising text printed on the cover, as a property of its own. */
-    val blurbProperty: BlurbProperty = BlurbProperty(
-        { newValue -> value?.also { it.blurb = newValue } },
-        { value?.blurb },
-        { fireValueChangedEvent() }
-    )
+    val blurbProperty: BlurbProperty = BlurbProperty()
 
     /** Advertising text printed on the cover. */
     var blurb: Blurb?
@@ -120,32 +116,21 @@ internal class BookProperty(
             blurbProperty.set(value)
         }
 
-    /**
-     * Called whenever the wrapped object itself is exchanged, so the properties of its fields belong
-     * to another object afterwards and have to take over its values.
-     */
-    override fun invalidated() {
-        super.invalidated()
-        refreshFields()
+    init {
+        fields.string(titleProperty, "title")
+        fields.list(titleAppendixProperty, "titleAppendix")
+        fields.model(promptsProperty, "prompts", promptsProperty::refresh)
+        fields.model(prologProperty, "prolog", prologProperty::refresh)
+        fields.list(chaptersProperty, "chapters")
+        fields.model(epilogProperty, "epilog", epilogProperty::refresh)
+        fields.model(blurbProperty, "blurb", blurbProperty::refresh)
+
+        // The field properties belong to another object after every exchange, so they are tied to the
+        // one this property carries now.
+        addListener { _, _, newValue -> fields.rebind(newValue) }
+        fields.rebind(get())
     }
 
-    override fun refresh() {
-        super.refresh()
-        refreshFields()
-    }
-
-    /**
-     * Lets every field property take over the value of the object the property carries now. A field
-     * whose value did not change reports nothing, so an exchanged object is not announced as a change
-     * of every one of its fields.
-     */
-    private fun refreshFields() {
-        titleProperty.refresh()
-        titleAppendixProperty.refresh()
-        prologProperty.refresh()
-        chaptersProperty.refresh()
-        epilogProperty.refresh()
-        blurbProperty.refresh()
-    }
+    override fun refresh() = fields.refresh()
 
 }

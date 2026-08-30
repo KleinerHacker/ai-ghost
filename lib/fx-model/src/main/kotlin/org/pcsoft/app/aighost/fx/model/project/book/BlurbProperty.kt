@@ -12,58 +12,64 @@
 
 package org.pcsoft.app.aighost.fx.model.project.book
 
+import javafx.beans.property.ListProperty
+import javafx.beans.property.SimpleListProperty
+import javafx.beans.property.SimpleObjectProperty
+import javafx.beans.property.SimpleStringProperty
+import javafx.beans.property.StringProperty
 import javafx.collections.FXCollections
-import org.pcsoft.app.aighost.fx.model.property.common.OverrideListProperty
-import org.pcsoft.app.aighost.fx.model.property.common.OverrideObjectProperty
+import org.pcsoft.app.aighost.fx.model.internal.BeanFields
 import org.pcsoft.app.aighost.model.project.book.Blurb
 
 /**
- * Property wrapping the blurb of a book and offering its text as a property of its own.
+ * Property wrapping the blurb of a book and offering its prompt and its text as properties of their
+ * own.
  *
  * A book carries a blurb only after the user created it, so the wrapped object is absent until then
- * and the text property answers with no paragraphs at all.
+ * and the field properties answer with an empty prompt and with no paragraphs at all.
+ *
+ * This property model is handed out with its own type, so a caller reaches the prompt and the
+ * paragraphs directly; it is built by the book alone and therefore carries an internal constructor.
  */
-internal class BlurbProperty(
-    setter: (Blurb?) -> Unit,
-    getter: () -> Blurb?,
-    fireEvent: () -> Unit
-) : OverrideObjectProperty<Blurb?>(setter, getter, fireEvent) {
+class BlurbProperty internal constructor() : SimpleObjectProperty<Blurb?>() {
+
+    private val fields = BeanFields<Blurb> { fireValueChangedEvent() }
+
+    /** Prompt the blurb is generated from, as a property of its own. */
+    val promptProperty: StringProperty = SimpleStringProperty()
+
+    /** Prompt the blurb is generated from. */
+    var prompt: String?
+        get() = promptProperty.get()
+        set(value) {
+            promptProperty.set(value)
+        }
 
     /** Paragraphs of the blurb in their order, as a property of their own. */
-    val paragraphProperty: OverrideListProperty<String> = OverrideListProperty(
-        { newValue -> value?.also { it.paragraph = newValue } },
-        { value?.paragraph },
-        { fireValueChangedEvent() }
-    )
+    val paragraphProperty: ListProperty<String> =
+        SimpleListProperty(FXCollections.observableArrayList())
 
     /** Paragraphs of the blurb in their order. */
     var paragraph: List<String>
         get() = paragraphProperty.get()
         set(value) {
-            paragraphProperty.set(FXCollections.observableArrayList(value))
+            paragraphProperty.setAll(value)
         }
 
-    /**
-     * Called whenever the wrapped object itself is exchanged, so the properties of its fields belong
-     * to another object afterwards and have to take over its values.
-     */
-    override fun invalidated() {
-        super.invalidated()
-        refreshFields()
-    }
+    init {
+        fields.string(promptProperty, "prompt")
+        fields.list(paragraphProperty, "paragraph")
 
-    override fun refresh() {
-        super.refresh()
-        refreshFields()
+        // The field properties belong to another object after every exchange, so they are tied to the
+        // one this property carries now.
+        addListener { _, _, newValue -> fields.rebind(newValue) }
+        fields.rebind(get())
     }
 
     /**
-     * Lets the text property take over the paragraphs of the object the property carries now. A field
-     * whose value did not change reports nothing, so an exchanged object is not announced as a change
-     * of every one of its fields.
+     * Reads the prompt and the paragraphs of the wrapped blurb again and hands what changed to the
+     * field properties, for a caller that wrote on the blurb past this model.
      */
-    private fun refreshFields() {
-        paragraphProperty.refresh()
-    }
+    fun refresh() = fields.refresh()
 
 }

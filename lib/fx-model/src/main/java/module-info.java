@@ -7,11 +7,17 @@ module org.pcsoft.app.aighost.fx.model {
     // The observable wrappers expose the plain model types, so consumers need them as well.
     requires transitive org.pcsoft.app.aighost.model;
 
-    // The storage entry point and the property models it hands out are the public surface.
-    exports org.pcsoft.app.aighost.fx.model;
+    // The property models mirroring the plain model types are the public surface.
     exports org.pcsoft.app.aighost.fx.model.pref;
     exports org.pcsoft.app.aighost.fx.model.project;
 
-    // A plugin builds the property model of its own project part on these wrappers.
-    exports org.pcsoft.app.aighost.fx.model.property.common;
+    // The manuscript is edited in the user interface, so its property model is part of that surface.
+    exports org.pcsoft.app.aighost.fx.model.project.book;
+
+    // Every nested property model is handed out with its own type, so the packages carrying those
+    // types belong to the public surface as well - otherwise the module system rejects them.
+    exports org.pcsoft.app.aighost.fx.model.common;
+    exports org.pcsoft.app.aighost.fx.model.project.common;
+    exports org.pcsoft.app.aighost.fx.model.project.design;
+    exports org.pcsoft.app.aighost.fx.model.project.meta;
 }

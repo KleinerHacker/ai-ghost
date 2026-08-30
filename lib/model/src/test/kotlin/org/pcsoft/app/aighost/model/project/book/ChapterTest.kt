@@ -19,6 +19,7 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.pcsoft.app.aighost.model.project.common.AIPrompt
 
 /**
  * Developer tests for [org.pcsoft.app.aighost.model.project.book.Chapter].
@@ -29,13 +30,14 @@ class ChapterTest {
 
     /**
      * Use case: the user creates a chapter and only names and titles it, so the chapter starts
-     * without appendix lines and without text instead of forcing content up front.
+     * without appendix lines, without prompts and without text instead of forcing content up front.
      */
     @Test
-    fun defaultsToEmptyAppendixAndText() {
+    fun defaultsToEmptyAppendixPromptsAndText() {
         val chapter = Chapter("prologue", "Prologue")
 
         assertEquals(emptyList<String>(), chapter.titleAppendix)
+        assertEquals(AIPrompt(), chapter.prompts)
         assertEquals(emptyList<String>(), chapter.paragraph)
     }
 
@@ -57,33 +59,47 @@ class ChapterTest {
      */
     @Test
     fun isABookPart() {
-        val part: BookPart = Chapter("draft-01", "Prologue", listOf("A beginning"), listOf("Text."))
+        val part: BookPart = Chapter(
+            "draft-01",
+            "Prologue",
+            listOf("A beginning"),
+            AIPrompt("Tell how it started.", "Calm and slow."),
+            listOf("Text.")
+        )
 
         assertEquals("Prologue", part.title)
         assertEquals(listOf("A beginning"), part.titleAppendix)
+        assertEquals(AIPrompt("Tell how it started.", "Calm and slow."), part.prompts)
         assertEquals(listOf("Text."), part.paragraph)
     }
 
     /**
-     * Use case: a chapter is written to disk, so name, heading, appendix lines and paragraphs appear
-     * in the JSON under the stable property names the file format promises.
+     * Use case: a chapter is written to disk, so name, heading, appendix lines, prompts and
+     * paragraphs appear in the JSON under the stable property names the file format promises.
      */
     @Test
-    fun serialisesNameTitleAppendixAndParagraphs() {
-        val chapter = Chapter("prologue", "Prologue", listOf("A beginning"), listOf("Once upon a time."))
+    fun serialisesNameTitleAppendixPromptsAndParagraphs() {
+        val chapter = Chapter(
+            "prologue",
+            "Prologue",
+            listOf("A beginning"),
+            AIPrompt("Tell how it started.", "Calm and slow."),
+            listOf("Once upon a time.")
+        )
 
         val json = mapper.writeValueAsString(chapter)
 
         assertEquals(
             """{"name":"prologue","title":"Prologue","titleAppendix":["A beginning"],""" +
+                """"prompts":{"contentPrompt":"Tell how it started.","stylePrompt":"Calm and slow."},""" +
                 """"paragraph":["Once upon a time."]}""",
             json
         )
     }
 
     /**
-     * Use case: a stored chapter is read back, so heading and all paragraphs survive the round trip
-     * unchanged and keep their order.
+     * Use case: a stored chapter is read back, so heading, prompts and all paragraphs survive the
+     * round trip unchanged and keep their order.
      */
     @Test
     fun roundTripsParagraphsInOrder() {
@@ -91,12 +107,14 @@ class ChapterTest {
             "chapter-01",
             "Chapter 1",
             listOf("The first step", "and the second"),
+            AIPrompt("Tell how it started.", "Calm and slow."),
             listOf("First paragraph.", "Second paragraph.", "Third paragraph.")
         )
 
         val restored: Chapter = mapper.readValue(mapper.writeValueAsString(chapter))
 
         assertEquals(chapter, restored)
+        assertEquals(AIPrompt("Tell how it started.", "Calm and slow."), restored.prompts)
         assertEquals(
             listOf("First paragraph.", "Second paragraph.", "Third paragraph."),
             restored.paragraph

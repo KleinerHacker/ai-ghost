@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.model.TestData
+import org.pcsoft.app.aighost.model.project.common.AIPrompt
 
 /**
  * Developer tests for [org.pcsoft.app.aighost.model.project.book.Book].
@@ -37,6 +38,15 @@ class BookTest {
 
         assertEquals(emptyList<String>(), book.titleAppendix)
         assertEquals(emptyList<Chapter>(), book.chapters)
+    }
+
+    /**
+     * Use case: a book is created before the user described what it is about, so it starts with
+     * empty prompts instead of demanding a description up front.
+     */
+    @Test
+    fun defaultsToEmptyPrompts() {
+        assertEquals(AIPrompt(), Book(title = "My Novel").prompts)
     }
 
     /**
@@ -62,18 +72,25 @@ class BookTest {
     }
 
     /**
-     * Use case: a book is written to disk, so title, appendix lines and chapters appear in the JSON
-     * under the stable property names the file format promises.
+     * Use case: a book is written to disk, so title, appendix lines, prompts and chapters appear in
+     * the JSON under the stable property names the file format promises.
      */
     @Test
-    fun serialisesTitleAppendixAndChapters() {
-        val book = Book(title = "My Novel", titleAppendix = listOf("A Story"), chapters = listOf(Chapter("prologue", "Prologue")))
+    fun serialisesTitleAppendixPromptsAndChapters() {
+        val book = Book(
+            title = "My Novel",
+            titleAppendix = listOf("A Story"),
+            prompts = AIPrompt("Tell a story in two parts.", "Warm and calm."),
+            chapters = listOf(Chapter("prologue", "Prologue"))
+        )
 
         val json = mapper.writeValueAsString(book)
 
         assertEquals(
-            """{"version":1,"title":"My Novel","titleAppendix":["A Story"],"prolog":null,""" +
-                """"chapters":[{"name":"prologue","title":"Prologue","titleAppendix":[],"paragraph":[]}],""" +
+            """{"version":1,"title":"My Novel","titleAppendix":["A Story"],""" +
+                """"prompts":{"contentPrompt":"Tell a story in two parts.","stylePrompt":"Warm and calm."},""" +
+                """"prolog":null,"chapters":[{"name":"prologue","title":"Prologue","titleAppendix":[],""" +
+                """"prompts":{"contentPrompt":"","stylePrompt":""},"paragraph":[]}],""" +
                 """"epilog":null,"blurb":null}""",
             json
         )
@@ -106,6 +123,19 @@ class BookTest {
         assertEquals(TestData.prolog(), restored.prolog)
         assertEquals(TestData.epilog(), restored.epilog)
         assertEquals(TestData.blurb(), restored.blurb)
+    }
+
+    /**
+     * Use case: the user described the manuscript for the assistant, so the prompts of the book are
+     * stored with it and come back unchanged when the project is opened again.
+     */
+    @Test
+    fun roundTripsPrompts() {
+        val book = TestData.book()
+
+        val restored: Book = mapper.readValue(mapper.writeValueAsString(book))
+
+        assertEquals(TestData.bookPrompts(), restored.prompts)
     }
 
     /**

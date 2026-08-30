@@ -12,6 +12,7 @@
 
 package org.pcsoft.app.aighost.fx.model.common
 
+import javafx.beans.InvalidationListener
 import javafx.beans.binding.Bindings
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleIntegerProperty
@@ -69,14 +70,14 @@ class FontDataPropertyTest {
     fun setUp() {
         holder = Holder(FontData(name = "Times New Roman", size = 12, bold = false, italic = false))
         parentEvents = 0
-        property = FontDataProperty(
-            { holder.font = it },
-            { holder.font },
-            { parentEvents++ }
-        )
-        // A parent property aligns a nested one with the model object as soon as that object arrives,
-        // so the same alignment happens here before the views are built.
-        property.refresh()
+
+        property = FontDataProperty()
+        // A parent property reports a change of this property as its own and writes an exchanged font
+        // back into the object carrying it, which is what these two listeners stand for.
+        property.addListener { parentEvents++ }
+        property.addListener { _, _, newValue -> holder.font = newValue }
+        // A parent property hands the nested object to this property as soon as that object arrives.
+        property.set(holder.font)
 
         rootView = SimpleStringProperty()
         val rootBinding = Bindings.createStringBinding({ state(property.value) }, property)
@@ -288,8 +289,8 @@ class FontDataPropertyTest {
     }
 
     /**
-     * Use case: a field of the font is changed by application code past the property, so every field
-     * property delivers the current value instead of a cached copy.
+     * Use case: a field of the font is changed by application code past the property, so the property
+     * is told to read the font again and every field property delivers the current value afterwards.
      */
     @Test
     fun readsFieldsChangedOnModel() {
@@ -298,10 +299,13 @@ class FontDataPropertyTest {
         holder.font?.bold = true
         holder.font?.italic = true
 
+        property.refresh()
+
         assertEquals("Garamond", property.name)
         assertEquals(16, property.size)
         assertTrue(property.bold)
         assertTrue(property.italic)
+        assertTreeShows(name = "Garamond", size = 16, bold = true, italic = true)
     }
 
     /**

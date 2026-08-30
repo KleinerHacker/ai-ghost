@@ -12,8 +12,10 @@
 
 package org.pcsoft.app.aighost.fx.model.project.meta
 
+import javafx.beans.property.SimpleStringProperty
+import javafx.beans.property.StringProperty
+import org.pcsoft.app.aighost.fx.model.internal.BeanFields
 import org.pcsoft.app.aighost.fx.model.project.ProjectPartProperty
-import org.pcsoft.app.aighost.fx.model.property.common.OverrideStringProperty
 import org.pcsoft.app.aighost.model.project.meta.Meta
 
 /**
@@ -27,19 +29,16 @@ import org.pcsoft.app.aighost.model.project.meta.Meta
  * is never written by the user and never changes while a project is open. The list of the additional
  * parts is left out for the same reason: it is bookkeeping of the storage, written on every save out
  * of the parts the project carries, and nothing the user edits.
+ *
+ * This property model is handed out with its own type, so a caller reaches every field of the meta
+ * data directly; it is built by the project alone and therefore carries an internal constructor.
  */
-internal class MetaProperty(
-    setter: (Meta?) -> Unit,
-    getter: () -> Meta?,
-    fireEvent: () -> Unit
-) : ProjectPartProperty<Meta>(setter, getter, fireEvent) {
+class MetaProperty internal constructor() : ProjectPartProperty<Meta>() {
+
+    private val fields = BeanFields<Meta> { fireValueChangedEvent() }
 
     /** Name of the project as shown to the user, as a property of its own. */
-    val nameProperty: OverrideStringProperty = OverrideStringProperty(
-        { newValue -> value?.also { it.name = newValue ?: "" } },
-        { value?.name },
-        { fireValueChangedEvent() }
-    )
+    val nameProperty: StringProperty = SimpleStringProperty()
 
     // A property carries a name of its own, so the accessors of the wrapped field are given another
     // name on the JVM side - otherwise they would silently replace the one of the base class.
@@ -51,11 +50,7 @@ internal class MetaProperty(
         }
 
     /** Author printed in the manuscript, as a property of its own. */
-    val authorProperty: OverrideStringProperty = OverrideStringProperty(
-        { newValue -> value?.also { it.author = newValue ?: "" } },
-        { value?.author },
-        { fireValueChangedEvent() }
-    )
+    val authorProperty: StringProperty = SimpleStringProperty()
 
     /** Author printed in the manuscript. */
     var author: String?
@@ -65,11 +60,7 @@ internal class MetaProperty(
         }
 
     /** Copyright notice printed in the manuscript, as a property of its own. */
-    val copyrightProperty: OverrideStringProperty = OverrideStringProperty(
-        { newValue -> value?.also { it.copyright = newValue ?: "" } },
-        { value?.copyright },
-        { fireValueChangedEvent() }
-    )
+    val copyrightProperty: StringProperty = SimpleStringProperty()
 
     /** Copyright notice printed in the manuscript. */
     var copyright: String?
@@ -78,29 +69,17 @@ internal class MetaProperty(
             copyrightProperty.set(value)
         }
 
-    /**
-     * Called whenever the wrapped object itself is exchanged, so the properties of its fields belong
-     * to another object afterwards and have to take over its values.
-     */
-    override fun invalidated() {
-        super.invalidated()
-        refreshFields()
+    init {
+        fields.string(nameProperty, "name")
+        fields.string(authorProperty, "author")
+        fields.string(copyrightProperty, "copyright")
+
+        // The field properties belong to another object after every exchange, so they are tied to the
+        // one this property carries now.
+        addListener { _, _, newValue -> fields.rebind(newValue) }
+        fields.rebind(get())
     }
 
-    override fun refresh() {
-        super.refresh()
-        refreshFields()
-    }
-
-    /**
-     * Lets every field property take over the value of the object the property carries now. A field
-     * whose value did not change reports nothing, so an exchanged object is not announced as a change
-     * of every one of its fields.
-     */
-    private fun refreshFields() {
-        nameProperty.refresh()
-        authorProperty.refresh()
-        copyrightProperty.refresh()
-    }
+    override fun refresh() = fields.refresh()
 
 }

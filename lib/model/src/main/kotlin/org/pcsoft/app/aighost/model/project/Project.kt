@@ -57,7 +57,7 @@ data class Project(
      * not in here - it is text, not a part this application can work with.
      */
     val parts: Map<String, ProjectPart>
-        get() = linkedMapOf<String, ProjectPart>(
+        get() = linkedMapOf(
             PART_META to meta,
             PART_DESIGN to design,
             PART_BOOK to book
