@@ -28,5 +28,11 @@ project(":lib:fx-model").name = "ai-ghost-fx-model"
 include(":lib:ai")
 project(":lib:ai").name = "ai-ghost-ai"
 
+include(":lib:layouting")
+project(":lib:layouting").name = "ai-ghost-layouting"
+
+include(":lib:layouting-model")
+project(":lib:layouting-model").name = "ai-ghost-layouting-model"
+
 include(":app:ui")
 project(":app:ui").name = "ai-ghost-ui"

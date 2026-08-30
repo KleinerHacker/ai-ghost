@@ -50,6 +50,8 @@ opened once the user accepts it. Both documents are written with Jackson.
 | JavaFX desktop shell (`app/ai-ghost-ui`)          | Implemented |
 | JSON data model (`lib/ai-ghost-model`)            | Implemented |
 | AI support library (`lib/ai-ghost-ai`)            | Implemented |
+| Layout core: line breaking and alignment (`lib/ai-ghost-layouting`) | Implemented |
+| Layout blocks from book, design and meta data (`lib/ai-ghost-layouting-model`) | Implemented |
 | Prompt input with character limit and token estimate | Implemented |
 | ZIP distribution with start scripts and `libs`    | Implemented |
 | MVVM UI architecture (MVVM FX)                    | Implemented |

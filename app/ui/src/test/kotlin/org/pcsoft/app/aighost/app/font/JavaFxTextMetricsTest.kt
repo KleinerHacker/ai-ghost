@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.pcsoft.app.aighost.layouting.TextStyle
 import org.pcsoft.app.aighost.model.common.FontData
 import org.testfx.framework.junit5.ApplicationTest
 import org.testfx.util.WaitForAsyncUtils
@@ -220,4 +221,74 @@ class JavaFxTextMetricsTest : ApplicationTest() {
         assertEquals(0, fx { JavaFxTextMetrics.cacheSize })
         assertEquals(0L, fx { JavaFxTextMetrics.cacheHits })
     }
+
+    /**
+     * Use case: the layout core asks through its own interface, in its own style type, and gets
+     * exactly the numbers the stored font of the same face gives - the translation loses nothing.
+     */
+    @Test
+    fun measuringThroughTheLayoutInterfaceGivesTheSameNumbersAsTheStoredFont() {
+        val font = installedFont(size = 14, bold = true, italic = true)
+        val style = layoutStyle(font)
+
+        val byFont = fx {
+            Triple(
+                JavaFxTextMetrics.wordWidth(font, "manuscript"),
+                JavaFxTextMetrics.spaceWidth(font),
+                JavaFxTextMetrics.lineMetrics(font)
+            )
+        }
+        val byStyle = fx {
+            Triple(
+                JavaFxTextMetrics.wordWidth(style, "manuscript"),
+                JavaFxTextMetrics.spaceWidth(style),
+                JavaFxTextMetrics.lineMetrics(style)
+            )
+        }
+
+        assertEquals(byFont, byStyle)
+    }
+
+    /**
+     * Use case: the same face reaches the measurer once as a stored font and once as a layout style;
+     * both answers come out of the very same cache entry instead of being measured twice.
+     */
+    @Test
+    fun aLayoutStyleAndTheStoredFontShareTheirCacheEntry() {
+        val font = installedFont()
+
+        fx { JavaFxTextMetrics.wordWidth(font, "chapter") }
+        assertEquals(1, fx { JavaFxTextMetrics.cacheSize })
+        assertEquals(0L, fx { JavaFxTextMetrics.cacheHits })
+
+        fx { JavaFxTextMetrics.wordWidth(layoutStyle(font), "chapter") }
+
+        assertEquals(1, fx { JavaFxTextMetrics.cacheSize })
+        assertEquals(1L, fx { JavaFxTextMetrics.cacheHits })
+    }
+
+    /**
+     * Use case: the layout core hands the measurer a style whose numbers are read only for the face -
+     * the line spacing of the style must not end up in the returned line metrics.
+     */
+    @Test
+    fun theLineSpacingOfAStyleDoesNotReachTheMeasuredLineMetrics() {
+        val font = installedFont()
+        val tight = layoutStyle(font).copy(lineSpacing = 1.0)
+        val wide = layoutStyle(font).copy(lineSpacing = 2.5, spaceBefore = 20.0, spaceAfter = 20.0)
+
+        val first = fx { JavaFxTextMetrics.lineMetrics(tight) }
+        val second = fx { JavaFxTextMetrics.lineMetrics(wide) }
+
+        assertEquals(first, second)
+    }
+
+    /** The layout style of the given stored font, with everything vertical left at its default. */
+    private fun layoutStyle(font: FontData) =
+        TextStyle(
+            family = font.name,
+            size = font.size.toDouble(),
+            bold = font.bold,
+            italic = font.italic
+        )
 }

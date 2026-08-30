@@ -13,6 +13,8 @@ module org.pcsoft.app.aighost.ui {
     requires org.pcsoft.app.aighost.fx.model;
     // The prompt area estimates the token cost of what the user wrote.
     requires org.pcsoft.app.aighost.ai;
+    // The JavaFX text measuring implements the measuring interface of the layout core.
+    requires transitive org.pcsoft.app.aighost.layouting;
 
     opens org.pcsoft.app.aighost.app to javafx.fxml, de.saxsys.mvvmfx;
     opens org.pcsoft.app.aighost.app.ui.window to javafx.fxml, de.saxsys.mvvmfx;

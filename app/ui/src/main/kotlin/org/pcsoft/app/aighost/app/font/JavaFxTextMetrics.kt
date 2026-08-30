@@ -15,11 +15,19 @@ package org.pcsoft.app.aighost.app.font
 import javafx.geometry.VPos
 import javafx.scene.text.Font
 import javafx.scene.text.Text
+import org.pcsoft.app.aighost.layouting.LineMetrics
+import org.pcsoft.app.aighost.layouting.TextMetrics
+import org.pcsoft.app.aighost.layouting.TextStyle
 import org.pcsoft.app.aighost.model.common.FontData
 
 /**
  * Measures text with JavaFX, so the layout engine works with the very numbers the drawing side later
  * produces.
+ *
+ * This is the production implementation of [TextMetrics]: the layout core asks in its own
+ * [TextStyle], which is translated into the [FontData] the font resolution works on. The two
+ * overloads taking a [FontData] are the same measurement and stay available to everything inside the
+ * application that already holds a stored font.
  *
  * Everything is measured through a single hidden [Text] node: the font is set, the text is set,
  * `wrappingWidth` is put to zero and `prefWidth(-1)` is read. No font file is opened and
@@ -40,7 +48,7 @@ import org.pcsoft.app.aighost.model.common.FontData
  * called on that thread. This object is *not* thread safe and holds mutable state - the helper node
  * and the caches - that is shared between all callers.
  */
-object JavaFxTextMetrics {
+object JavaFxTextMetrics : TextMetrics {
 
     /** Carries an ascender, a descender and no accents, so ascent and descent are both covered. */
     private const val REFERENCE_TEXT: String = "Hxpg"
@@ -77,12 +85,42 @@ object JavaFxTextMetrics {
     /**
      * Width of a single word, without any surrounding space.
      *
+     * @param style Style of the layout core the word is set in.
+     * @param word Word to measure; it must not contain a line break.
+     * @return Width in points, unrounded.
+     */
+    override fun wordWidth(style: TextStyle, word: String): Double =
+        cachedWidth(FontKey.of(style), word)
+
+    /**
+     * Width of the space between two words of the given style.
+     *
+     * @param style Style of the layout core the words are set in.
+     * @return Width in points, unrounded.
+     */
+    override fun spaceWidth(style: TextStyle): Double =
+        cachedWidth(FontKey.of(style), SPACE)
+
+    /**
+     * Ascent, descent and leading of a line set in the given style.
+     *
+     * The line spacing of the style is not applied here: what is returned are the metrics of the bare
+     * face, the way the layout core expects them.
+     *
+     * @param style Style of the layout core the line is set in.
+     */
+    override fun lineMetrics(style: TextStyle): LineMetrics =
+        cachedMetrics(FontKey.of(style))
+
+    /**
+     * Width of a single word, without any surrounding space.
+     *
      * @param font Font of the design the word is set in.
      * @param word Word to measure; it must not contain a line break.
      * @return Width in points, unrounded.
      */
     fun wordWidth(font: FontData, word: String): Double =
-        cachedWidth(font, word)
+        cachedWidth(FontKey.of(font), word)
 
     /**
      * Width of the space between two words in the given font.
@@ -91,21 +129,30 @@ object JavaFxTextMetrics {
      * @return Width in points, unrounded.
      */
     fun spaceWidth(font: FontData): Double =
-        cachedWidth(font, SPACE)
+        cachedWidth(FontKey.of(font), SPACE)
 
     /**
      * Ascent, descent and leading of a line set in the given font.
      *
      * @param font Font of the design the line is set in.
      */
-    fun lineMetrics(font: FontData): LineMetrics {
-        val key = FontKey.of(font)
+    fun lineMetrics(font: FontData): LineMetrics =
+        cachedMetrics(FontKey.of(font))
+
+    /** Drops every measurement taken so far, for instance after the font catalogue was rebuilt. */
+    fun clearCache() {
+        widths.clear()
+        metrics.clear()
+        cacheHits = 0L
+    }
+
+    private fun cachedMetrics(key: FontKey): LineMetrics {
         metrics[key]?.let { hit ->
             cacheHits++
             return hit
         }
 
-        val resolved = FontResolver.font(font)
+        val resolved = FontResolver.font(key.toFontData())
         val single = boundsOf(resolved, REFERENCE_TEXT)
         val double = boundsOf(resolved, REFERENCE_TEXT + "\n" + REFERENCE_TEXT)
 
@@ -121,21 +168,14 @@ object JavaFxTextMetrics {
         return measured
     }
 
-    /** Drops every measurement taken so far, for instance after the font catalogue was rebuilt. */
-    fun clearCache() {
-        widths.clear()
-        metrics.clear()
-        cacheHits = 0L
-    }
-
-    private fun cachedWidth(font: FontData, text: String): Double {
-        val key = WidthKey(FontKey.of(font), text)
+    private fun cachedWidth(font: FontKey, text: String): Double {
+        val key = WidthKey(font, text)
         widths[key]?.let { hit ->
             cacheHits++
             return hit
         }
 
-        val measured = measureWidth(FontResolver.font(font), text)
+        val measured = measureWidth(FontResolver.font(font.toFontData()), text)
         widths[key] = measured
         return measured
     }
@@ -168,10 +208,19 @@ object JavaFxTextMetrics {
         val italic: Boolean
     ) {
 
+        /** The stored font this key stands for, the form the font resolution works on. */
+        fun toFontData(): FontData =
+            FontData(family, size, bold, italic)
+
         companion object {
 
             fun of(data: FontData): FontKey =
                 FontKey(data.name, data.size, data.bold, data.italic)
+
+            // A stored font carries whole points only, so the size of a layout style is cut down to
+            // one; a style built from a design never carries a fraction in the first place.
+            fun of(style: TextStyle): FontKey =
+                FontKey(style.family, style.size.toInt(), style.bold, style.italic)
         }
     }
 

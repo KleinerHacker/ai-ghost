@@ -10,7 +10,7 @@ Status: IN_PROGRESS
 | IP-22 | Font Identity And Substitution Reporting  | NOT_STARTED |
 | IP-02 | Design Page Format Model                  | COMPLETED   |
 | IP-24 | Optional Parts In The Model               | COMPLETED   |
-| IP-03 | Layout Core                               | NOT_STARTED |
+| IP-03 | Layout Core                               | COMPLETED   |
 | IP-04 | Pagination And Page Break Policy          | NOT_STARTED |
 | IP-05 | Incremental Layout And Caching            | NOT_STARTED |
 | IP-06 | Layout Regression Harness                 | NOT_STARTED |
@@ -32,11 +32,18 @@ Status: IN_PROGRESS
 
 ## Overall Progress
 
-13%
+17%
 
 ## Notes
 
-IP-01, IP-02 and IP-24 are implemented; IP-03 is unblocked and is the next plan.
+IP-01, IP-02, IP-24 and IP-03 are implemented; IP-04 is unblocked and is the next plan.
+
+The layout core is implemented as planned. `LaidOutLine` carries two fields the plan did not name:
+`width`, and `wordSpacing` as the gap a justified line is stretched by - without it a justified line
+could not be drawn from the result alone. A break opportunity is not always a gap: after a hyphen the
+next word follows immediately, so a word carries whether whitespace separated it from the next one.
+The gaps above and below a block are not stored in the document and are fixed in `BlockSpacing` of
+`lib/layouting-model`.
 
 The scope covers the title page, the copyright page and all written parts. Prolog, epilog and blurb
 always stand on pages of their own and always carry their text; the checkbox in the project tree

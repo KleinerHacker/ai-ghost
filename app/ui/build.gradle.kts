@@ -39,6 +39,8 @@ dependencies {
     implementation(project(":lib:ai-ghost-model"))
     implementation(project(":lib:ai-ghost-fx-model"))
     implementation(project(":lib:ai-ghost-ai"))
+    // The text measuring of the UI is the production implementation of the layout core's interface.
+    implementation(project(":lib:ai-ghost-layouting"))
 
     implementation("io.arrow-kt:arrow-core:2.1.2")
     implementation("org.apache.commons:commons-lang3:3.20.0")
