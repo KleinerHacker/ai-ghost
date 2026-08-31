@@ -24,6 +24,7 @@
 
 * Zeilen aus IP-03 auf Seiten des Seitenformats verteilen.
 * Innen- und Außenrand nach gerader oder ungerader Seite wählen.
+* Gerade und ungerade Seiten über das ganze Buch hinweg zählen.
 * Leerseite am Anfang und am Ende des Buches berücksichtigen.
 
 ### 2. Vorspann

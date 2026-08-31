@@ -109,8 +109,13 @@ new values is read with their defaults.
 The remaining implementation plans are written out under `.claude/plans/implementation`, each with
 its own status file and with its origin and its dependencies named in it; `FP-001-Overview.md` lists
 them in order. The files of a finished plan are removed, so the table above is the only record that
-it is done. The plans of IP-25 to IP-28 still have to be written out, and IP-07 and IP-08 have to be
-rewritten onto the library.
+it is done. Every open plan, IP-25 to IP-28 and the library scoped IP-07 and IP-08 included, is
+written out.
+
+The Feature Plan is orientation only: it carries the objective, the architecture, the plan overview,
+the dependency graph, the decisions and the completion criteria. Tasks, constraints and tests of a
+plan live in its file under `.claude/plans/implementation`; section 7 of the Feature Plan names that
+file per plan and keeps only the reasoning the detailed plan does not carry.
 
 The feature adds three Gradle modules (`lib/layouting`, `lib/layouting-model`, `lib/layouting-fx`) and
 needs one new third party dependency: JavaFX in a library module.

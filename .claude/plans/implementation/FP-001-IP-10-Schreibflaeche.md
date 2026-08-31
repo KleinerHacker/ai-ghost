@@ -27,6 +27,7 @@
 * `BookPartEditor` nach dem MVVM-FX-Muster in `app/ui` anlegen.
 * `PaperFlowView` der Bibliothek einsetzen und mit den Blöcken des Teils speisen.
 * Blöcke aus `BookPartProperty` über die Bauer aus `lib/layouting-model` erzeugen.
+* Prolog, Kapitel und Epilog über einen einzigen Editor führen.
 
 ### 2. Bindung
 

@@ -30,6 +30,7 @@
 
 * Messen und Anordnen als getrennte Schritte führen.
 * Messen nur über `TextMetrics`, Anordnen ohne Toolkit-Bezug.
+* Nur Wörter, Leerzeichen und Zeilenmaße messen, nie ganze Absätze.
 * Vorabmessung der benötigten Wörter anbieten.
 
 ### 3. Seitengrenzen
