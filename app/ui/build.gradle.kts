@@ -50,6 +50,9 @@ dependencies {
     implementation("org.controlsfx:controlsfx:11.2.4")
     implementation("de.saxsys:mvvmfx:1.8.0")
 
+    // The startup area finds its steps by scanning the package they live in, instead of a hand kept list.
+    implementation("io.github.classgraph:classgraph:4.8.194")
+
     // The application logs against the SLF4J API only; Log4j 2 is the implementation behind it and
     // is bound through the SLF4J provider, so no code ever touches a Log4j type.
     implementation("org.slf4j:slf4j-api:2.0.18")

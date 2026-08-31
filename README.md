@@ -68,6 +68,7 @@ opened once the user accepts it. Both documents are written with Jackson.
 | Light and dark appearance, chosen in the preferences | Implemented |
 | Shipped `Ghost Writer` type face                  | Implemented |
 | Logging to console and to a rolled over log file  | Implemented |
+| Splash screen with a background area for startup jobs | Implemented |
 | Dokka API documentation                           | Implemented |
 | Dependency licence report                         | Implemented |
 | MkDocs documentation site (versioned via mike)    | Implemented |

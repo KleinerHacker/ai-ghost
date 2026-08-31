@@ -12,6 +12,7 @@
 
 package org.pcsoft.app.aighost.app.controller
 
+import arrow.core.Either
 import javafx.application.Application
 import org.pcsoft.app.aighost.app.Messages
 import org.pcsoft.app.aighost.app.font.FontIdentity
@@ -45,7 +46,7 @@ object IoController {
     /**
      * The settings the application works on, with every field of them as a property of its own.
      *
-     * Carries the defaults until [loadPreferences] read the file of the user.
+     * Carries the defaults until the read preferences were applied through [applyLoadedPreferences].
      */
     val preferences: PreferencesProperty = PreferencesProperty(Preferences())
 
@@ -213,15 +214,29 @@ object IoController {
 
     //region Preferences
     /**
-     * Reads the settings of the user into [preferences] and handles a failure according to
-     * [handlePreferencesError].
+     * Reads the settings of the user from their file without touching the application state.
      *
+     * The read is pure input and carries no dialog, so it may run off the FX thread - the startup
+     * area does exactly that. The result is handed to [applyLoadedPreferences] afterwards.
+     *
+     * @return the settings that were read, or the failure the storage reported
+     */
+    fun readPreferences(): Either<PreferencesStorage.Error, Preferences> {
+        log.debug("Loading preferences")
+        return PreferencesStorage.load()
+    }
+
+    /**
+     * Applies the outcome of [readPreferences]: a success replaces [preferences], a failure is
+     * answered according to [handlePreferencesError].
+     *
+     * MUST run on the FX thread, because a failure may show a dialog and may stop the application.
+     *
+     * @param result the outcome of [readPreferences]
      * @param app the running application, stopped when a failure leaves nothing to work with
      */
-    fun loadPreferences(app: Application) {
-        log.debug("Loading preferences")
-
-        PreferencesStorage.load().fold({ error ->
+    fun applyLoadedPreferences(result: Either<PreferencesStorage.Error, Preferences>, app: Application) {
+        result.fold({ error ->
             log.warn("Failed to load preferences: {}", error::class.simpleName)
             handlePreferencesError(error, app)
         }, { loaded ->

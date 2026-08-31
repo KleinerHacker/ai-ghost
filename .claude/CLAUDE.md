@@ -14,6 +14,7 @@
     added to it, and before the font file is referenced
   * `fx-model` - before a POJO in `lib/model` is added, removed or changed in its fields, and
     before an FX property model in `lib/fx-model` is created or changed
+  * `startup` - before a startup background process is added or changed
   * `testing` - before a test class is created or changed
   * `project-docs` - after EVERY change, to check README, MkDocs, KDoc and CHANGELOG.md
   * `ci-pipeline` - before a workflow file under `.github` is created or changed

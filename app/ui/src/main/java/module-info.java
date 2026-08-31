@@ -7,6 +7,8 @@ module org.pcsoft.app.aighost.ui {
 
     requires org.controlsfx.controls;
     requires de.saxsys.mvvmfx;
+    // The startup area scans its step package for StartupStep implementations.
+    requires io.github.classgraph;
 
     requires org.pcsoft.app.aighost.model;
     // The views bind onto the property models of the open project and the preferences.
@@ -22,6 +24,8 @@ module org.pcsoft.app.aighost.ui {
     opens org.pcsoft.app.aighost.app.ui.window to javafx.fxml, de.saxsys.mvvmfx;
     opens org.pcsoft.app.aighost.app.ui.dialog to javafx.fxml, de.saxsys.mvvmfx;
     opens org.pcsoft.app.aighost.app.ui.component to javafx.fxml, de.saxsys.mvvmfx;
+    // ClassGraph reads the class files of the startup steps to discover them.
+    opens org.pcsoft.app.aighost.app.startup.step to io.github.classgraph;
 
     exports org.pcsoft.app.aighost.app;
     // The font catalogue, the resolution of a design font and the JavaFX backed text measuring.
