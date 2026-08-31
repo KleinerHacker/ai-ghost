@@ -336,11 +336,11 @@ renumbered.
 
 | ID    | Implementation Plan                       | Objective                                                             | Dependencies         |
 |-------|-------------------------------------------|-----------------------------------------------------------------------|----------------------|
-| IP-01 | Font Discovery And Text Measuring         | Installed families, resolution, fallback, measuring through JavaFX    | -                    |
+| IP-01 | Font Discovery And Text Measuring ✅       | Installed families, resolution, fallback, measuring through JavaFX    | -                    |
 | IP-22 | Font Identity And Substitution Reporting  | Record the metrics used, detect and report a substitution             | IP-01                |
-| IP-02 | Design Page Format Model                  | `Design` v2 with page format, margins and spacing, mirrored           | -                    |
-| IP-24 | Optional Parts In The Model               | `Book` v2 with prolog, epilog and blurb always present and switchable | -                    |
-| IP-03 | Layout Core                               | Resolved styles, line breaking, alignment, placed lines               | IP-01, IP-02, IP-24  |
+| IP-02 | Design Page Format Model ✅                | `Design` v2 with page format, margins and spacing, mirrored           | -                    |
+| IP-24 | Optional Parts In The Model ✅             | `Book` v2 with prolog, epilog and blurb always present and switchable | -                    |
+| IP-03 | Layout Core ✅                             | Resolved styles, line breaking, alignment, placed lines               | IP-01, IP-02, IP-24  |
 | IP-04 | Pagination And Page Break Policy          | Page filling, breaks, odd/even margins, policy hook                   | IP-03                |
 | IP-25 | Renderer Library Module                   | New JavaFX library module, JPMS, TestFX, CI, architecture rule        | -                    |
 | IP-26 | Font And Measuring Migration              | Catalogue, resolution and metrics move into the library               | IP-01, IP-25         |
@@ -1438,13 +1438,13 @@ a page's position and its page number; the paper has to follow without the proje
 ## 8. Dependency Graph
 
 ```text
-IP-01 ─┬─> IP-22
+IP-01✅┬─> IP-22
        └─┐
 IP-25 ─┬─┴─> IP-26 ─┬─> IP-07 ─┬─> IP-27 ──> IP-28
                     ├─> IP-08 ─┘
                     └─> IP-13   (with IP-02, IP-12)
-IP-02 ─┬─────> IP-03 ──> IP-04 ─┬─> IP-05 ──────────────┐
-IP-24 ─┤    │                   │                       │
+IP-02✅┬───> IP-03✅ ──> IP-04 ─┬─> IP-05 ──────────────┐
+IP-24✅┤  │                   │                       │
        └─> IP-14                ├─> IP-07 ─┬────────────┤
                                 │          ├─> IP-06    │
                                 └─> IP-08 ─┘            │
@@ -1464,8 +1464,9 @@ IP-05, IP-07, IP-15 ──> IP-16
 IP-07, IP-08 ──> IP-06, IP-27
 ```
 
-Independent starting points: **IP-25**, **IP-09**, **IP-12**, **IP-17** can all begin at once; IP-01,
-IP-02, IP-24 and IP-03 are done.
+Completed: **IP-01** ✅, **IP-02** ✅, **IP-24** ✅, **IP-03** ✅. Every other node of the graph is open.
+
+Independent starting points: **IP-25**, **IP-09**, **IP-12**, **IP-17** can all begin at once.
 
 ## 9. Risks and Open Questions
 
