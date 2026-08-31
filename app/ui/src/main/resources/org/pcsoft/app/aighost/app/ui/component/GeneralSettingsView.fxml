@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright (c) KleinerHacker alias Pfeiffer C Soft 2026.
+  ~ This work is licensed under the Apache License, Version 2.0.
+  ~ You may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at:
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, this software is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and limitations.
+  -->
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<fx:root type="BorderPane" styleClass="general-settings" xmlns="http://javafx.com/javafx"
+         xmlns:fx="http://javafx.com/fxml"
+         fx:controller="org.pcsoft.app.aighost.app.ui.component.GeneralSettingsView">
+    <center>
+        <GridPane hgap="12.0" vgap="10.0">
+            <padding>
+                <Insets top="16.0" right="16.0" bottom="16.0" left="16.0"/>
+            </padding>
+            <columnConstraints>
+                <ColumnConstraints minWidth="140.0" halignment="RIGHT"/>
+                <ColumnConstraints minWidth="160.0" hgrow="ALWAYS"/>
+            </columnConstraints>
+
+            <Label text="%dialog.projectSettings.general.preset" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <ComboBox fx:id="cmbPreset" maxWidth="Infinity" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+            <Label text="%dialog.projectSettings.general.width" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <TextField fx:id="txtWidth" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+            <Label text="%dialog.projectSettings.general.height" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <TextField fx:id="txtHeight" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+            <Label fx:id="lblSizeError" styleClass="settings-error" text="%dialog.projectSettings.general.error.size"
+                   wrapText="true" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+            <Separator GridPane.rowIndex="4" GridPane.columnIndex="0" GridPane.columnSpan="2"/>
+
+            <Label text="%dialog.projectSettings.general.inner" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+            <TextField fx:id="txtInner" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+
+            <Label text="%dialog.projectSettings.general.outer" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+            <TextField fx:id="txtOuter" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+
+            <Label text="%dialog.projectSettings.general.top" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
+            <TextField fx:id="txtTop" GridPane.rowIndex="7" GridPane.columnIndex="1"/>
+
+            <Label text="%dialog.projectSettings.general.bottom" GridPane.rowIndex="8" GridPane.columnIndex="0"/>
+            <TextField fx:id="txtBottom" GridPane.rowIndex="8" GridPane.columnIndex="1"/>
+
+            <Label fx:id="lblMarginError" styleClass="settings-error" text="%dialog.projectSettings.general.error.margin"
+                   wrapText="true" GridPane.rowIndex="9" GridPane.columnIndex="1"/>
+
+            <Separator GridPane.rowIndex="10" GridPane.columnIndex="0" GridPane.columnSpan="2"/>
+
+            <CheckBox fx:id="chkStart" text="%dialog.projectSettings.general.startEmptyPage"
+                      GridPane.rowIndex="11" GridPane.columnIndex="1"/>
+            <CheckBox fx:id="chkEnd" text="%dialog.projectSettings.general.endEmptyPage"
+                      GridPane.rowIndex="12" GridPane.columnIndex="1"/>
+        </GridPane>
+    </center>
+</fx:root>

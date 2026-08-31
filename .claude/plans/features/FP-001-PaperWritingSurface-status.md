@@ -25,7 +25,7 @@ Status: IN_PROGRESS
 | IP-11 | Paragraph Structure Operations            | NOT_STARTED |
 | IP-12 | Inspector Shell And Content Sections      | NOT_STARTED |
 | IP-13 | Design Style Sections                     | NOT_STARTED |
-| IP-14 | Project Settings Dialog                   | NOT_STARTED |
+| IP-14 | Project Settings Dialog                   | COMPLETED   |
 | IP-15 | Editor Arrangement And Tree Routing       | NOT_STARTED |
 | IP-16 | Writing And Preview Modes                 | NOT_STARTED |
 | IP-17 | AI Action Port                            | NOT_STARTED |
@@ -36,11 +36,32 @@ Status: IN_PROGRESS
 
 ## Overall Progress
 
-19%
+22%
 
 ## Notes
 
-IP-01, IP-22, IP-02, IP-24, IP-03 and IP-25 are implemented; IP-04 and IP-26 are unblocked.
+IP-01, IP-22, IP-02, IP-24, IP-03, IP-25 and IP-14 are implemented; IP-04 and IP-26 are unblocked.
+
+IP-14 was built wider than first planned, on the user's request: a master-detail dialog with a
+`ProjectSettingsTree` (root hidden) on the left and the section editor on the right. Only the
+`General` section is real (`GeneralSettings`: page-size presets, four margins in millimetres, the two
+empty-page flags), bound to a working-copy `DesignProperty`. The `Design` node and its four children
+are `PlaceholderSettings`; their style editors stay with IP-13. No new model was added - the design
+POJOs for prolog/epilog/blurb and a separate title appendix are still open and deferred. The dialog
+keeps a deep-copied working project; OK and APPLY write the page geometry and the two flags back,
+CANCEL / ESCAPE discard. Buttons are `OK`, `CANCEL`, `APPLY` (`DialogButtons.OK_CANCEL_APPLY`), APPLY
+consumed so it stores without closing, OK and APPLY disabled while the input cannot be stored. The
+menu item and tool bar button in `MainWindowView` are wired. Styling landed in a new
+`styles/component/project-settings.css` (registered in `AiGhostTheme`) instead of `dialog.css`,
+because the combo box, the check box and the plain separator are first used here. The plan files were
+removed on completion; this table is the only record.
+
+Adjusted afterwards on the user's request: the page-format editor moved from the `General` node onto
+the `Design` node, `General` is now an empty placeholder and the dialog opens on `Design`; the
+`Design` branch gained two more placeholder children, `Title page` and `Copyright page`, ahead of
+`Epilog`. `ProjectSettingsSection` was reshaped from an `enum` into a `sealed interface` mirroring
+`ProjectListItem`, and `ProjectSettingsTreeView` now builds its tree explicitly with a named
+`ProjectSettingsTreeCell` like `ProjectListView`. Progress is unchanged.
 
 IP-22 was cut along the module boundary rather than kept in `app/ui` as a whole. The measurement is
 pure JavaFX and knows no type of this application, so `FontFingerprint` and `FontFingerprints` live

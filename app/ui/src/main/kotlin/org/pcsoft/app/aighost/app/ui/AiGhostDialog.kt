@@ -14,6 +14,7 @@ package org.pcsoft.app.aighost.app.ui
 
 import javafx.scene.control.Alert
 import javafx.scene.control.ButtonBar
+import javafx.scene.control.ButtonType
 import javafx.scene.control.Label
 import javafx.scene.image.ImageView
 import javafx.scene.layout.Region
@@ -21,9 +22,12 @@ import javafx.stage.Stage
 import javafx.stage.Window
 import org.pcsoft.app.aighost.app.AiGhostIcons
 import org.pcsoft.app.aighost.app.AiGhostTheme
+import org.pcsoft.app.aighost.app.Messages
 import org.pcsoft.app.aighost.app.ui.dialog.DetailDialog
 import org.pcsoft.app.aighost.app.ui.dialog.DialogButtons
 import org.pcsoft.app.aighost.app.ui.dialog.DialogType
+import org.pcsoft.app.aighost.app.ui.dialog.ProjectSettingsDialog
+import org.pcsoft.app.aighost.fx.model.project.design.DesignProperty
 
 /**
  * Every dialog of the application, dressed in the theme and asked in one place.
@@ -147,6 +151,27 @@ object AiGhostDialog {
         details: String,
         owner: Window? = null
     ): Boolean = showDetail(DialogType.WARNING, DialogButtons.YES_NO, title, caption, message, details, owner)
+
+    /**
+     * Opens the project settings and, when the user closes them with OK, writes the changed values
+     * into [design].
+     *
+     * APPLY has already written its changes by the time the dialog closes; OK writes them here, and
+     * CANCEL, ESCAPE or the window close button leave [design] untouched.
+     *
+     * @param design the design of the open project, the object the dialog edits
+     * @param owner window the dialog belongs to, none by default
+     */
+    @JvmStatic
+    @JvmOverloads
+    fun showProjectSettings(design: DesignProperty, owner: Window? = null) {
+        val dialog = ProjectSettingsDialog(design)
+        dialog.title = Messages["dialog.projectSettings.title"]
+        decorate(dialog, owner)
+
+        val confirmed = dialog.showAndWait().map { it == ButtonType.OK }.orElse(false) == true
+        if (confirmed) dialog.applyChanges()
+    }
 
     /**
      * Shows a plain alert, which needs nothing but the parts JavaFX already draws itself.

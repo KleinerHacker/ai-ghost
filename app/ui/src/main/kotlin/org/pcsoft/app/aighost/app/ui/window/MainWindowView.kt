@@ -26,6 +26,7 @@ import javafx.scene.layout.BorderPane
 import javafx.scene.layout.VBox
 import javafx.stage.FileChooser
 import org.pcsoft.app.aighost.app.AiGhostIcons
+import org.pcsoft.app.aighost.app.ui.AiGhostDialog
 import org.pcsoft.app.aighost.app.ui.component.Editor
 import org.pcsoft.app.aighost.app.ui.showingBinding
 import java.io.File
@@ -130,6 +131,19 @@ class MainWindowView : FxmlView<MainWindowViewModel>, Initializable {
     @FXML
     private fun actionExit() {
         pnlRoot.scene.window.hide()
+    }
+
+    /**
+     * Opens the project settings dialog for the open project.
+     *
+     * The dialog edits a working copy and writes the changed page geometry back into the design of
+     * the open project only when the user closes it with OK or presses APPLY.
+     *
+     * This action is triggered by the Project Settings menu item and the matching tool bar button.
+     */
+    @FXML
+    private fun actionProjectSettings() {
+        AiGhostDialog.showProjectSettings(viewModel.project.designProperty, pnlRoot.scene.window)
     }
 
     /**

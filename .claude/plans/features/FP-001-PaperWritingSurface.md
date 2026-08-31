@@ -171,7 +171,7 @@ numbering is kept stable rather than renumbered.
 | IP-11 | Paragraph Structure Operations            | Split, join, delete and reorder paragraphs                            | IP-10                |
 | IP-12 | Inspector Shell And Content Sections      | Context panel with book and part sections, absorbs `BookEditor`       | -                    |
 | IP-13 | Design Style Sections                     | Editing the styles in the inspector with live effect                  | IP-02, IP-12, IP-26  |
-| IP-14 | Project Settings Dialog                   | Page format, margins and empty pages in a dialog                      | IP-02                |
+| IP-14 | Project Settings Dialog ✅                 | Page format, margins and empty pages in a dialog                      | IP-02                |
 | IP-15 | Editor Arrangement And Tree Routing       | Three zones, routing of every tree node, view state persisted         | IP-11, IP-12         |
 | IP-16 | Writing And Preview Modes                 | Mode switch, whole book preview, scrolling, virtualisation            | IP-05, IP-07, IP-15  |
 | IP-17 | AI Action Port                            | Action interface in `lib/ai` with a stub implementation               | -                    |
@@ -349,12 +349,39 @@ The section writes the same `DesignProperty` the layout reads, which is what mak
 work without extra plumbing. Only installed families are offered, because an unresolvable family
 cannot be measured.
 
-### IP-14: Project Settings Dialog
+### IP-14: Project Settings Dialog ✅
 
-Plan: `FP-001-IP-14-ProjekteinstellungenDialog.md`
+Plan: `FP-001-IP-14-ProjekteinstellungenDialog.md` (removed on completion)
 
 Millimetres are shown, points are stored. A margin sum exceeding the page must be refused, or the
 engine receives a negative column width.
+
+Built wider than first planned, on the user's request: the dialog is a master-detail shell with a
+`ProjectSettingsTree` (root hidden) on the left and the section editor on the right. Only the
+`General` section is real - `GeneralSettings` with page-size presets, the four margins and the two
+empty-page flags, bound to a working-copy `DesignProperty`. The `Design` node and its four children
+(`Epilog`, `Chapter`, `Prolog`, `Blurb`) are `PlaceholderSettings` panels; their real style editors
+stay with IP-13. No new model was added - the design POJOs for prolog/epilog/blurb and a separate
+title appendix are still open and were deferred to a later step.
+
+The dialog keeps a working copy (a detached `ProjectProperty` whose design is a deep copy of the
+target); OK and APPLY write the page geometry and the two flags back into the real `DesignProperty`,
+CANCEL / ESCAPE discard. Buttons are the standard `OK`, `CANCEL`, `APPLY`
+(`DialogButtons.OK_CANCEL_APPLY`); APPLY is consumed so it stores without closing, and OK and APPLY
+are disabled while the input cannot be stored. The menu item and the tool bar button in
+`MainWindowView` are now wired; the action is always available because a project always carries a
+design. Styling landed in a new `styles/component/project-settings.css` (registered in
+`AiGhostTheme`) rather than in `dialog.css`, because the combo box, the check box and the plain
+separator are first used here. User docs: `docs/docs/project-settings.md`.
+
+Adjusted afterwards on the user's request: the page-format editor moved from the `General` node to
+the `Design` node, so `Design.implemented` is now the real editor and `General` is an empty
+placeholder; the dialog opens on `Design`. The `Design` branch gained two more placeholder children,
+`Title page` and `Copyright page`, ahead of `Epilog`. `ProjectSettingsSection` was reshaped from an
+`enum` into a `sealed interface` with `data object` cases, mirroring `ProjectListItem`, and
+`ProjectSettingsTreeView` now builds its tree from explicit `TreeItem` fields with a named
+`ProjectSettingsTreeCell`, the same way `ProjectListView` does - so a section that later stands for a
+single book part can become a `data class` without changing how the tree is built.
 
 ### IP-15: Editor Arrangement And Tree Routing
 
@@ -424,7 +451,7 @@ IP-25✅┬─┴─> IP-26 ─┬─> IP-07 ─┬─> IP-27 ──> IP-28
                     └─> IP-13   (with IP-02, IP-12)
 IP-02✅┬───> IP-03✅ ──> IP-04 ─┬─> IP-05 ──────────────┐
 IP-24✅┤  │                   │                       │
-       └─> IP-14                ├─> IP-07 ─┬────────────┤
+       └─> IP-14✅              ├─> IP-07 ─┬────────────┤
                                 │          ├─> IP-06    │
                                 └─> IP-08 ─┘            │
                                       │                 │

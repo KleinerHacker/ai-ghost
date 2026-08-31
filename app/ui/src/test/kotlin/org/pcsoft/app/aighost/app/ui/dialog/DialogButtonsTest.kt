@@ -14,6 +14,7 @@ package org.pcsoft.app.aighost.app.ui.dialog
 
 import javafx.scene.control.ButtonType
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -48,5 +49,21 @@ class DialogButtonsTest {
         assertEquals(listOf(ButtonType.YES, ButtonType.NO), buttons)
         assertTrue(buttons[0].buttonData.isDefaultButton, "yes does not answer ENTER")
         assertTrue(buttons[1].buttonData.isCancelButton, "no does not answer ESCAPE")
+    }
+
+    /**
+     * Use case: a settings editor is shown, so the dialog carries the standard OK, CANCEL and APPLY
+     * of JavaFX - OK stores and answers ENTER, CANCEL discards and answers ESCAPE, APPLY stores
+     * without closing and does neither.
+     */
+    @Test
+    fun editsWithOkCancelAndApply() {
+        val buttons = DialogButtons.OK_CANCEL_APPLY.buttonTypes
+
+        assertEquals(listOf(ButtonType.OK, ButtonType.CANCEL, ButtonType.APPLY), buttons)
+        assertTrue(buttons[0].buttonData.isDefaultButton, "OK does not answer ENTER")
+        assertTrue(buttons[1].buttonData.isCancelButton, "CANCEL does not answer ESCAPE")
+        assertFalse(buttons[2].buttonData.isDefaultButton, "APPLY answers ENTER")
+        assertFalse(buttons[2].buttonData.isCancelButton, "APPLY answers ESCAPE")
     }
 }

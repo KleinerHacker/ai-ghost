@@ -62,6 +62,8 @@ opened once the user accepts it. Both documents are written with Jackson.
 | Editor and preview tabs of the main window        | Implemented |
 | Project tree with prolog, chapters, epilog, blurb | Implemented |
 | Editor split into project tree and editing area   | Implemented |
+| Project settings dialog: page format and blank pages (Design section) | Implemented |
+| Project settings: typography of the book elements | Planned     |
 | Product design shared with logo and documentation | Implemented |
 | Light and dark appearance, chosen in the preferences | Implemented |
 | Shipped `Ghost Writer` type face                  | Implemented |

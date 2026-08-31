@@ -30,5 +30,12 @@ enum class DialogButtons(val buttonTypes: List<ButtonType>) {
     OK(listOf(ButtonType.OK)),
 
     /** An affirmative and a negative button, the affirmative one being the default. */
-    YES_NO(listOf(ButtonType.YES, ButtonType.NO))
+    YES_NO(listOf(ButtonType.YES, ButtonType.NO)),
+
+    /**
+     * An editor set: OK stores and closes, CANCEL discards and closes and answers ESCAPE, APPLY
+     * stores without closing. APPLY is left to the dialog, which keeps it from closing and wires it
+     * to its own store action.
+     */
+    OK_CANCEL_APPLY(listOf(ButtonType.OK, ButtonType.CANCEL, ButtonType.APPLY))
 }
