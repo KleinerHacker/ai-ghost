@@ -1506,6 +1506,49 @@ IP-02, IP-24 and IP-03 are done.
 * **Resolving a provisional AI part** on part change or project close (IP-19) is undecided.
 * **Three new Gradle modules** (`lib/layouting`, `lib/layouting-model`, `lib/layouting-fx`) require a
   check against the `ci-pipeline` skill.
+* **Kerning across word boundaries is lost.** `TextMetrics.wordWidth` measures word by word, so the
+  kerning a font applies between the last glyph of one word and the first of the next never enters the
+  width a line is broken on. Measuring a whole line in one call would be more accurate. The deviation
+  is small and does not break the fidelity chain - engine and renderer are still wrong in the same way -
+  but it makes a justified line marginally too wide. To be checked in IP-26.
+
+### Rejected third party libraries
+
+Whether an existing library should replace the layout core was raised repeatedly. Four candidates were
+examined and all four rejected. They are recorded here with the reason, because the question returns
+otherwise.
+
+* **Apache PDFBox** carries no layout engine at all. `PDPageContentStream.showText` draws one string at
+  one position; line breaking, paragraph flow, alignment and pagination are the caller's arithmetic on
+  top of `PDFont.getStringWidth`. It contributes font file parsing, font embedding and PDF writing -
+  none of which this feature needs, all of which the export feature does. PDFBox stays the decided
+  choice there.
+* **Apache FOP** does carry a real engine, but its input is XSL-FO XML, which every keystroke would
+  have to be serialised into - unusable for the incremental layout of IP-05. Its placed result is
+  reachable only through the area tree or the intermediate format, neither of which is a stable public
+  API. It measures with its own font handling, and it is a heavy non-modular dependency (Batik, XML
+  Graphics Commons) against a jlink image.
+* **`java.awt.font.TextLayout` and `LineBreakMeasurer`** are a real engine inside the JDK, and they
+  offer bidi, kerning aware measurement of attributed text and caret hit testing. But they measure
+  through the Java2D pipeline while the screen is painted by Prism. The part with the highest value -
+  correct break opportunities - is already in use through `java.text.BreakIterator` from `java.base`,
+  which needs no dependency at all. Caret hit testing has a JavaFX equivalent in `Text.hitTest` and
+  `TextFlow.hitTest`, and that one measures in the pipeline that draws. `requires java.desktop` would
+  additionally pull one of the largest JDK modules into an image that requires it nowhere today.
+* **SWT `TextLayout`** is the closest match in capability: wrapping through `setWidth`, alignment,
+  justification, styled runs through `setStyle`, line bounds and hit testing in both directions
+  through `getLocation` and `getOffset`. It is rejected on integration, not on capability. It needs a
+  `Device`, and therefore an SWT `Display` owning its own single threaded event loop - SWT can embed
+  JavaFX through `FXCanvas`, but not the reverse, so the application would have to become an SWT
+  application. It ships as a native artifact per operating system and architecture, and it is
+  EPL-2.0, which the allowlist of the root build does not carry.
+
+The common cause is not incidental. A layout engine *is* a measurement plus a breaking algorithm, so
+every candidate that has real layout brings its own font measurement with it. Taking the layout from a
+library while keeping the JavaFX measurement is therefore not a combination that exists. The fidelity
+chain of chapter 3 - what was measured is what is drawn - rules all four out, and what remains to be
+written for it is the breaking algorithm alone. Everything of weight in this feature - incremental
+layout, caret, paragraph operations, undo, sheet split, AI affordances - is offered by none of them.
 
 ### Decisions taken
 
