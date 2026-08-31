@@ -21,10 +21,11 @@ import javafx.beans.property.SimpleStringProperty
 import javafx.beans.property.StringProperty
 import org.pcsoft.app.aighost.fx.model.internal.BeanFields
 import org.pcsoft.app.aighost.model.common.FontData
+import org.pcsoft.app.aighost.model.common.FontMetricsData
 
 /**
- * Property wrapping the font of a piece of text and offering every field of it as a property of its
- * own.
+ * Property wrapping the font of a piece of text and offering every field of it - and every field of
+ * the fingerprint nested in it - as a property of its own.
  *
  * The wrapped object may be absent - a style that is not there at all - so every field property
  * answers with a neutral value and drops what is written to it as long as no font sits behind this
@@ -79,11 +80,22 @@ class FontDataProperty internal constructor() : SimpleObjectProperty<FontData?>(
             italicProperty.set(value)
         }
 
+    /** Fingerprint of the family as it was measured, as a property of its own. */
+    val metricsProperty: FontMetricsDataProperty = FontMetricsDataProperty()
+
+    /** Fingerprint of the family as it was measured, absent while it has never been taken. */
+    var metrics: FontMetricsData?
+        get() = metricsProperty.get()
+        set(value) {
+            metricsProperty.set(value)
+        }
+
     init {
         fields.string(nameProperty, "name")
         fields.integer(sizeProperty, "size")
         fields.boolean(boldProperty, "bold")
         fields.boolean(italicProperty, "italic")
+        fields.model(metricsProperty, "metrics", metricsProperty::refresh)
 
         // The field properties belong to another object after every exchange, so they are tied to the
         // one this property carries now.
@@ -92,8 +104,9 @@ class FontDataProperty internal constructor() : SimpleObjectProperty<FontData?>(
     }
 
     /**
-     * Reads every field of the wrapped font again and hands what changed to the field properties, for
-     * a caller that wrote on the font past this model.
+     * Reads every field of the wrapped font again - and every field of the fingerprint nested in it -
+     * and hands what changed to the field properties, for a caller that wrote on the font past this
+     * model.
      */
     fun refresh() = fields.refresh()
 

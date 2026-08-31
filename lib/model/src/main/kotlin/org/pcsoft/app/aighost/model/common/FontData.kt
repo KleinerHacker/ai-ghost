@@ -21,11 +21,14 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
  * @property size Font size in points.
  * @property bold Whether the text is drawn in a bold weight.
  * @property italic Whether the text is drawn slanted.
+ * @property metrics Fingerprint of the family as it measured when it was written down. `null` says
+ *   that it has never been taken - it never says that the family measures differently now.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class FontData(
     var name: String = "Arial",
     var size: Int = 12,
     var bold: Boolean = false,
-    var italic: Boolean = false
+    var italic: Boolean = false,
+    var metrics: FontMetricsData? = null
 )

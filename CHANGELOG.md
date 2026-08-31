@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+* Project records what its fonts measured like on the computer it was written on, and says so when
+  a font is missing or sets differently when the project is opened elsewhere: one warning names the
+  affected elements, the font the project asks for and the font that is used instead - a project
+  written before this existed carries no such record and is opened silently as before
+
 * Preferences are stored as YAML in `preferences.yml` instead of as JSON in `preferences.json`, so
   the settings read like plain lines of text when you open the file - a `preferences.json` left over
   from an earlier version is not read any more and the settings have to be chosen again

@@ -15,6 +15,8 @@ module org.pcsoft.app.aighost.ui {
     requires org.pcsoft.app.aighost.ai;
     // The JavaFX text measuring implements the measuring interface of the layout core.
     requires transitive org.pcsoft.app.aighost.layouting;
+    // The fingerprint a font family is recognised by is measured by the component library.
+    requires org.pcsoft.app.aighost.layouting.fx;
 
     opens org.pcsoft.app.aighost.app to javafx.fxml, de.saxsys.mvvmfx;
     opens org.pcsoft.app.aighost.app.ui.window to javafx.fxml, de.saxsys.mvvmfx;

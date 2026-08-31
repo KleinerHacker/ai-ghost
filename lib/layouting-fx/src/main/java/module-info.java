@@ -21,6 +21,7 @@ module org.pcsoft.app.aighost.layouting.fx {
     requires transitive javafx.graphics;
     requires transitive javafx.controls;
 
-    // Nothing is exported yet: the renderer and its package arrive with the following plan, this
-    // module carries the toolkit resolution and the headless test setup only.
+    // The identity of a font family: measured with the toolkit, compared by whoever stores it. The
+    // renderer and its package arrive with the following plan.
+    exports org.pcsoft.app.aighost.layouting.fx.font;
 }

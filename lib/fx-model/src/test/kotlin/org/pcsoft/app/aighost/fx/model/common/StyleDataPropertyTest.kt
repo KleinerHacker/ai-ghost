@@ -158,13 +158,21 @@ class StyleDataPropertyTest {
     private fun state(style: StyleData?): String =
         "${state(style?.font)}|${style?.alignment ?: MISSING}"
 
-    /** Text form of the font, used as the value of the binding on that nested object. */
+    /**
+     * Text form of the font, used as the value of the binding on that nested object. The fingerprint
+     * of the family belongs to the font, so it is part of that text as well.
+     */
     private fun state(font: FontData?): String =
-        "${font?.name ?: MISSING}|${font?.size ?: 0}|${font?.bold ?: false}|${font?.italic ?: false}"
+        "${font?.name ?: MISSING}|${font?.size ?: 0}|${font?.bold ?: false}|${font?.italic ?: false}|" +
+            "${font?.metrics?.widths ?: MISSING}|${font?.metrics?.ascent ?: 0.0}|" +
+            "${font?.metrics?.descent ?: 0.0}|${font?.metrics?.leading ?: 0.0}"
 
     /**
      * Asserts that every binding of the object tree delivers the given state, so no view keeps the
      * value of a previous object or of a previous field value.
+     *
+     * No font of this test has ever been measured, so the fingerprint stays the neutral one throughout -
+     * what a fingerprint does to the object tree is proven on the font itself.
      */
     private fun assertTreeShows(
         name: String?,
@@ -173,7 +181,7 @@ class StyleDataPropertyTest {
         italic: Boolean,
         alignment: Alignment?
     ) {
-        val fontState = "${name ?: MISSING}|$size|$bold|$italic"
+        val fontState = "${name ?: MISSING}|$size|$bold|$italic|$MISSING|0.0|0.0|0.0"
 
         assertEquals("$fontState|${alignment ?: MISSING}", rootView.get()) {
             "the binding on the style delivers an outdated state"

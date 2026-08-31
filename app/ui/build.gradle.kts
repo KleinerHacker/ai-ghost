@@ -41,6 +41,8 @@ dependencies {
     implementation(project(":lib:ai-ghost-ai"))
     // The text measuring of the UI is the production implementation of the layout core's interface.
     implementation(project(":lib:ai-ghost-layouting"))
+    // The identity of a font family is measured with the toolkit, which the component library owns.
+    implementation(project(":lib:ai-ghost-layouting-fx"))
 
     implementation("io.arrow-kt:arrow-core:2.1.2")
     implementation("org.apache.commons:commons-lang3:3.20.0")

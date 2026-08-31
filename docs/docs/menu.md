@@ -32,6 +32,22 @@ which part it is:
   Opening it does not bring those parts back - as soon as you save the project, they are removed from
   the file for good. Answer with *No* and back up the file first if you want to keep them.
 
+### Opening a project on another computer
+
+A book project stores the fonts it is set in by name, and it stores how those fonts measured on the
+computer it was written on. When you open it somewhere else, AI Ghost compares the two:
+
+* **A font is not installed here** - AI Ghost sets the manuscript in another one and warns you,
+  naming the affected elements, the font the project asks for and the font used instead behind
+  *Show details*.
+* **A font is installed but sets differently** - another version of the same font, for instance.
+  You are warned in the same way.
+
+Lines and pages break at other places in both cases, so the manuscript does not look the way its
+author saw it. Nothing in the project itself is changed; install the fonts named to see it as it was
+written. A project written before AI Ghost recorded this carries no measurements and is opened
+without a warning.
+
 ## Publish
 
 | Entry             | Shortcut       | What it does                                |

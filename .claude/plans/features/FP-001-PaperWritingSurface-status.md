@@ -7,7 +7,7 @@ Status: IN_PROGRESS
 | ID    | Implementation Plan                       | Status      |
 |-------|-------------------------------------------|-------------|
 | IP-01 | Font Discovery And Text Measuring         | COMPLETED   |
-| IP-22 | Font Identity And Substitution Reporting  | NOT_STARTED |
+| IP-22 | Font Identity And Substitution Reporting  | COMPLETED   |
 | IP-02 | Design Page Format Model                  | COMPLETED   |
 | IP-24 | Optional Parts In The Model               | COMPLETED   |
 | IP-03 | Layout Core                               | COMPLETED   |
@@ -36,11 +36,23 @@ Status: IN_PROGRESS
 
 ## Overall Progress
 
-15%
+19%
 
 ## Notes
 
-IP-01, IP-02, IP-24, IP-03 and IP-25 are implemented; IP-04 and IP-26 are unblocked.
+IP-01, IP-22, IP-02, IP-24, IP-03 and IP-25 are implemented; IP-04 and IP-26 are unblocked.
+
+IP-22 was cut along the module boundary rather than kept in `app/ui` as a whole. The measurement is
+pure JavaFX and knows no type of this application, so `FontFingerprint` and `FontFingerprints` live
+in `lib/layouting-fx`, which exports its first package with them; `lib/layouting` stays untouched,
+because the engine never sees a fingerprint. `app/ui` keeps what is application bound: the
+translation onto `FontMetricsData`, the comparison in `FontIdentity`, the walk over the design in
+`FontIdentityCheck` and the report. `app/ui` therefore depends on `lib/layouting-fx` from now on.
+The reference set grew beyond the ASCII plus umlauts the feature plan named: it carries Latin-1,
+Latin Extended-A and Cyrillic as well, because a substituted family usually differs in exactly those
+letters while plain ASCII still matches. Set and size are fixed from here on. A fingerprint is
+written when a project is saved and only where none stands yet, because the design editor of IP-13
+does not exist yet and overwriting on every save would make the comparison pointless.
 
 The JavaFX decision of IP-25 was made: `.claude/rules/architecture.md` now allows JavaFX in exactly
 one component library under `lib`, and `lib/layouting-fx` is that one. The module builds and its

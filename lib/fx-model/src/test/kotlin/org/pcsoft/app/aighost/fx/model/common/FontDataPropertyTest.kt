@@ -12,9 +12,9 @@
 
 package org.pcsoft.app.aighost.fx.model.common
 
-import javafx.beans.InvalidationListener
 import javafx.beans.binding.Bindings
 import javafx.beans.property.SimpleBooleanProperty
+import javafx.beans.property.SimpleDoubleProperty
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.beans.property.StringProperty
@@ -25,15 +25,17 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.model.common.FontData
+import org.pcsoft.app.aighost.model.common.FontMetricsData
 
 /**
  * Developer tests for [FontDataProperty].
  *
- * The property wraps the font of a piece of text and offers every field of that object as a property
- * of its own. Every test checks the object tree the way the user interface uses it: a binding hangs on
- * the font itself and on every single field of it, and the tests assert that a change reaches every
- * binding that has to know about it - upwards to the parent the property reports to as well as
- * downwards into the fields of an exchanged font.
+ * The property wraps the font of a piece of text and offers every field of that object - and every
+ * field of the fingerprint nested in it - as a property of its own. Every test checks the object tree
+ * the way the user interface uses it: a binding hangs on the font itself, on the fingerprint below it
+ * and on every single field, and the tests assert that a change reaches every binding that has to know
+ * about it - upwards to the parent the property reports to as well as downwards into the fields of an
+ * exchanged font.
  */
 class FontDataPropertyTest {
 
@@ -66,9 +68,37 @@ class FontDataPropertyTest {
     private lateinit var italicView: StringProperty
     private var italicViewChanges = 0
 
+    /** Binding on the fingerprint, standing for a view bound to that nested object. */
+    private lateinit var metricsView: StringProperty
+    private var metricsViewChanges = 0
+
+    /** Binding on the digest of the widths nested in the fingerprint. */
+    private lateinit var widthsView: StringProperty
+    private var widthsViewChanges = 0
+
+    /** Binding on the distance above the base line nested in the fingerprint. */
+    private lateinit var ascentView: StringProperty
+    private var ascentViewChanges = 0
+
+    /** Binding on the distance below the base line nested in the fingerprint. */
+    private lateinit var descentView: StringProperty
+    private var descentViewChanges = 0
+
+    /** Binding on the gap between two lines nested in the fingerprint. */
+    private lateinit var leadingView: StringProperty
+    private var leadingViewChanges = 0
+
     @BeforeEach
     fun setUp() {
-        holder = Holder(FontData(name = "Times New Roman", size = 12, bold = false, italic = false))
+        holder = Holder(
+            FontData(
+                name = "Times New Roman",
+                size = 12,
+                bold = false,
+                italic = false,
+                metrics = initialMetrics()
+            )
+        )
         parentEvents = 0
 
         property = FontDataProperty()
@@ -109,6 +139,37 @@ class FontDataPropertyTest {
         italicBinding.addListener { _, _, _ -> italicViewChanges++ }
         italicView.bind(italicBinding)
 
+        metricsView = SimpleStringProperty()
+        val metricsBinding = Bindings.createStringBinding(
+            { state(property.metricsProperty.value) },
+            property.metricsProperty
+        )
+        metricsBinding.addListener { _, _, _ -> metricsViewChanges++ }
+        metricsView.bind(metricsBinding)
+
+        widthsView = SimpleStringProperty()
+        val widthsBinding = Bindings.createStringBinding(
+            { property.metricsProperty.widthsProperty.get() ?: MISSING },
+            property.metricsProperty.widthsProperty
+        )
+        widthsBinding.addListener { _, _, _ -> widthsViewChanges++ }
+        widthsView.bind(widthsBinding)
+
+        ascentView = SimpleStringProperty()
+        val ascentBinding = property.metricsProperty.ascentProperty.asString()
+        ascentBinding.addListener { _, _, _ -> ascentViewChanges++ }
+        ascentView.bind(ascentBinding)
+
+        descentView = SimpleStringProperty()
+        val descentBinding = property.metricsProperty.descentProperty.asString()
+        descentBinding.addListener { _, _, _ -> descentViewChanges++ }
+        descentView.bind(descentBinding)
+
+        leadingView = SimpleStringProperty()
+        val leadingBinding = property.metricsProperty.leadingProperty.asString()
+        leadingBinding.addListener { _, _, _ -> leadingViewChanges++ }
+        leadingView.bind(leadingBinding)
+
         resetCounters()
     }
 
@@ -119,18 +180,41 @@ class FontDataPropertyTest {
         sizeViewChanges = 0
         boldViewChanges = 0
         italicViewChanges = 0
+        metricsViewChanges = 0
+        widthsViewChanges = 0
+        ascentViewChanges = 0
+        descentViewChanges = 0
+        leadingViewChanges = 0
     }
+
+    /** The fingerprint the font of every test starts with. */
+    private fun initialMetrics(): FontMetricsData =
+        FontMetricsData(widths = "a1b2c3d4", ascent = 9.0, descent = 2.0, leading = 1.0)
 
     /** Text form of the whole font, used as the value of the binding on the root. */
     private fun state(font: FontData?): String =
-        "${font?.name ?: MISSING}|${font?.size ?: 0}|${font?.bold ?: false}|${font?.italic ?: false}"
+        "${font?.name ?: MISSING}|${font?.size ?: 0}|${font?.bold ?: false}|${font?.italic ?: false}|" +
+            state(font?.metrics)
+
+    /** Text form of the fingerprint, used as the value of the binding on that nested object. */
+    private fun state(metrics: FontMetricsData?): String =
+        "${metrics?.widths ?: MISSING}|${metrics?.ascent ?: 0.0}|${metrics?.descent ?: 0.0}|" +
+            "${metrics?.leading ?: 0.0}"
 
     /**
      * Asserts that every binding of the object tree delivers the given state, so no view keeps the
      * value of a previous font or of a previous field value.
      */
-    private fun assertTreeShows(name: String?, size: Int, bold: Boolean, italic: Boolean) {
-        assertEquals("${name ?: MISSING}|$size|$bold|$italic", rootView.get()) {
+    private fun assertTreeShows(
+        name: String?,
+        size: Int,
+        bold: Boolean,
+        italic: Boolean,
+        metrics: FontMetricsData? = initialMetrics()
+    ) {
+        val metricsState = state(metrics)
+
+        assertEquals("${name ?: MISSING}|$size|$bold|$italic|$metricsState", rootView.get()) {
             "the binding on the font delivers an outdated state"
         }
         assertEquals(name ?: MISSING, nameView.get()) {
@@ -144,6 +228,21 @@ class FontDataPropertyTest {
         }
         assertEquals(italic.toString(), italicView.get()) {
             "the binding on the italic flag delivers an outdated value"
+        }
+        assertEquals(metricsState, metricsView.get()) {
+            "the binding on the fingerprint delivers an outdated state"
+        }
+        assertEquals(metrics?.widths ?: MISSING, widthsView.get()) {
+            "the binding on the digest of the widths delivers an outdated value"
+        }
+        assertEquals((metrics?.ascent ?: 0.0).toString(), ascentView.get()) {
+            "the binding on the distance above the base line delivers an outdated value"
+        }
+        assertEquals((metrics?.descent ?: 0.0).toString(), descentView.get()) {
+            "the binding on the distance below the base line delivers an outdated value"
+        }
+        assertEquals((metrics?.leading ?: 0.0).toString(), leadingView.get()) {
+            "the binding on the gap between two lines delivers an outdated value"
         }
     }
 
@@ -289,8 +388,117 @@ class FontDataPropertyTest {
     }
 
     /**
-     * Use case: a field of the font is changed by application code past the property, so the property
-     * is told to read the font again and every field property delivers the current value afterwards.
+     * Use case: the family is measured on this machine and the digest of the widths is written into the
+     * fingerprint nested in the font, so the bindings on that field, on the fingerprint and on the font
+     * show it.
+     */
+    @Test
+    fun writesNestedMetricsWidthsToModelAndNotifiesTree() {
+        property.metricsProperty.widths = "ffeeddcc"
+
+        assertEquals("ffeeddcc", holder.font?.metrics?.widths)
+        assertTreeShows(
+            name = "Times New Roman",
+            size = 12,
+            bold = false,
+            italic = false,
+            metrics = FontMetricsData("ffeeddcc", 9.0, 2.0, 1.0)
+        )
+        assertTrue(widthsViewChanges > 0) { "the binding on the digest was not re-evaluated" }
+        assertTrue(metricsViewChanges > 0) { "the binding on the fingerprint was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the font was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+    }
+
+    /**
+     * Use case: the measures of the fingerprint are bound to the values the measuring step produces, so
+     * every measure that step delivers reaches the nested fingerprint and every binding above it shows
+     * it.
+     */
+    @Test
+    fun writesBoundNestedMetricsMeasuresToModelAndNotifiesTree() {
+        val ascentSource = SimpleDoubleProperty(9.0)
+        val descentSource = SimpleDoubleProperty(2.0)
+        val leadingSource = SimpleDoubleProperty(1.0)
+        property.metricsProperty.ascentProperty.bind(ascentSource)
+        property.metricsProperty.descentProperty.bind(descentSource)
+        property.metricsProperty.leadingProperty.bind(leadingSource)
+
+        ascentSource.set(10.5)
+        descentSource.set(3.25)
+        leadingSource.set(1.75)
+
+        assertEquals(10.5, holder.font!!.metrics!!.ascent)
+        assertEquals(3.25, holder.font!!.metrics!!.descent)
+        assertEquals(1.75, holder.font!!.metrics!!.leading)
+        assertTreeShows(
+            name = "Times New Roman",
+            size = 12,
+            bold = false,
+            italic = false,
+            metrics = FontMetricsData("a1b2c3d4", 10.5, 3.25, 1.75)
+        )
+        assertTrue(ascentViewChanges > 0) { "the binding on the ascent was not re-evaluated" }
+        assertTrue(descentViewChanges > 0) { "the binding on the descent was not re-evaluated" }
+        assertTrue(leadingViewChanges > 0) { "the binding on the leading was not re-evaluated" }
+        assertTrue(metricsViewChanges > 0) { "the binding on the fingerprint was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the font was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+    }
+
+    /**
+     * Use case: the family is measured anew as a whole, so the fingerprint of the font is replaced and
+     * the field properties below it belong to another object afterwards, with every binding of the
+     * object tree showing the values of that object.
+     */
+    @Test
+    fun writesMetricsToModelAndNotifiesTree() {
+        property.metrics = FontMetricsData("ffeeddcc", 10.5, 3.25, 1.75)
+
+        assertEquals(FontMetricsData("ffeeddcc", 10.5, 3.25, 1.75), holder.font?.metrics)
+        assertTreeShows(
+            name = "Times New Roman",
+            size = 12,
+            bold = false,
+            italic = false,
+            metrics = FontMetricsData("ffeeddcc", 10.5, 3.25, 1.75)
+        )
+        assertTrue(widthsViewChanges > 0) { "the binding on the digest was not re-evaluated" }
+        assertTrue(ascentViewChanges > 0) { "the binding on the ascent was not re-evaluated" }
+        assertTrue(descentViewChanges > 0) { "the binding on the descent was not re-evaluated" }
+        assertTrue(leadingViewChanges > 0) { "the binding on the leading was not re-evaluated" }
+        assertTrue(metricsViewChanges > 0) { "the binding on the fingerprint was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the font was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+    }
+
+    /**
+     * Use case: the font of a project written before fingerprints existed carries none, so every field
+     * property of the fingerprint answers with a neutral value and the font dialog can be built
+     * nevertheless.
+     */
+    @Test
+    fun readsNeutralValuesWhenMetricsAreAbsent() {
+        property.metrics = null
+
+        assertNull(holder.font?.metrics)
+        assertNull(property.metricsProperty.widths)
+        assertEquals(0.0, property.metricsProperty.ascent)
+        assertEquals(0.0, property.metricsProperty.descent)
+        assertEquals(0.0, property.metricsProperty.leading)
+        assertTreeShows(
+            name = "Times New Roman",
+            size = 12,
+            bold = false,
+            italic = false,
+            metrics = null
+        )
+    }
+
+    /**
+     * Use case: a field of the font or of the fingerprint nested in it is changed by application code
+     * past the property, so the property is told to read the font again and every field property
+     * delivers the current value afterwards - down into the fingerprint, which nothing else would reach.
      */
     @Test
     fun readsFieldsChangedOnModel() {
@@ -298,6 +506,10 @@ class FontDataPropertyTest {
         holder.font?.size = 16
         holder.font?.bold = true
         holder.font?.italic = true
+        holder.font!!.metrics!!.widths = "ffeeddcc"
+        holder.font!!.metrics!!.ascent = 10.5
+        holder.font!!.metrics!!.descent = 3.25
+        holder.font!!.metrics!!.leading = 1.75
 
         property.refresh()
 
@@ -305,7 +517,17 @@ class FontDataPropertyTest {
         assertEquals(16, property.size)
         assertTrue(property.bold)
         assertTrue(property.italic)
-        assertTreeShows(name = "Garamond", size = 16, bold = true, italic = true)
+        assertEquals("ffeeddcc", property.metricsProperty.widths)
+        assertEquals(10.5, property.metricsProperty.ascent)
+        assertEquals(3.25, property.metricsProperty.descent)
+        assertEquals(1.75, property.metricsProperty.leading)
+        assertTreeShows(
+            name = "Garamond",
+            size = 16,
+            bold = true,
+            italic = true,
+            metrics = FontMetricsData("ffeeddcc", 10.5, 3.25, 1.75)
+        )
     }
 
     /**
@@ -315,31 +537,63 @@ class FontDataPropertyTest {
      */
     @Test
     fun writesReplacedFontToModelAndNotifiesWholeTree() {
-        property.value = FontData(name = "Garamond", size = 16, bold = true, italic = true)
+        property.value = FontData(
+            name = "Garamond",
+            size = 16,
+            bold = true,
+            italic = true,
+            metrics = FontMetricsData("ffeeddcc", 10.5, 3.25, 1.75)
+        )
 
-        assertEquals(FontData("Garamond", 16, bold = true, italic = true), holder.font)
-        assertTreeShows(name = "Garamond", size = 16, bold = true, italic = true)
+        assertEquals(
+            FontData("Garamond", 16, bold = true, italic = true, metrics = FontMetricsData("ffeeddcc", 10.5, 3.25, 1.75)),
+            holder.font
+        )
+        assertTreeShows(
+            name = "Garamond",
+            size = 16,
+            bold = true,
+            italic = true,
+            metrics = FontMetricsData("ffeeddcc", 10.5, 3.25, 1.75)
+        )
         assertTrue(nameViewChanges > 0) { "the binding on the family name was not re-evaluated" }
         assertTrue(sizeViewChanges > 0) { "the binding on the font size was not re-evaluated" }
         assertTrue(boldViewChanges > 0) { "the binding on the bold flag was not re-evaluated" }
         assertTrue(italicViewChanges > 0) { "the binding on the italic flag was not re-evaluated" }
+        assertTrue(widthsViewChanges > 0) { "the binding on the digest was not re-evaluated" }
+        assertTrue(ascentViewChanges > 0) { "the binding on the ascent was not re-evaluated" }
+        assertTrue(descentViewChanges > 0) { "the binding on the descent was not re-evaluated" }
+        assertTrue(leadingViewChanges > 0) { "the binding on the leading was not re-evaluated" }
+        assertTrue(metricsViewChanges > 0) { "the binding on the fingerprint was not re-evaluated" }
         assertTrue(rootViewChanges > 0) { "the binding on the font was not re-evaluated" }
         assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
     }
 
     /**
-     * Use case: the font is exchanged for an object carrying the same values, so nothing the user
-     * interface shows changes and no field property reports a change of its own.
+     * Use case: the font is exchanged for an object carrying the same values - the same fingerprint
+     * included - so nothing the user interface shows changes and no field property reports a change of
+     * its own.
      */
     @Test
     fun keepsFieldsQuietWhenReplacedFontCarriesTheSameValues() {
-        property.value = FontData(name = "Times New Roman", size = 12, bold = false, italic = false)
+        property.value = FontData(
+            name = "Times New Roman",
+            size = 12,
+            bold = false,
+            italic = false,
+            metrics = initialMetrics()
+        )
 
         assertTreeShows(name = "Times New Roman", size = 12, bold = false, italic = false)
         assertEquals(0, nameViewChanges) { "the family name was reported as changed although it did not change" }
         assertEquals(0, sizeViewChanges) { "the font size was reported as changed although it did not change" }
         assertEquals(0, boldViewChanges) { "the bold flag was reported as changed although it did not change" }
         assertEquals(0, italicViewChanges) { "the italic flag was reported as changed although it did not change" }
+        assertEquals(0, widthsViewChanges) { "the digest was reported as changed although it did not change" }
+        assertEquals(0, ascentViewChanges) { "the ascent was reported as changed although it did not change" }
+        assertEquals(0, descentViewChanges) { "the descent was reported as changed although it did not change" }
+        assertEquals(0, leadingViewChanges) { "the leading was reported as changed although it did not change" }
+        assertEquals(0, metricsViewChanges) { "the fingerprint was reported as changed although it did not change" }
     }
 
     /**
@@ -355,7 +609,12 @@ class FontDataPropertyTest {
         assertEquals(0, property.size)
         assertFalse(property.bold)
         assertFalse(property.italic)
-        assertTreeShows(name = null, size = 0, bold = false, italic = false)
+        assertNull(property.metrics)
+        assertNull(property.metricsProperty.widths)
+        assertEquals(0.0, property.metricsProperty.ascent)
+        assertEquals(0.0, property.metricsProperty.descent)
+        assertEquals(0.0, property.metricsProperty.leading)
+        assertTreeShows(name = null, size = 0, bold = false, italic = false, metrics = null)
     }
 
     /**
@@ -370,6 +629,8 @@ class FontDataPropertyTest {
         property.size = 18
         property.bold = true
         property.italic = true
+        property.metrics = FontMetricsData("ffeeddcc", 10.5, 3.25, 1.75)
+        property.metricsProperty.widths = "11223344"
 
         assertNull(holder.font)
     }

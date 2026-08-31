@@ -3,7 +3,7 @@ name: model-creator
 description: Creates new model POJOs in lib/model together with their FX property models in lib/fx-model and all tests, based on the exploration results of the model-explore agent. MUST be used whenever a POJO in lib/model has no counterpart in lib/fx-model, whenever a missing <Name>Property has to be created and whenever the fields of a POJO changed and its FX model has to follow - such work is never done inline.
 
 model: opus
-effort: medium
+effort: low
 
 skills:
   - fx-model
