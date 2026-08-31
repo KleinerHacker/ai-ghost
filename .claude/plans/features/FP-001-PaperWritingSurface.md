@@ -153,7 +153,7 @@ numbering is kept stable rather than renumbered.
 | ID    | Implementation Plan                       | Objective                                                             | Dependencies         |
 |-------|-------------------------------------------|-----------------------------------------------------------------------|----------------------|
 | IP-01 | Font Discovery And Text Measuring ✅       | Installed families, resolution, fallback, measuring through JavaFX     | -                    |
-| IP-22 | Font Identity And Substitution Reporting  | Record the metrics used, detect and report a substitution             | IP-01                |
+| IP-22 | Font Identity And Substitution Reporting ✅| Record the metrics used, detect and report a substitution             | IP-01                |
 | IP-02 | Design Page Format Model ✅                | Page format, margins and spacing in `Design`, mirrored                | -                    |
 | IP-24 | Optional Parts In The Model ✅             | Prolog, epilog and blurb always present and switchable                | -                    |
 | IP-03 | Layout Core ✅                             | Resolved styles, line breaking, alignment, placed lines               | IP-01, IP-02, IP-24  |
@@ -193,14 +193,20 @@ up: rounding is right for a control's preferred width but makes line breaking co
 dependent. Words are measured, not paragraphs, which keeps the cache small and reusable. IP-26 moves
 the reusable half into the library, which is why nothing here is rewritten.
 
-### IP-22: Font Identity And Substitution Reporting
+### IP-22: Font Identity And Substitution Reporting ✅
 
 Plan: `FP-001-IP-22-SchriftIdentitaetUndErsatzmeldung.md`
 
-The fingerprint comes from measurements, not from the file: it captures exactly what influences the
-layout and stays quiet about the rest. Reference set and size are fixed for all time, or every older
-project reports a false mismatch. It lives in `app/ui`, because a reusable renderer must not know
-that a project records what it was written with.
+Completed, split along the module boundary. The fingerprint comes from measurements, not from the
+file: it captures exactly what influences the layout and stays quiet about the rest. Reference set
+and size are fixed for all time, or every older project reports a false mismatch; the set grew to
+Latin-1, Latin Extended-A and Cyrillic, because a substituted family usually differs in exactly
+those letters while plain ASCII still matches. The measuring is pure JavaFX and knows no type of
+this application, so it sits in `lib/layouting-fx`, which exports its first package with it, while
+`app/ui` keeps what records it: the translation onto `FontMetricsData`, the comparison and the
+report. A fingerprint is written when a project is saved and only where none stands yet - the design
+editor of IP-13 does not exist yet, and overwriting on every save would make the comparison
+pointless.
 
 ### IP-02: Design Page Format Model ✅
 
@@ -411,7 +417,7 @@ destroys nothing - it is still one undo entry.
 ## 8. Dependency Graph
 
 ```text
-IP-01✅┬─> IP-22
+IP-01✅┬─> IP-22✅
        └─┐
 IP-25✅┬─┴─> IP-26 ─┬─> IP-07 ─┬─> IP-27 ──> IP-28
                     ├─> IP-08 ─┘
@@ -437,7 +443,7 @@ IP-05, IP-07, IP-15 ──> IP-16
 IP-07, IP-08 ──> IP-06, IP-27
 ```
 
-Completed: **IP-01** ✅, **IP-02** ✅, **IP-24** ✅, **IP-03** ✅, **IP-25** ✅.
+Completed: **IP-01** ✅, **IP-22** ✅, **IP-02** ✅, **IP-24** ✅, **IP-03** ✅, **IP-25** ✅.
 Independent starting points: **IP-26**, **IP-09**, **IP-12**, **IP-17**.
 
 ## 9. Risks and Open Questions

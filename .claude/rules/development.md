@@ -30,6 +30,14 @@ name: development
     * FORBIDDEN: removing a plan that is not finished yet
     * The removal happens in the same change set as the last task of the plan
     * The feature status file records the plan as `COMPLETED` before its files are removed
+    * The FEATURE PLAN itself MUST be ticked off in the SAME change set - the status file alone is
+      NOT enough
+        * EVERY place the feature plan names the finished plan gets its completion mark: the plan
+          table, the heading of its own section, the dependency graph and the list of completed
+          plans
+        * The section of the finished plan MUST say what was really built where it differs from
+          what was planned - a moved module boundary, a widened constant, a changed order
+        * FORBIDDEN: removing the plan files while the feature plan still shows the plan as open
 
 ## Implementation
 
