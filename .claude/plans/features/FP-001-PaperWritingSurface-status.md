@@ -12,7 +12,7 @@ Status: IN_PROGRESS
 | IP-24 | Optional Parts In The Model               | COMPLETED   |
 | IP-03 | Layout Core                               | COMPLETED   |
 | IP-04 | Pagination And Page Break Policy          | NOT_STARTED |
-| IP-25 | Renderer Library Module                   | BLOCKED     |
+| IP-25 | Renderer Library Module                   | COMPLETED   |
 | IP-26 | Font And Measuring Migration              | NOT_STARTED |
 | IP-05 | Incremental Layout And Caching            | NOT_STARTED |
 | IP-06 | Layout Regression Harness                 | NOT_STARTED |
@@ -40,11 +40,19 @@ Status: IN_PROGRESS
 
 ## Notes
 
-IP-01, IP-02, IP-24 and IP-03 are implemented; IP-04 is unblocked and is the next plan.
+IP-01, IP-02, IP-24, IP-03 and IP-25 are implemented; IP-04 and IP-26 are unblocked.
 
-IP-25 is BLOCKED: JavaFX as a dependency of a library module, and the amendment of
-`.claude/rules/architecture.md` that allows it, need the user's decision before the module is created.
-No other plan is blocked by anything.
+The JavaFX decision of IP-25 was made: `.claude/rules/architecture.md` now allows JavaFX in exactly
+one component library under `lib`, and `lib/layouting-fx` is that one. The module builds and its
+headless TestFX smoke test runs. It exports nothing yet; the renderer package arrives with IP-26.
+No plan is blocked by anything.
+
+Defect found while checking IP-25, outside its scope and not caused by it - it already failed on the
+unmodified project - and fixed right away on the user's request: `:app:ai-ghost-ui:createMergedModule`
+could not compile the generated descriptor of the merged module, because that compilation only sees
+the staging directories of the jlink plugin and neither JavaFX nor the Kotlin standard library was
+staged there. `addExtraDependencies("javafx", "kotlin")` in the `jlink` block of `app/ui` stages
+them; `jlink` now produces the image with its launcher again.
 
 The renderer became a library of its own after IP-03. Both surfaces and the JavaFX measuring live in
 the new module `lib/layouting-fx` (`ai-ghost-layouting-fx`), which depends on `ai-ghost-layouting` and

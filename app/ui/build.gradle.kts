@@ -146,6 +146,13 @@ tasks.register("generateFont") {
 }
 
 jlink {
+    // mvvmfx, arrow and typetools carry no module descriptor, so they are welded into one merged
+    // module whose descriptor is generated and then compiled on its own. That compilation only sees
+    // the two staging directories of the plugin, and neither JavaFX nor the Kotlin standard library
+    // is staged there - the merged descriptor requires both and javac reports them as not found.
+    // Naming them here copies their JARs into the staging directory, so the descriptor resolves.
+    addExtraDependencies("javafx", "kotlin")
+
     imageZip.set(layout.buildDirectory.file("/distributions/ghost-ui-image-${javafx.platform.classifier}.zip"))
     options.set(listOf("--strip-debug", "--compress", "zip-6", "--no-header-files", "--no-man-pages"))
     launcher {

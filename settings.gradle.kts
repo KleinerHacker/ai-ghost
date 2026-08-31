@@ -34,5 +34,8 @@ project(":lib:layouting").name = "ai-ghost-layouting"
 include(":lib:layouting-model")
 project(":lib:layouting-model").name = "ai-ghost-layouting-model"
 
+include(":lib:layouting-fx")
+project(":lib:layouting-fx").name = "ai-ghost-layouting-fx"
+
 include(":app:ui")
 project(":app:ui").name = "ai-ghost-ui"

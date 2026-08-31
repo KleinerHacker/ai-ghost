@@ -158,7 +158,7 @@ numbering is kept stable rather than renumbered.
 | IP-24 | Optional Parts In The Model ✅             | Prolog, epilog and blurb always present and switchable                | -                    |
 | IP-03 | Layout Core ✅                             | Resolved styles, line breaking, alignment, placed lines               | IP-01, IP-02, IP-24  |
 | IP-04 | Pagination And Page Break Policy          | Page filling, breaks, odd/even margins, policy hook                   | IP-03                |
-| IP-25 | Renderer Library Module                   | New JavaFX library module, JPMS, TestFX, CI, architecture rule        | -                    |
+| IP-25 | Renderer Library Module ✅                 | New JavaFX library module, JPMS, TestFX, CI, architecture rule        | -                    |
 | IP-26 | Font And Measuring Migration              | Catalogue, resolution and metrics move into the library               | IP-01, IP-25         |
 | IP-05 | Incremental Layout And Caching            | Per paragraph invalidation so typing stays responsive                 | IP-04                |
 | IP-06 | Layout Regression Harness                 | Golden page structures and the surface comparison                     | IP-04, IP-07, IP-08  |
@@ -413,7 +413,7 @@ destroys nothing - it is still one undo entry.
 ```text
 IP-01✅┬─> IP-22
        └─┐
-IP-25 ─┬─┴─> IP-26 ─┬─> IP-07 ─┬─> IP-27 ──> IP-28
+IP-25✅┬─┴─> IP-26 ─┬─> IP-07 ─┬─> IP-27 ──> IP-28
                     ├─> IP-08 ─┘
                     └─> IP-13   (with IP-02, IP-12)
 IP-02✅┬───> IP-03✅ ──> IP-04 ─┬─> IP-05 ──────────────┐
@@ -437,14 +437,14 @@ IP-05, IP-07, IP-15 ──> IP-16
 IP-07, IP-08 ──> IP-06, IP-27
 ```
 
-Completed: **IP-01** ✅, **IP-02** ✅, **IP-24** ✅, **IP-03** ✅.
-Independent starting points: **IP-25**, **IP-09**, **IP-12**, **IP-17**.
+Completed: **IP-01** ✅, **IP-02** ✅, **IP-24** ✅, **IP-03** ✅, **IP-25** ✅.
+Independent starting points: **IP-26**, **IP-09**, **IP-12**, **IP-17**.
 
 ## 9. Risks and Open Questions
 
-* **JavaFX in a library module** contradicts `.claude/rules/architecture.md` as it stands. The rule
-  amendment and the dependency need the user's confirmation before IP-25 starts. The one open
-  decision blocking a plan.
+* **JavaFX in a library module** was confirmed and is settled. `.claude/rules/architecture.md` now
+  names the JavaFX component library under `lib` as an allowed place for the toolkit. No decision
+  blocks a plan any more.
 * **Naming of the renderer library.** `ai-ghost-layouting-fx` keeps the convention of the sibling
   modules but carries the application name into a library meant for reuse. Open.
 * **Publication of the renderer library** as a real artifact or only inside this repository. Open;

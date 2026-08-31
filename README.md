@@ -52,6 +52,7 @@ opened once the user accepts it. Both documents are written with Jackson.
 | AI support library (`lib/ai-ghost-ai`)            | Implemented |
 | Layout core: line breaking and alignment (`lib/ai-ghost-layouting`) | Implemented |
 | Layout blocks from book, design and meta data (`lib/ai-ghost-layouting-model`) | Implemented |
+| JavaFX renderer of the layout core (`lib/ai-ghost-layouting-fx`) | Planned     |
 | Prompt input with character limit and token estimate | Implemented |
 | ZIP distribution with start scripts and `libs`    | Implemented |
 | MVVM UI architecture (MVVM FX)                    | Implemented |
