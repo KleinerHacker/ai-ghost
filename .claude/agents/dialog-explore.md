@@ -2,7 +2,7 @@
 name: dialog-explore
 description: Explores a typical Java FX alert (dialog) to gather design and architecture information.
 
-model: opus
+model: sonnet
 effort: low
 
 skills:

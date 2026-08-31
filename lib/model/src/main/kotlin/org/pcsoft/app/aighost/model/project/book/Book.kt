@@ -38,6 +38,7 @@ private const val VERSION = 1
  * @property title Main title of the book.
  * @property titleAppendix Further title lines shown below the main title, empty by default.
  * @property prompts Prompts for the book, empty by default.
+ * @property copyright Copyright page of the book, included by default.
  * @property prolog Prolog printed before the first chapter, empty and not included by default.
  * @property chapters Chapters of the book in their user defined order, empty by default.
  * @property epilog Epilog printed after the last chapter, empty and not included by default.
@@ -52,6 +53,7 @@ data class Book(
     var titleAppendix: List<String> = listOf(),
     var prompts: AIPrompt = AIPrompt(),
 
+    var copyright: Copyright = Copyright(),
     var prolog: Prolog = Prolog(),
     var chapters: List<Chapter> = emptyList(),
     var epilog: Epilog = Epilog(),

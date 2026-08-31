@@ -59,20 +59,9 @@ class MetaProperty internal constructor() : ProjectPartProperty<Meta>() {
             authorProperty.set(value)
         }
 
-    /** Copyright notice printed in the manuscript, as a property of its own. */
-    val copyrightProperty: StringProperty = SimpleStringProperty()
-
-    /** Copyright notice printed in the manuscript. */
-    var copyright: String?
-        get() = copyrightProperty.get()
-        set(value) {
-            copyrightProperty.set(value)
-        }
-
     init {
         fields.string(nameProperty, "name")
         fields.string(authorProperty, "author")
-        fields.string(copyrightProperty, "copyright")
 
         // The field properties belong to another object after every exchange, so they are tied to the
         // one this property carries now.

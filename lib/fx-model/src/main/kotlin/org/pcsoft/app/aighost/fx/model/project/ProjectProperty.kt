@@ -60,7 +60,7 @@ class ProjectProperty(project: Project) : SimpleObjectProperty<Project>(project)
     // alignment is not written back into it.
     private var attaching = false
 
-    /** Meta data of the project - its name, its author and its copyright notice. */
+    /** Meta data of the project - its name and its author. */
     val metaProperty: MetaProperty = MetaProperty()
 
     /** Meta data of the project. */

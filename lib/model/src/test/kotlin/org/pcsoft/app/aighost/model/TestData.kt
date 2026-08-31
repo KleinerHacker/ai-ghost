@@ -19,16 +19,18 @@ import org.pcsoft.app.aighost.model.project.Project
 import org.pcsoft.app.aighost.model.project.book.Blurb
 import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.book.Chapter
+import org.pcsoft.app.aighost.model.project.book.Copyright
 import org.pcsoft.app.aighost.model.project.book.Epilog
 import org.pcsoft.app.aighost.model.project.book.Prolog
 import org.pcsoft.app.aighost.model.project.common.AIPrompt
-import org.pcsoft.app.aighost.model.project.design.AuthorDesign
-import org.pcsoft.app.aighost.model.project.design.ChapterDesign
-import org.pcsoft.app.aighost.model.project.design.CopyrightDesign
+import org.pcsoft.app.aighost.model.project.design.BlurbPageDesign
+import org.pcsoft.app.aighost.model.project.design.ChapterPageDesign
+import org.pcsoft.app.aighost.model.project.design.CopyrightPageDesign
 import org.pcsoft.app.aighost.model.project.design.Design
+import org.pcsoft.app.aighost.model.project.design.EpilogPageDesign
 import org.pcsoft.app.aighost.model.project.design.PageFormat
-import org.pcsoft.app.aighost.model.project.design.TextDesign
-import org.pcsoft.app.aighost.model.project.design.TitleDesign
+import org.pcsoft.app.aighost.model.project.design.PrologPageDesign
+import org.pcsoft.app.aighost.model.project.design.TitlePageDesign
 import org.pcsoft.app.aighost.model.project.meta.Meta
 
 /**
@@ -44,38 +46,74 @@ object TestData {
     fun font(name: String = "Serif", size: Int = 12): FontData =
         FontData(name = name, size = size, bold = false, italic = false)
 
-    /** A style around [font], aligned to the given [alignment]. */
-    fun style(name: String = "Serif", size: Int = 12, alignment: Alignment = Alignment.LEFT): StyleData =
-        StyleData(font = font(name, size), alignment = alignment)
+    /** A style around [font], aligned to the given [alignment] and set with the given [lineSpacing]. */
+    fun style(
+        name: String = "Serif",
+        size: Int = 12,
+        alignment: Alignment = Alignment.LEFT,
+        lineSpacing: Double = 1.2
+    ): StyleData =
+        StyleData(font = font(name, size), textLineSpacing = lineSpacing, alignment = alignment)
 
     /** A prompt pair whose two texts differ, so a swapped one shows up in a round trip. */
     fun prompt(content: String, style: String = "Warm and calm."): AIPrompt =
         AIPrompt(contentPrompt = content, stylePrompt = style)
 
-    /** Meta data with all three texts filled, so a dropped one shows up in a round trip. */
+    /** Meta data with name and author filled, so a dropped one shows up in a round trip. */
     fun meta(): Meta = Meta(
         name = "My Novel",
-        author = "Jane Doe",
-        copyright = "(c) 2026 Jane Doe"
+        author = "Jane Doe"
     )
 
-    /** The design of the author name, styled differently from every other design part. */
-    fun authorDesign(): AuthorDesign = AuthorDesign(style = style("Sans", 16, Alignment.CENTER))
-
-    /** The design of the copyright page, printed on a page of its own. */
-    fun copyrightDesign(): CopyrightDesign = CopyrightDesign(style = style("Serif", 8), show = true)
-
-    /** The design of the title page, styled differently from every other design part. */
-    fun titleDesign(): TitleDesign = TitleDesign(style = style("Sans", 28, Alignment.CENTER))
-
-    /** The design of a chapter, whose heading and appendix carry styles of their own. */
-    fun chapterDesign(): ChapterDesign = ChapterDesign(
-        titleStyle = style("Sans", 20),
-        titleAppendixStyle = style("Sans", 14)
+    /** The copyright page of the book, with an appendix line and switched on. */
+    fun copyright(): Copyright = Copyright(
+        copyright = "(c) 2026 Jane Doe",
+        copyrightAppendix = listOf("All rights reserved."),
+        included = true
     )
 
-    /** The design of the body text, styled differently from every other design part. */
-    fun textDesign(): TextDesign = TextDesign(style = style("Serif", 11, Alignment.BLOCK))
+    /** The design of the title page, whose three texts carry styles of their own. */
+    fun titlePageDesign(): TitlePageDesign = TitlePageDesign(
+        titleStyle = style("Sans", 28, Alignment.CENTER, 1.5),
+        titleAppendixStyle = style("Sans", 18, Alignment.CENTER, 1.15),
+        showAuthor = true,
+        authorStyle = style("Sans", 16, Alignment.CENTER, 1.1)
+    )
+
+    /** The design of the copyright page, whose three texts carry styles of their own. */
+    fun copyrightPageDesign(): CopyrightPageDesign = CopyrightPageDesign(
+        copyrightStyle = style("Serif", 8, Alignment.LEFT, 1.0),
+        copyrightAppendixStyle = style("Serif", 7, Alignment.LEFT, 1.05),
+        showAuthor = true,
+        authorStyle = style("Serif", 9, Alignment.LEFT, 1.1)
+    )
+
+    /** The design of the prolog page, whose heading, appendix and text carry styles of their own. */
+    fun prologPageDesign(): PrologPageDesign = PrologPageDesign(
+        titleStyle = style("Sans", 22, Alignment.LEFT, 1.25),
+        titleAppendixStyle = style("Sans", 13, Alignment.LEFT, 1.2),
+        textStyle = style("Serif", 11, Alignment.BLOCK, 1.35)
+    )
+
+    /** The design of the epilog page, whose heading, appendix and text carry styles of their own. */
+    fun epilogPageDesign(): EpilogPageDesign = EpilogPageDesign(
+        titleStyle = style("Sans", 21, Alignment.LEFT, 1.24),
+        titleAppendixStyle = style("Sans", 12, Alignment.LEFT, 1.18),
+        textStyle = style("Serif", 11, Alignment.BLOCK, 1.36)
+    )
+
+    /** The design of a chapter page, with its own styles and the heading pushed onto its own page. */
+    fun chapterPageDesign(): ChapterPageDesign = ChapterPageDesign(
+        titleStyle = style("Sans", 20, Alignment.LEFT, 1.3),
+        titleAppendixStyle = style("Sans", 14, Alignment.LEFT, 1.22),
+        textStyle = style("Serif", 11, Alignment.BLOCK, 1.4),
+        titleOnSeparatePage = true
+    )
+
+    /** The design of the blurb page, styled differently from every other design part. */
+    fun blurbPageDesign(): BlurbPageDesign = BlurbPageDesign(
+        textStyle = style("Serif", 10, Alignment.BLOCK, 1.45)
+    )
 
     /** A page format whose measures all differ, so a swapped margin is caught by a round trip test. */
     fun pageFormat(): PageFormat = PageFormat(
@@ -90,16 +128,12 @@ object TestData {
     /** A design whose parts all differ, so a swapped property is caught by a round trip test. */
     fun design(): Design = Design(
         pageFormat = pageFormat(),
-        authorLineSpacing = 1.1,
-        copyrightLineSpacing = 1.0,
-        titleLineSpacing = 1.5,
-        chapterLineSpacing = 1.3,
-        textLineSpacing = 1.4,
-        authorDesign = authorDesign(),
-        copyrightDesign = copyrightDesign(),
-        titleDesign = titleDesign(),
-        chapterDesign = chapterDesign(),
-        textDesign = textDesign(),
+        titlePage = titlePageDesign(),
+        copyrightPage = copyrightPageDesign(),
+        prologPage = prologPageDesign(),
+        blurbPage = blurbPageDesign(),
+        chapterPage = chapterPageDesign(),
+        epilogPage = epilogPageDesign(),
         startWithEmptyPage = true,
         endWithEmptyPage = false
     )
@@ -141,11 +175,12 @@ object TestData {
         included = true
     )
 
-    /** A book with prolog, epilog, blurb and two chapters, the second one still without text. */
+    /** A book with copyright, prolog, epilog, blurb and two chapters, the second one still without text. */
     fun book(): Book = Book(
         title = "My Novel",
         titleAppendix = listOf("A Story in Two Parts"),
         prompts = bookPrompts(),
+        copyright = copyright(),
         prolog = prolog(),
         chapters = listOf(
             Chapter(

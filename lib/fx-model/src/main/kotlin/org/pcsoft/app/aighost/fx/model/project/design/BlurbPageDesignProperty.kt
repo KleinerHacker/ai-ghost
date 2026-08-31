@@ -16,11 +16,13 @@ import javafx.beans.property.SimpleObjectProperty
 import org.pcsoft.app.aighost.fx.model.common.StyleDataProperty
 import org.pcsoft.app.aighost.fx.model.internal.BeanFields
 import org.pcsoft.app.aighost.model.common.StyleData
-import org.pcsoft.app.aighost.model.project.design.AuthorDesign
+import org.pcsoft.app.aighost.model.project.design.BlurbPageDesign
 
 /**
- * Property wrapping the design settings of the author name of a project and offering the style it carries - and every
- * field of that style - as a property of its own.
+ * Property wrapping the design settings of the blurb page and offering the style it carries - and
+ * every field of that style - as a property of its own.
+ *
+ * The blurb carries no heading of its own, so a single text style is all it is set with.
  *
  * The wrapped object may be absent as long as no design sits above this property, so the style
  * property answers with a neutral value and drops what is written to it until then.
@@ -28,22 +30,22 @@ import org.pcsoft.app.aighost.model.project.design.AuthorDesign
  * This property model is handed out with its own type, so a caller reaches the style directly; it is
  * built by the design carrying it alone and therefore carries an internal constructor.
  */
-class AuthorDesignProperty internal constructor() : SimpleObjectProperty<AuthorDesign?>() {
+class BlurbPageDesignProperty internal constructor() : SimpleObjectProperty<BlurbPageDesign?>() {
 
-    private val fields = BeanFields<AuthorDesign> { fireValueChangedEvent() }
+    private val fields = BeanFields<BlurbPageDesign> { fireValueChangedEvent() }
 
-    /** Appearance of the author name, as a property of its own. */
-    val styleProperty: StyleDataProperty = StyleDataProperty()
+    /** Appearance of the blurb text, as a property of its own. */
+    val textStyleProperty: StyleDataProperty = StyleDataProperty()
 
-    /** Appearance of the author name. */
-    var style: StyleData?
-        get() = styleProperty.get()
+    /** Appearance of the blurb text. */
+    var textStyle: StyleData?
+        get() = textStyleProperty.get()
         set(value) {
-            styleProperty.set(value)
+            textStyleProperty.set(value)
         }
 
     init {
-        fields.model(styleProperty, "style", styleProperty::refresh)
+        fields.model(textStyleProperty, "textStyle", textStyleProperty::refresh)
 
         // The field properties belong to another object after every exchange, so they are tied to the
         // one this property carries now.
@@ -52,7 +54,7 @@ class AuthorDesignProperty internal constructor() : SimpleObjectProperty<AuthorD
     }
 
     /**
-     * Reads the style of the wrapped object again - and every field of that style - and hands what
+     * Reads the style of the wrapped page design again - and every field of that style - and hands what
      * changed to the field properties, for a caller that wrote on the object past this model.
      */
     fun refresh() = fields.refresh()

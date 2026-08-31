@@ -23,6 +23,7 @@ import org.pcsoft.app.aighost.fx.model.project.common.AIPromptProperty
 import org.pcsoft.app.aighost.model.project.book.Blurb
 import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.book.Chapter
+import org.pcsoft.app.aighost.model.project.book.Copyright
 import org.pcsoft.app.aighost.model.project.book.Epilog
 import org.pcsoft.app.aighost.model.project.book.Prolog
 import org.pcsoft.app.aighost.model.project.common.AIPrompt
@@ -31,16 +32,16 @@ import org.pcsoft.app.aighost.model.project.common.AIPrompt
  * Property wrapping the manuscript of a project and offering every field of it - and every field of
  * the objects nested in it - as a property of its own.
  *
- * Prolog, epilog and blurb are always part of the manuscript, each of them carrying a switch that
- * tells whether it belongs to the book. The properties standing for them carry no object only as long
- * as no manuscript sits behind this property, and their field properties answer with neutral values
- * until then. The chapters are offered as a list of the plain objects, because the user arranges them
- * as a whole.
+ * Copyright page, prolog, epilog and blurb are always part of the manuscript, each of them carrying a
+ * switch that tells whether it belongs to the book. The properties standing for them carry no object
+ * only as long as no manuscript sits behind this property, and their field properties answer with
+ * neutral values until then. The chapters are offered as a list of the plain objects, because the user
+ * arranges them as a whole.
  *
  * Every part nested in the manuscript is handed out with its own type, so a user interface reaches the
- * fields of the prompts, of the prolog, of the epilog and of the blurb through the property standing
- * for that part. The book itself is built by the project alone and therefore carries an internal
- * constructor.
+ * fields of the prompts, of the copyright page, of the prolog, of the epilog and of the blurb through
+ * the property standing for that part. The book itself is built by the project alone and therefore
+ * carries an internal constructor.
  */
 class BookProperty internal constructor() : ProjectPartProperty<Book>() {
 
@@ -75,6 +76,16 @@ class BookProperty internal constructor() : ProjectPartProperty<Book>() {
         get() = promptsProperty.get()
         set(value) {
             promptsProperty.set(value)
+        }
+
+    /** Copyright page of the book, as a property of its own. */
+    val copyrightProperty: CopyrightProperty = CopyrightProperty()
+
+    /** Copyright page of the book. */
+    var copyright: Copyright?
+        get() = copyrightProperty.get()
+        set(value) {
+            copyrightProperty.set(value)
         }
 
     /** Prolog printed before the first chapter, as a property of its own. */
@@ -122,6 +133,7 @@ class BookProperty internal constructor() : ProjectPartProperty<Book>() {
         fields.string(titleProperty, "title")
         fields.list(titleAppendixProperty, "titleAppendix")
         fields.model(promptsProperty, "prompts", promptsProperty::refresh)
+        fields.model(copyrightProperty, "copyright", copyrightProperty::refresh)
         fields.model(prologProperty, "prolog", prologProperty::refresh)
         fields.list(chaptersProperty, "chapters")
         fields.model(epilogProperty, "epilog", epilogProperty::refresh)

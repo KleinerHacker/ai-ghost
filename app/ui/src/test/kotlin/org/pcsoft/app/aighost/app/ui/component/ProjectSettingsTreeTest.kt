@@ -53,7 +53,7 @@ class ProjectSettingsTreeTest : ApplicationTest() {
     /**
      * Use case: the dialog needs a flat navigation, so the tree hides its root and shows "General"
      * and "Design" as the top level, with the six part sections below "Design" in the fixed order
-     * title page, copyright page, epilog, chapter, prolog, blurb.
+     * title page, copyright page, prolog, chapter, epilog, blurb.
      */
     @Test
     fun carriesEverySectionWithoutARoot() {
@@ -67,9 +67,9 @@ class ProjectSettingsTreeTest : ApplicationTest() {
             listOf(
                 ProjectSettingsSection.DesignTitle,
                 ProjectSettingsSection.DesignCopyright,
-                ProjectSettingsSection.DesignEpilog,
-                ProjectSettingsSection.DesignChapter,
                 ProjectSettingsSection.DesignProlog,
+                ProjectSettingsSection.DesignChapter,
+                ProjectSettingsSection.DesignEpilog,
                 ProjectSettingsSection.DesignBlurb
             ),
             tree.root.children[1].children.map { it.value }

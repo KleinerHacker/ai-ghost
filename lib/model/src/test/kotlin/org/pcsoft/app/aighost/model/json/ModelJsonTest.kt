@@ -29,6 +29,7 @@ import org.pcsoft.app.aighost.model.pref.ThemeMode
 import org.pcsoft.app.aighost.model.project.book.Blurb
 import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.book.Chapter
+import org.pcsoft.app.aighost.model.project.book.Copyright
 import org.pcsoft.app.aighost.model.project.book.Epilog
 import org.pcsoft.app.aighost.model.project.book.Prolog
 import org.pcsoft.app.aighost.model.project.common.AIPrompt
@@ -88,14 +89,20 @@ class ModelJsonTest {
     fun parsesHandWrittenDesignDocument() {
         val json = """
             {
-              "authorDesign" : { "style" : { "font" : { "name" : "Sans", "size" : 16 }, "alignment" : "CENTER" } },
-              "copyrightDesign" : { "style" : { "font" : { "name" : "Serif", "size" : 8 } }, "show" : true },
-              "titleDesign" : { "style" : { "font" : { "name" : "Sans", "size" : 28, "bold" : true } } },
-              "chapterDesign" : {
-                "titleStyle" : { "font" : { "name" : "Sans", "size" : 20, "bold" : true } },
-                "titleAppendixStyle" : { "font" : { "name" : "Sans", "size" : 14, "italic" : true } }
+              "titlePage" : {
+                "titleStyle" : { "font" : { "name" : "Sans", "size" : 28, "bold" : true } },
+                "authorStyle" : { "font" : { "name" : "Sans", "size" : 16 }, "alignment" : "CENTER" },
+                "showAuthor" : false
               },
-              "textDesign" : { "style" : { "font" : { "name" : "Serif", "size" : 11 }, "alignment" : "BLOCK" } },
+              "copyrightPage" : {
+                "copyrightStyle" : { "font" : { "name" : "Serif", "size" : 8 }, "textLineSpacing" : 1.0 }
+              },
+              "chapterPage" : {
+                "titleStyle" : { "font" : { "name" : "Sans", "size" : 20, "bold" : true } },
+                "titleAppendixStyle" : { "font" : { "name" : "Sans", "size" : 14, "italic" : true } },
+                "titleOnSeparatePage" : true
+              },
+              "blurbPage" : { "textStyle" : { "font" : { "name" : "Serif", "size" : 11 }, "alignment" : "BLOCK" } },
               "startWithEmptyPage" : false,
               "endWithEmptyPage" : true
             }
@@ -103,12 +110,14 @@ class ModelJsonTest {
 
         val design: Design = mapper.readValue(json)
 
-        assertEquals(16, design.authorDesign.style.font.size)
-        assertEquals(Alignment.CENTER, design.authorDesign.style.alignment)
-        assertEquals(true, design.copyrightDesign.show)
-        assertEquals(true, design.titleDesign.style.font.bold)
-        assertEquals(true, design.chapterDesign.titleAppendixStyle.font.italic)
-        assertEquals(Alignment.BLOCK, design.textDesign.style.alignment)
+        assertEquals(28, design.titlePage.titleStyle.font.size)
+        assertEquals(Alignment.CENTER, design.titlePage.authorStyle.alignment)
+        assertEquals(false, design.titlePage.showAuthor)
+        assertEquals(1.0, design.copyrightPage.copyrightStyle.textLineSpacing)
+        assertEquals(true, design.chapterPage.titleStyle.font.bold)
+        assertEquals(true, design.chapterPage.titleAppendixStyle.font.italic)
+        assertEquals(true, design.chapterPage.titleOnSeparatePage)
+        assertEquals(Alignment.BLOCK, design.blurbPage.textStyle.alignment)
         assertEquals(false, design.startWithEmptyPage)
         assertEquals(true, design.endWithEmptyPage)
     }
@@ -129,6 +138,7 @@ class ModelJsonTest {
 
         val book: Book = mapper.readValue(json)
 
+        assertEquals(Copyright(), book.copyright)
         assertEquals(Prolog(), book.prolog)
         assertEquals(Epilog(), book.epilog)
         assertEquals(Blurb(), book.blurb)

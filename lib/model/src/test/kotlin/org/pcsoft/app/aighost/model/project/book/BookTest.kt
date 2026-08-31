@@ -17,6 +17,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.model.TestData
 import org.pcsoft.app.aighost.model.project.common.AIPrompt
@@ -66,6 +67,8 @@ class BookTest {
     fun defaultsToEmptyPrologEpilogAndBlurbThatAreNotIncluded() {
         val book = Book(title = "My Novel")
 
+        assertEquals(Copyright(), book.copyright)
+        assertTrue(book.copyright.included)
         assertEquals(Prolog(), book.prolog)
         assertEquals(Epilog(), book.epilog)
         assertEquals(Blurb(), book.blurb)
@@ -84,6 +87,7 @@ class BookTest {
             title = "My Novel",
             titleAppendix = listOf("A Story"),
             prompts = AIPrompt("Tell a story in two parts.", "Warm and calm."),
+            copyright = Copyright("(c) 2026", included = true),
             chapters = listOf(Chapter("prologue", "Prologue"))
         )
 
@@ -92,6 +96,7 @@ class BookTest {
         assertEquals(
             """{"version":1,"title":"My Novel","titleAppendix":["A Story"],""" +
                 """"prompts":{"contentPrompt":"Tell a story in two parts.","stylePrompt":"Warm and calm."},""" +
+                """"copyright":{"copyright":"(c) 2026","copyrightAppendix":[],"included":true},""" +
                 """"prolog":{"title":"","titleAppendix":[],""" +
                 """"prompts":{"contentPrompt":"","stylePrompt":""},"paragraph":[],"included":false},""" +
                 """"chapters":[{"name":"prologue","title":"Prologue","titleAppendix":[],""" +

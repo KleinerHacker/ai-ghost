@@ -22,7 +22,7 @@ import org.pcsoft.app.aighost.model.project.design.Design
  * Builds the blocks of the blurb.
  *
  * The blurb carries no heading of its own, so it is its paragraphs and nothing else. They are set in
- * the text design, the same way the body of a chapter is.
+ * the blurb page design, the same way the body of a chapter is.
  */
 object BlurbBuilder {
 
@@ -30,13 +30,12 @@ object BlurbBuilder {
      * Builds the blurb.
      *
      * @param blurb Blurb the paragraphs are taken from.
-     * @param design Design the style and the line spacing are taken from.
+     * @param design Design the blurb page style is taken from.
      * @return The blocks in the order they are set.
      */
     fun build(blurb: Blurb, design: Design): List<TextBlock> {
         val style = StyleTranslation.toTextStyle(
-            style = design.textDesign.style,
-            lineSpacing = design.textLineSpacing,
+            style = design.blurbPage.textStyle,
             spaceAfter = BlockSpacing.AFTER_PARAGRAPH
         )
 

@@ -93,11 +93,11 @@ object FontIdentityCheck {
 
     /** Every style of the design that carries a font of its own, named by its element. */
     private fun stylesOf(design: Design): List<Pair<String, StyleData>> = listOf(
-        ELEMENT_TITLE to design.titleDesign.style,
-        ELEMENT_AUTHOR to design.authorDesign.style,
-        ELEMENT_COPYRIGHT to design.copyrightDesign.style,
-        ELEMENT_CHAPTER_TITLE to design.chapterDesign.titleStyle,
-        ELEMENT_CHAPTER_TITLE_APPENDIX to design.chapterDesign.titleAppendixStyle,
-        ELEMENT_TEXT to design.textDesign.style
+        ELEMENT_TITLE to design.titlePage.titleStyle,
+        ELEMENT_AUTHOR to design.titlePage.authorStyle,
+        ELEMENT_COPYRIGHT to design.copyrightPage.copyrightStyle,
+        ELEMENT_CHAPTER_TITLE to design.chapterPage.titleStyle,
+        ELEMENT_CHAPTER_TITLE_APPENDIX to design.chapterPage.titleAppendixStyle,
+        ELEMENT_TEXT to design.chapterPage.textStyle
     )
 }

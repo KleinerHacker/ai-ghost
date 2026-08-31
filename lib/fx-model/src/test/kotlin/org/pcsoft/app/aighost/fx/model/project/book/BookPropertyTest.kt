@@ -27,6 +27,7 @@ import org.pcsoft.app.aighost.model.project.book.Blurb
 import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.book.BookPart
 import org.pcsoft.app.aighost.model.project.book.Chapter
+import org.pcsoft.app.aighost.model.project.book.Copyright
 import org.pcsoft.app.aighost.model.project.book.Epilog
 import org.pcsoft.app.aighost.model.project.book.Prolog
 import org.pcsoft.app.aighost.model.project.common.AIPrompt
@@ -37,9 +38,9 @@ import org.pcsoft.app.aighost.model.project.common.AIPrompt
  * The property wraps the manuscript of a project and offers every field of that object - and every
  * field of the objects nested in it - as a property of its own. Every test checks the object tree the
  * way the user interface uses it: a binding hangs on each property of the tree - the book itself, the
- * prolog, the epilog and the blurb below it and every single field - and the tests assert that a change
- * reaches every binding that has to know about it, upwards to the parent the property reports to as
- * well as downwards into the fields of an exchanged object.
+ * copyright page, the prolog, the epilog and the blurb below it and every single field - and the tests
+ * assert that a change reaches every binding that has to know about it, upwards to the parent the
+ * property reports to as well as downwards into the fields of an exchanged object.
  */
 class BookPropertyTest {
 
@@ -67,6 +68,22 @@ class BookPropertyTest {
     /** Binding on the prompts of the whole manuscript. */
     private lateinit var promptsView: StringProperty
     private var promptsViewChanges = 0
+
+    /** Binding on the copyright page, standing for a view bound to that nested object. */
+    private lateinit var copyrightView: StringProperty
+    private var copyrightViewChanges = 0
+
+    /** Binding on the notice nested in the copyright page. */
+    private lateinit var copyrightNoticeView: StringProperty
+    private var copyrightNoticeViewChanges = 0
+
+    /** Binding on the further lines nested in the copyright page. */
+    private lateinit var copyrightAppendixView: StringProperty
+    private var copyrightAppendixViewChanges = 0
+
+    /** Binding on the switch nested in the copyright page. */
+    private lateinit var copyrightIncludedView: StringProperty
+    private var copyrightIncludedViewChanges = 0
 
     /** Binding on the prolog, standing for a view bound to that nested object. */
     private lateinit var prologView: StringProperty
@@ -158,6 +175,38 @@ class BookPropertyTest {
         )
         promptsBinding.addListener { _, _, _ -> promptsViewChanges++ }
         promptsView.bind(promptsBinding)
+
+        copyrightView = SimpleStringProperty()
+        val copyrightBinding = Bindings.createStringBinding(
+            { copyrightState(property.copyrightProperty.value) },
+            property.copyrightProperty
+        )
+        copyrightBinding.addListener { _, _, _ -> copyrightViewChanges++ }
+        copyrightView.bind(copyrightBinding)
+
+        copyrightNoticeView = SimpleStringProperty()
+        val copyrightNoticeBinding = Bindings.createStringBinding(
+            { property.copyrightProperty.copyrightProperty.get() ?: MISSING },
+            property.copyrightProperty.copyrightProperty
+        )
+        copyrightNoticeBinding.addListener { _, _, _ -> copyrightNoticeViewChanges++ }
+        copyrightNoticeView.bind(copyrightNoticeBinding)
+
+        copyrightAppendixView = SimpleStringProperty()
+        val copyrightAppendixBinding = Bindings.createStringBinding(
+            { property.copyrightProperty.copyrightAppendixProperty.joinToString(";") },
+            property.copyrightProperty.copyrightAppendixProperty
+        )
+        copyrightAppendixBinding.addListener { _, _, _ -> copyrightAppendixViewChanges++ }
+        copyrightAppendixView.bind(copyrightAppendixBinding)
+
+        copyrightIncludedView = SimpleStringProperty()
+        val copyrightIncludedBinding = Bindings.createStringBinding(
+            { property.copyrightProperty.includedProperty.get().toString() },
+            property.copyrightProperty.includedProperty
+        )
+        copyrightIncludedBinding.addListener { _, _, _ -> copyrightIncludedViewChanges++ }
+        copyrightIncludedView.bind(copyrightIncludedBinding)
 
         prologView = SimpleStringProperty()
         val prologBinding = Bindings.createStringBinding(
@@ -264,6 +313,10 @@ class BookPropertyTest {
         titleViewChanges = 0
         titleAppendixViewChanges = 0
         promptsViewChanges = 0
+        copyrightViewChanges = 0
+        copyrightNoticeViewChanges = 0
+        copyrightAppendixViewChanges = 0
+        copyrightIncludedViewChanges = 0
         prologViewChanges = 0
         prologTitleViewChanges = 0
         prologParagraphViewChanges = 0
@@ -283,6 +336,11 @@ class BookPropertyTest {
         title = "The long journey",
         titleAppendix = listOf("A novel"),
         prompts = INITIAL_PROMPTS,
+        copyright = Copyright(
+            copyright = "Copyright 2026 Jane Doe",
+            copyrightAppendix = listOf("All rights reserved."),
+            included = true
+        ),
         prolog = Prolog(
             title = "Before the storm",
             titleAppendix = listOf("A short note"),
@@ -311,7 +369,7 @@ class BookPropertyTest {
     /** Text form of the whole book, used as the value of the binding on the root. */
     private fun bookState(book: Book?): String =
         "${book?.title ?: MISSING}|${book?.titleAppendix.orEmpty().joinToString(";")}|" +
-                "${promptText(book?.prompts)}|" +
+                "${promptText(book?.prompts)}|${copyrightState(book?.copyright)}|" +
                 "${prologState(book?.prolog)}|${book?.chapters.orEmpty().joinToString(";") { it.name }}|" +
                 "${epilogState(book?.epilog)}|${blurbState(book?.blurb)}"
 
@@ -321,6 +379,12 @@ class BookPropertyTest {
                 "${promptText(part?.prompts)}|" +
                 "${part?.paragraph.orEmpty().joinToString(";")}|" +
                 "$included"
+
+    /** Text form of the copyright page, used as the value of the binding on that object. */
+    private fun copyrightState(copyright: Copyright?): String =
+        "${copyright?.copyright ?: MISSING}|" +
+                "${copyright?.copyrightAppendix.orEmpty().joinToString(";")}|" +
+                "${copyright?.included ?: false}"
 
     /** Text form of the prolog, used as the value of the binding on that object. */
     private fun prologState(prolog: Prolog?): String = partState(prolog, prolog?.included ?: false)
@@ -340,6 +404,7 @@ class BookPropertyTest {
     private fun assertTreeShows(
         title: String?,
         titleAppendix: List<String>,
+        copyright: Copyright?,
         prolog: Prolog?,
         chapters: List<Chapter>,
         epilog: Epilog?,
@@ -351,6 +416,7 @@ class BookPropertyTest {
 
         assertEquals(
             "${title ?: MISSING}|$titleAppendixText|${promptText(prompts)}|" +
+                    "${copyrightState(copyright)}|" +
                     "${prologState(prolog)}|$chaptersText|" +
                     "${epilogState(epilog)}|${blurbState(blurb)}",
             rootView.get()
@@ -363,6 +429,19 @@ class BookPropertyTest {
         }
         assertEquals(promptText(prompts), promptsView.get()) {
             "the binding on the prompts of the book delivers outdated prompts"
+        }
+        assertEquals(copyrightState(copyright), copyrightView.get()) {
+            "the binding on the copyright page delivers an outdated state"
+        }
+        assertEquals(copyright?.copyright ?: MISSING, copyrightNoticeView.get()) {
+            "the binding on the copyright notice delivers an outdated value"
+        }
+        assertEquals(
+            copyright?.copyrightAppendix.orEmpty().joinToString(";"),
+            copyrightAppendixView.get()
+        ) { "the binding on the further copyright lines delivers outdated lines" }
+        assertEquals((copyright?.included ?: false).toString(), copyrightIncludedView.get()) {
+            "the binding on the switch of the copyright page delivers an outdated value"
         }
         assertEquals(promptText(prolog?.prompts), prologPromptsView.get()) {
             "the binding on the prompts of the prolog delivers outdated prompts"
@@ -408,6 +487,7 @@ class BookPropertyTest {
         assertTreeShows(
             book.title,
             book.titleAppendix,
+            book.copyright,
             book.prolog,
             book.chapters,
             book.epilog,
@@ -487,6 +567,114 @@ class BookPropertyTest {
         assertEquals(listOf("In three parts"), book().titleAppendix)
         assertEquals("In three parts", titleAppendixView.get())
         assertTrue(titleAppendixViewChanges > 0) { "the binding on the further title lines was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+    }
+
+    /**
+     * Use case: the user types another copyright notice, so the text lands in the nested model object
+     * and the bindings on that field, on the copyright page and on the book show it.
+     */
+    @Test
+    fun writesNestedCopyrightNoticeToModelAndNotifiesTree() {
+        property.copyrightProperty.copyright = "Copyright 2027 Jane Doe"
+
+        assertEquals("Copyright 2027 Jane Doe", book().copyright.copyright)
+        assertEquals("Copyright 2027 Jane Doe", copyrightNoticeView.get())
+        assertTrue(copyrightNoticeViewChanges > 0) { "the binding on the copyright notice was not re-evaluated" }
+        assertTrue(copyrightViewChanges > 0) { "the binding on the copyright page was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+    }
+
+    /**
+     * Use case: the copyright notice is bound to the text field of the editor, so every text that field
+     * produces reaches the nested model object and every binding above it shows it.
+     */
+    @Test
+    fun writesBoundNestedCopyrightNoticeToModelAndNotifiesTree() {
+        val source = SimpleStringProperty("A first draft.")
+        property.copyrightProperty.copyrightProperty.bind(source)
+
+        source.set("Copyright 2027 Jane Doe")
+
+        assertEquals("Copyright 2027 Jane Doe", book().copyright.copyright)
+        assertEquals("Copyright 2027 Jane Doe", copyrightNoticeView.get())
+        assertTrue(copyrightNoticeViewChanges > 0) { "the binding on the copyright notice was not re-evaluated" }
+        assertTrue(copyrightViewChanges > 0) { "the binding on the copyright page was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+
+        property.copyrightProperty.copyrightProperty.unbind()
+    }
+
+    /**
+     * Use case: the user adds a further line below the copyright notice, so the content change alone
+     * reaches the nested model object and every binding above it shows it.
+     */
+    @Test
+    fun writesNestedCopyrightAppendixToModelAndNotifiesTree() {
+        property.copyrightProperty.copyrightAppendixProperty.add("Printed in Germany.")
+
+        assertEquals(
+            listOf("All rights reserved.", "Printed in Germany."),
+            book().copyright.copyrightAppendix
+        )
+        assertEquals("All rights reserved.;Printed in Germany.", copyrightAppendixView.get())
+        assertTrue(copyrightAppendixViewChanges > 0) {
+            "the binding on the further copyright lines was not re-evaluated"
+        }
+        assertTrue(copyrightViewChanges > 0) { "the binding on the copyright page was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+    }
+
+    /**
+     * Use case: the user takes the copyright page out of the book, so the switch lands in the nested
+     * model object and the bindings on that field, on the copyright page and on the book show it.
+     */
+    @Test
+    fun writesNestedCopyrightIncludedToModelAndNotifiesTree() {
+        property.copyrightProperty.included = false
+
+        assertFalse(book().copyright.included)
+        assertEquals("false", copyrightIncludedView.get())
+        assertTrue(copyrightIncludedViewChanges > 0) {
+            "the binding on the switch of the copyright page was not re-evaluated"
+        }
+        assertTrue(copyrightViewChanges > 0) { "the binding on the copyright page was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+    }
+
+    /**
+     * Use case: the whole copyright page is replaced, so the field properties below it belong to
+     * another object afterwards and every binding of the object tree shows the values of that object
+     * instead of the previous ones.
+     */
+    @Test
+    fun writesCopyrightToModelAndNotifiesTree() {
+        val copyright = Copyright(
+            copyright = "Copyright 2030 John Doe",
+            copyrightAppendix = listOf("Printed in Germany."),
+            included = false
+        )
+
+        property.copyright = copyright
+
+        assertEquals(copyright, book().copyright)
+        assertEquals(copyrightState(copyright), copyrightView.get())
+        assertEquals("Copyright 2030 John Doe", copyrightNoticeView.get())
+        assertEquals("Printed in Germany.", copyrightAppendixView.get())
+        assertEquals("false", copyrightIncludedView.get())
+        assertTrue(copyrightNoticeViewChanges > 0) { "the binding on the copyright notice was not re-evaluated" }
+        assertTrue(copyrightAppendixViewChanges > 0) {
+            "the binding on the further copyright lines was not re-evaluated"
+        }
+        assertTrue(copyrightIncludedViewChanges > 0) {
+            "the binding on the switch of the copyright page was not re-evaluated"
+        }
+        assertTrue(copyrightViewChanges > 0) { "the binding on the copyright page was not re-evaluated" }
         assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
         assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
     }
@@ -837,8 +1025,8 @@ class BookPropertyTest {
     /**
      * Use case: a field of the book or of an object nested in it is changed by application code past
      * the property, so the property is told to read the book again and every field property delivers
-     * the current value afterwards - down into prolog, epilog and blurb, which nothing else would
-     * reach because those objects were not exchanged.
+     * the current value afterwards - down into copyright page, prolog, epilog and blurb, which nothing
+     * else would reach because those objects were not exchanged.
      */
     @Test
     fun readsFieldsChangedOnModel() {
@@ -846,6 +1034,9 @@ class BookPropertyTest {
         book.title = "The way back"
         book.titleAppendix = listOf("In three parts")
         book.prompts = AIPrompt("Tell a story of a way back.", "Dry and short.")
+        book.copyright.copyright = "Copyright 2027 Jane Doe"
+        book.copyright.copyrightAppendix = listOf("Printed in Germany.")
+        book.copyright.included = false
         book.prolog.title = "After the storm"
         book.prolog.included = false
         book.chapters = listOf(Chapter(name = "Chapter two", title = "The departure"))
@@ -859,6 +1050,9 @@ class BookPropertyTest {
         assertEquals("The way back", property.title)
         assertEquals(listOf("In three parts"), property.titleAppendix)
         assertEquals(AIPrompt("Tell a story of a way back.", "Dry and short."), property.prompts)
+        assertEquals("Copyright 2027 Jane Doe", property.copyrightProperty.copyright)
+        assertEquals(listOf("Printed in Germany."), property.copyrightProperty.copyrightAppendix)
+        assertFalse(property.copyrightProperty.included)
         assertEquals("After the storm", property.prologProperty.title)
         assertFalse(property.prologProperty.included)
         assertEquals(listOf("Chapter two"), property.chapters.map { it.name })
@@ -875,6 +1069,11 @@ class BookPropertyTest {
      */
     @Test
     fun writesReplacedBookToModelAndNotifiesWholeTree() {
+        val copyright = Copyright(
+            copyright = "Copyright 2030 John Doe",
+            copyrightAppendix = listOf("Printed in Germany."),
+            included = false
+        )
         val prolog = Prolog(title = "After the storm", paragraph = listOf("Then the wind came."))
         val epilog = Epilog(
             title = "The years after",
@@ -887,6 +1086,7 @@ class BookPropertyTest {
         property.value = Book(
             title = "The way back",
             titleAppendix = listOf("In three parts"),
+            copyright = copyright,
             prolog = prolog,
             chapters = chapters,
             epilog = epilog,
@@ -896,6 +1096,7 @@ class BookPropertyTest {
         assertTreeShows(
             "The way back",
             listOf("In three parts"),
+            copyright,
             prolog,
             chapters,
             epilog,
@@ -904,6 +1105,14 @@ class BookPropertyTest {
         )
         assertTrue(titleViewChanges > 0) { "the binding on the main title was not re-evaluated" }
         assertTrue(promptsViewChanges > 0) { "the binding on the prompts of the book was not re-evaluated" }
+        assertTrue(copyrightNoticeViewChanges > 0) { "the binding on the copyright notice was not re-evaluated" }
+        assertTrue(copyrightAppendixViewChanges > 0) {
+            "the binding on the further copyright lines was not re-evaluated"
+        }
+        assertTrue(copyrightIncludedViewChanges > 0) {
+            "the binding on the switch of the copyright page was not re-evaluated"
+        }
+        assertTrue(copyrightViewChanges > 0) { "the binding on the copyright page was not re-evaluated" }
         assertTrue(prologPromptsViewChanges > 0) {
             "the binding on the prompts of the prolog was not re-evaluated"
         }
@@ -942,6 +1151,18 @@ class BookPropertyTest {
         }
         assertEquals(0, promptsViewChanges) {
             "the prompts of the book were reported as changed although they did not change"
+        }
+        assertEquals(0, copyrightNoticeViewChanges) {
+            "the copyright notice was reported as changed although it did not change"
+        }
+        assertEquals(0, copyrightAppendixViewChanges) {
+            "the further copyright lines were reported as changed although they did not change"
+        }
+        assertEquals(0, copyrightIncludedViewChanges) {
+            "the switch of the copyright page was reported as changed although it did not change"
+        }
+        assertEquals(0, copyrightViewChanges) {
+            "the copyright page was reported as changed although it did not change"
         }
         assertEquals(0, prologPromptsViewChanges) {
             "the prompts of the prolog were reported as changed although they did not change"
@@ -985,6 +1206,10 @@ class BookPropertyTest {
         assertNull(property.title)
         assertEquals(emptyList<String>(), property.titleAppendix)
         assertNull(property.prompts)
+        assertNull(property.copyright)
+        assertNull(property.copyrightProperty.copyright)
+        assertEquals(emptyList<String>(), property.copyrightProperty.copyrightAppendix)
+        assertFalse(property.copyrightProperty.included)
         assertNull(property.prolog)
         assertNull(property.prologProperty.title)
         assertFalse(property.prologProperty.included)
@@ -995,7 +1220,7 @@ class BookPropertyTest {
         assertNull(property.blurb)
         assertEquals(emptyList<String>(), property.blurbProperty.paragraph)
         assertFalse(property.blurbProperty.included)
-        assertTreeShows(null, emptyList(), null, emptyList(), null, null, null)
+        assertTreeShows(null, emptyList(), null, null, emptyList(), null, null, null)
     }
 
     /**
@@ -1009,6 +1234,8 @@ class BookPropertyTest {
         property.title = "The way back"
         property.titleAppendix = listOf("In three parts")
         property.prompts = AIPrompt("Tell a story of a way back.", "Dry and short.")
+        property.copyright = Copyright(copyright = "Copyright 2030 John Doe")
+        property.copyrightProperty.included = true
         property.prolog = Prolog(title = "After the storm")
         property.prologProperty.included = true
         property.chapters = listOf(Chapter(name = "Chapter two", title = "The departure"))

@@ -42,9 +42,9 @@ class ProjectSettingsTreeView : FxmlView<ProjectSettingsTreeViewModel>, Initiali
     private val designItem = TreeItem<ProjectSettingsSection>(ProjectSettingsSection.Design)
     private val designTitleItem = TreeItem<ProjectSettingsSection>(ProjectSettingsSection.DesignTitle)
     private val designCopyrightItem = TreeItem<ProjectSettingsSection>(ProjectSettingsSection.DesignCopyright)
-    private val designEpilogItem = TreeItem<ProjectSettingsSection>(ProjectSettingsSection.DesignEpilog)
-    private val designChapterItem = TreeItem<ProjectSettingsSection>(ProjectSettingsSection.DesignChapter)
     private val designPrologItem = TreeItem<ProjectSettingsSection>(ProjectSettingsSection.DesignProlog)
+    private val designChapterItem = TreeItem<ProjectSettingsSection>(ProjectSettingsSection.DesignChapter)
+    private val designEpilogItem = TreeItem<ProjectSettingsSection>(ProjectSettingsSection.DesignEpilog)
     private val designBlurbItem = TreeItem<ProjectSettingsSection>(ProjectSettingsSection.DesignBlurb)
 
     private val itemsBySection: Map<ProjectSettingsSection, TreeItem<ProjectSettingsSection>> = mapOf(
@@ -52,9 +52,9 @@ class ProjectSettingsTreeView : FxmlView<ProjectSettingsTreeViewModel>, Initiali
         ProjectSettingsSection.Design to designItem,
         ProjectSettingsSection.DesignTitle to designTitleItem,
         ProjectSettingsSection.DesignCopyright to designCopyrightItem,
-        ProjectSettingsSection.DesignEpilog to designEpilogItem,
-        ProjectSettingsSection.DesignChapter to designChapterItem,
         ProjectSettingsSection.DesignProlog to designPrologItem,
+        ProjectSettingsSection.DesignChapter to designChapterItem,
+        ProjectSettingsSection.DesignEpilog to designEpilogItem,
         ProjectSettingsSection.DesignBlurb to designBlurbItem
     )
 
@@ -64,8 +64,8 @@ class ProjectSettingsTreeView : FxmlView<ProjectSettingsTreeViewModel>, Initiali
         val messages = resources ?: Messages.bundle
 
         designItem.children.setAll(
-            designTitleItem, designCopyrightItem,
-            designEpilogItem, designChapterItem, designPrologItem, designBlurbItem
+            designTitleItem, designCopyrightItem, designPrologItem,
+            designChapterItem, designEpilogItem, designBlurbItem
         )
 
         val root = TreeItem<ProjectSettingsSection>()

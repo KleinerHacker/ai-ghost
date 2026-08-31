@@ -16,15 +16,21 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.pcsoft.app.aighost.model.common.StyleData
 
 /**
- * Represents the design settings for the title page.
+ * Typographic settings for the title page.
  *
- * This class captures the stylistic configuration for the title page,
- * defining how elements like font, alignment, and other typographic
- * properties are rendered.
+ * The title page carries the main title of the book, the further title lines below it and, when
+ * asked for, the author name. Each of the three is set with its own style.
  *
- * @property style Stylistic attributes for the title page.
+ * @property titleStyle Appearance of the main title.
+ * @property titleAppendixStyle Appearance of the further title lines.
+ * @property showAuthor Whether the author name is printed on the title page, true by default.
+ * @property authorStyle Appearance of the author name.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class TitleDesign(
-    var style: StyleData = StyleData()
+data class TitlePageDesign(
+    var titleStyle: StyleData = StyleData(),
+    var titleAppendixStyle: StyleData = StyleData(),
+
+    var showAuthor: Boolean = true,
+    var authorStyle: StyleData = StyleData()
 )

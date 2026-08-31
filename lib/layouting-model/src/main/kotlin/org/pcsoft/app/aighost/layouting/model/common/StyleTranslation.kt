@@ -21,23 +21,21 @@ import org.pcsoft.app.aighost.model.common.StyleData
  * The one place where a stored style becomes a style the layout core understands.
  *
  * The two types look alike but belong to different worlds: [StyleData] is what the user edits and
- * what is written to disk, [TextStyle] is what a line is set with. The vertical numbers are not part
- * of the stored style at all - the line spacing lives on the design, the gaps around a block are not
- * stored anywhere - so they are handed in separately.
+ * what is written to disk, [TextStyle] is what a line is set with. The line spacing is part of the
+ * stored style and is carried over; the gaps around a block are not stored anywhere, so they are
+ * handed in separately.
  */
 object StyleTranslation {
 
     /**
      * Translates a stored style into a layout style.
      *
-     * @param style Stored style of the element.
-     * @param lineSpacing Line spacing factor the design gives for this class of element.
+     * @param style Stored style of the element, line spacing included.
      * @param spaceBefore Empty space above the block in points.
      * @param spaceAfter Empty space below the block in points.
      */
     fun toTextStyle(
         style: StyleData,
-        lineSpacing: Double,
         spaceBefore: Double = 0.0,
         spaceAfter: Double = 0.0
     ): TextStyle =
@@ -47,7 +45,7 @@ object StyleTranslation {
             bold = style.font.bold,
             italic = style.font.italic,
             alignment = toTextAlignment(style.alignment),
-            lineSpacing = lineSpacing,
+            lineSpacing = style.textLineSpacing,
             spaceBefore = spaceBefore,
             spaceAfter = spaceAfter
         )

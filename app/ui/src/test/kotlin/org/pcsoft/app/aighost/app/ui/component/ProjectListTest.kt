@@ -29,12 +29,13 @@ import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.book.Chapter
 import org.pcsoft.app.aighost.model.project.book.Epilog
 import org.pcsoft.app.aighost.model.project.Project
-import org.pcsoft.app.aighost.model.project.design.AuthorDesign
-import org.pcsoft.app.aighost.model.project.design.ChapterDesign
-import org.pcsoft.app.aighost.model.project.design.CopyrightDesign
+import org.pcsoft.app.aighost.model.project.design.BlurbPageDesign
+import org.pcsoft.app.aighost.model.project.design.ChapterPageDesign
+import org.pcsoft.app.aighost.model.project.design.CopyrightPageDesign
 import org.pcsoft.app.aighost.model.project.design.Design
-import org.pcsoft.app.aighost.model.project.design.TextDesign
-import org.pcsoft.app.aighost.model.project.design.TitleDesign
+import org.pcsoft.app.aighost.model.project.design.EpilogPageDesign
+import org.pcsoft.app.aighost.model.project.design.PrologPageDesign
+import org.pcsoft.app.aighost.model.project.design.TitlePageDesign
 import org.pcsoft.app.aighost.model.project.meta.Meta
 import org.pcsoft.app.aighost.model.project.book.Prolog
 import org.pcsoft.app.aighost.model.common.Alignment
@@ -83,15 +84,15 @@ class ProjectListTest : ApplicationTest() {
     private fun project(book: Book): Project = Project(
         meta = Meta(
             name = "My Novel",
-            author = "Jane Doe",
-            copyright = "(c) 2026 Jane Doe"
+            author = "Jane Doe"
         ),
         design = Design(
-            authorDesign = AuthorDesign(style()),
-            copyrightDesign = CopyrightDesign(style(), show = false),
-            titleDesign = TitleDesign(style()),
-            chapterDesign = ChapterDesign(style(), style()),
-            textDesign = TextDesign(style()),
+            titlePage = TitlePageDesign(style(), style(), showAuthor = true, authorStyle = style()),
+            copyrightPage = CopyrightPageDesign(style(), style(), showAuthor = false, authorStyle = style()),
+            prologPage = PrologPageDesign(style(), style(), style()),
+            blurbPage = BlurbPageDesign(style()),
+            chapterPage = ChapterPageDesign(style(), style(), style()),
+            epilogPage = EpilogPageDesign(style(), style(), style()),
             startWithEmptyPage = false,
             endWithEmptyPage = false
         ),

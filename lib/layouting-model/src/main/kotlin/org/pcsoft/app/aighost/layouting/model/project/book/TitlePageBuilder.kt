@@ -33,11 +33,12 @@ object TitlePageBuilder {
      *
      * @param book Book the title and its further lines are taken from.
      * @param meta Meta data the author name is taken from.
-     * @param design Design the styles and the line spacings are taken from.
+     * @param design Design the title page styles are taken from.
      * @return The blocks in the order they are set.
      */
     fun build(book: Book, meta: Meta, design: Design): List<TextBlock> {
         val blocks = ArrayList<TextBlock>()
+        val titlePage = design.titlePage
 
         val appendix = book.titleAppendix.filter { it.isNotBlank() }
 
@@ -45,8 +46,7 @@ object TitlePageBuilder {
             blocks += TextBlock(
                 text = book.title,
                 style = StyleTranslation.toTextStyle(
-                    style = design.titleDesign.style,
-                    lineSpacing = design.titleLineSpacing,
+                    style = titlePage.titleStyle,
                     spaceAfter = if (appendix.isEmpty()) BlockSpacing.AFTER_TITLE_APPENDIX else BlockSpacing.AFTER_TITLE
                 )
             )
@@ -56,19 +56,17 @@ object TitlePageBuilder {
             blocks += TextBlock(
                 text = line,
                 style = StyleTranslation.toTextStyle(
-                    style = design.titleDesign.style,
-                    lineSpacing = design.titleLineSpacing,
+                    style = titlePage.titleAppendixStyle,
                     spaceAfter = if (index == appendix.lastIndex) BlockSpacing.AFTER_TITLE_APPENDIX else 0.0
                 )
             )
         }
 
-        if (meta.author.isNotBlank()) {
+        if (titlePage.showAuthor && meta.author.isNotBlank()) {
             blocks += TextBlock(
                 text = meta.author,
                 style = StyleTranslation.toTextStyle(
-                    style = design.authorDesign.style,
-                    lineSpacing = design.authorLineSpacing,
+                    style = titlePage.authorStyle,
                     spaceBefore = BlockSpacing.BEFORE_AUTHOR
                 )
             )

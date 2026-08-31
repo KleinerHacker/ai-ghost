@@ -16,45 +16,59 @@ import javafx.beans.property.SimpleObjectProperty
 import org.pcsoft.app.aighost.fx.model.common.StyleDataProperty
 import org.pcsoft.app.aighost.fx.model.internal.BeanFields
 import org.pcsoft.app.aighost.model.common.StyleData
-import org.pcsoft.app.aighost.model.project.design.ChapterDesign
+import org.pcsoft.app.aighost.model.project.design.EpilogPageDesign
 
 /**
- * Property wrapping the design settings of a chapter and offering every field of it - and every field
- * of the styles nested in it - as a property of its own.
+ * Property wrapping the design settings of the epilog page and offering every style it carries - and
+ * every field of those styles - as a property of its own.
+ *
+ * The epilog is a written part like a chapter or the prolog: it carries a heading, the further heading
+ * lines below it and the body text, each set with its own style.
  *
  * The wrapped object may be absent as long as no design sits above this property, so every field
  * property answers with a neutral value and drops what is written to it until then.
  *
- * This property model is handed out with its own type, so a caller reaches both styles directly; it
- * is built by the design carrying it alone and therefore carries an internal constructor.
+ * This property model is handed out with its own type, so a caller reaches every style directly; it is
+ * built by the design carrying it alone and therefore carries an internal constructor.
  */
-class ChapterDesignProperty internal constructor() : SimpleObjectProperty<ChapterDesign?>() {
+class EpilogPageDesignProperty internal constructor() : SimpleObjectProperty<EpilogPageDesign?>() {
 
-    private val fields = BeanFields<ChapterDesign> { fireValueChangedEvent() }
+    private val fields = BeanFields<EpilogPageDesign> { fireValueChangedEvent() }
 
-    /** Appearance of a chapter heading, as a property of its own. */
+    /** Appearance of the epilog heading, as a property of its own. */
     val titleStyleProperty: StyleDataProperty = StyleDataProperty()
 
-    /** Appearance of a chapter heading. */
+    /** Appearance of the epilog heading. */
     var titleStyle: StyleData?
         get() = titleStyleProperty.get()
         set(value) {
             titleStyleProperty.set(value)
         }
 
-    /** Appearance of the further chapter heading lines, as a property of its own. */
+    /** Appearance of the further heading lines of the epilog, as a property of its own. */
     val titleAppendixStyleProperty: StyleDataProperty = StyleDataProperty()
 
-    /** Appearance of the further chapter heading lines. */
+    /** Appearance of the further heading lines of the epilog. */
     var titleAppendixStyle: StyleData?
         get() = titleAppendixStyleProperty.get()
         set(value) {
             titleAppendixStyleProperty.set(value)
         }
 
+    /** Appearance of the epilog body text, as a property of its own. */
+    val textStyleProperty: StyleDataProperty = StyleDataProperty()
+
+    /** Appearance of the epilog body text. */
+    var textStyle: StyleData?
+        get() = textStyleProperty.get()
+        set(value) {
+            textStyleProperty.set(value)
+        }
+
     init {
         fields.model(titleStyleProperty, "titleStyle", titleStyleProperty::refresh)
         fields.model(titleAppendixStyleProperty, "titleAppendixStyle", titleAppendixStyleProperty::refresh)
+        fields.model(textStyleProperty, "textStyle", textStyleProperty::refresh)
 
         // The field properties belong to another object after every exchange, so they are tied to the
         // one this property carries now.
@@ -63,8 +77,9 @@ class ChapterDesignProperty internal constructor() : SimpleObjectProperty<Chapte
     }
 
     /**
-     * Reads both styles of the wrapped object again - and every field of them - and hands what changed
-     * to the field properties, for a caller that wrote on the object past this model.
+     * Reads every field of the wrapped page design again - and every field of the styles nested in it -
+     * and hands what changed to the field properties, for a caller that wrote on the object past this
+     * model.
      */
     fun refresh() = fields.refresh()
 

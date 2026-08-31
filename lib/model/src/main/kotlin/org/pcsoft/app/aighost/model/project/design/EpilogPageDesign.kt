@@ -16,15 +16,18 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.pcsoft.app.aighost.model.common.StyleData
 
 /**
- * Represents the design settings for the main text content.
+ * Typographic settings for the epilog page.
  *
- * This class captures the stylistic configuration for the main text content,
- * defining how elements like font, alignment, and other typographic
- * properties are rendered.
+ * The epilog is a written part like a chapter or the prolog: it carries a heading, the further
+ * heading lines below it and the body text, each set with its own style.
  *
- * @property style Stylistic attributes for the main text content.
+ * @property titleStyle Appearance of the epilog heading.
+ * @property titleAppendixStyle Appearance of the further heading lines of the epilog.
+ * @property textStyle Appearance of the epilog body text.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class TextDesign(
-    var style: StyleData = StyleData()
-)
+data class EpilogPageDesign(
+    override var titleStyle: StyleData = StyleData(),
+    override var titleAppendixStyle: StyleData = StyleData(),
+    override var textStyle: StyleData = StyleData()
+) : BookPartPageDesign

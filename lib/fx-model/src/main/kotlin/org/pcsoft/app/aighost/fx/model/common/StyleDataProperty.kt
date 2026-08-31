@@ -12,7 +12,9 @@
 
 package org.pcsoft.app.aighost.fx.model.common
 
+import javafx.beans.property.DoubleProperty
 import javafx.beans.property.ObjectProperty
+import javafx.beans.property.SimpleDoubleProperty
 import javafx.beans.property.SimpleObjectProperty
 import org.pcsoft.app.aighost.fx.model.internal.BeanFields
 import org.pcsoft.app.aighost.model.common.Alignment
@@ -22,6 +24,10 @@ import org.pcsoft.app.aighost.model.common.StyleData
 /**
  * Property wrapping the appearance of a piece of text and offering every field of it - and every
  * field of the font nested in it - as a property of its own.
+ *
+ * Beside the font and the placement the style carries the space between its lines, a factor on the
+ * line height of the font: `1.0` sets the lines as tightly as the font asks for and a larger value
+ * spreads them apart.
  *
  * The wrapped object may be absent, so every field property answers with a neutral value and drops
  * what is written to it as long as no style sits behind this property.
@@ -43,6 +49,16 @@ class StyleDataProperty internal constructor() : SimpleObjectProperty<StyleData?
             fontProperty.set(value)
         }
 
+    /** Space between the lines of the text as a factor, as a property of its own. */
+    val textLineSpacingProperty: DoubleProperty = SimpleDoubleProperty()
+
+    /** Space between the lines of the text as a factor. */
+    var textLineSpacing: Double
+        get() = textLineSpacingProperty.get()
+        set(value) {
+            textLineSpacingProperty.set(value)
+        }
+
     /** Horizontal placement of the text, as a property of its own. */
     val alignmentProperty: ObjectProperty<Alignment?> = SimpleObjectProperty()
 
@@ -55,6 +71,7 @@ class StyleDataProperty internal constructor() : SimpleObjectProperty<StyleData?
 
     init {
         fields.model(fontProperty, "font", fontProperty::refresh)
+        fields.double(textLineSpacingProperty, "textLineSpacing")
         fields.reference(alignmentProperty, "alignment")
 
         // The field properties belong to another object after every exchange, so they are tied to the

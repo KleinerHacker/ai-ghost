@@ -38,7 +38,6 @@ class MetaTest {
 
         assertEquals("New Project", meta.name)
         assertEquals("", meta.author)
-        assertEquals("", meta.copyright)
         assertEquals(emptyList<String>(), meta.additionalParts)
     }
 
@@ -77,7 +76,6 @@ class MetaTest {
 
         assertEquals(true, json.contains(""""name":"My Novel""""))
         assertEquals(true, json.contains(""""author":"Jane Doe""""))
-        assertEquals(true, json.contains(""""copyright":"(c) 2026 Jane Doe""""))
         assertEquals(true, json.contains(""""version":1"""))
     }
 

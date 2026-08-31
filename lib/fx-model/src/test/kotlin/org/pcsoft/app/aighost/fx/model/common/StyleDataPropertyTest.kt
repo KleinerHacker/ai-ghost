@@ -14,6 +14,7 @@ package org.pcsoft.app.aighost.fx.model.common
 
 import javafx.beans.binding.Bindings
 import javafx.beans.property.SimpleBooleanProperty
+import javafx.beans.property.SimpleDoubleProperty
 import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
@@ -31,12 +32,12 @@ import org.pcsoft.app.aighost.model.common.StyleData
 /**
  * Developer tests for [StyleDataProperty].
  *
- * The property wraps the appearance of a piece of text and offers every field of that object - and
- * every field of the font nested in it - as a property of its own. Every test checks the object tree
- * the way the user interface uses it: a binding hangs on each property of the tree - the style itself,
- * the font below it and every single field - and the tests assert that a change reaches every binding
- * that has to know about it, upwards to the parent as well as downwards into the fields of an
- * exchanged object.
+ * The property wraps the appearance of a piece of text and offers every field of that object - the
+ * font, the space between its lines and its placement - as well as every field of the font nested in
+ * it as a property of its own. Every test checks the object tree the way the user interface uses it: a
+ * binding hangs on each property of the tree - the style itself, the font below it and every single
+ * field - and the tests assert that a change reaches every binding that has to know about it, upwards
+ * to the parent as well as downwards into the fields of an exchanged object.
  */
 class StyleDataPropertyTest {
 
@@ -73,6 +74,10 @@ class StyleDataPropertyTest {
     private lateinit var italicView: StringProperty
     private var italicViewChanges = 0
 
+    /** Binding on the space between the lines of the text. */
+    private lateinit var spacingView: StringProperty
+    private var spacingViewChanges = 0
+
     /** Binding on the horizontal placement of the text. */
     private lateinit var alignmentView: StringProperty
     private var alignmentViewChanges = 0
@@ -82,6 +87,7 @@ class StyleDataPropertyTest {
         holder = Holder(
             StyleData(
                 font = FontData(name = "Times New Roman", size = 12, bold = false, italic = false),
+                textLineSpacing = 1.2,
                 alignment = Alignment.LEFT
             )
         )
@@ -132,6 +138,11 @@ class StyleDataPropertyTest {
         italicBinding.addListener { _, _, _ -> italicViewChanges++ }
         italicView.bind(italicBinding)
 
+        spacingView = SimpleStringProperty()
+        val spacingBinding = property.textLineSpacingProperty.asString()
+        spacingBinding.addListener { _, _, _ -> spacingViewChanges++ }
+        spacingView.bind(spacingBinding)
+
         alignmentView = SimpleStringProperty()
         val alignmentBinding = Bindings.createStringBinding(
             { property.alignmentProperty.get()?.toString() ?: MISSING },
@@ -151,12 +162,13 @@ class StyleDataPropertyTest {
         sizeViewChanges = 0
         boldViewChanges = 0
         italicViewChanges = 0
+        spacingViewChanges = 0
         alignmentViewChanges = 0
     }
 
     /** Text form of the whole style, used as the value of the binding on the root. */
     private fun state(style: StyleData?): String =
-        "${state(style?.font)}|${style?.alignment ?: MISSING}"
+        "${state(style?.font)}|${style?.textLineSpacing ?: 0.0}|${style?.alignment ?: MISSING}"
 
     /**
      * Text form of the font, used as the value of the binding on that nested object. The fingerprint
@@ -179,11 +191,12 @@ class StyleDataPropertyTest {
         size: Int,
         bold: Boolean,
         italic: Boolean,
-        alignment: Alignment?
+        alignment: Alignment?,
+        textLineSpacing: Double = 1.2
     ) {
         val fontState = "${name ?: MISSING}|$size|$bold|$italic|$MISSING|0.0|0.0|0.0"
 
-        assertEquals("$fontState|${alignment ?: MISSING}", rootView.get()) {
+        assertEquals("$fontState|$textLineSpacing|${alignment ?: MISSING}", rootView.get()) {
             "the binding on the style delivers an outdated state"
         }
         assertEquals(fontState, fontView.get()) {
@@ -200,6 +213,9 @@ class StyleDataPropertyTest {
         }
         assertEquals(italic.toString(), italicView.get()) {
             "the binding on the italic flag delivers an outdated value"
+        }
+        assertEquals(textLineSpacing.toString(), spacingView.get()) {
+            "the binding on the line spacing delivers an outdated value"
         }
         assertEquals((alignment ?: MISSING).toString(), alignmentView.get()) {
             "the binding on the placement delivers an outdated value"
@@ -246,6 +262,55 @@ class StyleDataPropertyTest {
         assertTrue(alignmentViewChanges > 0) { "the binding on the placement was not re-evaluated" }
         assertTrue(rootViewChanges > 0) { "the binding on the style was not re-evaluated" }
         assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+    }
+
+    /**
+     * Use case: the user sets the lines of a paragraph further apart, so the factor lands in the style
+     * object and both the binding on that field and the binding on the style show it.
+     */
+    @Test
+    fun writesTextLineSpacingToModelAndNotifiesTree() {
+        property.textLineSpacing = 1.8
+
+        assertEquals(1.8, holder.style?.textLineSpacing)
+        assertTreeShows(
+            "Times New Roman",
+            12,
+            bold = false,
+            italic = false,
+            alignment = Alignment.LEFT,
+            textLineSpacing = 1.8
+        )
+        assertTrue(spacingViewChanges > 0) { "the binding on the line spacing was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the style was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+    }
+
+    /**
+     * Use case: the line spacing is bound to the spinner of the style dialog, so every value that
+     * spinner produces reaches the style object and every binding above it shows it.
+     */
+    @Test
+    fun writesBoundTextLineSpacingToModelAndNotifiesTree() {
+        val source = SimpleDoubleProperty(1.5)
+        property.textLineSpacingProperty.bind(source)
+
+        source.set(1.8)
+
+        assertEquals(1.8, holder.style?.textLineSpacing)
+        assertTreeShows(
+            "Times New Roman",
+            12,
+            bold = false,
+            italic = false,
+            alignment = Alignment.LEFT,
+            textLineSpacing = 1.8
+        )
+        assertTrue(spacingViewChanges > 0) { "the binding on the line spacing was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the style was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+
+        property.textLineSpacingProperty.unbind()
     }
 
     /**
@@ -365,6 +430,7 @@ class StyleDataPropertyTest {
     @Test
     fun readsFieldsChangedOnModel() {
         holder.style?.alignment = Alignment.RIGHT
+        holder.style?.textLineSpacing = 1.9
         holder.style?.font?.name = "Garamond"
         holder.style?.font?.size = 16
         holder.style?.font?.bold = true
@@ -373,6 +439,7 @@ class StyleDataPropertyTest {
         property.refresh()
 
         assertEquals(Alignment.RIGHT, property.alignment)
+        assertEquals(1.9, property.textLineSpacing)
         assertEquals("Garamond", property.fontProperty.name)
         assertEquals(16, property.fontProperty.size)
         assertTrue(property.fontProperty.bold)
@@ -388,14 +455,23 @@ class StyleDataPropertyTest {
     fun writesReplacedStyleToModelAndNotifiesWholeTree() {
         property.value = StyleData(
             font = FontData(name = "Garamond", size = 16, bold = true, italic = true),
+            textLineSpacing = 2.0,
             alignment = Alignment.BLOCK
         )
 
-        assertTreeShows("Garamond", 16, bold = true, italic = true, alignment = Alignment.BLOCK)
+        assertTreeShows(
+            "Garamond",
+            16,
+            bold = true,
+            italic = true,
+            alignment = Alignment.BLOCK,
+            textLineSpacing = 2.0
+        )
         assertTrue(nameViewChanges > 0) { "the binding on the family name was not re-evaluated" }
         assertTrue(sizeViewChanges > 0) { "the binding on the font size was not re-evaluated" }
         assertTrue(boldViewChanges > 0) { "the binding on the bold flag was not re-evaluated" }
         assertTrue(italicViewChanges > 0) { "the binding on the italic flag was not re-evaluated" }
+        assertTrue(spacingViewChanges > 0) { "the binding on the line spacing was not re-evaluated" }
         assertTrue(alignmentViewChanges > 0) { "the binding on the placement was not re-evaluated" }
         assertTrue(fontViewChanges > 0) { "the binding on the font was not re-evaluated" }
         assertTrue(rootViewChanges > 0) { "the binding on the style was not re-evaluated" }
@@ -409,6 +485,7 @@ class StyleDataPropertyTest {
     fun keepsFieldsQuietWhenReplacedStyleCarriesTheSameValues() {
         property.value = StyleData(
             font = FontData(name = "Times New Roman", size = 12, bold = false, italic = false),
+            textLineSpacing = 1.2,
             alignment = Alignment.LEFT
         )
 
@@ -417,6 +494,9 @@ class StyleDataPropertyTest {
         assertEquals(0, sizeViewChanges) { "the font size was reported as changed although it did not change" }
         assertEquals(0, boldViewChanges) { "the bold flag was reported as changed although it did not change" }
         assertEquals(0, italicViewChanges) { "the italic flag was reported as changed although it did not change" }
+        assertEquals(0, spacingViewChanges) {
+            "the line spacing was reported as changed although it did not change"
+        }
         assertEquals(0, alignmentViewChanges) { "the placement was reported as changed although it did not change" }
         assertEquals(0, fontViewChanges) { "the font was reported as changed although it did not change" }
     }
@@ -431,11 +511,12 @@ class StyleDataPropertyTest {
 
         assertNull(property.font)
         assertNull(property.alignment)
+        assertEquals(0.0, property.textLineSpacing)
         assertNull(property.fontProperty.name)
         assertEquals(0, property.fontProperty.size)
         assertFalse(property.fontProperty.bold)
         assertFalse(property.fontProperty.italic)
-        assertTreeShows(null, 0, bold = false, italic = false, alignment = null)
+        assertTreeShows(null, 0, bold = false, italic = false, alignment = null, textLineSpacing = 0.0)
     }
 
     /**
@@ -447,6 +528,7 @@ class StyleDataPropertyTest {
         property.value = null
 
         property.alignment = Alignment.CENTER
+        property.textLineSpacing = 1.7
         property.font = FontData(name = "Georgia")
         property.fontProperty.name = "Garamond"
 

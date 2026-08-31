@@ -18,10 +18,12 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
  * Appearance of a single piece of text: how it is drawn and how it is placed.
  *
  * @property font Font the text is rendered with.
+ * @property textLineSpacing Line spacing of the text, 1.2 by default.
  * @property alignment Horizontal placement of the text, [Alignment.LEFT] by default.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class StyleData(
     var font: FontData = FontData(),
+    var textLineSpacing: Double = 1.2,
     var alignment: Alignment = Alignment.LEFT
 )

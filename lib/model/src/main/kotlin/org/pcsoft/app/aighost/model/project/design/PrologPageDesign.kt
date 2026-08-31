@@ -16,17 +16,18 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.pcsoft.app.aighost.model.common.StyleData
 
 /**
- * Represents the design settings for the copyright page.
+ * Typographic settings for the prolog page.
  *
- * This class captures the stylistic configuration for the copyright page,
- * defining how elements like font, alignment, and other typographic
- * properties are rendered.
+ * The prolog is a written part like a chapter or the epilog: it carries a heading, the further
+ * heading lines below it and the body text, each set with its own style.
  *
- * @property style Stylistic attributes for the copyright page.
- * @property show Whether the copyright page should be included in the book, false by default.
+ * @property titleStyle Appearance of the prolog heading.
+ * @property titleAppendixStyle Appearance of the further heading lines of the prolog.
+ * @property textStyle Appearance of the prolog body text.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class CopyrightDesign(
-    var style: StyleData = StyleData(),
-    var show: Boolean = false
-)
+data class PrologPageDesign(
+    override var titleStyle: StyleData = StyleData(),
+    override var titleAppendixStyle: StyleData = StyleData(),
+    override var textStyle: StyleData = StyleData()
+) : BookPartPageDesign

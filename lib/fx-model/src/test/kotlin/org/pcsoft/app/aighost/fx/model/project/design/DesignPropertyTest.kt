@@ -24,22 +24,23 @@ import org.pcsoft.app.aighost.fx.model.ChangeRecorder
 import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.FontData
 import org.pcsoft.app.aighost.model.common.StyleData
-import org.pcsoft.app.aighost.model.project.design.AuthorDesign
-import org.pcsoft.app.aighost.model.project.design.ChapterDesign
-import org.pcsoft.app.aighost.model.project.design.CopyrightDesign
+import org.pcsoft.app.aighost.model.project.design.BlurbPageDesign
+import org.pcsoft.app.aighost.model.project.design.ChapterPageDesign
+import org.pcsoft.app.aighost.model.project.design.CopyrightPageDesign
 import org.pcsoft.app.aighost.model.project.design.Design
+import org.pcsoft.app.aighost.model.project.design.EpilogPageDesign
 import org.pcsoft.app.aighost.model.project.design.PageFormat
-import org.pcsoft.app.aighost.model.project.design.TextDesign
-import org.pcsoft.app.aighost.model.project.design.TitleDesign
+import org.pcsoft.app.aighost.model.project.design.PrologPageDesign
+import org.pcsoft.app.aighost.model.project.design.TitlePageDesign
 
 /**
  * Developer tests for [DesignProperty].
  *
  * The property wraps the typographic and page settings of a project and offers every part of that
- * object - the page format, every design part and every field of the styles nested in those parts -
- * as a property of its own. The tests watch the whole tree at once: the page geometry, every design
- * part, the style below it, the font of that style, the line spacings and the page flags, so a change
- * that fails to travel through one of the levels is named by the assertion.
+ * object - the page format, every page design and every field of the styles nested in those designs -
+ * as a property of its own. The tests watch the whole tree at once: the page geometry, every page
+ * design, the styles below them, the fonts of those styles, their line spacings and the page flags, so
+ * a change that fails to travel through one of the levels is named by the assertion.
  */
 class DesignPropertyTest {
 
@@ -69,22 +70,41 @@ class DesignPropertyTest {
         recorder.watch("design", property)
         recorder.watch("design.pageFormat", property.pageFormatProperty)
         recorder.watch("design.pageFormat.innerMargin", property.pageFormatProperty.innerMarginProperty)
-        recorder.watch("design.author", property.authorDesignProperty)
-        recorder.watch("design.author.style.font.name", property.authorDesignProperty.styleProperty.fontProperty.nameProperty)
-        recorder.watch("design.copyright", property.copyrightDesignProperty)
-        recorder.watch("design.copyright.show", property.copyrightDesignProperty.showProperty)
-        recorder.watch("design.title", property.titleDesignProperty)
-        recorder.watch("design.title.style.alignment", property.titleDesignProperty.styleProperty.alignmentProperty)
-        recorder.watch("design.chapter", property.chapterDesignProperty)
-        recorder.watch("design.chapter.titleStyle", property.chapterDesignProperty.titleStyleProperty)
-        recorder.watch("design.chapter.titleAppendixStyle", property.chapterDesignProperty.titleAppendixStyleProperty)
-        recorder.watch("design.text", property.textDesignProperty)
-        recorder.watch("design.text.style.font.size", property.textDesignProperty.styleProperty.fontProperty.sizeProperty)
-        recorder.watch("design.authorLineSpacing", property.authorLineSpacingProperty)
-        recorder.watch("design.copyrightLineSpacing", property.copyrightLineSpacingProperty)
-        recorder.watch("design.titleLineSpacing", property.titleLineSpacingProperty)
-        recorder.watch("design.chapterLineSpacing", property.chapterLineSpacingProperty)
-        recorder.watch("design.textLineSpacing", property.textLineSpacingProperty)
+        recorder.watch("design.titlePage", property.titlePageProperty)
+        recorder.watch(
+            "design.titlePage.titleStyle.font.name",
+            property.titlePageProperty.titleStyleProperty.fontProperty.nameProperty
+        )
+        recorder.watch("design.titlePage.showAuthor", property.titlePageProperty.showAuthorProperty)
+        recorder.watch("design.copyrightPage", property.copyrightPageProperty)
+        recorder.watch(
+            "design.copyrightPage.copyrightStyle.font.size",
+            property.copyrightPageProperty.copyrightStyleProperty.fontProperty.sizeProperty
+        )
+        recorder.watch("design.prologPage", property.prologPageProperty)
+        recorder.watch(
+            "design.prologPage.textStyle.alignment",
+            property.prologPageProperty.textStyleProperty.alignmentProperty
+        )
+        recorder.watch("design.blurbPage", property.blurbPageProperty)
+        recorder.watch(
+            "design.blurbPage.textStyle.font.size",
+            property.blurbPageProperty.textStyleProperty.fontProperty.sizeProperty
+        )
+        recorder.watch("design.chapterPage", property.chapterPageProperty)
+        recorder.watch(
+            "design.chapterPage.textStyle.textLineSpacing",
+            property.chapterPageProperty.textStyleProperty.textLineSpacingProperty
+        )
+        recorder.watch(
+            "design.chapterPage.titleOnSeparatePage",
+            property.chapterPageProperty.titleOnSeparatePageProperty
+        )
+        recorder.watch("design.epilogPage", property.epilogPageProperty)
+        recorder.watch(
+            "design.epilogPage.titleStyle.font.name",
+            property.epilogPageProperty.titleStyleProperty.fontProperty.nameProperty
+        )
         recorder.watch("design.startWithEmptyPage", property.startWithEmptyPageProperty)
         recorder.watch("design.endWithEmptyPage", property.endWithEmptyPageProperty)
 
@@ -101,65 +121,275 @@ class DesignPropertyTest {
             topMargin = 12.0,
             bottomMargin = 22.0
         ),
-        authorDesign = AuthorDesign(StyleData(FontData("Author Serif", 16), Alignment.CENTER)),
-        copyrightDesign = CopyrightDesign(StyleData(FontData("Copyright Serif", 8), Alignment.LEFT), show = true),
-        titleDesign = TitleDesign(StyleData(FontData("Title Serif", 28, bold = true), Alignment.CENTER)),
-        chapterDesign = ChapterDesign(
-            titleStyle = StyleData(FontData("Chapter Serif", 20, bold = true), Alignment.LEFT),
-            titleAppendixStyle = StyleData(FontData("Chapter Appendix Serif", 14, italic = true), Alignment.CENTER)
+        titlePage = TitlePageDesign(
+            titleStyle = StyleData(
+                font = FontData("Title Serif", 28, bold = true),
+                textLineSpacing = 1.5,
+                alignment = Alignment.CENTER
+            ),
+            titleAppendixStyle = StyleData(
+                font = FontData("Title Appendix Serif", 18),
+                textLineSpacing = 1.3,
+                alignment = Alignment.CENTER
+            ),
+            showAuthor = true,
+            authorStyle = StyleData(
+                font = FontData("Author Serif", 16),
+                textLineSpacing = 1.1,
+                alignment = Alignment.CENTER
+            )
         ),
-        textDesign = TextDesign(StyleData(FontData("Text Serif", 11), Alignment.BLOCK)),
-        authorLineSpacing = 1.1,
-        copyrightLineSpacing = 1.0,
-        titleLineSpacing = 1.5,
-        chapterLineSpacing = 1.3,
-        textLineSpacing = 1.4,
+        copyrightPage = CopyrightPageDesign(
+            copyrightStyle = StyleData(
+                font = FontData("Copyright Serif", 9),
+                textLineSpacing = 1.0,
+                alignment = Alignment.LEFT
+            ),
+            copyrightAppendixStyle = StyleData(
+                font = FontData("Copyright Appendix Serif", 8),
+                textLineSpacing = 1.0,
+                alignment = Alignment.LEFT
+            ),
+            showAuthor = false,
+            authorStyle = StyleData(
+                font = FontData("Copyright Author Serif", 9),
+                textLineSpacing = 1.0,
+                alignment = Alignment.LEFT
+            )
+        ),
+        prologPage = PrologPageDesign(
+            titleStyle = StyleData(
+                font = FontData("Prolog Title Serif", 22),
+                textLineSpacing = 1.3,
+                alignment = Alignment.LEFT
+            ),
+            titleAppendixStyle = StyleData(
+                font = FontData("Prolog Appendix Serif", 15),
+                textLineSpacing = 1.2,
+                alignment = Alignment.LEFT
+            ),
+            textStyle = StyleData(
+                font = FontData("Prolog Text Serif", 11),
+                textLineSpacing = 1.4,
+                alignment = Alignment.BLOCK
+            )
+        ),
+        blurbPage = BlurbPageDesign(
+            textStyle = StyleData(
+                font = FontData("Blurb Serif", 12),
+                textLineSpacing = 1.4,
+                alignment = Alignment.BLOCK
+            )
+        ),
+        chapterPage = ChapterPageDesign(
+            titleStyle = StyleData(
+                font = FontData("Chapter Serif", 20, bold = true),
+                textLineSpacing = 1.3,
+                alignment = Alignment.LEFT
+            ),
+            titleAppendixStyle = StyleData(
+                font = FontData("Chapter Appendix Serif", 14, italic = true),
+                textLineSpacing = 1.2,
+                alignment = Alignment.LEFT
+            ),
+            textStyle = StyleData(
+                font = FontData("Chapter Text Serif", 11),
+                textLineSpacing = 1.4,
+                alignment = Alignment.BLOCK
+            ),
+            titleOnSeparatePage = true
+        ),
+        epilogPage = EpilogPageDesign(
+            titleStyle = StyleData(
+                font = FontData("Epilog Title Serif", 21),
+                textLineSpacing = 1.3,
+                alignment = Alignment.LEFT
+            ),
+            titleAppendixStyle = StyleData(
+                font = FontData("Epilog Appendix Serif", 14),
+                textLineSpacing = 1.2,
+                alignment = Alignment.LEFT
+            ),
+            textStyle = StyleData(
+                font = FontData("Epilog Text Serif", 11),
+                textLineSpacing = 1.4,
+                alignment = Alignment.BLOCK
+            )
+        ),
         startWithEmptyPage = true,
         endWithEmptyPage = false
     )
 
+    /** A design differing from [newDesign] in every watched field of the tree. */
+    private fun otherDesign(): Design = Design(
+        pageFormat = PageFormat(
+            width = 300.0,
+            height = 500.0,
+            innerMargin = 21.0,
+            outerMargin = 14.0,
+            topMargin = 16.0,
+            bottomMargin = 19.0
+        ),
+        titlePage = TitlePageDesign(
+            titleStyle = StyleData(
+                font = FontData("Other Title", 29),
+                textLineSpacing = 2.1,
+                alignment = Alignment.LEFT
+            ),
+            titleAppendixStyle = StyleData(
+                font = FontData("Other Title Appendix", 19),
+                textLineSpacing = 2.1,
+                alignment = Alignment.LEFT
+            ),
+            showAuthor = false,
+            authorStyle = StyleData(
+                font = FontData("Other Author", 17),
+                textLineSpacing = 2.1,
+                alignment = Alignment.LEFT
+            )
+        ),
+        copyrightPage = CopyrightPageDesign(
+            copyrightStyle = StyleData(
+                font = FontData("Other Copyright", 10),
+                textLineSpacing = 2.2,
+                alignment = Alignment.RIGHT
+            ),
+            copyrightAppendixStyle = StyleData(
+                font = FontData("Other Copyright Appendix", 9),
+                textLineSpacing = 2.2,
+                alignment = Alignment.RIGHT
+            ),
+            showAuthor = true,
+            authorStyle = StyleData(
+                font = FontData("Other Copyright Author", 10),
+                textLineSpacing = 2.2,
+                alignment = Alignment.RIGHT
+            )
+        ),
+        prologPage = PrologPageDesign(
+            titleStyle = StyleData(
+                font = FontData("Other Prolog Title", 23),
+                textLineSpacing = 2.3,
+                alignment = Alignment.RIGHT
+            ),
+            titleAppendixStyle = StyleData(
+                font = FontData("Other Prolog Appendix", 16),
+                textLineSpacing = 2.3,
+                alignment = Alignment.RIGHT
+            ),
+            textStyle = StyleData(
+                font = FontData("Other Prolog Text", 12),
+                textLineSpacing = 2.3,
+                alignment = Alignment.RIGHT
+            )
+        ),
+        blurbPage = BlurbPageDesign(
+            textStyle = StyleData(
+                font = FontData("Other Blurb", 15),
+                textLineSpacing = 2.4,
+                alignment = Alignment.LEFT
+            )
+        ),
+        chapterPage = ChapterPageDesign(
+            titleStyle = StyleData(
+                font = FontData("Other Chapter", 24),
+                textLineSpacing = 2.5,
+                alignment = Alignment.RIGHT
+            ),
+            titleAppendixStyle = StyleData(
+                font = FontData("Other Chapter Appendix", 17),
+                textLineSpacing = 2.5,
+                alignment = Alignment.RIGHT
+            ),
+            textStyle = StyleData(
+                font = FontData("Other Chapter Text", 13),
+                textLineSpacing = 2.5,
+                alignment = Alignment.RIGHT
+            ),
+            titleOnSeparatePage = false
+        ),
+        epilogPage = EpilogPageDesign(
+            titleStyle = StyleData(
+                font = FontData("Other Epilog Title", 25),
+                textLineSpacing = 2.6,
+                alignment = Alignment.RIGHT
+            ),
+            titleAppendixStyle = StyleData(
+                font = FontData("Other Epilog Appendix", 18),
+                textLineSpacing = 2.6,
+                alignment = Alignment.RIGHT
+            ),
+            textStyle = StyleData(
+                font = FontData("Other Epilog Text", 14),
+                textLineSpacing = 2.6,
+                alignment = Alignment.RIGHT
+            )
+        ),
+        startWithEmptyPage = false,
+        endWithEmptyPage = true
+    )
+
     /**
-     * Use case: the design dialog is opened, so every design part and every page flag answers with
+     * Use case: the design dialog is opened, so every page design and every page flag answers with
      * the value the wrapped object carries instead of a copy made at some earlier point.
      */
     @Test
-    fun readsEveryPartFromTheModelObject() {
-        assertEquals("Author Serif", property.authorDesignProperty.styleProperty.fontProperty.nameProperty.get())
-        assertEquals(true, property.copyrightDesignProperty.showProperty.get())
-        assertEquals(Alignment.CENTER, property.titleDesignProperty.styleProperty.alignmentProperty.get())
-        assertEquals("Chapter Serif", property.chapterDesignProperty.titleStyleProperty.fontProperty.nameProperty.get())
-        assertEquals(11, property.textDesignProperty.styleProperty.fontProperty.sizeProperty.get())
+    fun readsEveryPageDesignFromTheModelObject() {
+        assertEquals("Title Serif", property.titlePageProperty.titleStyleProperty.fontProperty.nameProperty.get())
+        assertTrue(property.titlePageProperty.showAuthorProperty.get())
+        assertEquals(9, property.copyrightPageProperty.copyrightStyleProperty.fontProperty.sizeProperty.get())
+        assertFalse(property.copyrightPageProperty.showAuthorProperty.get())
+        assertEquals(Alignment.BLOCK, property.prologPageProperty.textStyleProperty.alignmentProperty.get())
+        assertEquals(12, property.blurbPageProperty.textStyleProperty.fontProperty.sizeProperty.get())
+        assertEquals("Chapter Serif", property.chapterPageProperty.titleStyleProperty.fontProperty.nameProperty.get())
+        assertTrue(property.chapterPageProperty.titleOnSeparatePageProperty.get())
+        assertEquals(
+            "Epilog Title Serif",
+            property.epilogPageProperty.titleStyleProperty.fontProperty.nameProperty.get()
+        )
         assertTrue(property.startWithEmptyPageProperty.get())
         assertFalse(property.endWithEmptyPageProperty.get())
     }
 
     /**
-     * Use case: the project settings dialog is opened, so the page geometry and every line spacing
-     * answer with the value the wrapped design carries.
+     * Use case: the project settings dialog is opened, so the page geometry and the line spacings of
+     * the styles answer with the values the wrapped design carries.
      */
     @Test
     fun readsThePageLayoutFromTheModelObject() {
         assertEquals(400.0, property.pageFormatProperty.widthProperty.get())
         assertEquals(25.0, property.pageFormatProperty.innerMarginProperty.get())
         assertEquals(22.0, property.pageFormatProperty.bottomMarginProperty.get())
-        assertEquals(1.1, property.authorLineSpacingProperty.get())
-        assertEquals(1.0, property.copyrightLineSpacingProperty.get())
-        assertEquals(1.5, property.titleLineSpacingProperty.get())
-        assertEquals(1.3, property.chapterLineSpacingProperty.get())
-        assertEquals(1.4, property.textLineSpacingProperty.get())
+        assertEquals(1.5, property.titlePageProperty.titleStyleProperty.textLineSpacingProperty.get())
+        assertEquals(1.4, property.chapterPageProperty.textStyleProperty.textLineSpacingProperty.get())
+        assertEquals(1.4, property.blurbPageProperty.textStyleProperty.textLineSpacingProperty.get())
     }
 
     /**
-     * Use case: the user picks another font for the body text, so the value reaches the model object
-     * through every level of the tree and each of them reports the change up to the root.
+     * Use case: the user picks another size for the body text of a chapter, so the value reaches the
+     * model object through every level of the tree and each of them reports the change up to the root.
      */
     @Test
     fun writingDeepInsideTheTreeReachesTheModelObject() {
-        property.textDesignProperty.styleProperty.fontProperty.sizeProperty.set(13)
+        property.chapterPageProperty.textStyleProperty.fontProperty.sizeProperty.set(13)
 
-        assertEquals(13, holder.design?.textDesign?.style?.font?.size)
-        assertEquals(1, recorder.countOf("design.text.style.font.size"))
-        assertEquals(1, recorder.countOf("design.text"))
+        assertEquals(13, holder.design?.chapterPage?.textStyle?.font?.size)
+        assertEquals(1, recorder.countOf("design.chapterPage"))
+        assertEquals(1, recorder.countOf("design"))
+        assertEquals(1, parentEvents)
+    }
+
+    /**
+     * Use case: the user sets the lines of the chapter body text further apart, so the factor reaches
+     * the style nested in the chapter design and every level above it reports the change.
+     */
+    @Test
+    fun writingALineSpacingReachesTheModelObject() {
+        property.chapterPageProperty.textStyleProperty.textLineSpacingProperty.set(1.8)
+
+        assertEquals(1.8, holder.design?.chapterPage?.textStyle?.textLineSpacing)
+        assertEquals(1, recorder.countOf("design.chapterPage.textStyle.textLineSpacing"))
+        assertEquals(1, recorder.countOf("design.chapterPage"))
         assertEquals(1, recorder.countOf("design"))
         assertEquals(1, parentEvents)
     }
@@ -180,15 +410,37 @@ class DesignPropertyTest {
     }
 
     /**
-     * Use case: the user sets the lines of the body text further apart, so the factor reaches the
-     * model object and the design as a whole reports the change instead of the factor alone.
+     * Use case: the user takes the author name off the title page, so the switch of that page design
+     * reaches the model object and every level above it reports the change.
      */
     @Test
-    fun writingALineSpacingReachesTheModelObject() {
-        property.textLineSpacingProperty.set(1.8)
+    fun writingASwitchOfAPageDesignReachesTheModelObject() {
+        property.titlePageProperty.showAuthorProperty.set(false)
 
-        assertEquals(1.8, holder.design?.textLineSpacing)
-        assertEquals(1, recorder.countOf("design.textLineSpacing"))
+        assertFalse(holder.design?.titlePage?.showAuthor ?: true)
+        assertEquals(1, recorder.countOf("design.titlePage.showAuthor"))
+        assertEquals(1, recorder.countOf("design.titlePage"))
+        assertEquals(1, recorder.countOf("design"))
+        assertEquals(1, parentEvents)
+    }
+
+    /**
+     * Use case: a whole page design is replaced - a preset was applied to the blurb - so the field
+     * properties below it belong to another object afterwards and the change reaches the model object.
+     */
+    @Test
+    fun writingAWholePageDesignReachesTheModelObject() {
+        property.blurbPage = BlurbPageDesign(
+            textStyle = StyleData(
+                font = FontData("Replaced Blurb", 14),
+                textLineSpacing = 1.9,
+                alignment = Alignment.LEFT
+            )
+        )
+
+        assertEquals("Replaced Blurb", holder.design?.blurbPage?.textStyle?.font?.name)
+        assertEquals(14, property.blurbPageProperty.textStyleProperty.fontProperty.sizeProperty.get())
+        assertEquals(1, recorder.countOf("design.blurbPage"))
         assertEquals(1, recorder.countOf("design"))
         assertEquals(1, parentEvents)
     }
@@ -232,15 +484,15 @@ class DesignPropertyTest {
     @Test
     fun writingALineSpacingThroughABindingReachesTheModelObject() {
         val input = SimpleDoubleProperty(1.6)
-        property.chapterLineSpacingProperty.bind(input)
+        property.chapterPageProperty.titleStyleProperty.textLineSpacingProperty.bind(input)
 
-        assertEquals(1.6, holder.design?.chapterLineSpacing)
+        assertEquals(1.6, holder.design?.chapterPage?.titleStyle?.textLineSpacing)
 
         input.set(2.0)
 
-        assertEquals(2.0, holder.design?.chapterLineSpacing)
+        assertEquals(2.0, holder.design?.chapterPage?.titleStyle?.textLineSpacing)
 
-        property.chapterLineSpacingProperty.unbind()
+        property.chapterPageProperty.titleStyleProperty.textLineSpacingProperty.unbind()
     }
 
     /**
@@ -249,16 +501,21 @@ class DesignPropertyTest {
      */
     @Test
     fun aChangeOnTheModelObjectBecomesVisible() {
-        holder.design?.textDesign = TextDesign(StyleData(FontData("Imported Serif", 19), Alignment.LEFT))
+        holder.design?.chapterPage?.textStyle?.font?.name = "Imported Serif"
+        holder.design?.chapterPage?.titleOnSeparatePage = false
         holder.design?.pageFormat?.topMargin = 33.0
-        holder.design?.textLineSpacing = 1.9
+        holder.design?.blurbPage?.textStyle?.textLineSpacing = 1.9
         holder.design?.endWithEmptyPage = true
 
         property.refresh()
 
-        assertEquals("Imported Serif", property.textDesignProperty.styleProperty.fontProperty.nameProperty.get())
+        assertEquals(
+            "Imported Serif",
+            property.chapterPageProperty.textStyleProperty.fontProperty.nameProperty.get()
+        )
+        assertFalse(property.chapterPageProperty.titleOnSeparatePageProperty.get())
         assertEquals(33.0, property.pageFormatProperty.topMarginProperty.get())
-        assertEquals(1.9, property.textLineSpacingProperty.get())
+        assertEquals(1.9, property.blurbPageProperty.textStyleProperty.textLineSpacingProperty.get())
         assertTrue(property.endWithEmptyPageProperty.get())
     }
 
@@ -267,43 +524,24 @@ class DesignPropertyTest {
      * tree takes over the value of the new object and reports it up to the root.
      */
     @Test
-    fun exchangingTheModelObjectUpdatesEveryPart() {
+    fun exchangingTheModelObjectUpdatesEveryPageDesign() {
         recorder.reset()
         parentEvents = 0
 
-        property.set(
-            Design(
-                pageFormat = PageFormat(
-                    width = 300.0,
-                    height = 500.0,
-                    innerMargin = 21.0,
-                    outerMargin = 14.0,
-                    topMargin = 16.0,
-                    bottomMargin = 19.0
-                ),
-                authorDesign = AuthorDesign(StyleData(FontData("Other Author", 17), Alignment.LEFT)),
-                copyrightDesign = CopyrightDesign(StyleData(FontData("Other Copyright", 9), Alignment.RIGHT)),
-                titleDesign = TitleDesign(StyleData(FontData("Other Title", 29), Alignment.LEFT)),
-                chapterDesign = ChapterDesign(
-                    titleStyle = StyleData(FontData("Other Chapter", 21), Alignment.RIGHT),
-                    titleAppendixStyle = StyleData(FontData("Other Appendix", 15), Alignment.LEFT)
-                ),
-                textDesign = TextDesign(StyleData(FontData("Other Text", 12), Alignment.LEFT)),
-                authorLineSpacing = 2.1,
-                copyrightLineSpacing = 2.2,
-                titleLineSpacing = 2.3,
-                chapterLineSpacing = 2.4,
-                textLineSpacing = 2.5,
-                startWithEmptyPage = false,
-                endWithEmptyPage = true
-            )
-        )
+        property.set(otherDesign())
 
-        assertEquals("Other Author", property.authorDesignProperty.styleProperty.fontProperty.nameProperty.get())
-        assertFalse(property.copyrightDesignProperty.showProperty.get())
-        assertEquals(12, property.textDesignProperty.styleProperty.fontProperty.sizeProperty.get())
+        assertEquals("Other Title", property.titlePageProperty.titleStyleProperty.fontProperty.nameProperty.get())
+        assertFalse(property.titlePageProperty.showAuthorProperty.get())
+        assertEquals(10, property.copyrightPageProperty.copyrightStyleProperty.fontProperty.sizeProperty.get())
+        assertEquals(Alignment.RIGHT, property.prologPageProperty.textStyleProperty.alignmentProperty.get())
+        assertEquals(15, property.blurbPageProperty.textStyleProperty.fontProperty.sizeProperty.get())
+        assertEquals(2.5, property.chapterPageProperty.textStyleProperty.textLineSpacingProperty.get())
+        assertFalse(property.chapterPageProperty.titleOnSeparatePageProperty.get())
+        assertEquals(
+            "Other Epilog Title",
+            property.epilogPageProperty.titleStyleProperty.fontProperty.nameProperty.get()
+        )
         assertEquals(300.0, property.pageFormatProperty.widthProperty.get())
-        assertEquals(2.5, property.textLineSpacingProperty.get())
         recorder.assertAllFired("exchanging the design")
         assertEquals(1, parentEvents)
     }
@@ -331,14 +569,18 @@ class DesignPropertyTest {
         // property itself to nothing stands for.
         property.set(null)
 
-        assertNull(property.authorDesignProperty.get())
-        assertNull(property.textDesignProperty.get())
         assertNull(property.pageFormatProperty.get())
-        assertEquals(0.0, property.textLineSpacingProperty.get())
+        assertNull(property.titlePageProperty.get())
+        assertNull(property.copyrightPageProperty.get())
+        assertNull(property.prologPageProperty.get())
+        assertNull(property.blurbPageProperty.get())
+        assertNull(property.chapterPageProperty.get())
+        assertNull(property.epilogPageProperty.get())
         assertFalse(property.startWithEmptyPageProperty.get())
+        assertFalse(property.endWithEmptyPageProperty.get())
 
         property.startWithEmptyPageProperty.set(true)
-        property.textLineSpacingProperty.set(1.7)
+        property.chapterPageProperty.textStyleProperty.textLineSpacingProperty.set(1.7)
 
         assertNull(holder.design)
     }

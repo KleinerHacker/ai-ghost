@@ -13,22 +13,25 @@
 package org.pcsoft.app.aighost.fx.model.project.design
 
 import javafx.beans.property.BooleanProperty
-import javafx.beans.property.DoubleProperty
 import javafx.beans.property.SimpleBooleanProperty
-import javafx.beans.property.SimpleDoubleProperty
 import org.pcsoft.app.aighost.fx.model.internal.BeanFields
 import org.pcsoft.app.aighost.fx.model.project.ProjectPartProperty
-import org.pcsoft.app.aighost.model.project.design.AuthorDesign
-import org.pcsoft.app.aighost.model.project.design.ChapterDesign
-import org.pcsoft.app.aighost.model.project.design.CopyrightDesign
+import org.pcsoft.app.aighost.model.project.design.BlurbPageDesign
+import org.pcsoft.app.aighost.model.project.design.ChapterPageDesign
+import org.pcsoft.app.aighost.model.project.design.CopyrightPageDesign
 import org.pcsoft.app.aighost.model.project.design.Design
+import org.pcsoft.app.aighost.model.project.design.EpilogPageDesign
 import org.pcsoft.app.aighost.model.project.design.PageFormat
-import org.pcsoft.app.aighost.model.project.design.TextDesign
-import org.pcsoft.app.aighost.model.project.design.TitleDesign
+import org.pcsoft.app.aighost.model.project.design.PrologPageDesign
+import org.pcsoft.app.aighost.model.project.design.TitlePageDesign
 
 /**
  * Property wrapping the typographic and page settings of a project and offering every field of it -
- * and every field of the page format and the design parts nested in it - as a property of its own.
+ * and every field of the page format and the page designs nested in it - as a property of its own.
+ *
+ * The settings are grouped by the page they apply to: the title page, the copyright page, the prolog,
+ * the blurb, the chapters and the epilog each carry the styles of their texts, and every one of them
+ * is reached through a property model of its own.
  *
  * The wrapped object may be absent as long as no project sits above this property, so every field
  * property answers with a neutral value and drops what is written to it until then.
@@ -36,7 +39,7 @@ import org.pcsoft.app.aighost.model.project.design.TitleDesign
  * The version of the part is not offered as a property: it names the shape of the stored document,
  * is never written by the user and never changes while a project is open.
  *
- * This property model is handed out with its own type, so a caller reaches every design part below it
+ * This property model is handed out with its own type, so a caller reaches every page design below it
  * directly; it is built by the project alone and therefore carries an internal constructor.
  */
 class DesignProperty internal constructor() : ProjectPartProperty<Design>() {
@@ -53,104 +56,64 @@ class DesignProperty internal constructor() : ProjectPartProperty<Design>() {
             pageFormatProperty.set(value)
         }
 
-    /** Typographic settings for the author name, as a property of its own. */
-    val authorDesignProperty: AuthorDesignProperty = AuthorDesignProperty()
+    /** Typographic settings for the title page, as a property of its own. */
+    val titlePageProperty: TitlePageDesignProperty = TitlePageDesignProperty()
 
-    /** Typographic settings for the author name. */
-    var authorDesign: AuthorDesign?
-        get() = authorDesignProperty.get()
+    /** Typographic settings for the title page. */
+    var titlePage: TitlePageDesign?
+        get() = titlePageProperty.get()
         set(value) {
-            authorDesignProperty.set(value)
+            titlePageProperty.set(value)
         }
 
     /** Typographic settings for the copyright page, as a property of its own. */
-    val copyrightDesignProperty: CopyrightDesignProperty = CopyrightDesignProperty()
+    val copyrightPageProperty: CopyrightPageDesignProperty = CopyrightPageDesignProperty()
 
     /** Typographic settings for the copyright page. */
-    var copyrightDesign: CopyrightDesign?
-        get() = copyrightDesignProperty.get()
+    var copyrightPage: CopyrightPageDesign?
+        get() = copyrightPageProperty.get()
         set(value) {
-            copyrightDesignProperty.set(value)
+            copyrightPageProperty.set(value)
         }
 
-    /** Typographic settings for the title page, as a property of its own. */
-    val titleDesignProperty: TitleDesignProperty = TitleDesignProperty()
+    /** Typographic settings for the prolog page, as a property of its own. */
+    val prologPageProperty: PrologPageDesignProperty = PrologPageDesignProperty()
 
-    /** Typographic settings for the title page. */
-    var titleDesign: TitleDesign?
-        get() = titleDesignProperty.get()
+    /** Typographic settings for the prolog page. */
+    var prologPage: PrologPageDesign?
+        get() = prologPageProperty.get()
         set(value) {
-            titleDesignProperty.set(value)
+            prologPageProperty.set(value)
         }
 
-    /** Typographic settings for chapter headings, as a property of its own. */
-    val chapterDesignProperty: ChapterDesignProperty = ChapterDesignProperty()
+    /** Typographic settings for the blurb page, as a property of its own. */
+    val blurbPageProperty: BlurbPageDesignProperty = BlurbPageDesignProperty()
 
-    /** Typographic settings for chapter headings. */
-    var chapterDesign: ChapterDesign?
-        get() = chapterDesignProperty.get()
+    /** Typographic settings for the blurb page. */
+    var blurbPage: BlurbPageDesign?
+        get() = blurbPageProperty.get()
         set(value) {
-            chapterDesignProperty.set(value)
+            blurbPageProperty.set(value)
         }
 
-    /** Typographic settings for the body text, as a property of its own. */
-    val textDesignProperty: TextDesignProperty = TextDesignProperty()
+    /** Typographic settings for the chapter pages, as a property of its own. */
+    val chapterPageProperty: ChapterPageDesignProperty = ChapterPageDesignProperty()
 
-    /** Typographic settings for the body text. */
-    var textDesign: TextDesign?
-        get() = textDesignProperty.get()
+    /** Typographic settings for the chapter pages. */
+    var chapterPage: ChapterPageDesign?
+        get() = chapterPageProperty.get()
         set(value) {
-            textDesignProperty.set(value)
+            chapterPageProperty.set(value)
         }
 
-    /** Line spacing factor of the author name, as a property of its own. */
-    val authorLineSpacingProperty: DoubleProperty = SimpleDoubleProperty()
+    /** Typographic settings for the epilog page, as a property of its own. */
+    val epilogPageProperty: EpilogPageDesignProperty = EpilogPageDesignProperty()
 
-    /** Line spacing factor of the author name. */
-    var authorLineSpacing: Double
-        get() = authorLineSpacingProperty.get()
+    /** Typographic settings for the epilog page. */
+    var epilogPage: EpilogPageDesign?
+        get() = epilogPageProperty.get()
         set(value) {
-            authorLineSpacingProperty.set(value)
-        }
-
-    /** Line spacing factor of the copyright page, as a property of its own. */
-    val copyrightLineSpacingProperty: DoubleProperty = SimpleDoubleProperty()
-
-    /** Line spacing factor of the copyright page. */
-    var copyrightLineSpacing: Double
-        get() = copyrightLineSpacingProperty.get()
-        set(value) {
-            copyrightLineSpacingProperty.set(value)
-        }
-
-    /** Line spacing factor of the title page, as a property of its own. */
-    val titleLineSpacingProperty: DoubleProperty = SimpleDoubleProperty()
-
-    /** Line spacing factor of the title page. */
-    var titleLineSpacing: Double
-        get() = titleLineSpacingProperty.get()
-        set(value) {
-            titleLineSpacingProperty.set(value)
-        }
-
-    /** Line spacing factor of chapter headings, as a property of its own. */
-    val chapterLineSpacingProperty: DoubleProperty = SimpleDoubleProperty()
-
-    /** Line spacing factor of chapter headings. */
-    var chapterLineSpacing: Double
-        get() = chapterLineSpacingProperty.get()
-        set(value) {
-            chapterLineSpacingProperty.set(value)
-        }
-
-    /** Line spacing factor of the body text, as a property of its own. */
-    val textLineSpacingProperty: DoubleProperty = SimpleDoubleProperty()
-
-    /** Line spacing factor of the body text. */
-    var textLineSpacing: Double
-        get() = textLineSpacingProperty.get()
-        set(value) {
-            textLineSpacingProperty.set(value)
+            epilogPageProperty.set(value)
         }
 
     /** Whether the manuscript starts with an empty page, as a property of its own. */
@@ -175,16 +138,12 @@ class DesignProperty internal constructor() : ProjectPartProperty<Design>() {
 
     init {
         fields.model(pageFormatProperty, "pageFormat", pageFormatProperty::refresh)
-        fields.model(authorDesignProperty, "authorDesign", authorDesignProperty::refresh)
-        fields.model(copyrightDesignProperty, "copyrightDesign", copyrightDesignProperty::refresh)
-        fields.model(titleDesignProperty, "titleDesign", titleDesignProperty::refresh)
-        fields.model(chapterDesignProperty, "chapterDesign", chapterDesignProperty::refresh)
-        fields.model(textDesignProperty, "textDesign", textDesignProperty::refresh)
-        fields.double(authorLineSpacingProperty, "authorLineSpacing")
-        fields.double(copyrightLineSpacingProperty, "copyrightLineSpacing")
-        fields.double(titleLineSpacingProperty, "titleLineSpacing")
-        fields.double(chapterLineSpacingProperty, "chapterLineSpacing")
-        fields.double(textLineSpacingProperty, "textLineSpacing")
+        fields.model(titlePageProperty, "titlePage", titlePageProperty::refresh)
+        fields.model(copyrightPageProperty, "copyrightPage", copyrightPageProperty::refresh)
+        fields.model(prologPageProperty, "prologPage", prologPageProperty::refresh)
+        fields.model(blurbPageProperty, "blurbPage", blurbPageProperty::refresh)
+        fields.model(chapterPageProperty, "chapterPage", chapterPageProperty::refresh)
+        fields.model(epilogPageProperty, "epilogPage", epilogPageProperty::refresh)
         fields.boolean(startWithEmptyPageProperty, "startWithEmptyPage")
         fields.boolean(endWithEmptyPageProperty, "endWithEmptyPage")
 

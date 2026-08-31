@@ -29,16 +29,17 @@ class StyleTranslationTest {
 
     /**
      * Use case: a stored style is handed to the layout core, and every part of the font - family,
-     * size, weight and slant - together with the alignment arrives unchanged.
+     * size, weight and slant - together with the alignment and the line spacing arrives unchanged.
      */
     @Test
     fun everyPartOfTheStoredStyleIsCarriedOver() {
         val stored = StyleData(
             font = FontData(name = "Garamond", size = 14, bold = true, italic = true),
+            textLineSpacing = 1.5,
             alignment = Alignment.CENTER
         )
 
-        val translated = StyleTranslation.toTextStyle(stored, lineSpacing = 1.5)
+        val translated = StyleTranslation.toTextStyle(stored)
 
         assertEquals(
             TextStyle(
@@ -54,19 +55,18 @@ class StyleTranslationTest {
     }
 
     /**
-     * Use case: the vertical numbers are not part of a stored style, so the line spacing of the design
-     * and the gaps around the block are taken from the arguments and nowhere else.
+     * Use case: the line spacing belongs to the stored style, the gaps around the block do not, so
+     * the spacing is read from the style and the gaps are taken from the arguments.
      */
     @Test
-    fun theVerticalNumbersAreTakenFromTheArguments() {
+    fun theLineSpacingComesFromTheStyleAndTheGapsFromTheArguments() {
         val translated = StyleTranslation.toTextStyle(
-            style = StyleData(),
-            lineSpacing = 1.2,
+            style = StyleData(textLineSpacing = 1.35),
             spaceBefore = 8.0,
             spaceAfter = 4.0
         )
 
-        assertEquals(1.2, translated.lineSpacing)
+        assertEquals(1.35, translated.lineSpacing)
         assertEquals(8.0, translated.spaceBefore)
         assertEquals(4.0, translated.spaceAfter)
     }
@@ -77,7 +77,7 @@ class StyleTranslationTest {
      */
     @Test
     fun theGapsDefaultToNothing() {
-        val translated = StyleTranslation.toTextStyle(StyleData(), lineSpacing = 1.0)
+        val translated = StyleTranslation.toTextStyle(StyleData())
 
         assertEquals(0.0, translated.spaceBefore)
         assertEquals(0.0, translated.spaceAfter)
@@ -91,6 +91,6 @@ class StyleTranslationTest {
     @CsvSource("LEFT,LEFT", "CENTER,CENTER", "RIGHT,RIGHT", "BLOCK,JUSTIFY")
     fun everyStoredAlignmentHasItsCounterpart(stored: Alignment, expected: TextAlignment) {
         assertEquals(expected, StyleTranslation.toTextAlignment(stored))
-        assertEquals(expected, StyleTranslation.toTextStyle(StyleData(alignment = stored), 1.0).alignment)
+        assertEquals(expected, StyleTranslation.toTextStyle(StyleData(alignment = stored)).alignment)
     }
 }

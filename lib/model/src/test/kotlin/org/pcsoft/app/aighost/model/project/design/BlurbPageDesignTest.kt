@@ -18,51 +18,50 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.model.TestData
+import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.StyleData
 
 /**
- * Developer tests for [CopyrightDesign].
+ * Developer tests for [BlurbPageDesign].
  */
-class CopyrightDesignTest {
+class BlurbPageDesignTest {
 
     private val mapper: ObjectMapper = ObjectMapper().registerKotlinModule()
 
     /**
-     * Use case: a fresh project is rendered before the user touched the design, so the copyright page
-     * is left out and its style is the one the application ships with.
+     * Use case: a fresh project is rendered before the user touched the design, so the blurb text is
+     * drawn with the style the application ships with instead of nothing at all.
      */
     @Test
-    fun defaultsToAHiddenCopyrightPage() {
-        val design = CopyrightDesign()
-
-        assertEquals(StyleData(), design.style)
-        assertEquals(false, design.show)
+    fun defaultsToThePlainStyle() {
+        assertEquals(StyleData(), BlurbPageDesign().textStyle)
     }
 
     /**
-     * Use case: the user turns the copyright page on and styles it, so both the flag and the style
-     * come back exactly as they were chosen.
+     * Use case: the user styles the blurb and stores the project, so the font, the alignment and the
+     * line spacing come back exactly as they were chosen.
      */
     @Test
-    fun roundTripsStyleAndFlag() {
-        val design = TestData.copyrightDesign()
+    fun roundTripsTheStyle() {
+        val design = TestData.blurbPageDesign()
 
-        val restored: CopyrightDesign = mapper.readValue(mapper.writeValueAsString(design))
+        val restored: BlurbPageDesign = mapper.readValue(mapper.writeValueAsString(design))
 
         assertEquals(design, restored)
-        assertEquals(8, restored.style.font.size)
-        assertEquals(true, restored.show)
+        assertEquals(10, restored.textStyle.font.size)
+        assertEquals(Alignment.BLOCK, restored.textStyle.alignment)
+        assertEquals(1.45, restored.textStyle.textLineSpacing)
     }
 
     /**
-     * Use case: a document holds the flag only, so the style is filled with its default instead of
-     * the design being rejected.
+     * Use case: a document holds an empty design object, so it is read back with the default style
+     * instead of failing.
      */
     @Test
-    fun readsPartialDocumentWithDefaults() {
-        val design: CopyrightDesign = mapper.readValue("""{"show":true}""")
+    fun readsEmptyDocument() {
+        val design: BlurbPageDesign = mapper.readValue("{}")
 
-        assertEquals(CopyrightDesign(show = true), design)
+        assertEquals(BlurbPageDesign(), design)
     }
 
     /**
@@ -71,8 +70,8 @@ class CopyrightDesignTest {
      */
     @Test
     fun ignoresUnknownProperties() {
-        val design: CopyrightDesign = mapper.readValue("""{"outline":true}""")
+        val design: BlurbPageDesign = mapper.readValue("""{"outline":true}""")
 
-        assertEquals(CopyrightDesign(), design)
+        assertEquals(BlurbPageDesign(), design)
     }
 }

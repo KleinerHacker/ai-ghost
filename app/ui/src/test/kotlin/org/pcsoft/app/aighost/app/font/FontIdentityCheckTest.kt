@@ -44,12 +44,12 @@ class FontIdentityCheckTest : ApplicationTest() {
     }
 
     private fun stylesOf(design: Design) = listOf(
-        design.titleDesign.style,
-        design.authorDesign.style,
-        design.copyrightDesign.style,
-        design.chapterDesign.titleStyle,
-        design.chapterDesign.titleAppendixStyle,
-        design.textDesign.style
+        design.titlePage.titleStyle,
+        design.titlePage.authorStyle,
+        design.copyrightPage.copyrightStyle,
+        design.chapterPage.titleStyle,
+        design.chapterPage.titleAppendixStyle,
+        design.chapterPage.textStyle
     )
 
     /**
@@ -76,11 +76,11 @@ class FontIdentityCheckTest : ApplicationTest() {
     fun stampingLeavesAnExistingFingerprintAlone() {
         val design = designOf(installedFamily())
         val brought = FontMetricsData("0123456789abcdef", 11.0, 3.0, 0.0)
-        design.textDesign.style.font.metrics = brought
+        design.chapterPage.textStyle.font.metrics = brought
 
         fx { FontIdentityCheck.stamp(design) }
 
-        assertEquals(brought, design.textDesign.style.font.metrics, "a stored fingerprint stays")
+        assertEquals(brought, design.chapterPage.textStyle.font.metrics, "a stored fingerprint stays")
     }
 
     /**
@@ -136,9 +136,9 @@ class FontIdentityCheckTest : ApplicationTest() {
         val family = installedFamily()
         val design = designOf(family)
         fx { FontIdentityCheck.stamp(design) }
-        design.titleDesign.style.font.metrics =
-            design.titleDesign.style.font.metrics!!.copy(widths = "0000000000000000")
-        design.textDesign.style.font.name = "No Such Family At All"
+        design.titlePage.titleStyle.font.metrics =
+            design.titlePage.titleStyle.font.metrics!!.copy(widths = "0000000000000000")
+        design.chapterPage.textStyle.font.name = "No Such Family At All"
 
         val findings = fx { FontIdentityCheck.check(design) }
 

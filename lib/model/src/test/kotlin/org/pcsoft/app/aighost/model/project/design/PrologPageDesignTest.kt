@@ -18,51 +18,56 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.model.TestData
+import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.StyleData
 
 /**
- * Developer tests for [ChapterDesign].
+ * Developer tests for [PrologPageDesign].
  */
-class ChapterDesignTest {
+class PrologPageDesignTest {
 
     private val mapper: ObjectMapper = ObjectMapper().registerKotlinModule()
 
     /**
-     * Use case: a fresh project is rendered before the user touched the design, so a chapter heading
-     * and its appendix are drawn with the style the application ships with.
+     * Use case: a fresh project is rendered before the user touched the design, so the prolog heading,
+     * its appendix and its body text are drawn with the style the application ships with.
      */
     @Test
     fun defaultsToPlainStyles() {
-        val design = ChapterDesign()
+        val design = PrologPageDesign()
 
         assertEquals(StyleData(), design.titleStyle)
         assertEquals(StyleData(), design.titleAppendixStyle)
+        assertEquals(StyleData(), design.textStyle)
     }
 
     /**
-     * Use case: the user styles a chapter heading and its appendix differently, so both keep their
-     * own font across the round trip instead of collapsing into one.
+     * Use case: the user styles the heading, its appendix and the body text differently, so all three
+     * keep their own font across the round trip instead of collapsing into one.
      */
     @Test
-    fun roundTripsBothStylesSeparately() {
-        val design = TestData.chapterDesign()
+    fun roundTripsEveryStyleSeparately() {
+        val design = TestData.prologPageDesign()
 
-        val restored: ChapterDesign = mapper.readValue(mapper.writeValueAsString(design))
+        val restored: PrologPageDesign = mapper.readValue(mapper.writeValueAsString(design))
 
         assertEquals(design, restored)
-        assertEquals(20, restored.titleStyle.font.size)
-        assertEquals(14, restored.titleAppendixStyle.font.size)
+        assertEquals(22, restored.titleStyle.font.size)
+        assertEquals(13, restored.titleAppendixStyle.font.size)
+        assertEquals(Alignment.BLOCK, restored.textStyle.alignment)
+        assertEquals(1.35, restored.textStyle.textLineSpacing)
     }
 
     /**
-     * Use case: a document holds the heading style only, so the appendix style is filled with its
-     * default instead of the design being rejected.
+     * Use case: a document holds the heading style only, so the remaining styles are filled with
+     * their defaults instead of the design being rejected.
      */
     @Test
     fun readsPartialDocumentWithDefaults() {
-        val design: ChapterDesign = mapper.readValue("""{"titleStyle":{"alignment":"CENTER"}}""")
+        val design: PrologPageDesign = mapper.readValue("""{"titleStyle":{"alignment":"CENTER"}}""")
 
         assertEquals(StyleData(), design.titleAppendixStyle)
+        assertEquals(StyleData(), design.textStyle)
     }
 
     /**
@@ -71,8 +76,8 @@ class ChapterDesignTest {
      */
     @Test
     fun ignoresUnknownProperties() {
-        val design: ChapterDesign = mapper.readValue("""{"numbering":"roman"}""")
+        val design: PrologPageDesign = mapper.readValue("""{"dropCap":true}""")
 
-        assertEquals(ChapterDesign(), design)
+        assertEquals(PrologPageDesign(), design)
     }
 }

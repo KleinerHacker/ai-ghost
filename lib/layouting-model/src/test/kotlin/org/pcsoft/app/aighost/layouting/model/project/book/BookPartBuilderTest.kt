@@ -23,25 +23,29 @@ import org.pcsoft.app.aighost.model.common.StyleData
 import org.pcsoft.app.aighost.model.project.book.Chapter
 import org.pcsoft.app.aighost.model.project.book.Epilog
 import org.pcsoft.app.aighost.model.project.book.Prolog
-import org.pcsoft.app.aighost.model.project.design.ChapterDesign
-import org.pcsoft.app.aighost.model.project.design.Design
-import org.pcsoft.app.aighost.model.project.design.TextDesign
+import org.pcsoft.app.aighost.model.project.design.ChapterPageDesign
 
 /**
  * Developer tests for the blocks of a written part, [BookPartBuilder].
  */
 class BookPartBuilderTest {
 
-    private val design = Design(
-        chapterDesign = ChapterDesign(
-            titleStyle = StyleData(font = FontData("Garamond", 20, bold = true), alignment = Alignment.CENTER),
-            titleAppendixStyle = StyleData(font = FontData("Garamond", 14, italic = true), alignment = Alignment.CENTER)
+    private val pageDesign = ChapterPageDesign(
+        titleStyle = StyleData(
+            font = FontData("Garamond", 20, bold = true),
+            textLineSpacing = 1.3,
+            alignment = Alignment.CENTER
         ),
-        textDesign = TextDesign(
-            style = StyleData(font = FontData("Baskerville", 11), alignment = Alignment.BLOCK)
+        titleAppendixStyle = StyleData(
+            font = FontData("Garamond", 14, italic = true),
+            textLineSpacing = 1.3,
+            alignment = Alignment.CENTER
         ),
-        chapterLineSpacing = 1.3,
-        textLineSpacing = 1.6
+        textStyle = StyleData(
+            font = FontData("Baskerville", 11),
+            textLineSpacing = 1.6,
+            alignment = Alignment.BLOCK
+        )
     )
 
     private fun chapter() = Chapter(
@@ -57,7 +61,7 @@ class BookPartBuilderTest {
      */
     @Test
     fun aPartIsHeadingAppendixAndParagraphs() {
-        val blocks = BookPartBuilder.build(chapter(), design)
+        val blocks = BookPartBuilder.build(chapter(), pageDesign)
 
         assertEquals(
             listOf(
@@ -71,12 +75,12 @@ class BookPartBuilderTest {
     }
 
     /**
-     * Use case: the heading is styled by the chapter design and the body by the text design, so a
+     * Use case: the heading is styled by the heading style and the body by the text style, so a
      * heading and a paragraph never end up looking alike by accident.
      */
     @Test
-    fun theHeadingAndTheBodyComeFromDifferentDesigns() {
-        val blocks = BookPartBuilder.build(chapter(), design)
+    fun theHeadingAndTheBodyComeFromDifferentStyles() {
+        val blocks = BookPartBuilder.build(chapter(), pageDesign)
 
         assertEquals("Garamond", blocks[0].style.family)
         assertEquals(20.0, blocks[0].style.size)
@@ -100,7 +104,7 @@ class BookPartBuilderTest {
      */
     @Test
     fun theHeadingAndTheParagraphsCarryTheirGaps() {
-        val blocks = BookPartBuilder.build(chapter(), design)
+        val blocks = BookPartBuilder.build(chapter(), pageDesign)
 
         assertEquals(BlockSpacing.BEFORE_PART_TITLE, blocks[0].style.spaceBefore)
         assertEquals(0.0, blocks[0].style.spaceAfter)
@@ -114,7 +118,7 @@ class BookPartBuilderTest {
      */
     @Test
     fun withoutAFurtherHeadingLineTheHeadingCarriesTheGapBelow() {
-        val blocks = BookPartBuilder.build(chapter().copy(titleAppendix = emptyList()), design)
+        val blocks = BookPartBuilder.build(chapter().copy(titleAppendix = emptyList()), pageDesign)
 
         assertEquals(BlockSpacing.BEFORE_PART_TITLE, blocks[0].style.spaceBefore)
         assertEquals(BlockSpacing.AFTER_PART_TITLE, blocks[0].style.spaceAfter)
@@ -126,7 +130,7 @@ class BookPartBuilderTest {
      */
     @Test
     fun withoutAHeadingTheFurtherLineTakesTheGapAbove() {
-        val blocks = BookPartBuilder.build(chapter().copy(title = ""), design)
+        val blocks = BookPartBuilder.build(chapter().copy(title = ""), pageDesign)
 
         assertEquals("In which the ship comes in", blocks[0].text)
         assertEquals(BlockSpacing.BEFORE_PART_TITLE, blocks[0].style.spaceBefore)
@@ -140,22 +144,22 @@ class BookPartBuilderTest {
     fun anEmptyParagraphIsKeptWhileAnEmptyHeadingIsNot() {
         val part = chapter().copy(title = "  ", paragraph = listOf("First.", "", "Second."))
 
-        val blocks = BookPartBuilder.build(part, design)
+        val blocks = BookPartBuilder.build(part, pageDesign)
 
         assertEquals(listOf("In which the ship comes in", "First.", "", "Second."), blocks.map { it.text })
     }
 
     /**
      * Use case: a prolog and an epilog carry the same shape as a chapter, so all three are built the
-     * very same way and never need a builder of their own.
+     * very same way from the page design they are handed.
      */
     @Test
     fun aPrologAndAnEpilogAreBuiltLikeAChapter() {
         val prolog = Prolog(title = "Before", paragraph = listOf("It began earlier."))
         val epilog = Epilog(title = "After", paragraph = listOf("It ended later."))
 
-        val fromProlog = BookPartBuilder.build(prolog, design)
-        val fromEpilog = BookPartBuilder.build(epilog, design)
+        val fromProlog = BookPartBuilder.build(prolog, pageDesign)
+        val fromEpilog = BookPartBuilder.build(epilog, pageDesign)
 
         assertEquals(listOf("Before", "It began earlier."), fromProlog.map { it.text })
         assertEquals(listOf("After", "It ended later."), fromEpilog.map { it.text })
@@ -168,6 +172,6 @@ class BookPartBuilderTest {
      */
     @Test
     fun anEmptyPartGivesNoBlock() {
-        assertTrue(BookPartBuilder.build(Prolog(), design).isEmpty())
+        assertTrue(BookPartBuilder.build(Prolog(), pageDesign).isEmpty())
     }
 }

@@ -31,22 +31,18 @@ private const val VERSION = 1
  * define the visual appearance of various book elements, the geometry of a page and page structure
  * options.
  *
- * A line spacing is a factor on the line height of the font it applies to: `1.0` sets the lines as
- * tightly as the font asks for, a larger value spreads them apart. Each class of element carries its
- * own factor, so a heading is set differently from the body text.
+ * The settings are grouped by the page they apply to. Each page design carries the styles of its
+ * texts, and a style carries its own line spacing - a factor on the line height of the font, where
+ * `1.0` sets the lines as tightly as the font asks for and a larger value spreads them apart.
  *
  * @property version Version of the design metadata structure.
  * @property pageFormat Size of a page and the empty space on its four sides.
- * @property authorDesign Typographic settings for the author name.
- * @property copyrightDesign Typographic settings for the copyright page.
- * @property titleDesign Typographic settings for the title page.
- * @property chapterDesign Typographic settings for chapter headings and content.
- * @property textDesign Typographic settings for regular body text.
- * @property authorLineSpacing Line spacing factor of the author name.
- * @property copyrightLineSpacing Line spacing factor of the copyright page.
- * @property titleLineSpacing Line spacing factor of the title page.
- * @property chapterLineSpacing Line spacing factor of chapter headings.
- * @property textLineSpacing Line spacing factor of the body text.
+ * @property titlePage Typographic settings for the title page.
+ * @property copyrightPage Typographic settings for the copyright page.
+ * @property prologPage Typographic settings for the prolog page.
+ * @property blurbPage Typographic settings for the blurb page.
+ * @property chapterPage Typographic settings for the chapter pages.
+ * @property epilogPage Typographic settings for the epilog page.
  * @property startWithEmptyPage Whether to begin the book with a blank page, true by default.
  * @property endWithEmptyPage Whether to end the book with a blank page, true by default.
  */
@@ -57,17 +53,13 @@ data class Design(
 
     var pageFormat: PageFormat = PageFormat(),
 
-    var authorDesign: AuthorDesign = AuthorDesign(),
-    var copyrightDesign: CopyrightDesign = CopyrightDesign(),
-    var titleDesign: TitleDesign = TitleDesign(),
-    var chapterDesign: ChapterDesign = ChapterDesign(),
-    var textDesign: TextDesign = TextDesign(),
+    var titlePage: TitlePageDesign = TitlePageDesign(),
+    var copyrightPage: CopyrightPageDesign = CopyrightPageDesign(),
 
-    var authorLineSpacing: Double = 1.2,
-    var copyrightLineSpacing: Double = 1.2,
-    var titleLineSpacing: Double = 1.2,
-    var chapterLineSpacing: Double = 1.2,
-    var textLineSpacing: Double = 1.2,
+    var prologPage: PrologPageDesign = PrologPageDesign(),
+    var blurbPage: BlurbPageDesign = BlurbPageDesign(),
+    var chapterPage: ChapterPageDesign = ChapterPageDesign(),
+    var epilogPage: EpilogPageDesign = EpilogPageDesign(),
 
     var startWithEmptyPage: Boolean = true,
     var endWithEmptyPage: Boolean = true

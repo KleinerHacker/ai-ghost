@@ -7,7 +7,7 @@
   custom width and height entered in millimetres - the four page margins in millimetres, and whether
   the book begins and ends with a blank page; OK stores and closes, Apply stores without closing,
   Cancel discards, and impossible values keep both from being stored. The *General* section and the
-  child sections of *Design* - title page, copyright page, epilog, chapter, prolog, blurb - are
+  child sections of *Design* - title page, copyright page, prolog, chapter, epilog, blurb - are
   placeholders for now
 
 * Project records what its fonts measured like on the computer it was written on, and says so when

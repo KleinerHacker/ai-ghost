@@ -2,7 +2,7 @@
 name: window-creator
 description: Creates a new Java FX window that does not exist yet, based on the exploration results of the window-explore agent.
 
-model: opus
+model: sonnet
 effort: low
 
 skills:

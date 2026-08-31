@@ -2,7 +2,7 @@
 name: dialog-creator
 description: Creates a new Java FX alert (dialog) that does not exist yet, based on the exploration results of the dialog-explore agent.
 
-model: opus
+model: sonnet
 effort: low
 
 skills:

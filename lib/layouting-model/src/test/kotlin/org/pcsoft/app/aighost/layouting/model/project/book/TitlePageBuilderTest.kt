@@ -21,9 +21,8 @@ import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.FontData
 import org.pcsoft.app.aighost.model.common.StyleData
 import org.pcsoft.app.aighost.model.project.book.Book
-import org.pcsoft.app.aighost.model.project.design.AuthorDesign
 import org.pcsoft.app.aighost.model.project.design.Design
-import org.pcsoft.app.aighost.model.project.design.TitleDesign
+import org.pcsoft.app.aighost.model.project.design.TitlePageDesign
 import org.pcsoft.app.aighost.model.project.meta.Meta
 
 /**
@@ -32,14 +31,24 @@ import org.pcsoft.app.aighost.model.project.meta.Meta
 class TitlePageBuilderTest {
 
     private val design = Design(
-        titleDesign = TitleDesign(
-            style = StyleData(font = FontData("Garamond", 28, bold = true), alignment = Alignment.CENTER)
-        ),
-        authorDesign = AuthorDesign(
-            style = StyleData(font = FontData("Garamond", 16, italic = true), alignment = Alignment.CENTER)
-        ),
-        titleLineSpacing = 1.4,
-        authorLineSpacing = 1.1
+        titlePage = TitlePageDesign(
+            titleStyle = StyleData(
+                font = FontData("Garamond", 28, bold = true),
+                textLineSpacing = 1.4,
+                alignment = Alignment.CENTER
+            ),
+            titleAppendixStyle = StyleData(
+                font = FontData("Garamond", 28, bold = true),
+                textLineSpacing = 1.4,
+                alignment = Alignment.CENTER
+            ),
+            showAuthor = true,
+            authorStyle = StyleData(
+                font = FontData("Garamond", 16, italic = true),
+                textLineSpacing = 1.1,
+                alignment = Alignment.CENTER
+            )
+        )
     )
 
     /**
@@ -65,11 +74,11 @@ class TitlePageBuilderTest {
     }
 
     /**
-     * Use case: the title and the author are set with the line spacing their own design carries, not
+     * Use case: the title and the author are set with the line spacing their own style carries, not
      * with a single one for the whole page.
      */
     @Test
-    fun everyBlockCarriesTheLineSpacingOfItsOwnDesign() {
+    fun everyBlockCarriesTheLineSpacingOfItsOwnStyle() {
         val blocks = TitlePageBuilder.build(
             Book(title = "The Silent Harbour", titleAppendix = listOf("A Novel")),
             Meta(author = "Jane Doe"),
@@ -107,6 +116,19 @@ class TitlePageBuilderTest {
 
         assertEquals(listOf("The Silent Harbour", "Jane Doe"), blocks.map { it.text })
         assertEquals(BlockSpacing.AFTER_TITLE_APPENDIX, blocks[0].style.spaceAfter)
+    }
+
+    /**
+     * Use case: the design hides the author name on the title page, so the block is left out even
+     * though an author was typed.
+     */
+    @Test
+    fun theAuthorIsLeftOutWhenTheDesignHidesIt() {
+        val hidden = design.copy(titlePage = design.titlePage.copy(showAuthor = false))
+
+        val blocks = TitlePageBuilder.build(Book(title = "The Silent Harbour"), Meta(author = "Jane Doe"), hidden)
+
+        assertEquals(listOf("The Silent Harbour"), blocks.map { it.text })
     }
 
     /**

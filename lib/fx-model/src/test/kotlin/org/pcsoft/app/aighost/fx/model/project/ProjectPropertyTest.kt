@@ -36,8 +36,8 @@ import org.pcsoft.app.aighost.model.project.Project
 import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.book.Chapter
 import org.pcsoft.app.aighost.model.project.book.Prolog
+import org.pcsoft.app.aighost.model.project.design.ChapterPageDesign
 import org.pcsoft.app.aighost.model.project.design.Design
-import org.pcsoft.app.aighost.model.project.design.TextDesign
 import org.pcsoft.app.aighost.model.project.meta.Meta
 import org.pcsoft.app.aighost.plugin.api.model.project.ProjectPart
 
@@ -77,12 +77,14 @@ class ProjectPropertyTest {
         recorder.watch("project.design", designProperty)
         recorder.watch("project.design.startWithEmptyPage", designProperty.startWithEmptyPageProperty)
         recorder.watch(
-            "project.design.text.style.font.size",
-            designProperty.textDesignProperty.styleProperty.fontProperty.sizeProperty
+            "project.design.chapterPage.textStyle.font.size",
+            designProperty.chapterPageProperty.textStyleProperty.fontProperty.sizeProperty
         )
         recorder.watch("project.book", bookProperty)
         recorder.watch("project.book.title", bookProperty.titleProperty)
         recorder.watch("project.book.chapters", bookProperty.chaptersProperty)
+        recorder.watch("project.book.copyright", bookProperty.copyrightProperty)
+        recorder.watch("project.book.copyright.copyright", bookProperty.copyrightProperty.copyrightProperty)
         recorder.watch("project.book.prolog", bookProperty.prologProperty)
         recorder.watch("project.book.prolog.title", bookProperty.prologProperty.titleProperty)
         recorder.watch("project.notes", notesProperty)
@@ -91,14 +93,19 @@ class ProjectPropertyTest {
 
     /** The project every test starts from, built fresh so no test sees the objects of another. */
     private fun newProject(): Project = Project(
-        meta = Meta(name = "My Novel", author = "Jane Doe", copyright = "(c) 2026 Jane Doe"),
+        meta = Meta(name = "My Novel", author = "Jane Doe"),
         design = Design(
-            textDesign = TextDesign(StyleData(FontData("Text Serif", 11), Alignment.BLOCK)),
+            chapterPage = ChapterPageDesign(
+                textStyle = StyleData(font = FontData("Text Serif", 11), alignment = Alignment.BLOCK)
+            ),
             startWithEmptyPage = true,
             endWithEmptyPage = false
         ),
         book = Book(
             title = "My Novel",
+            copyright = org.pcsoft.app.aighost.model.project.book.Copyright(
+                copyright = "Copyright 2026 Jane Doe"
+            ),
             prolog = Prolog("Before It All", paragraph = listOf("Long before.")),
             chapters = listOf(Chapter("first", "The First Part"))
         ),
@@ -109,11 +116,16 @@ class ProjectPropertyTest {
     private fun otherProject(): Project = Project(
         meta = Meta(name = "Other Novel", author = "John Doe"),
         design = Design(
-            textDesign = TextDesign(StyleData(FontData("Other Serif", 12), Alignment.LEFT)),
+            chapterPage = ChapterPageDesign(
+                textStyle = StyleData(font = FontData("Other Serif", 12), alignment = Alignment.LEFT)
+            ),
             startWithEmptyPage = false
         ),
         book = Book(
             title = "Other Novel",
+            copyright = org.pcsoft.app.aighost.model.project.book.Copyright(
+                copyright = "Copyright 2026 John Doe"
+            ),
             prolog = Prolog("Another Start"),
             chapters = listOf(Chapter("only", "The Only Part"))
         ),
@@ -173,15 +185,30 @@ class ProjectPropertyTest {
     }
 
     /**
+     * Use case: the user types another copyright notice, so the value travels through book and
+     * copyright page into the project and every level of that path reports the change.
+     */
+    @Test
+    fun writingTheCopyrightNoticeReachesTheProject() {
+        bookProperty.copyrightProperty.copyrightProperty.set("Copyright 2027 Jane Doe")
+
+        assertEquals("Copyright 2027 Jane Doe", project.book.copyright.copyright)
+        assertEquals(1, recorder.countOf("project.book.copyright.copyright"))
+        assertEquals(1, recorder.countOf("project.book.copyright"))
+        assertEquals(1, recorder.countOf("project.book"))
+        assertEquals(1, recorder.countOf("project"))
+    }
+
+    /**
      * Use case: the user changes the size of the body text, so the value travels through design and
-     * text design into the project and every level of that path reports the change.
+     * chapter page design into the project and every level of that path reports the change.
      */
     @Test
     fun writingDeepInsideTheDesignReachesTheProject() {
-        designProperty.textDesignProperty.styleProperty.fontProperty.sizeProperty.set(13)
+        designProperty.chapterPageProperty.textStyleProperty.fontProperty.sizeProperty.set(13)
 
-        assertEquals(13, project.design.textDesign.style.font.size)
-        assertEquals(1, recorder.countOf("project.design.text.style.font.size"))
+        assertEquals(13, project.design.chapterPage.textStyle.font.size)
+        assertEquals(1, recorder.countOf("project.design.chapterPage.textStyle.font.size"))
         assertEquals(1, recorder.countOf("project.design"))
         assertEquals(1, recorder.countOf("project"))
     }
@@ -346,7 +373,11 @@ class ProjectPropertyTest {
 
         assertEquals("Other Novel", property.metaProperty.nameProperty.get())
         assertEquals("Another Start", bookProperty.prologProperty.titleProperty.get())
-        assertEquals(12, designProperty.textDesignProperty.styleProperty.fontProperty.sizeProperty.get())
+        assertEquals("Copyright 2026 John Doe", bookProperty.copyrightProperty.copyrightProperty.get())
+        assertEquals(
+            12,
+            designProperty.chapterPageProperty.textStyleProperty.fontProperty.sizeProperty.get()
+        )
         assertEquals("Written elsewhere", notesProperty.noteProperty.get())
         recorder.assertAllFired("opening another project")
     }

@@ -16,15 +16,14 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.pcsoft.app.aighost.model.common.StyleData
 
 /**
- * Represents the design settings for an author.
+ * Typographic settings for the blurb page.
  *
- * This class captures the stylistic configuration for an author's text and
- * appearance, defining how elements like font, alignment, and other typographic
- * properties are rendered.
+ * The blurb carries no heading of its own, so it is its paragraphs and nothing else. They are set
+ * with a single text style, the same way the body of a chapter is.
  *
- * @property style Defines the stylistic attributes such as font, alignment, and text placement.
+ * @property textStyle Appearance of the blurb text.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class AuthorDesign(
-    var style: StyleData = StyleData()
+data class BlurbPageDesign(
+    var textStyle: StyleData = StyleData()
 )

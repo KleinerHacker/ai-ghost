@@ -15,36 +15,66 @@ package org.pcsoft.app.aighost.layouting.model.project.meta
 import org.pcsoft.app.aighost.layouting.TextBlock
 import org.pcsoft.app.aighost.layouting.model.common.BlockSpacing
 import org.pcsoft.app.aighost.layouting.model.common.StyleTranslation
+import org.pcsoft.app.aighost.model.project.book.Copyright
 import org.pcsoft.app.aighost.model.project.design.Design
 import org.pcsoft.app.aighost.model.project.meta.Meta
 
 /**
  * Builds the blocks of the copyright page.
  *
- * The copyright is one text the user typed and it may carry line breaks of its own. A block never
- * does, so the text is cut at its breaks and every part becomes a block: what the user typed on its
- * own line is set on its own line.
+ * The notice is one text the user typed and it may carry line breaks of its own. A block never does,
+ * so the text is cut at its breaks and every part becomes a block. The further copyright lines follow
+ * below it, and the author name closes the page when the design asks for it.
+ *
+ * Whether the page is printed at all is a switch of the copyright itself: a page that does not belong
+ * to the book gives no block.
  */
 object CopyrightPageBuilder {
 
     /**
      * Builds the copyright page.
      *
-     * @param meta Meta data the copyright text is taken from.
-     * @param design Design the style and the line spacing are taken from.
-     * @return The blocks in the order they are set, empty when nothing was typed.
+     * @param copyright Copyright page of the book - the notice, its further lines and the switch.
+     * @param meta Meta data the author name is taken from.
+     * @param design Design the copyright page styles are taken from.
+     * @return The blocks in the order they are set, empty when the page does not belong to the book.
      */
-    fun build(meta: Meta, design: Design): List<TextBlock> {
-        if (meta.copyright.isBlank()) {
+    fun build(copyright: Copyright, meta: Meta, design: Design): List<TextBlock> {
+        if (!copyright.included) {
             return emptyList()
         }
 
-        val style = StyleTranslation.toTextStyle(
-            style = design.copyrightDesign.style,
-            lineSpacing = design.copyrightLineSpacing,
+        val copyrightPage = design.copyrightPage
+        val blocks = ArrayList<TextBlock>()
+
+        if (copyright.copyright.isNotBlank()) {
+            val noticeStyle = StyleTranslation.toTextStyle(
+                style = copyrightPage.copyrightStyle,
+                spaceAfter = BlockSpacing.AFTER_PARAGRAPH
+            )
+            copyright.copyright.lines().forEach { line ->
+                blocks += TextBlock(text = line, style = noticeStyle)
+            }
+        }
+
+        val appendixStyle = StyleTranslation.toTextStyle(
+            style = copyrightPage.copyrightAppendixStyle,
             spaceAfter = BlockSpacing.AFTER_PARAGRAPH
         )
+        copyright.copyrightAppendix.filter { it.isNotBlank() }.forEach { line ->
+            blocks += TextBlock(text = line, style = appendixStyle)
+        }
 
-        return meta.copyright.lines().map { line -> TextBlock(text = line, style = style) }
+        if (copyrightPage.showAuthor && meta.author.isNotBlank()) {
+            blocks += TextBlock(
+                text = meta.author,
+                style = StyleTranslation.toTextStyle(
+                    style = copyrightPage.authorStyle,
+                    spaceBefore = BlockSpacing.BEFORE_AUTHOR
+                )
+            )
+        }
+
+        return blocks
     }
 }

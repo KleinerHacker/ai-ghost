@@ -37,17 +37,26 @@ class StyleDataTest {
     }
 
     /**
-     * Use case: a style is written to disk, so font and alignment appear in the JSON under the stable
-     * property names the file format promises.
+     * Use case: a style is created from a font alone, so the lines are set with the spacing the
+     * application ships with until the user picks something else.
      */
     @Test
-    fun serialisesFontAndAlignment() {
-        val style = StyleData(FontData("Serif", 12, true, false), Alignment.BLOCK)
+    fun defaultsToTheShippedLineSpacing() {
+        assertEquals(1.2, StyleData(FontData("Serif", 12, false, false)).textLineSpacing)
+    }
+
+    /**
+     * Use case: a style is written to disk, so font, line spacing and alignment appear in the JSON
+     * under the stable property names the file format promises.
+     */
+    @Test
+    fun serialisesFontLineSpacingAndAlignment() {
+        val style = StyleData(FontData("Serif", 12, true, false), textLineSpacing = 1.5, alignment = Alignment.BLOCK)
 
         val json = mapper.writeValueAsString(style)
 
         assertEquals(
-            """{"font":{"name":"Serif","size":12,"bold":true,"italic":false,"metrics":null},"alignment":"BLOCK"}""",
+            """{"font":{"name":"Serif","size":12,"bold":true,"italic":false,"metrics":null},"textLineSpacing":1.5,"alignment":"BLOCK"}""",
             json
         )
     }
@@ -59,11 +68,12 @@ class StyleDataTest {
     @ParameterizedTest
     @EnumSource(Alignment::class)
     fun roundTripsEveryAlignment(alignment: Alignment) {
-        val style = StyleData(FontData("Sans", 14, false, true), alignment)
+        val style = StyleData(FontData("Sans", 14, false, true), textLineSpacing = 1.3, alignment = alignment)
 
         val restored: StyleData = mapper.readValue(mapper.writeValueAsString(style))
 
         assertEquals(style, restored)
+        assertEquals(1.3, restored.textLineSpacing)
     }
 
     /**

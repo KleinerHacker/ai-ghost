@@ -16,13 +16,14 @@ import org.pcsoft.app.aighost.layouting.TextBlock
 import org.pcsoft.app.aighost.layouting.model.common.BlockSpacing
 import org.pcsoft.app.aighost.layouting.model.common.StyleTranslation
 import org.pcsoft.app.aighost.model.project.book.BookPart
-import org.pcsoft.app.aighost.model.project.design.Design
+import org.pcsoft.app.aighost.model.project.design.BookPartPageDesign
 
 /**
  * Builds the blocks of a written part - a prolog, a chapter or an epilog.
  *
  * All three carry the same shape, so all three are built here: the heading, the further heading lines
- * and the paragraphs. The heading is styled by the chapter design, the paragraphs by the text design.
+ * and the paragraphs. The heading is styled by the part's page design, the paragraphs by its text
+ * style; the caller passes the page design that belongs to the part.
  *
  * An empty heading is left out, an empty paragraph is **not**: the user put it there and it keeps its
  * line on the page.
@@ -33,10 +34,10 @@ object BookPartBuilder {
      * Builds one written part.
      *
      * @param part Part the heading and the paragraphs are taken from.
-     * @param design Design the styles and the line spacings are taken from.
+     * @param pageDesign Page design of the part - the styles of the heading, its further lines and the text.
      * @return The blocks in the order they are set.
      */
-    fun build(part: BookPart, design: Design): List<TextBlock> {
+    fun build(part: BookPart, pageDesign: BookPartPageDesign): List<TextBlock> {
         val blocks = ArrayList<TextBlock>()
 
         val appendix = part.titleAppendix.filter { it.isNotBlank() }
@@ -45,8 +46,7 @@ object BookPartBuilder {
             blocks += TextBlock(
                 text = part.title,
                 style = StyleTranslation.toTextStyle(
-                    style = design.chapterDesign.titleStyle,
-                    lineSpacing = design.chapterLineSpacing,
+                    style = pageDesign.titleStyle,
                     spaceBefore = BlockSpacing.BEFORE_PART_TITLE,
                     spaceAfter = if (appendix.isEmpty()) BlockSpacing.AFTER_PART_TITLE else 0.0
                 )
@@ -57,8 +57,7 @@ object BookPartBuilder {
             blocks += TextBlock(
                 text = line,
                 style = StyleTranslation.toTextStyle(
-                    style = design.chapterDesign.titleAppendixStyle,
-                    lineSpacing = design.chapterLineSpacing,
+                    style = pageDesign.titleAppendixStyle,
                     spaceBefore = if (index == 0 && part.title.isBlank()) BlockSpacing.BEFORE_PART_TITLE else 0.0,
                     spaceAfter = if (index == appendix.lastIndex) BlockSpacing.AFTER_PART_TITLE else 0.0
                 )
@@ -66,8 +65,7 @@ object BookPartBuilder {
         }
 
         val textStyle = StyleTranslation.toTextStyle(
-            style = design.textDesign.style,
-            lineSpacing = design.textLineSpacing,
+            style = pageDesign.textStyle,
             spaceAfter = BlockSpacing.AFTER_PARAGRAPH
         )
         part.paragraph.forEach { paragraph ->

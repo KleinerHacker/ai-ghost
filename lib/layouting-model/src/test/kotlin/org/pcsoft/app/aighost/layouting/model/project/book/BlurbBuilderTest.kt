@@ -21,8 +21,8 @@ import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.FontData
 import org.pcsoft.app.aighost.model.common.StyleData
 import org.pcsoft.app.aighost.model.project.book.Blurb
+import org.pcsoft.app.aighost.model.project.design.BlurbPageDesign
 import org.pcsoft.app.aighost.model.project.design.Design
-import org.pcsoft.app.aighost.model.project.design.TextDesign
 
 /**
  * Developer tests for the blocks of the blurb, [BlurbBuilder].
@@ -30,10 +30,13 @@ import org.pcsoft.app.aighost.model.project.design.TextDesign
 class BlurbBuilderTest {
 
     private val design = Design(
-        textDesign = TextDesign(
-            style = StyleData(font = FontData("Baskerville", 11), alignment = Alignment.BLOCK)
-        ),
-        textLineSpacing = 1.6
+        blurbPage = BlurbPageDesign(
+            textStyle = StyleData(
+                font = FontData("Baskerville", 11),
+                textLineSpacing = 1.6,
+                alignment = Alignment.BLOCK
+            )
+        )
     )
 
     /**
@@ -53,11 +56,11 @@ class BlurbBuilderTest {
     }
 
     /**
-     * Use case: the blurb is set the way the body of the book is, so it comes out in the text design
-     * and with the line spacing of the text.
+     * Use case: the blurb is set the way the body of the book is, so it comes out in the blurb page
+     * design and with the line spacing of that style.
      */
     @Test
-    fun theBlurbIsSetInTheTextDesign() {
+    fun theBlurbIsSetInTheBlurbPageDesign() {
         val blocks = BlurbBuilder.build(Blurb(paragraph = listOf("Until one summer.")), design)
 
         val style = blocks.single().style
