@@ -18,19 +18,19 @@ import javafx.scene.layout.BorderPane
 import org.pcsoft.app.aighost.fx.model.project.design.DesignProperty
 
 /**
- * The "General" section of the project settings: the page geometry and the two blank pages that
+ * The "Design" section of the project settings: the page geometry and the two blank pages that
  * frame the book.
  *
  * The component owns no data of its own. [bindDesign] hands it the design property of the working
  * copy the dialog keeps; every field follows that model and writes straight back into it. [valid]
  * reports whether the current input can be stored, so the dialog can lock its buttons.
  */
-class GeneralSettings : BorderPane() {
+class DesignSettings : BorderPane() {
 
-    private val viewModel: GeneralSettingsViewModel
+    private val viewModel: DesignSettingsViewModel
 
     init {
-        FluentViewLoader.fxmlView(GeneralSettingsView::class.java).let {
+        FluentViewLoader.fxmlView(DesignSettingsView::class.java).let {
             it.root(this)
             it.load().let { loaded ->
                 viewModel = loaded.viewModel

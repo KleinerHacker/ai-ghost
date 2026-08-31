@@ -18,7 +18,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
-<?import org.pcsoft.app.aighost.app.ui.component.GeneralSettings?>
+<?import org.pcsoft.app.aighost.app.ui.component.DesignSettings?>
 <?import org.pcsoft.app.aighost.app.ui.component.PlaceholderSettings?>
 <?import org.pcsoft.app.aighost.app.ui.component.ProjectSettingsTree?>
 <BorderPane styleClass="project-settings-content" prefWidth="800.0" prefHeight="600.0"
@@ -39,7 +39,7 @@
     </left>
     <center>
         <StackPane fx:id="content">
-            <GeneralSettings fx:id="general"/>
+            <DesignSettings fx:id="design"/>
             <PlaceholderSettings fx:id="placeholder"/>
         </StackPane>
     </center>

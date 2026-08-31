@@ -29,7 +29,7 @@ import java.math.RoundingMode
 import kotlin.math.abs
 
 /**
- * View model of [GeneralSettings].
+ * View model of [DesignSettings].
  *
  * The page geometry is stored in points and shown in millimetres, so this model is the single place
  * the two units meet: every field is a millimetre text, and the conversion happens on the way in and
@@ -37,11 +37,13 @@ import kotlin.math.abs
  * component owns no state of its own, the millimetre texts are only the current value of the design
  * expressed differently.
  *
- * [valid] reports whether the current input can be stored - every number present and positive, and
- * the margins of an axis leaving room for the text between them. While the input is invalid the
- * design keeps the last value that could be parsed.
+ * [valid] reports whether the current input can be stored - a positive width and height and a
+ * number of zero or more in every margin. A single margin can never grow past a third of its page
+ * measure, so the margins of an axis always leave room for the text between them; the view caps the
+ * spinner at that third. While the input is invalid the design keeps the last value that could be
+ * parsed.
  */
-class GeneralSettingsViewModel : ViewModel {
+class DesignSettingsViewModel : ViewModel {
 
     private companion object {
         /** Points per millimetre, `72 / 25.4`. */
@@ -85,16 +87,6 @@ class GeneralSettingsViewModel : ViewModel {
     val sizeValid: BooleanBinding =
         Bindings.createBooleanBinding({ positive(widthMm.get()) && positive(heightMm.get()) }, widthMm, heightMm)
 
-    /** Whether the horizontal margins leave room for the text between them. */
-    val widthFits: BooleanBinding = Bindings.createBooleanBinding(
-        { fits(widthMm.get(), innerMm.get(), outerMm.get()) }, widthMm, innerMm, outerMm
-    )
-
-    /** Whether the vertical margins leave room for the text between them. */
-    val heightFits: BooleanBinding = Bindings.createBooleanBinding(
-        { fits(heightMm.get(), topMm.get(), bottomMm.get()) }, heightMm, topMm, bottomMm
-    )
-
     /** Whether every margin is a number that is zero or greater. */
     val marginsValid: BooleanBinding = Bindings.createBooleanBinding(
         { listOf(innerMm, outerMm, topMm, bottomMm).all { zeroOrMore(it.get()) } },
@@ -102,13 +94,10 @@ class GeneralSettingsViewModel : ViewModel {
     )
 
     /** Whether the whole form can be stored. */
-    val valid: BooleanBinding = sizeValid.and(marginsValid).and(widthFits).and(heightFits)
+    val valid: BooleanBinding = sizeValid.and(marginsValid)
 
     /** Whether the page size fields are in error. */
     val sizeError: BooleanBinding = sizeValid.not()
-
-    /** Whether the margin fields are in error. */
-    val marginError: BooleanBinding = sizeValid.and(marginsValid.and(widthFits).and(heightFits).not())
 
     // The model the form follows right now, and the listeners it follows it with, so both can be
     // released again when another model takes its place.
@@ -211,13 +200,6 @@ class GeneralSettingsViewModel : ViewModel {
     private fun positive(text: String?): Boolean = (mm(text) ?: -1.0) > 0.0
 
     private fun zeroOrMore(text: String?): Boolean = (mm(text) ?: -1.0) >= 0.0
-
-    private fun fits(size: String?, first: String?, second: String?): Boolean {
-        val s = mm(size) ?: return false
-        val a = mm(first) ?: return false
-        val b = mm(second) ?: return false
-        return a >= 0.0 && b >= 0.0 && a + b < s
-    }
 
     private fun format(valueMm: Double): String {
         val plain = valueMm.toBigDecimal().setScale(2, RoundingMode.HALF_UP).toPlainString()

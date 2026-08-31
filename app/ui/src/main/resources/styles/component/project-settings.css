@@ -11,9 +11,10 @@
  */
 
 /*
- * Project settings dialog: the header strip, the navigation tree, the general settings form and the
- * placeholder that stands in for the design sections. The combo box, the check box and the plain
- * separator are first used here, so they are styled in this file, scoped to the dialog.
+ * Project settings dialog: the header strip, the navigation tree, the design settings form and the
+ * placeholder that stands in for the other design sections. The combo box, the spinner, the check
+ * box and the plain separator are first used here, so they are styled in this file, scoped to the
+ * dialog.
  */
 
 .project-settings-content {
@@ -56,7 +57,9 @@
 }
 
 .text-field.field-error,
-.text-field.field-error:focused {
+.text-field.field-error:focused,
+.spinner.field-error,
+.spinner.field-error:focused {
     -fx-border-color: -ghost-danger;
 }
 
@@ -124,6 +127,63 @@
 
 .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
     -fx-background-color: -ghost-tint-pressed;
+}
+
+/* ------------------------------------------------------------- spinner ---- */
+
+.project-settings-content .spinner {
+    -fx-background-color: -ghost-surface-input;
+    -fx-background-radius: 8px;
+    -fx-border-color: -ghost-tint-line;
+    -fx-border-width: 2px;
+    -fx-border-radius: 8px;
+    -fx-padding: 0;
+}
+
+.project-settings-content .spinner:focused,
+.project-settings-content .spinner:focus-within {
+    -fx-border-color: -ghost-accent;
+}
+
+.project-settings-content .spinner:disabled {
+    -fx-opacity: 0.5;
+}
+
+.project-settings-content .spinner > .text-field {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 2px;
+    -fx-text-fill: -ghost-ink;
+    -fx-highlight-fill: -ghost-tint-pressed;
+    -fx-padding: 3px 6px 3px 6px;
+}
+
+.project-settings-content .spinner .increment-arrow-button,
+.project-settings-content .spinner .decrement-arrow-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 8px;
+    -fx-padding: 3px 8px 3px 8px;
+}
+
+.project-settings-content .spinner .increment-arrow-button:hover,
+.project-settings-content .spinner .decrement-arrow-button:hover {
+    -fx-background-color: -ghost-tint-hover;
+}
+
+.project-settings-content .spinner .increment-arrow-button:pressed,
+.project-settings-content .spinner .decrement-arrow-button:pressed {
+    -fx-background-color: -ghost-tint-pressed;
+}
+
+.project-settings-content .spinner .increment-arrow,
+.project-settings-content .spinner .decrement-arrow {
+    -fx-background-color: -ghost-ink-soft;
+}
+
+.project-settings-content .spinner:disabled .increment-arrow,
+.project-settings-content .spinner:disabled .decrement-arrow {
+    -fx-background-color: -ghost-ink-soft;
 }
 
 /* ----------------------------------------------------------- check box ---- */

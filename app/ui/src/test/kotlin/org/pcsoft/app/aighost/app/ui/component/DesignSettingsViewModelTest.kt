@@ -23,19 +23,19 @@ import org.pcsoft.app.aighost.model.project.design.Design
 import org.pcsoft.app.aighost.model.project.design.PageFormat
 
 /**
- * Developer tests for [GeneralSettingsViewModel].
+ * Developer tests for [DesignSettingsViewModel].
  *
  * The model stores points and the form shows millimetres, so every check converts one into the other
  * with the same factor the view model uses.
  */
-class GeneralSettingsViewModelTest {
+class DesignSettingsViewModelTest {
 
     private companion object {
         const val PT_PER_MM: Double = 72.0 / 25.4
         const val DELTA: Double = 1e-6
     }
 
-    private val viewModel = GeneralSettingsViewModel()
+    private val viewModel = DesignSettingsViewModel()
 
     private fun mmToPt(mm: Double): Double = mm * PT_PER_MM
 
@@ -162,14 +162,14 @@ class GeneralSettingsViewModelTest {
     }
 
     /**
-     * Use case: the margins of an axis add up to more than the page, so the form cannot be stored.
+     * Use case: a margin that is not a number of zero or more keeps the form from being stored.
      */
     @Test
-    fun validIsFalseWhenMarginsDoNotFit() {
+    fun validIsFalseWhenAMarginIsNotANumber() {
         viewModel.bind(designOf(a5()))
         assertTrue(viewModel.valid.value)
 
-        viewModel.innerMm.value = "200"
+        viewModel.innerMm.value = ""
         assertFalse(viewModel.valid.value)
     }
 

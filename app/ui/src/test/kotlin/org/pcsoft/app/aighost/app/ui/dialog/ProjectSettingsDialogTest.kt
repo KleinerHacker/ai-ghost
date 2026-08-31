@@ -14,7 +14,7 @@ package org.pcsoft.app.aighost.app.ui.dialog
 
 import de.saxsys.mvvmfx.MvvmFX
 import javafx.scene.control.ButtonType
-import javafx.scene.control.TextField
+import javafx.scene.control.Spinner
 import javafx.scene.control.TreeView
 import javafx.stage.Stage
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -82,8 +82,8 @@ class ProjectSettingsDialogTest : ApplicationTest() {
     }
 
     /**
-     * Use case: the user picks a design section, so its placeholder comes to the front and the
-     * general editor steps back.
+     * Use case: the user picks a design child section, so its placeholder comes to the front and the
+     * design editor steps back.
      */
     @Test
     fun pickingADesignSectionShowsItsPlaceholder() {
@@ -91,14 +91,14 @@ class ProjectSettingsDialogTest : ApplicationTest() {
 
         @Suppress("UNCHECKED_CAST")
         val tree = dialog.dialogPane.lookup(".tree-view") as TreeView<ProjectSettingsSection>
-        val general = dialog.dialogPane.lookup(".general-settings")
+        val design = dialog.dialogPane.lookup(".design-settings")
         val placeholder = dialog.dialogPane.lookup(".placeholder-settings")
 
-        assertTrue(general.isVisible, "the dialog opens on the design editor")
+        assertTrue(design.isVisible, "the dialog opens on the design editor")
 
         interact { tree.selectionModel.select(tree.root.children[1].children[0]) }
 
-        assertFalse(general.isVisible, "the general editor stayed in front of a design child section")
+        assertFalse(design.isVisible, "the design editor stayed in front of a design child section")
         assertTrue(placeholder.isVisible, "the placeholder of the design child section is not shown")
     }
 
@@ -111,17 +111,17 @@ class ProjectSettingsDialogTest : ApplicationTest() {
         val dialog = build(target)
         val ok = dialog.dialogPane.lookupButton(ButtonType.OK)
         val apply = dialog.dialogPane.lookupButton(ButtonType.APPLY)
-        val inner = dialog.dialogPane.lookup("#txtInner") as TextField
+        val width = dialog.dialogPane.lookup("#spnWidth") as Spinner<*>
 
         assertFalse(ok.isDisabled, "OK is locked on a valid page")
         assertFalse(apply.isDisabled, "APPLY is locked on a valid page")
 
-        interact { inner.text = "500" }
+        interact { width.editor.text = "" }
 
         assertTrue(ok.isDisabled, "OK stays open on an impossible page")
         assertTrue(apply.isDisabled, "APPLY stays open on an impossible page")
 
-        interact { inner.text = "20" }
+        interact { width.editor.text = "148" }
 
         assertFalse(ok.isDisabled, "OK stays locked after the page became valid again")
     }
@@ -134,10 +134,10 @@ class ProjectSettingsDialogTest : ApplicationTest() {
     fun applyWritesTheWorkingCopyIntoTheProject() {
         val design = target
         val dialog = build(design)
-        val width = dialog.dialogPane.lookup("#txtWidth") as TextField
+        val width = dialog.dialogPane.lookup("#spnWidth") as Spinner<*>
         val original = design.get()!!.pageFormat.width
 
-        interact { width.text = "500" }
+        interact { width.editor.text = "500" }
         assertEquals(original, design.get()!!.pageFormat.width, DELTA, "the working copy leaked into the project")
 
         interact { dialog.applyChanges() }

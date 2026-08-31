@@ -15,7 +15,7 @@ package org.pcsoft.app.aighost.app.ui.component
 import kotlin.math.abs
 
 /**
- * A ready-made page size the user picks in the general project settings instead of typing width and
+ * A ready-made page size the user picks in the design project settings instead of typing width and
  * height by hand.
  *
  * The measures are kept in millimetres, the unit the dialog shows; the model is filled in points.
@@ -28,22 +28,22 @@ import kotlin.math.abs
 enum class PagePreset(val bundleKey: String, val widthMm: Double?, val heightMm: Double?) {
 
     /** DIN A5. */
-    A5("dialog.projectSettings.general.preset.a5", 148.0, 210.0),
+    A5("dialog.projectSettings.design.preset.a5", 148.0, 210.0),
 
     /** DIN A4. */
-    A4("dialog.projectSettings.general.preset.a4", 210.0, 297.0),
+    A4("dialog.projectSettings.design.preset.a4", 210.0, 297.0),
 
     /** 12.5 cm x 19 cm, a common trade paperback. */
-    TRADE_125_190("dialog.projectSettings.general.preset.trade125", 125.0, 190.0),
+    TRADE_125_190("dialog.projectSettings.design.preset.trade125", 125.0, 190.0),
 
     /** 13.5 cm x 21.5 cm, a common trade paperback. */
-    TRADE_135_215("dialog.projectSettings.general.preset.trade135", 135.0, 215.0),
+    TRADE_135_215("dialog.projectSettings.design.preset.trade135", 135.0, 215.0),
 
     /** 6 in x 9 in, the US trade paperback. */
-    US_TRADE_6_9("dialog.projectSettings.general.preset.usTrade", 152.4, 228.6),
+    US_TRADE_6_9("dialog.projectSettings.design.preset.usTrade", 152.4, 228.6),
 
     /** A freely sized page. */
-    CUSTOM("dialog.projectSettings.general.preset.custom", null, null);
+    CUSTOM("dialog.projectSettings.design.preset.custom", null, null);
 
     companion object {
 

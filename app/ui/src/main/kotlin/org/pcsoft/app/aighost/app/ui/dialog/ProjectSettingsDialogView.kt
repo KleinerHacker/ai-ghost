@@ -20,7 +20,7 @@ import javafx.fxml.Initializable
 import javafx.scene.image.ImageView
 import javafx.scene.layout.StackPane
 import org.pcsoft.app.aighost.app.AiGhostIcons
-import org.pcsoft.app.aighost.app.ui.component.GeneralSettings
+import org.pcsoft.app.aighost.app.ui.component.DesignSettings
 import org.pcsoft.app.aighost.app.ui.component.PlaceholderSettings
 import org.pcsoft.app.aighost.app.ui.component.ProjectSettingsSection
 import org.pcsoft.app.aighost.app.ui.component.ProjectSettingsTree
@@ -47,7 +47,7 @@ class ProjectSettingsDialogView : FxmlView<ProjectSettingsDialogViewModel>, Init
     private lateinit var content: StackPane
 
     @FXML
-    private lateinit var general: GeneralSettings
+    private lateinit var design: DesignSettings
 
     @FXML
     private lateinit var placeholder: PlaceholderSettings
@@ -56,12 +56,12 @@ class ProjectSettingsDialogView : FxmlView<ProjectSettingsDialogViewModel>, Init
     private lateinit var viewModel: ProjectSettingsDialogViewModel
 
     /** Whether the input of the currently shown editor can be stored. */
-    val valid: BooleanExpression get() = general.valid
+    val valid: BooleanExpression get() = design.valid
 
     override fun initialize(location: URL?, resources: ResourceBundle?) {
         imgIcon.image = AiGhostIcons.projectSettings
 
-        general.bindDesign(viewModel.workingDesign)
+        design.bindDesign(viewModel.workingDesign)
 
         tree.selectedSection.addListener { _, _, section -> showSection(section) }
         showSection(tree.selectedSection.value)
@@ -71,8 +71,8 @@ class ProjectSettingsDialogView : FxmlView<ProjectSettingsDialogViewModel>, Init
         val current = section ?: ProjectSettingsSection.Design
         val showsEditor = current.implemented
 
-        general.isVisible = showsEditor
-        general.isManaged = showsEditor
+        design.isVisible = showsEditor
+        design.isManaged = showsEditor
         placeholder.isVisible = !showsEditor
         placeholder.isManaged = !showsEditor
 

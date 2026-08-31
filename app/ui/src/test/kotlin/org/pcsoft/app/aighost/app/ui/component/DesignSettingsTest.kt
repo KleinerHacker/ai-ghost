@@ -16,7 +16,8 @@ import de.saxsys.mvvmfx.MvvmFX
 import javafx.scene.Scene
 import javafx.scene.control.CheckBox
 import javafx.scene.control.ComboBox
-import javafx.scene.control.TextField
+import javafx.scene.control.Spinner
+import javafx.scene.control.SpinnerValueFactory.DoubleSpinnerValueFactory
 import javafx.stage.Stage
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -33,19 +34,19 @@ import java.util.Locale
 import java.util.ResourceBundle
 
 /**
- * Developer tests for [GeneralSettings].
+ * Developer tests for [DesignSettings].
  *
  * The checks run on the real controls the user works with, and prove the binding to the design
  * property in both directions.
  */
-class GeneralSettingsTest : ApplicationTest() {
+class DesignSettingsTest : ApplicationTest() {
 
     private companion object {
         const val PT_PER_MM: Double = 72.0 / 25.4
         const val DELTA: Double = 1e-6
     }
 
-    private lateinit var component: GeneralSettings
+    private lateinit var component: DesignSettings
 
     private val design: DesignProperty =
         ProjectProperty(Project(design = Design(pageFormat = a5()))).designProperty
@@ -58,14 +59,18 @@ class GeneralSettingsTest : ApplicationTest() {
         topMargin = 15.0 * (72.0 / 25.4), bottomMargin = 18.0 * (72.0 / 25.4)
     )
 
-    private val width: TextField get() = component.lookup("#txtWidth") as TextField
-    private val height: TextField get() = component.lookup("#txtHeight") as TextField
-    private val inner: TextField get() = component.lookup("#txtInner") as TextField
+    private val width: Spinner<*> get() = component.lookup("#spnWidth") as Spinner<*>
+    private val height: Spinner<*> get() = component.lookup("#spnHeight") as Spinner<*>
+    private val inner: Spinner<*> get() = component.lookup("#spnInner") as Spinner<*>
+    private val top: Spinner<*> get() = component.lookup("#spnTop") as Spinner<*>
 
     @Suppress("UNCHECKED_CAST")
     private val preset: ComboBox<PagePreset>
         get() = component.lookup("#cmbPreset") as ComboBox<PagePreset>
     private val startEmptyPage: CheckBox get() = component.lookup("#chkStart") as CheckBox
+
+    private fun maxOf(spinner: Spinner<*>): Double =
+        (spinner.valueFactory as DoubleSpinnerValueFactory).max
 
     override fun start(stage: Stage) {
         // No fallback, so the English base bundle is used no matter which locale the build runs under.
@@ -77,58 +82,58 @@ class GeneralSettingsTest : ApplicationTest() {
             )
         )
 
-        component = GeneralSettings()
+        component = DesignSettings()
         component.bindDesign(design)
         stage.scene = Scene(component, 420.0, 460.0)
         stage.show()
     }
 
     /**
-     * Use case: the design is handed to the component, so the fields show its point values converted
-     * to millimetres.
+     * Use case: the design is handed to the component, so the spinners show its point values
+     * converted to millimetres.
      */
     @Test
     fun boundDesignReachesTheFields() {
-        assertEquals("148", width.text)
-        assertEquals("210", height.text)
-        assertEquals("20", inner.text)
+        assertEquals("148", width.editor.text)
+        assertEquals("210", height.editor.text)
+        assertEquals("20", inner.editor.text)
     }
 
     /**
-     * Use case: a value is written through the design property, so the matching field shows it in
+     * Use case: a value is written through the design property, so the matching spinner shows it in
      * millimetres.
      */
     @Test
     fun modelToUi() {
         interact { design.pageFormatProperty.width = mmToPt(150.0) }
 
-        assertEquals("150", width.text)
+        assertEquals("150", width.editor.text)
     }
 
     /**
-     * Use case: the user types a millimetre value into a field, so the design behind it carries the
-     * value in points, read from the plain model object.
+     * Use case: the user types a millimetre value into a spinner, so the design behind it carries
+     * the value in points, read from the plain model object.
      */
     @Test
     fun uiToModel() {
-        interact { inner.text = "22" }
+        interact { inner.editor.text = "22" }
 
         assertEquals(mmToPt(22.0), design.get()!!.pageFormat.innerMargin, DELTA)
     }
 
     /**
      * Use case: the user picks a page size preset, so the page is sized to it, the design follows and
-     * the width and height fields are locked.
+     * the width and height spinners are locked.
      */
     @Test
     fun choosingAPresetSizesAndLocksTheFields() {
         interact { preset.selectionModel.select(PagePreset.A4) }
 
-        assertEquals("210", width.text)
-        assertEquals("297", height.text)
+        assertEquals("210", width.editor.text)
+        assertEquals("297", height.editor.text)
         assertEquals(mmToPt(210.0), design.get()!!.pageFormat.width, DELTA)
-        assertTrue(width.isDisabled, "the width field stays open under a preset")
-        assertTrue(height.isDisabled, "the height field stays open under a preset")
+        assertTrue(width.isDisabled, "the width spinner stays open under a preset")
+        assertTrue(height.isDisabled, "the height spinner stays open under a preset")
     }
 
     /**
@@ -145,16 +150,46 @@ class GeneralSettingsTest : ApplicationTest() {
     }
 
     /**
-     * Use case: the user types margins that do not fit the page, so the component reports that its
-     * input cannot be stored and marks the field.
+     * Use case: the user types a margin past a third of the page, so the spinner caps the value at
+     * that third and the capped input can still be stored.
      */
     @Test
-    fun impossibleMarginsAreRejected() {
+    fun aMarginIsCappedAtAThirdOfThePage() {
         assertTrue(component.valid.value)
 
-        interact { inner.text = "200" }
+        interact { inner.editor.text = "200" }
+
+        assertEquals("49.33", inner.editor.text)
+        assertTrue(component.valid.value)
+    }
+
+    /**
+     * Use case: the width is cleared, so the component reports that its input cannot be stored and
+     * marks the width spinner.
+     */
+    @Test
+    fun anEmptySizeIsRejectedAndMarked() {
+        assertTrue(component.valid.value)
+
+        interact { width.editor.text = "" }
 
         assertFalse(component.valid.value)
-        assertTrue(inner.styleClass.contains("field-error"), "the field in error is not marked")
+        assertTrue(width.styleClass.contains("field-error"), "the spinner in error is not marked")
+    }
+
+    /**
+     * Use case: a margin spinner never offers more than a third of the page measure it belongs to,
+     * and that ceiling follows a change of the width and height.
+     */
+    @Test
+    fun marginCeilingIsAThirdOfThePageAndFollowsTheSize() {
+        assertEquals(148.0 / 3.0, maxOf(inner), DELTA)
+        assertEquals(210.0 / 3.0, maxOf(top), DELTA)
+
+        interact { width.editor.text = "300" }
+        assertEquals(300.0 / 3.0, maxOf(inner), DELTA)
+
+        interact { height.editor.text = "150" }
+        assertEquals(150.0 / 3.0, maxOf(top), DELTA)
     }
 }

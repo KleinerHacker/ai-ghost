@@ -4,11 +4,13 @@
 
 * Project Settings dialog opens from the File menu and from the tool bar: a tree on the left switches
   between sections, and the *Design* section sets the page size - a preset such as A5 or A4, or a
-  custom width and height entered in millimetres - the four page margins in millimetres, and whether
-  the book begins and ends with a blank page; OK stores and closes, Apply stores without closing,
-  Cancel discards, and impossible values keep both from being stored. The *General* section and the
-  child sections of *Design* - title page, copyright page, prolog, chapter, epilog, blurb - are
-  placeholders for now
+  custom width and height - the four page margins, and whether the book begins and ends with a blank
+  page; width, height and the margins are set with millimetre steppers, a single margin can be no
+  more than a third of the page and the stepper holds it there, and the ceiling follows the width and
+  height as they change; OK stores and closes, Apply stores without closing, Cancel discards, and a
+  width or height that is not greater than zero keeps both from being stored. The *General* section
+  and the child sections of *Design* - title page, copyright page, prolog, chapter, epilog, blurb -
+  are placeholders for now
 
 * Project records what its fonts measured like on the computer it was written on, and says so when
   a font is missing or sets differently when the project is opened elsewhere: one warning names the
