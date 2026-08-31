@@ -21,7 +21,8 @@ module org.pcsoft.app.aighost.layouting.fx {
     requires transitive javafx.graphics;
     requires transitive javafx.controls;
 
-    // The identity of a font family: measured with the toolkit, compared by whoever stores it. The
-    // renderer and its package arrive with the following plan.
+    // Font handling on the toolkit: the installed-family catalogue, the resolution of a
+    // FontDescription to a JavaFX font, the text measuring behind the core interface, and the
+    // family fingerprint measured here and compared by whoever stores it.
     exports org.pcsoft.app.aighost.layouting.fx.font;
 }

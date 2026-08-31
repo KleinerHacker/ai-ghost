@@ -16,7 +16,9 @@ import javafx.stage.Stage
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertInstanceOf
 import org.junit.jupiter.api.Test
+import org.pcsoft.app.aighost.layouting.fx.font.FontCatalog
 import org.pcsoft.app.aighost.layouting.fx.font.FontFingerprints
+import org.pcsoft.app.aighost.layouting.fx.font.FontResolver
 import org.pcsoft.app.aighost.model.common.FontData
 import org.pcsoft.app.aighost.model.common.FontMetricsData
 import org.testfx.framework.junit5.ApplicationTest
@@ -107,7 +109,7 @@ class FontIdentityTest : ApplicationTest() {
             "the report names the family the project asks for"
         )
         assertEquals(
-            fx { FontResolver.font(data) }.family.lowercase(),
+            fx { FontResolver.font(data.toFontDescription()) }.family.lowercase(),
             substituted.substituteFamily.lowercase(),
             "the report names the family that is set instead"
         )

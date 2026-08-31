@@ -10,7 +10,7 @@
  * See the License for the specific language governing permissions and limitations.
  */
 
-package org.pcsoft.app.aighost.app.font
+package org.pcsoft.app.aighost.layouting.fx.font
 
 import javafx.geometry.VPos
 import javafx.scene.text.Text
@@ -21,7 +21,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.layouting.TextStyle
-import org.pcsoft.app.aighost.model.common.FontData
 import org.testfx.framework.junit5.ApplicationTest
 import org.testfx.util.WaitForAsyncUtils
 
@@ -45,8 +44,8 @@ class JavaFxTextMetricsTest : ApplicationTest() {
         fx { JavaFxTextMetrics.clearCache() }
     }
 
-    private fun installedFont(size: Int = 12, bold: Boolean = false, italic: Boolean = false) =
-        FontData(name = fx { FontCatalog.families }.first(), size = size, bold = bold, italic = italic)
+    private fun installedFace(size: Int = 12, bold: Boolean = false, italic: Boolean = false) =
+        FontDescription(family = fx { FontCatalog.families }.first(), size = size, bold = bold, italic = italic)
 
     /**
      * Use case: the layout engine asks for the width of a word and gets the width JavaFX itself
@@ -54,14 +53,14 @@ class JavaFxTextMetricsTest : ApplicationTest() {
      */
     @Test
     fun wordWidthIsTheUnroundedWidthOfTheJavaFxText() {
-        val font = installedFont()
+        val face = installedFace()
 
-        val measured = fx { JavaFxTextMetrics.wordWidth(font, "manuscript") }
+        val measured = fx { JavaFxTextMetrics.wordWidth(face, "manuscript") }
 
         val expected = fx {
             val reference = Text("manuscript")
             reference.textOrigin = VPos.BASELINE
-            reference.font = FontResolver.font(font)
+            reference.font = FontResolver.font(face)
             reference.wrappingWidth = 0.0
             reference.prefWidth(-1.0)
         }
@@ -75,8 +74,8 @@ class JavaFxTextMetricsTest : ApplicationTest() {
      */
     @Test
     fun widthFollowsTheTextAndTheFontSize() {
-        val small = installedFont(size = 12)
-        val big = installedFont(size = 24)
+        val small = installedFace(size = 12)
+        val big = installedFace(size = 24)
 
         val short = fx { JavaFxTextMetrics.wordWidth(small, "ink") }
         val long = fx { JavaFxTextMetrics.wordWidth(small, "inkwell") }
@@ -92,10 +91,10 @@ class JavaFxTextMetricsTest : ApplicationTest() {
      */
     @Test
     fun spaceWidthIsMeasuredOnItsOwn() {
-        val font = installedFont()
+        val face = installedFace()
 
-        val space = fx { JavaFxTextMetrics.spaceWidth(font) }
-        val word = fx { JavaFxTextMetrics.wordWidth(font, "chapter") }
+        val space = fx { JavaFxTextMetrics.spaceWidth(face) }
+        val word = fx { JavaFxTextMetrics.wordWidth(face, "chapter") }
 
         assertTrue(space > 0.0, "the space must have a width")
         assertTrue(space < word, "a space must be narrower than a word")
@@ -107,9 +106,9 @@ class JavaFxTextMetricsTest : ApplicationTest() {
      */
     @Test
     fun lineMetricsCarryAscentDescentAndLeading() {
-        val font = installedFont(size = 20)
+        val face = installedFace(size = 20)
 
-        val metrics = fx { JavaFxTextMetrics.lineMetrics(font) }
+        val metrics = fx { JavaFxTextMetrics.lineMetrics(face) }
 
         assertTrue(metrics.ascent > 0.0, "ascent must be positive")
         assertTrue(metrics.descent > 0.0, "descent must be positive")
@@ -124,13 +123,13 @@ class JavaFxTextMetricsTest : ApplicationTest() {
      */
     @Test
     fun repeatedMeasurementIsAnsweredFromTheCache() {
-        val font = installedFont()
+        val face = installedFace()
 
-        val first = fx { JavaFxTextMetrics.wordWidth(font, "paragraph") }
+        val first = fx { JavaFxTextMetrics.wordWidth(face, "paragraph") }
         assertEquals(1, fx { JavaFxTextMetrics.cacheSize })
         assertEquals(0L, fx { JavaFxTextMetrics.cacheHits })
 
-        val second = fx { JavaFxTextMetrics.wordWidth(font, "paragraph") }
+        val second = fx { JavaFxTextMetrics.wordWidth(face, "paragraph") }
 
         assertEquals(first, second)
         assertEquals(1, fx { JavaFxTextMetrics.cacheSize })
@@ -143,10 +142,10 @@ class JavaFxTextMetricsTest : ApplicationTest() {
      */
     @Test
     fun lineMetricsAreCachedPerFont() {
-        val font = installedFont()
+        val face = installedFace()
 
-        val first = fx { JavaFxTextMetrics.lineMetrics(font) }
-        val second = fx { JavaFxTextMetrics.lineMetrics(font) }
+        val first = fx { JavaFxTextMetrics.lineMetrics(face) }
+        val second = fx { JavaFxTextMetrics.lineMetrics(face) }
 
         assertEquals(first, second)
         assertEquals(1, fx { JavaFxTextMetrics.cacheSize })
@@ -159,13 +158,13 @@ class JavaFxTextMetricsTest : ApplicationTest() {
      */
     @Test
     fun styleIsPartOfTheCacheKey() {
-        val plain = installedFont()
-        val bold = installedFont(bold = true)
-        val italic = installedFont(italic = true)
-        val bigger = installedFont(size = 18)
+        val plain = installedFace()
+        val bold = installedFace(bold = true)
+        val italic = installedFace(italic = true)
+        val bigger = installedFace(size = 18)
 
-        listOf(plain, bold, italic, bigger).forEach { font ->
-            fx { JavaFxTextMetrics.wordWidth(font, "title") }
+        listOf(plain, bold, italic, bigger).forEach { face ->
+            fx { JavaFxTextMetrics.wordWidth(face, "title") }
         }
 
         assertEquals(4, fx { JavaFxTextMetrics.cacheSize })
@@ -178,10 +177,10 @@ class JavaFxTextMetricsTest : ApplicationTest() {
      */
     @Test
     fun theHiddenHelperNodeIsReused() {
-        val font = installedFont()
+        val face = installedFace()
 
-        val node = fx { JavaFxTextMetrics.wordWidth(font, "first"); JavaFxTextMetrics.helper }
-        val again = fx { JavaFxTextMetrics.wordWidth(font, "second"); JavaFxTextMetrics.helper }
+        val node = fx { JavaFxTextMetrics.wordWidth(face, "first"); JavaFxTextMetrics.helper }
+        val again = fx { JavaFxTextMetrics.wordWidth(face, "second"); JavaFxTextMetrics.helper }
 
         assertSame(node, again)
         assertTrue(fx { !JavaFxTextMetrics.helper.isVisible }, "the helper node must stay hidden")
@@ -193,10 +192,10 @@ class JavaFxTextMetricsTest : ApplicationTest() {
      */
     @Test
     fun missingFamilyIsMeasuredWithItsSubstitute() {
-        val missing = FontData(name = "No Such Family 4711", size = 15)
+        val missing = FontDescription(family = "No Such Family 4711", size = 15)
         val substitute = fx {
             val resolution = FontResolver.resolve(missing) as FontResolution.NotInstalled
-            FontData(name = resolution.substituteFamily, size = 15)
+            FontDescription(family = resolution.substituteFamily, size = 15)
         }
 
         val missingWidth = fx { JavaFxTextMetrics.wordWidth(missing, "substitute") }
@@ -211,9 +210,9 @@ class JavaFxTextMetricsTest : ApplicationTest() {
      */
     @Test
     fun clearingTheCacheDropsEveryMeasurement() {
-        val font = installedFont()
-        fx { JavaFxTextMetrics.wordWidth(font, "page") }
-        fx { JavaFxTextMetrics.lineMetrics(font) }
+        val face = installedFace()
+        fx { JavaFxTextMetrics.wordWidth(face, "page") }
+        fx { JavaFxTextMetrics.lineMetrics(face) }
         assertEquals(2, fx { JavaFxTextMetrics.cacheSize })
 
         fx { JavaFxTextMetrics.clearCache() }
@@ -224,18 +223,18 @@ class JavaFxTextMetricsTest : ApplicationTest() {
 
     /**
      * Use case: the layout core asks through its own interface, in its own style type, and gets
-     * exactly the numbers the stored font of the same face gives - the translation loses nothing.
+     * exactly the numbers the description of the same face gives - the translation loses nothing.
      */
     @Test
-    fun measuringThroughTheLayoutInterfaceGivesTheSameNumbersAsTheStoredFont() {
-        val font = installedFont(size = 14, bold = true, italic = true)
-        val style = layoutStyle(font)
+    fun measuringThroughTheLayoutInterfaceGivesTheSameNumbersAsTheDescription() {
+        val face = installedFace(size = 14, bold = true, italic = true)
+        val style = layoutStyle(face)
 
-        val byFont = fx {
+        val byFace = fx {
             Triple(
-                JavaFxTextMetrics.wordWidth(font, "manuscript"),
-                JavaFxTextMetrics.spaceWidth(font),
-                JavaFxTextMetrics.lineMetrics(font)
+                JavaFxTextMetrics.wordWidth(face, "manuscript"),
+                JavaFxTextMetrics.spaceWidth(face),
+                JavaFxTextMetrics.lineMetrics(face)
             )
         }
         val byStyle = fx {
@@ -246,22 +245,22 @@ class JavaFxTextMetricsTest : ApplicationTest() {
             )
         }
 
-        assertEquals(byFont, byStyle)
+        assertEquals(byFace, byStyle)
     }
 
     /**
-     * Use case: the same face reaches the measurer once as a stored font and once as a layout style;
+     * Use case: the same face reaches the measurer once as a description and once as a layout style;
      * both answers come out of the very same cache entry instead of being measured twice.
      */
     @Test
-    fun aLayoutStyleAndTheStoredFontShareTheirCacheEntry() {
-        val font = installedFont()
+    fun aLayoutStyleAndTheDescriptionShareTheirCacheEntry() {
+        val face = installedFace()
 
-        fx { JavaFxTextMetrics.wordWidth(font, "chapter") }
+        fx { JavaFxTextMetrics.wordWidth(face, "chapter") }
         assertEquals(1, fx { JavaFxTextMetrics.cacheSize })
         assertEquals(0L, fx { JavaFxTextMetrics.cacheHits })
 
-        fx { JavaFxTextMetrics.wordWidth(layoutStyle(font), "chapter") }
+        fx { JavaFxTextMetrics.wordWidth(layoutStyle(face), "chapter") }
 
         assertEquals(1, fx { JavaFxTextMetrics.cacheSize })
         assertEquals(1L, fx { JavaFxTextMetrics.cacheHits })
@@ -273,9 +272,9 @@ class JavaFxTextMetricsTest : ApplicationTest() {
      */
     @Test
     fun theLineSpacingOfAStyleDoesNotReachTheMeasuredLineMetrics() {
-        val font = installedFont()
-        val tight = layoutStyle(font).copy(lineSpacing = 1.0)
-        val wide = layoutStyle(font).copy(lineSpacing = 2.5, spaceBefore = 20.0, spaceAfter = 20.0)
+        val face = installedFace()
+        val tight = layoutStyle(face).copy(lineSpacing = 1.0)
+        val wide = layoutStyle(face).copy(lineSpacing = 2.5, spaceBefore = 20.0, spaceAfter = 20.0)
 
         val first = fx { JavaFxTextMetrics.lineMetrics(tight) }
         val second = fx { JavaFxTextMetrics.lineMetrics(wide) }
@@ -283,12 +282,12 @@ class JavaFxTextMetricsTest : ApplicationTest() {
         assertEquals(first, second)
     }
 
-    /** The layout style of the given stored font, with everything vertical left at its default. */
-    private fun layoutStyle(font: FontData) =
+    /** The layout style of the given face, with everything vertical left at its default. */
+    private fun layoutStyle(face: FontDescription) =
         TextStyle(
-            family = font.name,
-            size = font.size.toDouble(),
-            bold = font.bold,
-            italic = font.italic
+            family = face.family,
+            size = face.size.toDouble(),
+            bold = face.bold,
+            italic = face.italic
         )
 }

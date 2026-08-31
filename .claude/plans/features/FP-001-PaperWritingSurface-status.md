@@ -13,7 +13,7 @@ Status: IN_PROGRESS
 | IP-03 | Layout Core                               | COMPLETED   |
 | IP-04 | Pagination And Page Break Policy          | NOT_STARTED |
 | IP-25 | Renderer Library Module                   | COMPLETED   |
-| IP-26 | Font And Measuring Migration              | NOT_STARTED |
+| IP-26 | Font And Measuring Migration              | COMPLETED   |
 | IP-05 | Incremental Layout And Caching            | NOT_STARTED |
 | IP-06 | Layout Regression Harness                 | NOT_STARTED |
 | IP-07 | Paper Page View                           | NOT_STARTED |
@@ -36,11 +36,12 @@ Status: IN_PROGRESS
 
 ## Overall Progress
 
-22%
+27%
 
 ## Notes
 
-IP-01, IP-22, IP-02, IP-24, IP-03, IP-25 and IP-14 are implemented; IP-04 and IP-26 are unblocked.
+IP-01, IP-22, IP-02, IP-24, IP-03, IP-25, IP-14 and IP-26 are implemented; IP-04, IP-07, IP-08 and
+IP-13 are unblocked.
 
 IP-14 was built wider than first planned, on the user's request: a master-detail dialog with a
 `ProjectSettingsTree` (root hidden) on the left and the section editor on the right. Only the
@@ -79,6 +80,23 @@ The JavaFX decision of IP-25 was made: `.claude/rules/architecture.md` now allow
 one component library under `lib`, and `lib/layouting-fx` is that one. The module builds and its
 headless TestFX smoke test runs. It exports nothing yet; the renderer package arrives with IP-26.
 No plan is blocked by anything.
+
+IP-26 moved the font foundation of IP-01 into `lib/layouting-fx`: `FontCatalog`, `FontResolver`,
+`FontResolution` and `JavaFxTextMetrics` now live in package
+`org.pcsoft.app.aighost.layouting.fx.font` beside the IP-22 fingerprint, and their three tests moved
+with them onto the module's headless TestFX setup (`:lib:ai-ghost-layouting-fx:test` now runs 34).
+The library type that replaces `FontData` in every moved signature is `FontDescription` (family,
+`size: Int`, `bold`, `italic`); the size stays a whole point so resolution and the measurement cache
+are unchanged. The application-side translation is one extension `FontData.toFontDescription()` in
+`app/ui` (`FontTranslation.kt`), modelled on `FontFingerprintTranslation.kt`, decided over a
+translator object on the user's request. `FontIdentity` is the only production caller and resolves
+through it. No `module-info` needed a structural change - the package was already exported,
+`javafx.graphics` already required, `app/ui` already read the library since IP-25 - only comments
+were sharpened. `app/ui` keeps `FontIdentity`, `FontIdentityCheck` and the two translation files.
+`SplashStageTest` was deleted on the user's request: it failed on the unmodified HEAD in this
+headless environment (splash opacity `1.0` instead of `0.0`), unrelated to this plan. The full
+`build` and a forced `clean :app:ai-ghost-ui:jlink` are green; the runtime image builds with no
+split-package or resolution error. IP-01 stays COMPLETED; IP-07, IP-08 and IP-13 are now unblocked.
 
 Defect found while checking IP-25, outside its scope and not caused by it - it already failed on the
 unmodified project - and fixed right away on the user's request: `:app:ai-ghost-ui:createMergedModule`
@@ -134,7 +152,7 @@ built first. IP-22 was added when it was decided that no manuscript font is ship
 IP-01 because it belongs to the font foundation. IP-25 to IP-28 were added when the renderer was
 decided to be an independent library. The numbering was kept stable instead of renumbering the plans.
 
-Independent starting points: IP-25 (once unblocked), IP-09, IP-12, IP-17.
+Independent starting points: IP-09, IP-12, IP-17.
 
 Besides the JavaFX decision of IP-25, two questions of the renderer library are open and do not block
 it: the naming of module and package, which carries the application name into a reusable library, and

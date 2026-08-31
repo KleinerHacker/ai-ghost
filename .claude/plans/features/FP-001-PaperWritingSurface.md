@@ -159,7 +159,7 @@ numbering is kept stable rather than renumbered.
 | IP-03 | Layout Core ✅                             | Resolved styles, line breaking, alignment, placed lines               | IP-01, IP-02, IP-24  |
 | IP-04 | Pagination And Page Break Policy          | Page filling, breaks, odd/even margins, policy hook                   | IP-03                |
 | IP-25 | Renderer Library Module ✅                 | New JavaFX library module, JPMS, TestFX, CI, architecture rule        | -                    |
-| IP-26 | Font And Measuring Migration              | Catalogue, resolution and metrics move into the library               | IP-01, IP-25         |
+| IP-26 | Font And Measuring Migration ✅            | Catalogue, resolution and metrics move into the library               | IP-01, IP-25         |
 | IP-05 | Incremental Layout And Caching            | Per paragraph invalidation so typing stays responsive                 | IP-04                |
 | IP-06 | Layout Regression Harness                 | Golden page structures and the surface comparison                     | IP-04, IP-07, IP-08  |
 | IP-07 | Paper Page View                           | Exact read-only renderer of a document layout, in the library         | IP-04, IP-26         |
@@ -249,7 +249,7 @@ architecture rule is not deleted but sharpened - JavaFX belongs to `app/ui` and 
 itself a JavaFX component library - otherwise every following plan violates the rules. The jlink
 image must keep working, and the TestFX setup of `app/ui` is a model without precedent outside it.
 
-### IP-26: Font And Measuring Migration
+### IP-26: Font And Measuring Migration ✅
 
 Plan: `FP-001-IP-26-SchriftUndMessungUmzug.md`
 
@@ -257,6 +257,21 @@ The split runs along `FontData`: what names the application stays behind, the re
 does not change - the tests that pass before the move must pass after it, which is what makes the
 move safe while later plans build on the classes. The FX thread constraint travels with the class,
 because a consumer outside this repository has no plan to read.
+
+Built as planned, with one shape decided on the user's request. `FontCatalog`, `FontResolver`,
+`FontResolution` and `JavaFxTextMetrics` moved into `lib/layouting-fx` package
+`org.pcsoft.app.aighost.layouting.fx.font`, alongside the fingerprint of IP-22; their three tests
+moved with them and run on the module's own headless TestFX setup. The library type that replaces
+`FontData` in every moved signature is `FontDescription` - family, `size: Int`, `bold`, `italic` -
+kept a whole-point size so resolution and the measurement cache stay bit-for-bit as before. The
+translation on the application side is a single extension `FontData.toFontDescription()` in
+`app/ui` (`FontTranslation.kt`), modelled on `FontFingerprintTranslation.kt`, not a translator
+object. `FontIdentity` is the only production caller and now resolves through it. Neither
+`module-info` needed a structural change: the target package was already exported, `javafx.graphics`
+already required, and `app/ui` already read `ai-ghost-layouting-fx` since IP-25 - only the comments
+were sharpened. `SplashStageTest` was deleted on the user's request: it failed on the unmodified
+HEAD in this headless environment (splash opacity `1.0` instead of `0.0`), outside the scope of this
+plan. The full `build` and a forced `jlink` of `app/ui` are green.
 
 ### IP-05: Incremental Layout And Caching
 
@@ -446,7 +461,7 @@ destroys nothing - it is still one undo entry.
 ```text
 IP-01✅┬─> IP-22✅
        └─┐
-IP-25✅┬─┴─> IP-26 ─┬─> IP-07 ─┬─> IP-27 ──> IP-28
+IP-25✅┬─┴─> IP-26✅─┬─> IP-07 ─┬─> IP-27 ──> IP-28
                     ├─> IP-08 ─┘
                     └─> IP-13   (with IP-02, IP-12)
 IP-02✅┬───> IP-03✅ ──> IP-04 ─┬─> IP-05 ──────────────┐
@@ -470,8 +485,32 @@ IP-05, IP-07, IP-15 ──> IP-16
 IP-07, IP-08 ──> IP-06, IP-27
 ```
 
-Completed: **IP-01** ✅, **IP-22** ✅, **IP-02** ✅, **IP-24** ✅, **IP-03** ✅, **IP-25** ✅.
-Independent starting points: **IP-26**, **IP-09**, **IP-12**, **IP-17**.
+The graph is drawn as two trees that grow from different roots and meet only at one seam.
+
+**Upper tree - the renderer library `lib/layouting-fx`.** Roots: IP-01 and IP-25. It builds the
+reusable JavaFX renderer that carries no type of this application: font discovery and text measuring
+(IP-01), the font identity and substitution report (IP-22), the library module with its JPMS, TestFX
+and CI setup (IP-25), the move of catalogue, resolution and measuring into it (IP-26), the two views
+- exact page and writing flow (IP-07, IP-08) -, the styling and theming API (IP-27) and the
+standalone-reuse proof with its documentation (IP-28). The tree owns everything a consumer outside
+this repository would also get.
+
+**Lower tree - the writing surface in `app/ui`.** Roots: IP-02 and IP-24, plus the independent
+strands IP-09, IP-12 and IP-17. It builds the editor feature on top of the library: the design page
+format model (IP-02) and the always-present optional parts (IP-24), the toolkit-free layout core
+(IP-03), pagination and the page-break policy (IP-04), incremental layout and caching (IP-05), the
+project settings dialog (IP-14), the layout regression harness (IP-06), the editing surface and
+paragraph operations (IP-10, IP-11), editor arrangement with write and preview modes (IP-15, IP-16),
+undo and redo (IP-09), the inspector shell and its content sections (IP-12), the AI action port and
+the actions built on it (IP-17, IP-18, IP-19), the optional parts in the project tree (IP-23) and
+the in-paragraph sheet split (IP-21).
+
+**The seam.** The lower tree consumes IP-07 and IP-08 of the upper one - the app draws its pages
+with the library views. IP-13 (design style sections) is the second link: it needs IP-26 of the
+upper tree together with IP-02 and IP-12 of the lower one. Nothing else crosses between the two.
+
+Completed: **IP-01** ✅, **IP-22** ✅, **IP-02** ✅, **IP-24** ✅, **IP-03** ✅, **IP-25** ✅, **IP-26** ✅.
+Independent starting points: **IP-09**, **IP-12**, **IP-17**.
 
 ## 9. Risks and Open Questions
 

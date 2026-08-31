@@ -10,7 +10,7 @@
  * See the License for the specific language governing permissions and limitations.
  */
 
-package org.pcsoft.app.aighost.app.font
+package org.pcsoft.app.aighost.layouting.fx.font
 
 import javafx.scene.text.Font
 import javafx.stage.Stage
@@ -89,7 +89,7 @@ class FontCatalogTest : ApplicationTest() {
     @Test
     fun rebuildBuildsTheCatalogueAgainAndClearsTheMeasurementCache() {
         val before = fx { FontCatalog.families }
-        fx { JavaFxTextMetrics.wordWidth(fontData(before.first()), "Manuscript") }
+        fx { JavaFxTextMetrics.wordWidth(description(before.first()), "Manuscript") }
         assertTrue(fx { JavaFxTextMetrics.cacheSize } > 0)
 
         val rebuilt = fx { FontCatalog.rebuild() }
@@ -113,8 +113,8 @@ class FontCatalogTest : ApplicationTest() {
         assertFalse(fx { FontCatalog.contains(MISSING_FAMILY) })
     }
 
-    private fun fontData(family: String) =
-        org.pcsoft.app.aighost.model.common.FontData(name = family, size = 12)
+    private fun description(family: String) =
+        FontDescription(family = family, size = 12)
 
     private companion object {
 

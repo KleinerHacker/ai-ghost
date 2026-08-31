@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.pcsoft.app.aighost.layouting.fx.font.FontCatalog
 import org.pcsoft.app.aighost.model.common.FontMetricsData
 import org.pcsoft.app.aighost.model.project.design.Design
 import org.testfx.framework.junit5.ApplicationTest

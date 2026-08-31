@@ -13,6 +13,8 @@
 package org.pcsoft.app.aighost.app.font
 
 import org.pcsoft.app.aighost.layouting.fx.font.FontFingerprints
+import org.pcsoft.app.aighost.layouting.fx.font.FontResolution
+import org.pcsoft.app.aighost.layouting.fx.font.FontResolver
 import org.pcsoft.app.aighost.model.common.FontData
 import org.pcsoft.app.aighost.model.common.FontMetricsData
 
@@ -74,7 +76,7 @@ sealed interface FontIdentity {
         fun of(data: FontData): FontIdentity {
             val stored = data.metrics ?: return Unknown
 
-            return when (val resolution = FontResolver.resolve(data)) {
+            return when (val resolution = FontResolver.resolve(data.toFontDescription())) {
                 is FontResolution.NotInstalled ->
                     Substituted(resolution.requestedFamily, resolution.substituteFamily)
 

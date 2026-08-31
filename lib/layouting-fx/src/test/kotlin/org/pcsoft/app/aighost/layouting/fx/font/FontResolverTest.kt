@@ -10,7 +10,7 @@
  * See the License for the specific language governing permissions and limitations.
  */
 
-package org.pcsoft.app.aighost.app.font
+package org.pcsoft.app.aighost.layouting.fx.font
 
 import javafx.scene.text.Font
 import javafx.scene.text.FontPosture
@@ -20,12 +20,11 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.pcsoft.app.aighost.model.common.FontData
 import org.testfx.framework.junit5.ApplicationTest
 import org.testfx.util.WaitForAsyncUtils
 
 /**
- * Developer tests for the resolution of a design font onto a JavaFX font, [FontResolver].
+ * Developer tests for the resolution of a [FontDescription] onto a JavaFX font, [FontResolver].
  */
 class FontResolverTest : ApplicationTest() {
 
@@ -38,14 +37,14 @@ class FontResolverTest : ApplicationTest() {
     private fun installedFamily(): String = fx { FontCatalog.families }.first()
 
     /**
-     * Use case: the family of the design is installed, so the text is drawn in exactly that family,
-     * at exactly the size the design asks for.
+     * Use case: the family of the description is installed, so the text is drawn in exactly that
+     * family, at exactly the size the description asks for.
      */
     @Test
     fun installedFamilyIsResolvedToItself() {
         val family = installedFamily()
 
-        val resolution = fx { FontResolver.resolve(FontData(name = family, size = 14)) }
+        val resolution = fx { FontResolver.resolve(FontDescription(family = family, size = 14)) }
 
         assertTrue(resolution is FontResolution.Installed, "expected an installed resolution")
         assertEquals(family.lowercase(), resolution.font.family.lowercase())
@@ -53,15 +52,15 @@ class FontResolverTest : ApplicationTest() {
     }
 
     /**
-     * Use case: the design asks for bold and slanted text, so the resolved font carries the bold
+     * Use case: the description asks for bold and slanted text, so the resolved font carries the bold
      * weight and the italic posture instead of the regular face.
      */
     @Test
-    fun weightAndSlantOfTheDesignAreApplied() {
+    fun weightAndSlantOfTheDescriptionAreApplied() {
         val family = installedFamily()
-        val data = FontData(name = family, size = 14, bold = true, italic = true)
+        val description = FontDescription(family = family, size = 14, bold = true, italic = true)
 
-        val resolved = fx { FontResolver.font(data) }
+        val resolved = fx { FontResolver.font(description) }
 
         val expected = fx {
             Font.font(family, FontWeight.BOLD, FontPosture.ITALIC, 14.0)
@@ -75,9 +74,9 @@ class FontResolverTest : ApplicationTest() {
      */
     @Test
     fun missingFamilyIsReportedAsItsOwnState() {
-        val data = FontData(name = MISSING_FAMILY, size = 18, bold = true)
+        val description = FontDescription(family = MISSING_FAMILY, size = 18, bold = true)
 
-        val resolution = fx { FontResolver.resolve(data) }
+        val resolution = fx { FontResolver.resolve(description) }
 
         assertTrue(resolution is FontResolution.NotInstalled, "expected a missing family")
         val missing = resolution as FontResolution.NotInstalled
@@ -94,7 +93,7 @@ class FontResolverTest : ApplicationTest() {
     @Test
     fun substituteFollowsTheFixedFallbackChain() {
         val resolution = fx {
-            FontResolver.resolve(FontData(name = MISSING_FAMILY)) as FontResolution.NotInstalled
+            FontResolver.resolve(FontDescription(family = MISSING_FAMILY, size = 12)) as FontResolution.NotInstalled
         }
 
         val expected = fx {
@@ -105,13 +104,13 @@ class FontResolverTest : ApplicationTest() {
     }
 
     /**
-     * Use case: the same design font is resolved over and over during a layout run and must always
-     * give the same answer, for an installed as well as for a missing family.
+     * Use case: the same face is resolved over and over during a layout run and must always give the
+     * same answer, for an installed as well as for a missing family.
      */
     @Test
     fun resolutionIsDeterministic() {
-        val installed = FontData(name = installedFamily(), size = 11)
-        val missing = FontData(name = MISSING_FAMILY, size = 11)
+        val installed = FontDescription(family = installedFamily(), size = 11)
+        val missing = FontDescription(family = MISSING_FAMILY, size = 11)
 
         assertEquals(fx { FontResolver.resolve(installed) }, fx { FontResolver.resolve(installed) })
         assertEquals(fx { FontResolver.resolve(missing) }, fx { FontResolver.resolve(missing) })
@@ -123,7 +122,7 @@ class FontResolverTest : ApplicationTest() {
      */
     @Test
     fun fontShortcutReturnsTheFontOfTheResolution() {
-        val missing = FontData(name = MISSING_FAMILY, size = 20, italic = true)
+        val missing = FontDescription(family = MISSING_FAMILY, size = 20, italic = true)
 
         assertEquals(fx { FontResolver.resolve(missing) }.font, fx { FontResolver.font(missing) })
     }

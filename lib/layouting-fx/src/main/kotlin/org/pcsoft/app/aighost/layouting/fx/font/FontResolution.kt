@@ -10,12 +10,12 @@
  * See the License for the specific language governing permissions and limitations.
  */
 
-package org.pcsoft.app.aighost.app.font
+package org.pcsoft.app.aighost.layouting.fx.font
 
 import javafx.scene.text.Font
 
 /**
- * Outcome of turning the font of a design into a font JavaFX can draw with.
+ * Outcome of turning a [FontDescription] into a font JavaFX can draw with.
  *
  * A missing family is a state of its own rather than a silent substitution, so the user can be told
  * that the manuscript is not shown in the font it was written in.
@@ -27,16 +27,16 @@ sealed interface FontResolution {
     val font: Font
 
     /**
-     * The family the design asks for is installed and is what gets drawn.
+     * The family the description asks for is installed and is what gets drawn.
      *
      * @property font Font of the requested family, weight and slant.
      */
     data class Installed(override val font: Font) : FontResolution
 
     /**
-     * The family the design asks for is not installed; the fallback chain picked a substitute.
+     * The family the description asks for is not installed; the fallback chain picked a substitute.
      *
-     * @property requestedFamily Family the design asks for.
+     * @property requestedFamily Family the description asks for.
      * @property substituteFamily Family that is drawn instead.
      * @property font Font of the substitute family, carrying the requested weight, slant and size.
      */
