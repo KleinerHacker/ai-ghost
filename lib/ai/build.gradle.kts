@@ -17,7 +17,7 @@ plugins {
 }
 
 dependencies {
-    implementation("org.slf4j:slf4j-api:2.0.17")
+    implementation("org.slf4j:slf4j-api:2.0.18")
 }
 
 // The module descriptor is the only Java source, while the classes it exports are written in Kotlin.
