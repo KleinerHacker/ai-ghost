@@ -1,3 +1,4 @@
+@SuppressWarnings("requires-transitive-automatic")
 module org.pcsoft.app.aighost.model {
     requires kotlin.stdlib;
 
