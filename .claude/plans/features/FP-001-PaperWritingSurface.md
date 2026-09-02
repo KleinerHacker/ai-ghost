@@ -166,7 +166,7 @@ numbering is kept stable rather than renumbered.
 | IP-08 | Paper Flow View                           | Writing sheet with page geometry and break marks, in the library      | IP-04, IP-26         |
 | IP-27 | Library Styling And Theming API           | Own stylesheet, style classes, override by the ai-ghost palette       | IP-07, IP-08         |
 | IP-28 | Standalone Reuse And Documentation        | Demo without ai-ghost, published artifact, docs, dependency check     | IP-27                |
-| IP-09 | Undo And Redo Infrastructure              | One undo stack over model changes of the editor                       | -                    |
+| IP-09 | Undo And Redo Infrastructure ✅            | One undo stack over model changes of the editor                       | -                    |
 | IP-10 | Book Part Writing Surface                 | Caret, typing and binding of headings and paragraphs                  | IP-08, IP-09         |
 | IP-11 | Paragraph Structure Operations            | Split, join, delete and reorder paragraphs                            | IP-10                |
 | IP-12 | Inspector Shell And Content Sections      | Context panel with book and part sections, absorbs `BookEditor`       | -                    |
@@ -324,12 +324,21 @@ Plan: `FP-001-IP-28-EigenstaendigeNutzung.md`
 A library stays reusable only as long as something fails when it stops being so, which is why the
 dependency check is automated. The demo is a sample in its own source set, not a product.
 
-### IP-09: Undo And Redo Infrastructure
+### IP-09: Undo And Redo Infrastructure ✅
 
-Plan: `FP-001-IP-09-UndoRedoInfrastruktur.md`
+Plan removed, was `FP-001-IP-09-UndoRedoInfrastruktur.md`.
 
 It has to exist before the first surface records into it, otherwise editing and AI each grow their
 own mechanism. It stays in `app/ui`, because the library applies no change.
+
+Built as `UndoEntry`/`PropertyUndoEntry`/`UndoStack` under `app/ui/.../undo`, owned by
+`MainWindowViewModel` and cleared on `newProject()`/`openProject()`. Beyond the original scope, the
+user asked for a named tooltip per entry and a history dropdown on the Undo/Redo tool bar buttons
+(`SplitMenuButton`, styled like a browser back button) that jumps several steps at once via
+`undoUntil`/`redoUntil`; `UndoStack.visibleEntryCount` bounds how many entries the dropdown exposes,
+as a plain property rather than a persisted preference. The `icon-creator` agent had no image-writing
+tool available in this environment, so `undo@32.png`/`redo@32.png` were drawn with a small Pillow
+script instead, matching the existing icon palette - confirmed with the user.
 
 ### IP-10: Book Part Writing Surface
 
@@ -471,11 +480,11 @@ IP-24✅┤  │                   │                       │
                                 └─> IP-08 ─┘            │
                                       │                 │
                                       └─> IP-10 ────────┼──> IP-18   (with IP-17)
-                                      (with IP-09)      │
+                                      (with IP-09✅)     │
                                                 └─> IP-11 ─┬─> IP-15 ─┬─> IP-16
                                                            │          └─> IP-23   (with IP-24)
                                                            └─> IP-21
-IP-09 ──> IP-10, IP-18, IP-19
+IP-09✅ ──> IP-10, IP-18, IP-19
 IP-12 ─┬─> IP-13
        ├─> IP-15
        └─> IP-19   (with IP-17)
@@ -496,12 +505,12 @@ standalone-reuse proof with its documentation (IP-28). The tree owns everything 
 this repository would also get.
 
 **Lower tree - the writing surface in `app/ui`.** Roots: IP-02 and IP-24, plus the independent
-strands IP-09, IP-12 and IP-17. It builds the editor feature on top of the library: the design page
+strands IP-09 ✅, IP-12 and IP-17. It builds the editor feature on top of the library: the design page
 format model (IP-02) and the always-present optional parts (IP-24), the toolkit-free layout core
 (IP-03), pagination and the page-break policy (IP-04), incremental layout and caching (IP-05), the
 project settings dialog (IP-14), the layout regression harness (IP-06), the editing surface and
 paragraph operations (IP-10, IP-11), editor arrangement with write and preview modes (IP-15, IP-16),
-undo and redo (IP-09), the inspector shell and its content sections (IP-12), the AI action port and
+undo and redo (IP-09 ✅), the inspector shell and its content sections (IP-12), the AI action port and
 the actions built on it (IP-17, IP-18, IP-19), the optional parts in the project tree (IP-23) and
 the in-paragraph sheet split (IP-21).
 
@@ -509,8 +518,9 @@ the in-paragraph sheet split (IP-21).
 with the library views. IP-13 (design style sections) is the second link: it needs IP-26 of the
 upper tree together with IP-02 and IP-12 of the lower one. Nothing else crosses between the two.
 
-Completed: **IP-01** ✅, **IP-22** ✅, **IP-02** ✅, **IP-24** ✅, **IP-03** ✅, **IP-25** ✅, **IP-26** ✅.
-Independent starting points: **IP-09**, **IP-12**, **IP-17**.
+Completed: **IP-01** ✅, **IP-22** ✅, **IP-02** ✅, **IP-24** ✅, **IP-03** ✅, **IP-25** ✅, **IP-26** ✅,
+**IP-09** ✅.
+Independent starting points: **IP-09** ✅, **IP-12**, **IP-17**.
 
 ## 9. Risks and Open Questions
 

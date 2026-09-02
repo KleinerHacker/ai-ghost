@@ -16,21 +16,26 @@ import de.saxsys.mvvmfx.FxmlView
 import de.saxsys.mvvmfx.InjectViewModel
 import javafx.beans.Observable
 import javafx.beans.binding.BooleanBinding
+import javafx.beans.binding.Bindings
 import javafx.event.EventHandler
 import javafx.fxml.FXML
 import javafx.fxml.Initializable
 import javafx.scene.control.Label
 import javafx.scene.control.Menu
 import javafx.scene.control.MenuItem
+import javafx.scene.control.SplitMenuButton
+import javafx.scene.control.Tooltip
 import javafx.scene.layout.BorderPane
 import javafx.scene.layout.VBox
 import javafx.stage.FileChooser
 import org.pcsoft.app.aighost.app.AiGhostIcons
+import org.pcsoft.app.aighost.app.undo.UndoEntry
 import org.pcsoft.app.aighost.app.ui.AiGhostDialog
 import org.pcsoft.app.aighost.app.ui.component.Editor
 import org.pcsoft.app.aighost.app.ui.showingBinding
 import java.io.File
 import java.net.URL
+import java.text.MessageFormat
 import java.util.*
 
 /**
@@ -49,10 +54,25 @@ class MainWindowView : FxmlView<MainWindowViewModel>, Initializable {
     @FXML
     private lateinit var mnuOpenRecent: Menu
     @FXML
+    private lateinit var mnuUndo: MenuItem
+    @FXML
+    private lateinit var mnuRedo: MenuItem
+    @FXML
+    private lateinit var btnUndo: SplitMenuButton
+    @FXML
+    private lateinit var btnRedo: SplitMenuButton
+    @FXML
+    private lateinit var tltUndo: Tooltip
+    @FXML
+    private lateinit var tltRedo: Tooltip
+    @FXML
     private lateinit var editor: Editor
 
     @InjectViewModel
     private lateinit var viewModel: MainWindowViewModel
+
+    /** Resource bundle of this view, kept to format the dynamic undo/redo tooltip texts. */
+    private lateinit var resources: ResourceBundle
 
     /**
      * Binding that tracks whether this view is currently visible on screen.
@@ -74,6 +94,8 @@ class MainWindowView : FxmlView<MainWindowViewModel>, Initializable {
      * @param resources The resources used to localize the root object, or null if not localized.
      */
     override fun initialize(location: URL?, resources: ResourceBundle?) {
+        this.resources = requireNotNull(resources) { "MainWindowView requires a resource bundle" }
+
         // The preferences report nothing, so the view model reads them again every time this
         // component comes on screen.
         showing = pnlRoot.showingBinding()
@@ -84,12 +106,58 @@ class MainWindowView : FxmlView<MainWindowViewModel>, Initializable {
         }
         mnuOpenRecent.disableProperty().bind(viewModel.openRecentDisabled)
 
+        mnuUndo.disableProperty().bind(Bindings.not(viewModel.undoStack.canUndoProperty))
+        mnuRedo.disableProperty().bind(Bindings.not(viewModel.undoStack.canRedoProperty))
+        btnUndo.disableProperty().bind(Bindings.not(viewModel.undoStack.canUndoProperty))
+        btnRedo.disableProperty().bind(Bindings.not(viewModel.undoStack.canRedoProperty))
+
+        viewModel.undoStack.undoEntries.addListener { _: Observable -> refreshUndoHistory() }
+        viewModel.undoStack.redoEntries.addListener { _: Observable -> refreshRedoHistory() }
+        refreshUndoHistory()
+        refreshRedoHistory()
+
         // The editor works on the property model of the window instead of on a project handed to it
         // through a property of its own, so a property never carries another property.
         editor.bindProject(viewModel.project)
 
 
     }
+
+    /**
+     * Rebuilds the dropdown of [btnUndo] from the current undo history and updates its tooltip to
+     * name the change that would be reverted next.
+     *
+     * Choosing an entry from the dropdown jumps back several steps at once through
+     * [org.pcsoft.app.aighost.app.undo.UndoStack.undoUntil].
+     */
+    private fun refreshUndoHistory() {
+        val entries = viewModel.undoStack.undoEntries
+        btnUndo.items.setAll(entries.map(::undoHistoryItem))
+        tltUndo.text = entries.firstOrNull()?.label
+            ?.let { MessageFormat.format(resources.getString("window.main.toolbar.undo.tooltip"), it) }
+            ?: resources.getString("window.main.menu.edit.undo")
+    }
+
+    /**
+     * Rebuilds the dropdown of [btnRedo] from the current redo history and updates its tooltip to
+     * name the change that would be applied next.
+     *
+     * Choosing an entry from the dropdown jumps forward several steps at once through
+     * [org.pcsoft.app.aighost.app.undo.UndoStack.redoUntil].
+     */
+    private fun refreshRedoHistory() {
+        val entries = viewModel.undoStack.redoEntries
+        btnRedo.items.setAll(entries.map(::redoHistoryItem))
+        tltRedo.text = entries.firstOrNull()?.label
+            ?.let { MessageFormat.format(resources.getString("window.main.toolbar.redo.tooltip"), it) }
+            ?: resources.getString("window.main.menu.edit.redo")
+    }
+
+    private fun undoHistoryItem(entry: UndoEntry): MenuItem =
+        MenuItem(entry.label).apply { onAction = EventHandler { viewModel.undoStack.undoUntil(entry) } }
+
+    private fun redoHistoryItem(entry: UndoEntry): MenuItem =
+        MenuItem(entry.label).apply { onAction = EventHandler { viewModel.undoStack.redoUntil(entry) } }
 
     /**
      * Builds the menu entry of a recently opened project: its file name above, the directory it sits
@@ -109,6 +177,30 @@ class MainWindowView : FxmlView<MainWindowViewModel>, Initializable {
             graphic = VBox(name, directory).apply { styleClass += "recent-file" }
             onAction = EventHandler { viewModel.openProject(file) }
         }
+    }
+
+    /**
+     * Reverts the most recent entry of the undo history.
+     *
+     * This action is triggered by the Undo menu item and the matching tool bar button; its dropdown
+     * jumps back several steps at once instead, through
+     * [org.pcsoft.app.aighost.app.undo.UndoStack.undoUntil].
+     */
+    @FXML
+    private fun actionUndo() {
+        viewModel.undoStack.undo()
+    }
+
+    /**
+     * Applies the most recently undone entry again.
+     *
+     * This action is triggered by the Redo menu item and the matching tool bar button; its dropdown
+     * jumps forward several steps at once instead, through
+     * [org.pcsoft.app.aighost.app.undo.UndoStack.redoUntil].
+     */
+    @FXML
+    private fun actionRedo() {
+        viewModel.undoStack.redo()
     }
 
     /**

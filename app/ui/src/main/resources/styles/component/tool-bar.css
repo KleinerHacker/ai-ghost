@@ -74,3 +74,25 @@
 .tool-bar .split-menu-button:disabled {
     -fx-opacity: 0.4;
 }
+
+/*
+ * The dropdown arrow of a split menu button carries the default Modena triangle at its default size,
+ * which looks oversized next to the small tool bar icons. It is replaced by a smaller, own chevron
+ * shape instead of just recoloring the default one, and the box around it shrinks with it so the
+ * arrow does not float in leftover padding.
+ */
+.tool-bar .split-menu-button > .arrow-button {
+    -fx-padding: 0 4px 0 4px;
+}
+
+.tool-bar .split-menu-button > .arrow-button > .arrow {
+    -fx-background-color: -ghost-ink;
+    -fx-shape: "M 0 0 L 5 0 L 2.5 4 Z";
+    -fx-scale-shape: false;
+    -fx-min-width: 7px;
+    -fx-min-height: 4px;
+    -fx-max-width: 7px;
+    -fx-max-height: 4px;
+    -fx-pref-width: 7px;
+    -fx-pref-height: 4px;
+}

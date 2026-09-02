@@ -20,7 +20,7 @@ Status: IN_PROGRESS
 | IP-08 | Paper Flow View                           | NOT_STARTED |
 | IP-27 | Library Styling And Theming API           | NOT_STARTED |
 | IP-28 | Standalone Reuse And Documentation        | NOT_STARTED |
-| IP-09 | Undo And Redo Infrastructure              | NOT_STARTED |
+| IP-09 | Undo And Redo Infrastructure              | COMPLETED   |
 | IP-10 | Book Part Writing Surface                 | NOT_STARTED |
 | IP-11 | Paragraph Structure Operations            | NOT_STARTED |
 | IP-12 | Inspector Shell And Content Sections      | NOT_STARTED |

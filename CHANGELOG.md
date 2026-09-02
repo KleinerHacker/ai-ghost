@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+* Edit menu and tool bar carry Undo and Redo: each button shows the name of the change it would take
+  back or apply again as its tooltip, and its dropdown - opened like a browser's back button - lists
+  the most recent steps so several of them can be jumped at once; consecutive typing falls together
+  into a single step, and the history starts empty again whenever a project is opened or newly created
+
 * While the application starts, its logo floats on the desktop without a window frame or background,
   breathing and drifting gently so it is clear that something is still happening; it rests there for
   a moment, the settings are read behind it, and it fades away as the main window appears

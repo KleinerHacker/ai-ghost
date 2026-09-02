@@ -68,6 +68,18 @@
                     <SeparatorMenuItem/>
                     <MenuItem text="%window.main.menu.file.exit" accelerator="Alt+F4" onAction="#actionExit"/>
                 </Menu>
+                <Menu text="%window.main.menu.edit">
+                    <MenuItem fx:id="mnuUndo" text="%window.main.menu.edit.undo" accelerator="Shortcut+Z" onAction="#actionUndo">
+                        <graphic>
+                            <AiGhostIcons fx:factory="menuUndo"/>
+                        </graphic>
+                    </MenuItem>
+                    <MenuItem fx:id="mnuRedo" text="%window.main.menu.edit.redo" accelerator="Shortcut+Shift+Z" onAction="#actionRedo">
+                        <graphic>
+                            <AiGhostIcons fx:factory="menuRedo"/>
+                        </graphic>
+                    </MenuItem>
+                </Menu>
                 <Menu text="%window.main.menu.publish">
                     <Menu text="%window.main.menu.publish.export">
                         <graphic>
@@ -121,6 +133,23 @@
                         <Tooltip text="%window.main.menu.file.saveAs"/>
                     </tooltip>
                 </Button>
+                <Separator/>
+                <SplitMenuButton fx:id="btnUndo" onAction="#actionUndo">
+                    <graphic>
+                        <AiGhostIcons fx:factory="menuUndo"/>
+                    </graphic>
+                    <tooltip>
+                        <Tooltip fx:id="tltUndo" text="%window.main.menu.edit.undo"/>
+                    </tooltip>
+                </SplitMenuButton>
+                <SplitMenuButton fx:id="btnRedo" onAction="#actionRedo">
+                    <graphic>
+                        <AiGhostIcons fx:factory="menuRedo"/>
+                    </graphic>
+                    <tooltip>
+                        <Tooltip fx:id="tltRedo" text="%window.main.menu.edit.redo"/>
+                    </tooltip>
+                </SplitMenuButton>
                 <Separator/>
                 <Button>
                     <graphic>

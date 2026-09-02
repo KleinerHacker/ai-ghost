@@ -64,6 +64,7 @@ opened once the user accepts it. Both documents are written with Jackson.
 | Editor split into project tree and editing area   | Implemented |
 | Project settings dialog: page format and blank pages (Design section) | Implemented |
 | Project settings: typography of the book elements | Planned     |
+| Undo/Redo of project changes, with named history dropdown | Implemented |
 | Product design shared with logo and documentation | Implemented |
 | Light and dark appearance, chosen in the preferences | Implemented |
 | Shipped `Ghost Writer` type face                  | Implemented |

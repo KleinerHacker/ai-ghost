@@ -48,6 +48,19 @@ author saw it. Nothing in the project itself is changed; install the fonts named
 written. A project written before AI Ghost recorded this carries no measurements and is opened
 without a warning.
 
+## Edit
+
+| Entry  | Shortcut         | What it does                                      |
+|--------|------------------|----------------------------------------------------|
+| Undo   | `Ctrl+Z`         | Reverts the most recent change                     |
+| Redo   | `Ctrl+Shift+Z`   | Applies the most recently undone change again      |
+
+Undo and Redo also sit on the tool bar. Their tooltip names the change they would revert or apply
+next, and their dropdown - opened like a browser's back button - lists the most recent steps so
+several of them can be jumped at once. Typing into the same field falls together into a single step
+as long as you keep typing; moving to another field starts a new one. The history starts empty again
+whenever a project is newly created or opened.
+
 ## Publish
 
 | Entry             | Shortcut       | What it does                                |

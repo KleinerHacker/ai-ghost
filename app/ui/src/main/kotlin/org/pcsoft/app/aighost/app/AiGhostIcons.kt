@@ -86,6 +86,12 @@ object AiGhostIcons {
     /** Icon for removing a single entry from a list the user builds up. */
     val remove: Image by lazy { load("remove") }
 
+    /** Icon for undoing the most recent change. */
+    val undo: Image by lazy { load("undo") }
+
+    /** Icon for redoing the most recently undone change. */
+    val redo: Image by lazy { load("redo") }
+
     /**
      * Creates the button graphic for handing a text over to the AI, scaled to [MENU_ICON_SIZE].
      *
@@ -155,6 +161,26 @@ object AiGhostIcons {
      */
     @JvmStatic
     fun menuBlurb(): ImageView = blurb.toImageView()
+
+    /**
+     * Creates the menu graphic for undoing the most recent change, scaled to [MENU_ICON_SIZE].
+     *
+     * Referenced from FXML through `fx:factory`.
+     *
+     * @return a new image view showing [undo]
+     */
+    @JvmStatic
+    fun menuUndo(): ImageView = undo.toImageView()
+
+    /**
+     * Creates the menu graphic for redoing the most recently undone change, scaled to [MENU_ICON_SIZE].
+     *
+     * Referenced from FXML through `fx:factory`.
+     *
+     * @return a new image view showing [redo]
+     */
+    @JvmStatic
+    fun menuRedo(): ImageView = redo.toImageView()
 
     /**
      * Creates the menu graphic for opening a project, scaled to [MENU_ICON_SIZE].
