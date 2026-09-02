@@ -164,7 +164,7 @@ numbering is kept stable rather than renumbered.
 | IP-26 | Font And Measuring Migration ✅            | Catalogue, resolution and metrics move into the library               | IP-01, IP-25         |
 | IP-05 | Incremental Layout And Caching            | Per paragraph invalidation so typing stays responsive                 | IP-04                |
 | IP-06 | Layout Regression Harness                 | Golden page structures and the surface comparison                     | IP-04, IP-07, IP-08  |
-| IP-07 | Paper Page View                           | Exact read-only renderer of a document layout, in the library         | IP-04, IP-26         |
+| IP-07 | Paper Page View ✅                         | Exact read-only renderer of a document layout, in the library         | IP-04, IP-26         |
 | IP-08 | Paper Flow View                           | Writing sheet with page geometry and break marks, in the library      | IP-04, IP-26         |
 | IP-27 | Library Styling And Theming API           | Own stylesheet, style classes, override by the ai-ghost palette       | IP-07, IP-08         |
 | IP-28 | Standalone Reuse And Documentation        | Demo without ai-ghost, published artifact, docs, dependency check     | IP-27                |
@@ -303,13 +303,22 @@ produced against the deterministic metrics, never against a font installed on th
 otherwise the result differs per developer and per runner. The surface comparison belongs to the
 library, because both surfaces do.
 
-### IP-07: Paper Page View
+### IP-07: Paper Page View ✅
 
-Plan: `FP-001-IP-07-SeitenAnsicht.md`
+Plan removed, was `FP-001-IP-07-SeitenAnsicht.md`.
 
 The component decides nothing about typography; it paints coordinates, which is what makes it agree
 with the writing surface by construction. Virtualisation lands here rather than in IP-16: a library
 that cannot show a long document is not reusable.
+
+Built as planned: `PaperPageView` (a plain `Control` with a `SkinBase`-derived skin, Canvas-based
+drawing, no FXML) in `lib/layouting-fx`, package `...layouting.fx.paper`, with a `PagePainter`
+interface and its `DefaultPagePainter`. Widened by two decisions taken with the user, both without
+touching the completed IP-04: since `Page`/`DocumentLayout` carry no page width or height, the
+component takes its own `pageGeometryProperty` beside `documentLayoutProperty`; and the hard edge of
+an inactive page is read by comparing a page's `active` flag against its neighbour's in
+`DocumentLayout.pages`, rather than adding a field to `Page`. Virtualisation is a `ScrollPane` over a
+full-height `Pane`, one `Canvas` per page only while it intersects the viewport plus a buffer.
 
 ### IP-08: Paper Flow View
 
@@ -511,12 +520,12 @@ destroys nothing - it is still one undo entry.
 ```text
 IP-01✅┬─> IP-22✅
        └─┐
-IP-25✅┬─┴─> IP-26✅─┬─> IP-07 ─┬─> IP-27 ──> IP-28
+IP-25✅┬─┴─> IP-26✅─┬─> IP-07✅┬─> IP-27 ──> IP-28
                     ├─> IP-08 ─┘
                     └─> IP-13   (with IP-02, IP-12✅)
 IP-02✅┬───> IP-03✅ ──> IP-04✅┬─> IP-05 ──────────────┐
 IP-24✅┤  │                   │                       │
-       └─> IP-14✅              ├─> IP-07 ─┬────────────┤
+       └─> IP-14✅              ├─> IP-07✅┬────────────┤
                                 │          ├─> IP-06    │
                                 └─> IP-08 ─┘            │
                                       │                 │
@@ -560,7 +569,7 @@ with the library views. IP-13 (design style sections) is the second link: it nee
 upper tree together with IP-02 and IP-12 ✅ of the lower one. Nothing else crosses between the two.
 
 Completed: **IP-01** ✅, **IP-22** ✅, **IP-02** ✅, **IP-24** ✅, **IP-03** ✅, **IP-25** ✅, **IP-26** ✅,
-**IP-09** ✅, **IP-12** ✅, **IP-17** ✅, **IP-04** ✅.
+**IP-09** ✅, **IP-12** ✅, **IP-17** ✅, **IP-04** ✅, **IP-07** ✅.
 Independent starting points: **IP-09** ✅, **IP-12** ✅, **IP-17** ✅.
 
 ## 9. Risks and Open Questions

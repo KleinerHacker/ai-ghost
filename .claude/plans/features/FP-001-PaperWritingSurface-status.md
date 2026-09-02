@@ -16,7 +16,7 @@ Status: IN_PROGRESS
 | IP-26 | Font And Measuring Migration              | COMPLETED   |
 | IP-05 | Incremental Layout And Caching            | NOT_STARTED |
 | IP-06 | Layout Regression Harness                 | NOT_STARTED |
-| IP-07 | Paper Page View                           | NOT_STARTED |
+| IP-07 | Paper Page View                           | COMPLETED   |
 | IP-08 | Paper Flow View                           | NOT_STARTED |
 | IP-27 | Library Styling And Theming API           | NOT_STARTED |
 | IP-28 | Standalone Reuse And Documentation        | NOT_STARTED |
@@ -36,12 +36,37 @@ Status: IN_PROGRESS
 
 ## Overall Progress
 
-44%
+48%
 
 ## Notes
 
-IP-01, IP-22, IP-02, IP-24, IP-03, IP-25, IP-14, IP-26, IP-17 and IP-04 are implemented; IP-07, IP-08,
+IP-01, IP-22, IP-02, IP-24, IP-03, IP-25, IP-14, IP-26, IP-17, IP-04 and IP-07 are implemented; IP-08,
 IP-13, IP-18 and IP-19 are unblocked.
+
+IP-07 was built as planned: `PaperPageView` (a plain `javafx.scene.control.Control` with a
+`SkinBase`-derived `PaperPageViewSkin`, Canvas-based drawing, no FXML) landed in `lib/layouting-fx`,
+package `org.pcsoft.app.aighost.layouting.fx.paper`, alongside a `PagePainter` interface with a
+`DefaultPagePainter` implementation, and a neutral default stylesheet
+(`src/main/resources/.../paper/paper-page-view.css`). Two gaps found during exploration were closed
+with the user before implementation: `Page`/`DocumentLayout` carry no page width/height, so
+`PaperPageView` takes its own `pageGeometryProperty` (type `PageGeometry` from `lib/layouting`)
+alongside `documentLayoutProperty`, rather than widening the already-completed `Page`; and the "hard
+edge" of an inactive page is derived by comparing a page's `active` flag against its immediate
+neighbour's in `DocumentLayout.pages`, rather than adding a new field to `Page`. Both leave IP-04
+untouched. A justified line (`LaidOutLine.wordSpacing > 0`) is drawn word-by-word to honour the exact
+inter-word gap the engine computed; every other line is drawn with a single `fillText` call. Drawing
+resolves its `javafx.scene.text.Font` the same way `JavaFxTextMetrics` measured it -
+`FontDescription(style.family, style.size.toInt(), style.bold, style.italic)` through
+`FontResolver.font(...)`. Virtualisation uses a `ScrollPane` over a full-height `Pane`; a `Canvas` per
+page exists only while that page intersects the viewport plus a 400px buffer, recomputed on scroll,
+resize and zoom. Style classes (`paper-page-view`, `paper-page-view-scroll-pane`,
+`paper-page-view-container`, `paper-page-view-sheet`, `paper-page-view-page-inactive`) mark the chrome
+for later override per IP-27; page numbers and the inactive/active boundary are painted, not
+CSS-selectable, since a caller swaps the `PagePainter` for a different look instead. The component
+registers no listener outside its own node subtree, so `fx-component-lifecycle`'s `showingBinding()`
+pattern does not apply. The CHANGELOG and MkDocs stayed untouched, since nothing here is wired into an
+`app/ui` screen yet and so nothing is visible to an end user. `:lib:ai-ghost-layouting-fx:build` is
+green. IP-08 stays unblocked as before; IP-06 and IP-27 move a step closer, still waiting on IP-08.
 
 IP-04 was built as planned, widened by one explicit user request: the odd/even margin swap only
 applies when a new project setting, "Spiegelnde Ränder" (`PageFormat.mirroredMargins`, default

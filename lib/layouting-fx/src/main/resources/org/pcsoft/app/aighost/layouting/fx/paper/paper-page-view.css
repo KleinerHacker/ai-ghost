@@ -1,0 +1,38 @@
+/*
+ * Copyright (c) KleinerHacker alias Pfeiffer C Soft 2026.
+ * This work is licensed under the Apache License, Version 2.0.
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at:
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, this software is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations.
+ */
+
+/*
+ * Neutral default appearance of PaperPageView: shades of grey and white only, no palette of the
+ * application. A consumer overrides these selectors from its own stylesheet to fit its theme, or
+ * supplies its own PagePainter for the parts drawn on the canvas, which CSS cannot reach.
+ */
+
+.paper-page-view {
+    -fx-background-color: derive(gray, 60%);
+}
+
+.paper-page-view-scroll-pane {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.paper-page-view-container {
+    -fx-background-color: transparent;
+}
+
+.paper-page-view-sheet {
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.35), 8, 0.1, 0, 2);
+}
+
+.paper-page-view-page-inactive {
+    -fx-opacity: 0.85;
+}
