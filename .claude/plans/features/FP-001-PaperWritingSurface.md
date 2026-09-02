@@ -159,7 +159,7 @@ numbering is kept stable rather than renumbered.
 | IP-02 | Design Page Format Model ✅                | Page format, margins and spacing in `Design`, mirrored                | -                    |
 | IP-24 | Optional Parts In The Model ✅             | Prolog, epilog and blurb always present and switchable                | -                    |
 | IP-03 | Layout Core ✅                             | Resolved styles, line breaking, alignment, placed lines               | IP-01, IP-02, IP-24  |
-| IP-04 | Pagination And Page Break Policy          | Page filling, breaks, odd/even margins, policy hook                   | IP-03                |
+| IP-04 | Pagination And Page Break Policy ✅        | Page filling, breaks, odd/even margins, policy hook                   | IP-03                |
 | IP-25 | Renderer Library Module ✅                 | New JavaFX library module, JPMS, TestFX, CI, architecture rule        | -                    |
 | IP-26 | Font And Measuring Migration ✅            | Catalogue, resolution and metrics move into the library               | IP-01, IP-25         |
 | IP-05 | Incremental Layout And Caching            | Per paragraph invalidation so typing stays responsive                 | IP-04                |
@@ -230,9 +230,9 @@ The mapping from placed line back to source character range is what lets IP-10 p
 IP-18 address a paragraph. Hyphenation is out of scope, so the breaking step stays behind an
 interface.
 
-### IP-04: Pagination And Page Break Policy
+### IP-04: Pagination And Page Break Policy ✅
 
-Plan: `FP-001-IP-04-SeitenumbruchUndPaginierung.md`
+Plan removed, was `FP-001-IP-04-SeitenumbruchUndPaginierung.md`.
 
 The policy interface exists although nothing implements it, because widows and orphans change where a
 page ends and would otherwise reshape the engine later. A page carries two numbers that must not be
@@ -241,6 +241,16 @@ the book. That distinction is what makes switching a part on a pure renumbering.
 always starts a new page, so switching can never reflow a neighbouring part. A page also carries
 whether it is inactive, numbered and set apart; the library learns "apart" from the result, never
 that apart means blurb.
+
+Built as planned, widened by one request: odd/even margins only swap when the new "Spiegelnde
+Ränder" switch (`PageFormat.mirroredMargins`) is on, so a plain manuscript is not thrown off by an
+unrequested layout change; the title page and the copyright page were made explicitly unnumbered.
+`PageGeometry` in `lib/layouting` mirrors `PageFormat` the way `TextStyle` mirrors a stored style, kept
+by `PageGeometryTranslation` in `lib/layouting-model` - `lib/layouting` itself gained no dependency.
+`LayoutEngine.layout` paginates one part, `LayoutEngine.layoutBook` a whole book across parts; a part
+starting on a page of its own falls out of the loop structure rather than needing a flag. Margin side
+follows a page's physical position (position 0 is recto), independent of whether that page is
+numbered, so a switched off part's pages keep the book's physical layout stable.
 
 ### IP-25: Renderer Library Module
 
@@ -504,7 +514,7 @@ IP-01✅┬─> IP-22✅
 IP-25✅┬─┴─> IP-26✅─┬─> IP-07 ─┬─> IP-27 ──> IP-28
                     ├─> IP-08 ─┘
                     └─> IP-13   (with IP-02, IP-12✅)
-IP-02✅┬───> IP-03✅ ──> IP-04 ─┬─> IP-05 ──────────────┐
+IP-02✅┬───> IP-03✅ ──> IP-04✅┬─> IP-05 ──────────────┐
 IP-24✅┤  │                   │                       │
        └─> IP-14✅              ├─> IP-07 ─┬────────────┤
                                 │          ├─> IP-06    │
@@ -550,7 +560,7 @@ with the library views. IP-13 (design style sections) is the second link: it nee
 upper tree together with IP-02 and IP-12 ✅ of the lower one. Nothing else crosses between the two.
 
 Completed: **IP-01** ✅, **IP-22** ✅, **IP-02** ✅, **IP-24** ✅, **IP-03** ✅, **IP-25** ✅, **IP-26** ✅,
-**IP-09** ✅, **IP-12** ✅, **IP-17** ✅.
+**IP-09** ✅, **IP-12** ✅, **IP-17** ✅, **IP-04** ✅.
 Independent starting points: **IP-09** ✅, **IP-12** ✅, **IP-17** ✅.
 
 ## 9. Risks and Open Questions

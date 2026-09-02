@@ -33,6 +33,10 @@
 ### 1. Aktionsleiste
 
 * `AiActionBar` schwebend am fokussierten Absatz oder an der Überschrift zeigen.
+* Sichtbar nur, wenn die Maus über dem Absatz/der Überschrift steht.
+* Halbtransparent, solange die Maus nicht direkt über der Leiste steht.
+* Volle Deckkraft erst beim Hover direkt über der Leiste.
+* Deckkraftwechsel als sanfte Animation (Fade), kein hartes Umschalten.
 * Aktionen Umschreiben, Ausbauen und Kürzen anbieten.
 * Icons nach `icons` anlegen.
 

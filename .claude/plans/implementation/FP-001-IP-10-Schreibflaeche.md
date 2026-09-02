@@ -9,7 +9,9 @@
 ## Abhängigkeiten
 
 * Voraussetzung: IP-08, IP-09
-* Start erst, wenn jede Voraussetzung im Feature-Status `COMPLETED` ist.
+* IP-09 ist `COMPLETED`. IP-08 (Schreibblatt-Ansicht, `PaperFlowView`) ist `NOT_STARTED`.
+* Start erst, wenn jede Voraussetzung im Feature-Status `COMPLETED` ist - IP-10 ist damit
+  aktuell noch nicht startbar.
 * Blockiert: IP-06, IP-11, IP-18
 * Reihenfolge und Graph stehen in Abschnitt 8 des Feature Plans.
 
@@ -17,6 +19,7 @@
 
 * `ui-styling`
 * `fx-component-lifecycle`
+* `fx-model`
 * `testing`
 * `project-docs`
 
@@ -47,7 +50,10 @@
 
 ### 5. Undo
 
-* Jede Textänderung in den Stapel aus IP-09 aufzeichnen.
+* Textänderungen in den Stapel aus IP-09 aufzeichnen, pro Block (Absatz/Überschrift) zusammengefasst.
+* Aufeinanderfolgende Änderungen am selben Block nach einer Tipppause zu einem Eintrag coalescen.
+* Dauer der Tipppause als neues Feld in `Preferences` konfigurierbar (Default 500-800ms), gemäß `fx-model` gespiegelt.
+* Coalescing zusätzlich beim Fokus-/Blockwechsel abschließen, auch vor Ablauf der Tipppause.
 
 ### 6. Tests
 

@@ -4,7 +4,7 @@
 * Reihenfolge und Abhängigkeitsgraph: Abschnitt 8 des Feature Plans.
 * Ein Plan startet erst, wenn jede Voraussetzung `COMPLETED` ist.
 * Ein erledigter Plan wird samt Statusdatei entfernt; erledigt sind IP-01, IP-02, IP-24, IP-03,
-  IP-25, IP-22, IP-14, IP-26 und IP-17.
+  IP-25, IP-22, IP-14, IP-26, IP-17 und IP-04.
 * Den Stand jedes Plans führt `.claude/plans/features/FP-001-PaperWritingSurface-status.md`.
 * IP-25 bis IP-28 tragen die eigenständige JavaFX-Renderer-Bibliothek `lib/layouting-fx`.
 * IP-07 und IP-08 liegen in dieser Bibliothek; IP-06, IP-10, IP-13, IP-16 und IP-21 sind darauf
@@ -14,7 +14,6 @@
 
 | ID | Plan | Datei | Voraussetzung |
 |----|------|-------|---------------|
-| IP-04 | Seitenumbruch und Paginierung | `FP-001-IP-04-SeitenumbruchUndPaginierung.md` | IP-03 |
 | IP-05 | Inkrementelles Layout und Zwischenspeicher | `FP-001-IP-05-InkrementellesLayout.md` | IP-04 |
 | IP-06 | Layout-Regressionsprüfstand | `FP-001-IP-06-LayoutRegressionsPruefstand.md` | IP-04, IP-07, IP-08 |
 | IP-07 | Seiten-Ansicht | `FP-001-IP-07-SeitenAnsicht.md` | IP-04, IP-26 |

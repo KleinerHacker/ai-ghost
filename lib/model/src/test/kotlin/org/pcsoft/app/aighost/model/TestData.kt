@@ -122,7 +122,8 @@ object TestData {
         innerMargin = 25.0,
         outerMargin = 18.0,
         topMargin = 12.0,
-        bottomMargin = 22.0
+        bottomMargin = 22.0,
+        mirroredMargins = true
     )
 
     /** A design whose parts all differ, so a swapped property is caught by a round trip test. */

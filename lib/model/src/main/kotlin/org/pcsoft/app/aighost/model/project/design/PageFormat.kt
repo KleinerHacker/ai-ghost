@@ -36,6 +36,9 @@ const val A5_HEIGHT: Double = 595.28
  * @property outerMargin Empty space at the open edge of the page, 15 points by default.
  * @property topMargin Empty space above the text of the page, 15 points by default.
  * @property bottomMargin Empty space below the text of the page, 20 points by default.
+ * @property mirroredMargins Whether the inner and outer margin swap sides between an odd and an even
+ * page, as in a printed book. `false` by default, so every page keeps the same margins until the
+ * user turns this on.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class PageFormat(
@@ -45,5 +48,7 @@ data class PageFormat(
     var innerMargin: Double = 20.0,
     var outerMargin: Double = 15.0,
     var topMargin: Double = 15.0,
-    var bottomMargin: Double = 20.0
+    var bottomMargin: Double = 20.0,
+
+    var mirroredMargins: Boolean = false
 )

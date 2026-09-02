@@ -12,7 +12,9 @@
 
 package org.pcsoft.app.aighost.fx.model.project.design
 
+import javafx.beans.property.BooleanProperty
 import javafx.beans.property.DoubleProperty
+import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleDoubleProperty
 import javafx.beans.property.SimpleObjectProperty
 import org.pcsoft.app.aighost.fx.model.internal.BeanFields
@@ -91,6 +93,16 @@ class PageFormatProperty internal constructor() : SimpleObjectProperty<PageForma
             bottomMarginProperty.set(value)
         }
 
+    /** Whether the inner and outer margin swap sides between an odd and an even page, as a property of its own. */
+    val mirroredMarginsProperty: BooleanProperty = SimpleBooleanProperty()
+
+    /** Whether the inner and outer margin swap sides between an odd and an even page. */
+    var mirroredMargins: Boolean
+        get() = mirroredMarginsProperty.get()
+        set(value) {
+            mirroredMarginsProperty.set(value)
+        }
+
     init {
         fields.double(widthProperty, "width")
         fields.double(heightProperty, "height")
@@ -98,6 +110,7 @@ class PageFormatProperty internal constructor() : SimpleObjectProperty<PageForma
         fields.double(outerMarginProperty, "outerMargin")
         fields.double(topMarginProperty, "topMargin")
         fields.double(bottomMarginProperty, "bottomMargin")
+        fields.boolean(mirroredMarginsProperty, "mirroredMargins")
 
         // The field properties belong to another object after every exchange, so they are tied to the
         // one this property carries now.

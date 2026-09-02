@@ -11,7 +11,7 @@ Status: IN_PROGRESS
 | IP-02 | Design Page Format Model                  | COMPLETED   |
 | IP-24 | Optional Parts In The Model               | COMPLETED   |
 | IP-03 | Layout Core                               | COMPLETED   |
-| IP-04 | Pagination And Page Break Policy          | NOT_STARTED |
+| IP-04 | Pagination And Page Break Policy          | COMPLETED   |
 | IP-25 | Renderer Library Module                   | COMPLETED   |
 | IP-26 | Font And Measuring Migration              | COMPLETED   |
 | IP-05 | Incremental Layout And Caching            | NOT_STARTED |
@@ -36,12 +36,38 @@ Status: IN_PROGRESS
 
 ## Overall Progress
 
-41%
+44%
 
 ## Notes
 
-IP-01, IP-22, IP-02, IP-24, IP-03, IP-25, IP-14, IP-26 and IP-17 are implemented; IP-04, IP-07, IP-08,
+IP-01, IP-22, IP-02, IP-24, IP-03, IP-25, IP-14, IP-26, IP-17 and IP-04 are implemented; IP-07, IP-08,
 IP-13, IP-18 and IP-19 are unblocked.
+
+IP-04 was built as planned, widened by one explicit user request: the odd/even margin swap only
+applies when a new project setting, "Spiegelnde Ränder" (`PageFormat.mirroredMargins`, default
+`false`), is turned on - without it every page keeps the same inner/outer margin. The field was added
+to `PageFormat` in `lib/model` and mirrored into `PageFormatProperty` in `lib/fx-model` per the
+`fx-model` skill, with full property tests; no UI checkbox was wired yet, since that belongs to the
+project settings dialog, not to this plan. The title page and the copyright page carry no page number
+on the request as well.
+
+`lib/layouting` gained `PageGeometry` (a model-independent mirror of `PageFormat`, the same way
+`TextStyle` mirrors a stored style), `Page` and `DocumentLayout`, the `PageBreakPolicy` interface with
+its `NonePageBreakPolicy` implementation (greedy, no widow/orphan avoidance, no look-ahead), and
+`LayoutEngine` with `layout(...)` for a single part and `layoutBook(...)` for a whole book across
+parts. `LayoutEngine` keeps `position` (physical page position, including inactive pages) and
+`pageNumber` (`null` where a page is unnumbered) strictly apart, resolves `leftMargin`/`rightMargin`
+from `mirroredMargins` and the page's physical position (position 0 = recto), and honours the two
+blank-page switches (`Design.startWithEmptyPage`/`endWithEmptyPage`) at the start and end of a book.
+A part is guaranteed to start on a page of its own structurally, since `layoutBook` never continues one
+part's lines onto the tail of the previous part's last page. `lib/layouting-model` gained
+`PageGeometryTranslation`, translating a stored `PageFormat` into a `PageGeometry`, mirroring
+`StyleTranslation`. No dependency was added to `lib/layouting` itself, keeping it free of the
+manuscript model as before.
+
+The README's `lib/ai-ghost-layouting` row was widened to name pagination alongside line breaking and
+alignment; the CHANGELOG stayed untouched, since nothing produced by this plan is visible in the
+running application yet - the new preference has no UI control until a later plan wires one in.
 
 IP-17 was built as an interface only, per an explicit constraint clarified by the user: no stub and no
 real AI interaction ship anywhere in this feature, not even for testing. `lib/ai` (`ai-ghost-ai`) gained

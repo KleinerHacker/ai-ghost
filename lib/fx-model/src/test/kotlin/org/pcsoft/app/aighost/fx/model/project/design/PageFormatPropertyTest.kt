@@ -60,6 +60,7 @@ class PageFormatPropertyTest {
         recorder.watch("pageFormat.outerMargin", property.outerMarginProperty)
         recorder.watch("pageFormat.topMargin", property.topMarginProperty)
         recorder.watch("pageFormat.bottomMargin", property.bottomMarginProperty)
+        recorder.watch("pageFormat.mirroredMargins", property.mirroredMarginsProperty)
 
         parentEvents = 0
     }
@@ -71,7 +72,8 @@ class PageFormatPropertyTest {
         innerMargin = 25.0,
         outerMargin = 18.0,
         topMargin = 12.0,
-        bottomMargin = 22.0
+        bottomMargin = 22.0,
+        mirroredMargins = false
     )
 
     /**
@@ -86,6 +88,21 @@ class PageFormatPropertyTest {
         assertEquals(18.0, property.outerMarginProperty.get())
         assertEquals(12.0, property.topMarginProperty.get())
         assertEquals(22.0, property.bottomMarginProperty.get())
+        assertEquals(false, property.mirroredMarginsProperty.get())
+    }
+
+    /**
+     * Use case: the user turns on mirrored margins for a printed layout, so the switch reaches the
+     * page format and the format as a whole reports the change up to the design carrying it.
+     */
+    @Test
+    fun writingMirroredMarginsReachesTheModelObject() {
+        property.mirroredMarginsProperty.set(true)
+
+        assertEquals(true, holder.pageFormat?.mirroredMargins)
+        assertEquals(1, recorder.countOf("pageFormat.mirroredMargins"))
+        assertEquals(1, recorder.countOf("pageFormat"))
+        assertEquals(1, parentEvents)
     }
 
     /**
@@ -147,11 +164,13 @@ class PageFormatPropertyTest {
     fun aChangeOnTheModelObjectBecomesVisible() {
         holder.pageFormat?.width = 500.0
         holder.pageFormat?.bottomMargin = 40.0
+        holder.pageFormat?.mirroredMargins = true
 
         property.refresh()
 
         assertEquals(500.0, property.widthProperty.get())
         assertEquals(40.0, property.bottomMarginProperty.get())
+        assertEquals(true, property.mirroredMarginsProperty.get())
         assertTrue(parentEvents > 0) { "the parent property was not told about the reading" }
     }
 
@@ -171,12 +190,14 @@ class PageFormatPropertyTest {
                 innerMargin = 21.0,
                 outerMargin = 14.0,
                 topMargin = 16.0,
-                bottomMargin = 19.0
+                bottomMargin = 19.0,
+                mirroredMargins = true
             )
         )
 
         assertEquals(300.0, property.widthProperty.get())
         assertEquals(19.0, property.bottomMarginProperty.get())
+        assertEquals(true, property.mirroredMarginsProperty.get())
         recorder.assertAllFired("exchanging the page format")
         assertEquals(1, parentEvents)
     }
@@ -204,6 +225,7 @@ class PageFormatPropertyTest {
 
         assertEquals(0.0, property.widthProperty.get())
         assertEquals(0.0, property.innerMarginProperty.get())
+        assertEquals(false, property.mirroredMarginsProperty.get())
 
         property.widthProperty.set(500.0)
 

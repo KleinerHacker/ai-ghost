@@ -40,6 +40,7 @@ class PageFormatTest {
         assertEquals(15.0, format.outerMargin)
         assertEquals(15.0, format.topMargin)
         assertEquals(20.0, format.bottomMargin)
+        assertEquals(false, format.mirroredMargins)
     }
 
     /**
@@ -56,6 +57,7 @@ class PageFormatTest {
         assertEquals(18.0, restored.outerMargin)
         assertEquals(12.0, restored.topMargin)
         assertEquals(22.0, restored.bottomMargin)
+        assertEquals(true, restored.mirroredMargins)
         assertEquals(TestData.pageFormat(), restored)
     }
 
