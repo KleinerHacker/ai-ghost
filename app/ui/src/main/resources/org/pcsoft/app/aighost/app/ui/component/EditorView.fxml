@@ -36,7 +36,7 @@
                 <!-- Hard coded on purpose: temporary placeholder until the editing parts exist. -->
                 <Label styleClass="editor-placeholder" text="Not implemented yet."/>
             </StackPane>
-            <Inspector fx:id="inspector" minWidth="280" SplitPane.resizableWithParent="false">
+            <Inspector fx:id="inspector" minWidth="450" SplitPane.resizableWithParent="false">
                 <padding>
                     <Insets left="10"/>
                 </padding>

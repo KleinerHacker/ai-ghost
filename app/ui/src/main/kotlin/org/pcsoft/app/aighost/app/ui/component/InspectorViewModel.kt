@@ -49,8 +49,14 @@ class InspectorViewModel : ViewModel {
     /** Whether the "Chapter" section is expanded, pure runtime state that is never persisted. */
     val chapterSectionExpanded: BooleanProperty = SimpleBooleanProperty(this, "chapterSectionExpanded", true)
 
+    /** Whether the "Design" section is expanded, pure runtime state that is never persisted. */
+    val designSectionExpanded: BooleanProperty = SimpleBooleanProperty(this, "designSectionExpanded", true)
+
     /** Whether a book is bound at all, so the "Book" section shows its fields instead of an empty state. */
     val bookAvailable: BooleanProperty = SimpleBooleanProperty(this, "bookAvailable", false)
+
+    /** Whether a project is bound at all, so the "Design" section shows its fields instead of an empty state. */
+    val designAvailable: BooleanProperty = SimpleBooleanProperty(this, "designAvailable", false)
 
     /** Main title of the manuscript, empty while no manuscript is bound. */
     val title: StringProperty = SimpleStringProperty(this, "title", "")
@@ -91,6 +97,21 @@ class InspectorViewModel : ViewModel {
 
     /** Prompt the blurb is generated from, empty while no blurb is bound. */
     val blurbPrompt: StringProperty = SimpleStringProperty(this, "blurbPrompt", "")
+
+    /**
+     * Embedded editor for the style of the book title, wired up by [InspectorView] once the FXML of
+     * the "Design" section is loaded.
+     */
+    internal lateinit var titleStyleEditor: StyleDataEditor
+
+    /** Embedded editor for the style of the chapter heading. */
+    internal lateinit var chapterTitleStyleEditor: StyleDataEditor
+
+    /** Embedded editor for the style of the further chapter heading lines. */
+    internal lateinit var chapterTitleAppendixStyleEditor: StyleDataEditor
+
+    /** Embedded editor for the style of the chapter body text. */
+    internal lateinit var bodyTextStyleEditor: StyleDataEditor
 
     /**
      * Asks the user whether the title line holding the given text may be removed.
@@ -159,6 +180,7 @@ class InspectorViewModel : ViewModel {
             author.value = ""
             copyright.value = ""
             unbindBlurb()
+            bindDesign(null)
             return
         }
 
@@ -183,6 +205,44 @@ class InspectorViewModel : ViewModel {
         // item of the tree is picked decides whether its prompt is shown.
         rebindBlurb(project)
         onSelectionChanged(lastSelection)
+
+        bindDesign(project)
+    }
+
+    /**
+     * Binds the "Design" section's four style editors live to the design of the given project, or
+     * releases them while none is bound - unlike the "Book" and "Chapter" sections, this does not
+     * depend on the tree selection.
+     *
+     * The four editor fields are only set once [InspectorView] wires them up after loading the FXML;
+     * a plain unit test that builds this view model on its own therefore never sets them, so every
+     * access below is guarded and simply skipped while an editor is not there yet.
+     */
+    private fun bindDesign(project: ProjectProperty?) {
+        if (project == null) {
+            designAvailable.value = false
+            if (::titleStyleEditor.isInitialized) titleStyleEditor.release()
+            if (::chapterTitleStyleEditor.isInitialized) chapterTitleStyleEditor.release()
+            if (::chapterTitleAppendixStyleEditor.isInitialized) chapterTitleAppendixStyleEditor.release()
+            if (::bodyTextStyleEditor.isInitialized) bodyTextStyleEditor.release()
+            return
+        }
+
+        designAvailable.value = true
+        if (::titleStyleEditor.isInitialized) {
+            titleStyleEditor.bindStyle(project.designProperty.titlePageProperty.titleStyleProperty)
+        }
+        if (::chapterTitleStyleEditor.isInitialized) {
+            chapterTitleStyleEditor.bindStyle(project.designProperty.chapterPageProperty.titleStyleProperty)
+        }
+        if (::chapterTitleAppendixStyleEditor.isInitialized) {
+            chapterTitleAppendixStyleEditor.bindStyle(
+                project.designProperty.chapterPageProperty.titleAppendixStyleProperty
+            )
+        }
+        if (::bodyTextStyleEditor.isInitialized) {
+            bodyTextStyleEditor.bindStyle(project.designProperty.chapterPageProperty.textStyleProperty)
+        }
     }
 
     /**

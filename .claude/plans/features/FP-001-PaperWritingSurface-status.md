@@ -24,7 +24,7 @@ Status: IN_PROGRESS
 | IP-10 | Book Part Writing Surface                 | NOT_STARTED |
 | IP-11 | Paragraph Structure Operations            | NOT_STARTED |
 | IP-12 | Inspector Shell And Content Sections      | COMPLETED   |
-| IP-13 | Design Style Sections                     | NOT_STARTED |
+| IP-13 | Design Style Sections                     | COMPLETED   |
 | IP-14 | Project Settings Dialog                   | COMPLETED   |
 | IP-15 | Editor Arrangement And Tree Routing       | NOT_STARTED |
 | IP-16 | Writing And Preview Modes                 | NOT_STARTED |
@@ -36,12 +36,27 @@ Status: IN_PROGRESS
 
 ## Overall Progress
 
-52%
+56%
 
 ## Notes
 
-IP-01, IP-22, IP-02, IP-24, IP-03, IP-25, IP-14, IP-26, IP-17, IP-04, IP-07 and IP-08 are implemented;
-IP-06, IP-10, IP-13, IP-18, IP-19 and IP-27 are unblocked.
+IP-01, IP-22, IP-02, IP-24, IP-03, IP-25, IP-14, IP-26, IP-17, IP-04, IP-07, IP-08 and IP-13 are
+implemented; IP-06, IP-10, IP-18, IP-19 and IP-27 are unblocked.
+
+IP-13 was built narrower than planned: the family catalogue restriction, the per-family sample text
+and the uninstalled-family marking already existed in `StyleDataEditor` (built for IP-14's
+`BookPartPageDesignSettings`), so this plan's actual work was a third, always-live `TitledPane`
+section "Design" in `Inspector`, next to "Book" and "Chapter", holding four reused `StyleDataEditor`
+instances (title, chapter title, chapter title appendix, body text) bound straight to
+`project.designProperty.titlePageProperty.titleStyleProperty` and the three matching properties of
+`chapterPageProperty`. Unlike the other two sections it does not follow the project tree selection,
+only whether a project is bound at all (`InspectorViewModel.designAvailable`); the four editors are
+held by `InspectorView` and forwarded into `InspectorViewModel`, the same way
+`BookPartPageDesignSettingsView` forwards its three. `StyleDataEditor` gained one small addition,
+`release()`, delegating to its already-internal `StyleDataEditorViewModel.release()`, so the section
+drops its bindings cleanly when the project is closed instead of leaving them on an orphaned design.
+`:app:ai-ghost-ui:compileKotlin`, `compileTestKotlin` and `test --tests "*Inspector*"` are green. The
+plan file was removed on completion; this note is the only record. No other plan is unblocked by it.
 
 IP-08 was built as planned: `PaperFlowView` (a plain `javafx.scene.control.Control` with a
 `SkinBase`-derived `PaperFlowViewSkin`, no FXML) landed in `lib/layouting-fx`, package

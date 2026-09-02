@@ -15,6 +15,7 @@ package org.pcsoft.app.aighost.app.ui.component
 import de.saxsys.mvvmfx.MvvmFX
 import javafx.beans.property.SimpleObjectProperty
 import javafx.scene.Scene
+import javafx.scene.control.ComboBox
 import javafx.scene.control.TextArea
 import javafx.scene.control.TextField
 import javafx.scene.control.TitledPane
@@ -27,11 +28,16 @@ import org.pcsoft.app.aighost.app.Messages
 import org.pcsoft.app.aighost.app.ui.component.base.AiPromptArea
 import org.pcsoft.app.aighost.app.ui.component.base.AiTextField
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
+import org.pcsoft.app.aighost.model.common.FontData
+import org.pcsoft.app.aighost.model.common.StyleData
 import org.pcsoft.app.aighost.model.project.Project
 import org.pcsoft.app.aighost.model.project.book.Blurb
 import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.book.Chapter
 import org.pcsoft.app.aighost.model.project.common.AIPrompt
+import org.pcsoft.app.aighost.model.project.design.ChapterPageDesign
+import org.pcsoft.app.aighost.model.project.design.Design
+import org.pcsoft.app.aighost.model.project.design.TitlePageDesign
 import org.pcsoft.app.aighost.model.project.meta.Meta
 import org.testfx.framework.junit5.ApplicationTest
 import org.testfx.util.WaitForAsyncUtils
@@ -96,6 +102,31 @@ class InspectorTest : ApplicationTest() {
     private val blurbFieldsBox
         get() = inspector.lookup("#boxBlurbFields")
 
+    private val designSection: TitledPane
+        get() = inspector.lookup("#pnlDesignSection") as TitledPane
+
+    private val designEmptyBox
+        get() = inspector.lookup("#boxDesignEmpty")
+
+    private val designFieldsBox
+        get() = inspector.lookup("#boxDesignFields")
+
+    private val titleStyleEditor: StyleDataEditor
+        get() = inspector.lookup("#titleStyleEditor") as StyleDataEditor
+
+    private val chapterTitleStyleEditor: StyleDataEditor
+        get() = inspector.lookup("#chapterTitleStyleEditor") as StyleDataEditor
+
+    private val chapterTitleAppendixStyleEditor: StyleDataEditor
+        get() = inspector.lookup("#chapterTitleAppendixStyleEditor") as StyleDataEditor
+
+    private val bodyTextStyleEditor: StyleDataEditor
+        get() = inspector.lookup("#bodyTextStyleEditor") as StyleDataEditor
+
+    @Suppress("UNCHECKED_CAST")
+    private fun StyleDataEditor.familyText(): String =
+        (lookup("#cmbFamily") as ComboBox<String>).editor.text
+
     override fun start(stage: Stage) {
         // No fallback, so the English base bundle is used no matter which locale the build runs under.
         MvvmFX.setGlobalResourceBundle(
@@ -114,6 +145,27 @@ class InspectorTest : ApplicationTest() {
 
     private fun projectOf(book: Book, author: String = "Jane Doe"): ProjectProperty =
         ProjectProperty(Project(meta = Meta(author = author), book = book))
+
+    private fun styleOf(family: String): StyleData = StyleData(font = FontData(name = family, size = 12))
+
+    private fun projectWithDesignOf(
+        titleStyle: StyleData,
+        chapterTitleStyle: StyleData,
+        chapterTitleAppendixStyle: StyleData,
+        bodyTextStyle: StyleData
+    ): ProjectProperty =
+        ProjectProperty(
+            Project(
+                design = Design(
+                    titlePage = TitlePageDesign(titleStyle = titleStyle),
+                    chapterPage = ChapterPageDesign(
+                        titleStyle = chapterTitleStyle,
+                        titleAppendixStyle = chapterTitleAppendixStyle,
+                        textStyle = bodyTextStyle
+                    )
+                )
+            )
+        )
 
     private fun show(book: Book): ProjectProperty {
         val property = projectOf(book)
@@ -308,5 +360,146 @@ class InspectorTest : ApplicationTest() {
 
         assertFalse(chapterSection.isExpanded)
         assertTrue(bookSection.isExpanded, "collapsing one section collapsed the other as well")
+    }
+
+    /**
+     * Use case: no project is open, so the "Design" section shows its empty state and the fields are
+     * hidden.
+     */
+    @Test
+    fun withoutProjectTheDesignSectionIsEmpty() {
+        assertTrue(designEmptyBox.isVisible, "the empty state of the design section is missing")
+        assertFalse(designFieldsBox.isVisible, "the fields are shown without a project")
+    }
+
+    /**
+     * Use case: a project is bound, so the "Design" section shows its four style editors filled with
+     * the styles of the bound design and hides the empty state - independent of what is picked in the
+     * project tree, unlike the "Chapter" section next to it.
+     */
+    @Test
+    fun boundProjectFillsTheDesignSection() {
+        val property = projectWithDesignOf(
+            styleOf("Georgia"),
+            styleOf("Cambria"),
+            styleOf("Verdana"),
+            styleOf("Tahoma")
+        )
+        interact { inspector.bindProject(property) }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        assertFalse(designEmptyBox.isVisible, "the empty state is shown although a project is bound")
+        assertTrue(designFieldsBox.isVisible, "the fields are hidden although a project is bound")
+        assertEquals("Georgia", titleStyleEditor.familyText())
+        assertEquals("Cambria", chapterTitleStyleEditor.familyText())
+        assertEquals("Verdana", chapterTitleAppendixStyleEditor.familyText())
+        assertEquals("Tahoma", bodyTextStyleEditor.familyText())
+    }
+
+    /**
+     * Use case: the design is written through its property model, so every embedded style editor of
+     * the "Design" section shows the new styles.
+     */
+    @Test
+    fun designFieldsFollowTheProperty() {
+        val property =
+            projectWithDesignOf(styleOf("Georgia"), styleOf("Cambria"), styleOf("Verdana"), styleOf("Tahoma"))
+        interact { inspector.bindProject(property) }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        interact {
+            property.designProperty.titlePageProperty.titleStyleProperty.fontProperty.name = "Palatino"
+            property.designProperty.chapterPageProperty.textStyleProperty.fontProperty.name = "Consolas"
+        }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        assertEquals("Palatino", titleStyleEditor.familyText())
+        assertEquals("Consolas", bodyTextStyleEditor.familyText())
+    }
+
+    /**
+     * Use case: the user changes the font family in a style editor of the "Design" section, so it
+     * lands on the very design object the project carries - the section keeps no copy of its own.
+     */
+    @Test
+    fun designFieldsWriteThroughToTheModel() {
+        val property =
+            projectWithDesignOf(styleOf("Georgia"), styleOf("Cambria"), styleOf("Verdana"), styleOf("Tahoma"))
+        interact { inspector.bindProject(property) }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        interact { property.designProperty.chapterPageProperty.titleStyleProperty.fontProperty.name = "Rockwell" }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        assertEquals("Rockwell", chapterTitleStyleEditor.familyText())
+    }
+
+    /**
+     * Use case: the project is closed while the inspector stands, so the "Design" section falls back
+     * to its empty state and no longer crashes on the release of its style editors.
+     */
+    @Test
+    fun closedProjectEmptiesTheDesignSection() {
+        val property =
+            projectWithDesignOf(styleOf("Georgia"), styleOf("Cambria"), styleOf("Verdana"), styleOf("Tahoma"))
+        interact { inspector.bindProject(property) }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        interact { inspector.bindProject(null) }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        assertTrue(designEmptyBox.isVisible, "the empty state is missing after the project was closed")
+        assertFalse(designFieldsBox.isVisible, "the fields are shown after the project was closed")
+    }
+
+    /**
+     * Use case: a second project is bound after the first, so every style editor of the "Design"
+     * section follows the new design and writing into it no longer reaches the design left behind.
+     */
+    @Test
+    fun rebindingShowsTheNewDesignAndLeavesTheOldUntouched() {
+        val first =
+            projectWithDesignOf(styleOf("Georgia"), styleOf("Cambria"), styleOf("Verdana"), styleOf("Tahoma"))
+        interact { inspector.bindProject(first) }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        val second =
+            projectWithDesignOf(styleOf("Calibri"), styleOf("Consolas"), styleOf("Rockwell"), styleOf("Baskerville"))
+        interact { inspector.bindProject(second) }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        assertEquals("Calibri", titleStyleEditor.familyText())
+
+        interact { second.designProperty.titlePageProperty.titleStyleProperty.fontProperty.name = "Optima" }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        assertEquals("Optima", titleStyleEditor.familyText())
+        assertEquals("Georgia", first.designProperty.titlePageProperty.titleStyleProperty.get()!!.font.name)
+    }
+
+    /**
+     * Use case: the user collapses the "Design" section, so it no longer shows its fields, and
+     * expanding it again shows them once more, independent of the other two sections.
+     */
+    @Test
+    fun designSectionCanBeCollapsedAndExpanded() {
+        val property = projectWithDesignOf(
+            styleOf("Georgia"),
+            styleOf("Cambria"),
+            styleOf("Verdana"),
+            styleOf("Tahoma")
+        )
+        interact { inspector.bindProject(property) }
+        WaitForAsyncUtils.waitForFxEvents()
+        assertTrue(designSection.isExpanded, "the section starts collapsed")
+
+        interact { designSection.isExpanded = false }
+        WaitForAsyncUtils.waitForFxEvents()
+        assertFalse(designSection.isExpanded)
+
+        interact { designSection.isExpanded = true }
+        WaitForAsyncUtils.waitForFxEvents()
+        assertTrue(designSection.isExpanded)
+        assertEquals("Georgia", titleStyleEditor.familyText())
     }
 }

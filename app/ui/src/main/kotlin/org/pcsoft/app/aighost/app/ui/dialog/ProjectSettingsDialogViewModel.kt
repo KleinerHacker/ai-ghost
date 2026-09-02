@@ -23,13 +23,8 @@ import org.pcsoft.app.aighost.model.project.design.Design
  *
  * The dialog edits a working copy, not the design of the open project: [workingDesign] wraps a
  * detached [Project] whose design is a deep copy of the target. The editors below the dialog bind to
- * that copy and change it freely; only [apply] carries the values the dialog actually edits - the
- * page geometry and the two empty pages - back into the real design. Cancelling the dialog leaves
- * the working copy behind untouched.
- *
- * The design sections beyond "General" are placeholders today, so only the page format fields are
- * copied back; the deep copy still covers the whole design, so a future editor has a real object to
- * work on without changing this class.
+ * that copy and change it freely; only [apply] carries the values the dialog actually edits back into
+ * the real design. Cancelling the dialog leaves the working copy behind untouched.
  */
 class ProjectSettingsDialogViewModel : ViewModel {
 
@@ -48,12 +43,22 @@ class ProjectSettingsDialogViewModel : ViewModel {
     fun bindTarget(design: DesignProperty) {
         target = design
         val source = design.get() ?: Design()
-        workingProject.value = Project(design = source.copy(pageFormat = source.pageFormat.copy()))
+        workingProject.value = Project(
+            design = source.copy(
+                pageFormat = source.pageFormat.copy(),
+                titlePage = source.titlePage.copy(),
+                copyrightPage = source.copyrightPage.copy(),
+                prologPage = source.prologPage.copy(),
+                chapterPage = source.chapterPage.copy(),
+                epilogPage = source.epilogPage.copy(),
+                blurbPage = source.blurbPage.copy()
+            )
+        )
     }
 
     /**
-     * Writes the page geometry and the two empty page flags of the working copy back into the design
-     * of the open project.
+     * Writes the page geometry, the two empty page flags and every page design of the working copy
+     * back into the design of the open project.
      */
     fun apply() {
         val target = this.target ?: return
@@ -68,5 +73,11 @@ class ProjectSettingsDialogViewModel : ViewModel {
         }
         target.startWithEmptyPage = workingDesign.startWithEmptyPage
         target.endWithEmptyPage = workingDesign.endWithEmptyPage
+        target.titlePage = workingDesign.titlePage?.copy()
+        target.copyrightPage = workingDesign.copyrightPage?.copy()
+        target.prologPage = workingDesign.prologPage?.copy()
+        target.chapterPage = workingDesign.chapterPage?.copy()
+        target.epilogPage = workingDesign.epilogPage?.copy()
+        target.blurbPage = workingDesign.blurbPage?.copy()
     }
 }

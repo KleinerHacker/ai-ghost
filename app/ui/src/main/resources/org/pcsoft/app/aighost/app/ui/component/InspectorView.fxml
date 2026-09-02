@@ -20,6 +20,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import org.pcsoft.app.aighost.app.ui.component.StyleDataEditor?>
 <?import org.pcsoft.app.aighost.app.ui.component.base.AiPromptArea?>
 <?import org.pcsoft.app.aighost.app.ui.component.base.AiTextField?>
 <?import org.pcsoft.app.aighost.app.ui.component.base.AiTextFieldList?>
@@ -110,6 +111,41 @@
                         <VBox fx:id="boxBlurbFields" spacing="6">
                             <Label styleClass="inspector-label" text="%component.inspector.blurb.prompt.label"/>
                             <AiPromptArea fx:id="txaBlurbPrompt" prefHeight="120"/>
+                        </VBox>
+                    </StackPane>
+                </TitledPane>
+
+                <TitledPane fx:id="pnlDesignSection" styleClass="inspector-section"
+                            text="%component.inspector.design.section">
+                    <StackPane>
+                        <VBox fx:id="boxDesignEmpty" styleClass="inspector-empty">
+                            <Label styleClass="inspector-empty-label" text="%component.inspector.design.empty"/>
+                        </VBox>
+                        <VBox fx:id="boxDesignFields" spacing="6">
+                            <Label styleClass="inspector-label" text="%component.inspector.design.title"/>
+                            <StyleDataEditor fx:id="titleStyleEditor"/>
+
+                            <Label styleClass="inspector-label" text="%component.inspector.design.chapterTitle">
+                                <VBox.margin>
+                                    <Insets top="10"/>
+                                </VBox.margin>
+                            </Label>
+                            <StyleDataEditor fx:id="chapterTitleStyleEditor"/>
+
+                            <Label styleClass="inspector-label"
+                                   text="%component.inspector.design.chapterTitleAppendix">
+                                <VBox.margin>
+                                    <Insets top="10"/>
+                                </VBox.margin>
+                            </Label>
+                            <StyleDataEditor fx:id="chapterTitleAppendixStyleEditor"/>
+
+                            <Label styleClass="inspector-label" text="%component.inspector.design.bodyText">
+                                <VBox.margin>
+                                    <Insets top="10"/>
+                                </VBox.margin>
+                            </Label>
+                            <StyleDataEditor fx:id="bodyTextStyleEditor"/>
                         </VBox>
                     </StackPane>
                 </TitledPane>

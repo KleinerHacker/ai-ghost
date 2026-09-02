@@ -62,9 +62,9 @@ opened once the user accepts it. Both documents are written with Jackson.
 | Editor and preview tabs of the main window        | Implemented |
 | Project tree with prolog, chapters, epilog, blurb | Implemented |
 | Editor split into project tree and editing area   | Implemented |
-| Inspector with collapsible Book and Chapter sections | Implemented |
+| Inspector with collapsible Book, Chapter and Design sections | Implemented |
 | Project settings dialog: page format and blank pages (Design section) | Implemented |
-| Project settings: typography of the book elements | Planned     |
+| Live typography editing of title, chapter heading and body text in the Inspector | Implemented |
 | Undo/Redo of project changes, with named history dropdown | Implemented |
 | Product design shared with logo and documentation | Implemented |
 | Light and dark appearance, chosen in the preferences | Implemented |

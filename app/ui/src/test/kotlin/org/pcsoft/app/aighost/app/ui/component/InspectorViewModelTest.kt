@@ -250,4 +250,31 @@ class InspectorViewModelTest {
 
         assertEquals(InspectorViewModel.ChapterSelection.NONE, viewModel.chapterSelection.value)
     }
+
+    /**
+     * Use case: no project is open, so the "Design" section is marked as empty.
+     *
+     * The four style editors of the section are themselves real Java FX components and therefore
+     * belong to [InspectorTest], which exercises the assembled [Inspector] on a running Java FX
+     * toolkit; this plain unit test only proves the availability flag this view model owns on its
+     * own, without ever setting the lateinit editor fields [InspectorView] would otherwise wire up.
+     */
+    @Test
+    fun withoutProjectTheDesignSectionIsEmpty() {
+        assertFalse(viewModel.designAvailable.value, "the design section is not marked as empty")
+    }
+
+    /**
+     * Use case: a project is bound and later closed again, so the "Design" section's availability flag
+     * follows - and, crucially, neither call crashes even though no style editor was ever wired up, as
+     * is the case for this view model built without [InspectorView] around it.
+     */
+    @Test
+    fun designAvailabilityFollowsTheBoundProject() {
+        viewModel.bindProject(projectPropertyOf(Book()))
+        assertTrue(viewModel.designAvailable.value, "the design section is still marked as empty")
+
+        viewModel.bindProject(null)
+        assertFalse(viewModel.designAvailable.value, "the design section is not marked as empty")
+    }
 }

@@ -172,7 +172,7 @@ numbering is kept stable rather than renumbered.
 | IP-10 | Book Part Writing Surface                 | Caret, typing and binding of headings and paragraphs                  | IP-08, IP-09         |
 | IP-11 | Paragraph Structure Operations            | Split, join, delete and reorder paragraphs                            | IP-10                |
 | IP-12 | Inspector Shell And Content Sections ✅    | Context panel with book and part sections, absorbs `BookEditor`       | -                    |
-| IP-13 | Design Style Sections                     | Editing the styles in the inspector with live effect                  | IP-02, IP-12, IP-26  |
+| IP-13 | Design Style Sections ✅                   | Editing the styles in the inspector with live effect                  | IP-02, IP-12, IP-26  |
 | IP-14 | Project Settings Dialog ✅                 | Page format, margins and empty pages in a dialog                      | IP-02                |
 | IP-15 | Editor Arrangement And Tree Routing       | Three zones, routing of every tree node, view state persisted         | IP-11, IP-12         |
 | IP-16 | Writing And Preview Modes                 | Mode switch, whole book preview, scrolling, virtualisation            | IP-05, IP-07, IP-15  |
@@ -425,13 +425,29 @@ using its existing internal no-arg constructor plus `set(chapter)`), because bui
 `ChapterProperty` from a plain `Chapter` selected in the project tree had no prior counterpart; its
 KDoc was corrected accordingly and a developer test (`ChapterPropertyOfTest`) was added.
 
-### IP-13: Design Style Sections
+### IP-13: Design Style Sections ✅
 
-Plan: `FP-001-IP-13-DesignStilAbschnitte.md`
+Plan: `FP-001-IP-13-DesignStilAbschnitte.md` (removed on completion)
 
 The section writes the same `DesignProperty` the layout reads, which is what makes the live update
 work without extra plumbing. Only installed families are offered, because an unresolvable family
 cannot be measured.
+
+Built narrower than the plan described, because the family catalogue restriction, the per-family
+sample text and the uninstalled-family marking already existed in `StyleDataEditor` (built for IP-14's
+`BookPartPageDesignSettings`) rather than being new work here - `StyleDataEditorViewModel.familyName`
+already checks `FontCatalog.contains(...)` and the family combo box already renders each entry in its
+own face. What this plan actually added was a third, always-live `TitledPane` section "Design" in the
+`Inspector`, next to "Book" and "Chapter", holding four reused `StyleDataEditor` instances (title,
+chapter title, chapter title appendix, body text) bound straight to
+`project.designProperty.titlePageProperty.titleStyleProperty` and the three matching properties of
+`chapterPageProperty` - unlike the other two sections, this one does not follow the project tree
+selection, only whether a project is bound at all (`InspectorViewModel.designAvailable`). The four
+editors are held by `InspectorView` and forwarded into `InspectorViewModel` the same way
+`BookPartPageDesignSettingsView` forwards its three. `StyleDataEditor` gained one small addition,
+`release()`, delegating to its already-internal `StyleDataEditorViewModel.release()`, so the section
+can drop its bindings cleanly when the project is closed instead of leaving them dangling on an
+orphaned design.
 
 ### IP-14: Project Settings Dialog ✅
 
@@ -549,7 +565,7 @@ IP-01✅┬─> IP-22✅
        └─┐
 IP-25✅┬─┴─> IP-26✅─┬─> IP-07✅┬─> IP-27 ──> IP-28
                     ├─> IP-08✅┘
-                    └─> IP-13   (with IP-02, IP-12✅)
+                    └─> IP-13✅  (with IP-02, IP-12✅)
 IP-02✅┬───> IP-03✅ ──> IP-04✅┬─> IP-05 ──────────────┐
 IP-24✅┤  │                   │                       │
        └─> IP-14✅              ├─> IP-07✅┬────────────┤
@@ -562,7 +578,7 @@ IP-24✅┤  │                   │                       │
                                                            │          └─> IP-23   (with IP-24)
                                                            └─> IP-21
 IP-09✅ ──> IP-10, IP-18, IP-19
-IP-12✅┬─> IP-13
+IP-12✅┬─> IP-13✅
        ├─> IP-15
        └─> IP-19   (with IP-17✅)
 IP-17✅┬─> IP-18

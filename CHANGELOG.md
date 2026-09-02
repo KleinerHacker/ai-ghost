@@ -9,6 +9,12 @@
   explanation instead of fields while nothing matching is picked, and both can be collapsed and
   expanded on their own
 
+* Inspector gains a third section, "Design", showing the appearance of the book title, the chapter
+  heading, its further heading lines and the body text - family, size, weight, slant, alignment and
+  line spacing for each; unlike the other two sections it stays filled as long as a project is open,
+  no matter what is picked in the project tree, and every change is visible on the manuscript right
+  away
+
 * Edit menu and tool bar carry Undo and Redo: each button shows the name of the change it would take
   back or apply again as its tooltip, and its dropdown - opened like a browser's back button - lists
   the most recent steps so several of them can be jumped at once; consecutive typing falls together

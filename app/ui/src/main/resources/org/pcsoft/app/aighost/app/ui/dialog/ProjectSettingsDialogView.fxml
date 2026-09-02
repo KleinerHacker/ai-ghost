@@ -18,9 +18,14 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
+<?import org.pcsoft.app.aighost.app.ui.component.BookPartPageDesignSettings?>
+<?import org.pcsoft.app.aighost.app.ui.component.ChapterPageDesignSettings?>
+<?import org.pcsoft.app.aighost.app.ui.component.CopyrightPageDesignSettings?>
 <?import org.pcsoft.app.aighost.app.ui.component.DesignSettings?>
 <?import org.pcsoft.app.aighost.app.ui.component.PlaceholderSettings?>
 <?import org.pcsoft.app.aighost.app.ui.component.ProjectSettingsTree?>
+<?import org.pcsoft.app.aighost.app.ui.component.StyleDataEditor?>
+<?import org.pcsoft.app.aighost.app.ui.component.TitlePageDesignSettings?>
 <BorderPane styleClass="project-settings-content" prefWidth="800.0" prefHeight="600.0"
             xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
@@ -40,6 +45,12 @@
     <center>
         <StackPane fx:id="content">
             <DesignSettings fx:id="design"/>
+            <TitlePageDesignSettings fx:id="titleDesign"/>
+            <CopyrightPageDesignSettings fx:id="copyrightDesign"/>
+            <BookPartPageDesignSettings fx:id="prologDesign"/>
+            <ChapterPageDesignSettings fx:id="chapterDesign"/>
+            <BookPartPageDesignSettings fx:id="epilogDesign"/>
+            <StyleDataEditor fx:id="blurbDesign"/>
             <PlaceholderSettings fx:id="placeholder"/>
         </StackPane>
     </center>

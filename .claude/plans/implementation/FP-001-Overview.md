@@ -4,11 +4,10 @@
 * Reihenfolge und Abhängigkeitsgraph: Abschnitt 8 des Feature Plans.
 * Ein Plan startet erst, wenn jede Voraussetzung `COMPLETED` ist.
 * Ein erledigter Plan wird samt Statusdatei entfernt; erledigt sind IP-01, IP-02, IP-24, IP-03,
-  IP-25, IP-22, IP-14, IP-26, IP-17 und IP-04.
+  IP-25, IP-22, IP-14, IP-26, IP-17, IP-04 und IP-13.
 * Den Stand jedes Plans führt `.claude/plans/features/FP-001-PaperWritingSurface-status.md`.
 * IP-25 bis IP-28 tragen die eigenständige JavaFX-Renderer-Bibliothek `lib/layouting-fx`.
-* IP-07 und IP-08 liegen in dieser Bibliothek; IP-06, IP-10, IP-13, IP-16 und IP-21 sind darauf
-  angepasst.
+* IP-07 und IP-08 liegen in dieser Bibliothek; IP-06, IP-10, IP-16 und IP-21 sind darauf angepasst.
 
 ## Pläne
 
@@ -24,7 +23,6 @@
 | IP-10 | Schreibfläche für Buchteile | `FP-001-IP-10-Schreibflaeche.md` | IP-08, IP-09 |
 | IP-11 | Absatz-Operationen | `FP-001-IP-11-AbsatzOperationen.md` | IP-10 |
 | IP-12 | Inspector-Grundgerüst und Inhaltsabschnitte | `FP-001-IP-12-InspectorGrundgeruest.md` | - |
-| IP-13 | Design-Stilabschnitte | `FP-001-IP-13-DesignStilAbschnitte.md` | IP-02, IP-12, IP-26 |
 | IP-15 | Editor-Aufteilung und Baum-Routing | `FP-001-IP-15-EditorAufteilungUndBaumRouting.md` | IP-11, IP-12 |
 | IP-16 | Schreib- und Vorschaumodus | `FP-001-IP-16-SchreibUndVorschauModus.md` | IP-05, IP-07, IP-15 |
 | IP-18 | AI-Aktionen an Absatz und Überschrift | `FP-001-IP-18-AiAktionenAmAbsatz.md` | IP-10, IP-17 |

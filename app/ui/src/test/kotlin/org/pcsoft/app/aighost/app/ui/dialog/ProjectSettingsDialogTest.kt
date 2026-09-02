@@ -13,6 +13,7 @@
 package org.pcsoft.app.aighost.app.ui.dialog
 
 import de.saxsys.mvvmfx.MvvmFX
+import javafx.scene.Node
 import javafx.scene.control.ButtonType
 import javafx.scene.control.Spinner
 import javafx.scene.control.TreeView
@@ -82,11 +83,11 @@ class ProjectSettingsDialogTest : ApplicationTest() {
     }
 
     /**
-     * Use case: the user picks a design child section, so its placeholder comes to the front and the
-     * design editor steps back.
+     * Use case: the user picks the "General" section, so its placeholder comes to the front and the
+     * design editor steps back, since "General" is the only section without a real editor.
      */
     @Test
-    fun pickingADesignSectionShowsItsPlaceholder() {
+    fun pickingGeneralShowsItsPlaceholder() {
         val dialog = build(target)
 
         @Suppress("UNCHECKED_CAST")
@@ -96,10 +97,41 @@ class ProjectSettingsDialogTest : ApplicationTest() {
 
         assertTrue(design.isVisible, "the dialog opens on the design editor")
 
-        interact { tree.selectionModel.select(tree.root.children[1].children[0]) }
+        interact { tree.selectionModel.select(tree.root.children[0]) }
 
-        assertFalse(design.isVisible, "the design editor stayed in front of a design child section")
-        assertTrue(placeholder.isVisible, "the placeholder of the design child section is not shown")
+        assertFalse(design.isVisible, "the design editor stayed in front of General")
+        assertTrue(placeholder.isVisible, "the placeholder of General is not shown")
+    }
+
+    /**
+     * Use case: the user picks each design child section, so its own editor comes to the front and
+     * every other node - including the placeholder - steps back.
+     */
+    @Test
+    fun pickingADesignChildSectionShowsItsOwnEditor() {
+        val dialog = build(target)
+
+        @Suppress("UNCHECKED_CAST")
+        val tree = dialog.dialogPane.lookup(".tree-view") as TreeView<ProjectSettingsSection>
+        val content = dialog.dialogPane.lookup("#content") as javafx.scene.layout.StackPane
+        val topLevelNodes = content.children
+
+        val designChildren = tree.root.children[1].children
+        val expectedStyleClasses = listOf(
+            "title-page-design-settings", "copyright-page-design-settings", "book-part-page-design-settings",
+            "chapter-page-design-settings", "book-part-page-design-settings", "style-data-editor"
+        )
+
+        for ((index, styleClass) in expectedStyleClasses.withIndex()) {
+            interact { tree.selectionModel.select(designChildren[index]) }
+
+            val shown = topLevelNodes.filter { it.isVisible }
+            assertEquals(1, shown.size, "exactly one top-level editor is shown for child section $index")
+            assertTrue(
+                shown.single().styleClass.contains(styleClass),
+                "the shown editor of child section $index is not the expected one"
+            )
+        }
     }
 
     /**
@@ -124,6 +156,30 @@ class ProjectSettingsDialogTest : ApplicationTest() {
         interact { width.editor.text = "148" }
 
         assertFalse(ok.isDisabled, "OK stays locked after the page became valid again")
+    }
+
+    /**
+     * Use case: an invalid field in a design child section - not just the page geometry - also locks
+     * OK and APPLY, since [ProjectSettingsDialogView.valid] combines every embedded editor.
+     */
+    @Test
+    fun locksOkAndApplyWhileATitleFieldIsInvalid() {
+        val dialog = build(target)
+
+        @Suppress("UNCHECKED_CAST")
+        val tree = dialog.dialogPane.lookup(".tree-view") as TreeView<ProjectSettingsSection>
+        val ok = dialog.dialogPane.lookupButton(ButtonType.OK)
+
+        interact { tree.selectionModel.select(tree.root.children[1].children[0]) }
+
+        val titleEditor = dialog.dialogPane.lookup(".title-page-design-settings") as Node
+        val sizeSpinner = (titleEditor as javafx.scene.Parent).lookup("#spnSize") as Spinner<*>
+
+        interact { sizeSpinner.editor.text = "" }
+        assertTrue(ok.isDisabled, "OK stays open on an impossible title style")
+
+        interact { sizeSpinner.editor.text = "12" }
+        assertFalse(ok.isDisabled, "OK stays locked after the title style became valid again")
     }
 
     /**

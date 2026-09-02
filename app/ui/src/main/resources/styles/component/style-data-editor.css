@@ -1,0 +1,54 @@
+/*
+ * Copyright (c) KleinerHacker alias Pfeiffer C Soft 2026.
+ * This work is licensed under the Apache License, Version 2.0.
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at:
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, this software is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations.
+ */
+
+/*
+ * Style data editor: the appearance of a piece of text. The toggle button, used here for bold and
+ * italic, is first used in this file and therefore styled here, scoped to the editor; the "not
+ * installed" warning next to the family field is styled here as well.
+ */
+
+.style-data-editor .toggle-button {
+    -fx-background-color: -ghost-surface-input;
+    -fx-background-radius: 8px;
+    -fx-border-color: -ghost-tint-line;
+    -fx-border-width: 2px;
+    -fx-border-radius: 8px;
+    -fx-text-fill: -ghost-ink;
+    -fx-padding: 3px 10px 3px 10px;
+}
+
+.style-data-editor .toggle-button:hover {
+    -fx-background-color: -ghost-tint-hover;
+}
+
+.style-data-editor .toggle-button:pressed {
+    -fx-background-color: -ghost-tint-pressed;
+}
+
+.style-data-editor .toggle-button:focused {
+    -fx-border-color: -ghost-accent;
+}
+
+.style-data-editor .toggle-button:selected {
+    -fx-background-color: -ghost-primary;
+    -fx-border-color: -ghost-primary;
+    -fx-text-fill: -ghost-on-primary;
+}
+
+.style-data-editor .toggle-button:disabled {
+    -fx-opacity: 0.5;
+}
+
+.style-data-editor .field-warning {
+    -fx-text-fill: -ghost-warn;
+    -fx-font-size: 12px;
+}

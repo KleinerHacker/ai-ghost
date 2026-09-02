@@ -66,7 +66,12 @@ object AiGhostTheme {
         "/styles/component/text-field-list.css",
         "/styles/component/inspector.css",
         "/styles/component/dialog.css",
-        "/styles/component/project-settings.css"
+        "/styles/component/project-settings.css",
+        "/styles/component/style-data-editor.css",
+        "/styles/component/book-part-page-design-settings.css",
+        "/styles/component/chapter-page-design-settings.css",
+        "/styles/component/title-page-design-settings.css",
+        "/styles/component/copyright-page-design-settings.css"
     )
 
     /**

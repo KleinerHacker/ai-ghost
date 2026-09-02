@@ -21,9 +21,9 @@ package org.pcsoft.app.aighost.app.ui.component
  * single book part becomes a `data class` carrying that part, the same way [ProjectListItem.ChapterItem]
  * does, without changing how the tree is built.
  *
- * [Design] is the only section with a real editor at the moment - the page geometry and the two
- * empty pages. Every other one stands for a typographic editor that IP-13 fills in; until then it
- * shows a placeholder.
+ * Every design section now carries a real editor - the page geometry and the two empty pages under
+ * [Design], and the typography of each page under its own child section. Only [General] still shows a
+ * placeholder.
  */
 sealed interface ProjectSettingsSection {
 
@@ -47,30 +47,36 @@ sealed interface ProjectSettingsSection {
     /** Typography of the title page. */
     data object DesignTitle : ProjectSettingsSection {
         override val bundleKey: String get() = "dialog.projectSettings.section.design.title"
+        override val implemented: Boolean get() = true
     }
 
     /** Typography of the copyright page. */
     data object DesignCopyright : ProjectSettingsSection {
         override val bundleKey: String get() = "dialog.projectSettings.section.design.copyright"
+        override val implemented: Boolean get() = true
     }
 
     /** Typography of the epilog. */
     data object DesignEpilog : ProjectSettingsSection {
         override val bundleKey: String get() = "dialog.projectSettings.section.design.epilog"
+        override val implemented: Boolean get() = true
     }
 
     /** Typography of the chapters. */
     data object DesignChapter : ProjectSettingsSection {
         override val bundleKey: String get() = "dialog.projectSettings.section.design.chapter"
+        override val implemented: Boolean get() = true
     }
 
     /** Typography of the prolog. */
     data object DesignProlog : ProjectSettingsSection {
         override val bundleKey: String get() = "dialog.projectSettings.section.design.prolog"
+        override val implemented: Boolean get() = true
     }
 
     /** Typography of the blurb. */
     data object DesignBlurb : ProjectSettingsSection {
         override val bundleKey: String get() = "dialog.projectSettings.section.design.blurb"
+        override val implemented: Boolean get() = true
     }
 }

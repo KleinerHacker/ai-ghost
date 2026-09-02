@@ -92,6 +92,27 @@ class InspectorView : FxmlView<InspectorViewModel>, Initializable {
     @FXML
     private lateinit var txaBlurbPrompt: AiPromptArea
 
+    @FXML
+    private lateinit var pnlDesignSection: TitledPane
+
+    @FXML
+    private lateinit var boxDesignEmpty: VBox
+
+    @FXML
+    private lateinit var boxDesignFields: VBox
+
+    @FXML
+    private lateinit var titleStyleEditor: StyleDataEditor
+
+    @FXML
+    private lateinit var chapterTitleStyleEditor: StyleDataEditor
+
+    @FXML
+    private lateinit var chapterTitleAppendixStyleEditor: StyleDataEditor
+
+    @FXML
+    private lateinit var bodyTextStyleEditor: StyleDataEditor
+
     @InjectViewModel
     private lateinit var viewModel: InspectorViewModel
 
@@ -104,9 +125,11 @@ class InspectorView : FxmlView<InspectorViewModel>, Initializable {
 
         pnlBookSection.expandedProperty().bindBidirectional(viewModel.bookSectionExpanded)
         pnlChapterSection.expandedProperty().bindBidirectional(viewModel.chapterSectionExpanded)
+        pnlDesignSection.expandedProperty().bindBidirectional(viewModel.designSectionExpanded)
 
         bindBookSection()
         bindChapterSection()
+        bindDesignSection()
     }
 
     private fun bindBookSection() {
@@ -172,6 +195,18 @@ class InspectorView : FxmlView<InspectorViewModel>, Initializable {
 
         txaBlurbPrompt.text.bindBidirectional(viewModel.blurbPrompt)
         txaBlurbPrompt.maxCharacters.bind(viewModel.maxContentPromptCharacters)
+    }
+
+    private fun bindDesignSection() {
+        showExactly(boxDesignFields, viewModel.designAvailable)
+        showExactly(boxDesignEmpty, viewModel.designAvailable.not())
+
+        // The section binds live to the design of whatever project is bound, not to the tree
+        // selection, so the view model only needs to know the editors to forward that binding into.
+        viewModel.titleStyleEditor = titleStyleEditor
+        viewModel.chapterTitleStyleEditor = chapterTitleStyleEditor
+        viewModel.chapterTitleAppendixStyleEditor = chapterTitleAppendixStyleEditor
+        viewModel.bodyTextStyleEditor = bodyTextStyleEditor
     }
 
     /**
