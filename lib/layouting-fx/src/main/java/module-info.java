@@ -25,4 +25,8 @@ module org.pcsoft.app.aighost.layouting.fx {
     // FontDescription to a JavaFX font, the text measuring behind the core interface, and the
     // family fingerprint measured here and compared by whoever stores it.
     exports org.pcsoft.app.aighost.layouting.fx.font;
+
+    // The controls rendering and editing a laid out document: the read-only page preview and the
+    // editable writing surface, both consumed by app/ui.
+    exports org.pcsoft.app.aighost.layouting.fx.paper;
 }

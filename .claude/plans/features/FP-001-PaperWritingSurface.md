@@ -153,7 +153,7 @@ library and were added after IP-01 to IP-03 were completed. IP-20 was removed wi
 numbering is kept stable rather than renumbered.
 
 | ID    | Implementation Plan                       | Objective                                                             | Dependencies         |
-|-------|-------------------------------------------|-----------------------------------------------------------------------|----------------------|
+|-------|-------------------------------------------|-------------------------------------------------------------------------|----------------------|
 | IP-01 | Font Discovery And Text Measuring ✅       | Installed families, resolution, fallback, measuring through JavaFX     | -                    |
 | IP-22 | Font Identity And Substitution Reporting ✅| Record the metrics used, detect and report a substitution             | IP-01                |
 | IP-02 | Design Page Format Model ✅                | Page format, margins and spacing in `Design`, mirrored                | -                    |
@@ -165,7 +165,7 @@ numbering is kept stable rather than renumbered.
 | IP-05 | Incremental Layout And Caching            | Per paragraph invalidation so typing stays responsive                 | IP-04                |
 | IP-06 | Layout Regression Harness                 | Golden page structures and the surface comparison                     | IP-04, IP-07, IP-08  |
 | IP-07 | Paper Page View ✅                         | Exact read-only renderer of a document layout, in the library         | IP-04, IP-26         |
-| IP-08 | Paper Flow View                           | Writing sheet with page geometry and break marks, in the library      | IP-04, IP-26         |
+| IP-08 | Paper Flow View ✅                         | Writing sheet with page geometry and break marks, in the library      | IP-04, IP-26         |
 | IP-27 | Library Styling And Theming API           | Own stylesheet, style classes, override by the ai-ghost palette       | IP-07, IP-08         |
 | IP-28 | Standalone Reuse And Documentation        | Demo without ai-ghost, published artifact, docs, dependency check     | IP-27                |
 | IP-09 | Undo And Redo Infrastructure ✅            | One undo stack over model changes of the editor                       | -                    |
@@ -320,15 +320,42 @@ an inactive page is read by comparing a page's `active` flag against its neighbo
 `DocumentLayout.pages`, rather than adding a field to `Page`. Virtualisation is a `ScrollPane` over a
 full-height `Pane`, one `Canvas` per page only while it intersects the viewport plus a buffer.
 
-### IP-08: Paper Flow View
+### IP-08: Paper Flow View ✅
 
-Plan: `FP-001-IP-08-SchreibblattAnsicht.md`
+Plan removed, was `FP-001-IP-08-SchreibblattAnsicht.md`.
 
 The native control wraps with the same text stack the engine measured with, so the breaks agree once
 the control's insets are taken out of the column width. Debouncing belongs on the break recomputation,
 not on the text. The component owns the caret, the consumer owns the text - that is what keeps the
 component reusable and undo working. Applying a change, the binding to `BookPartProperty` and the
 ai-ghost behaviour belong to IP-10; splitting a control at a break is IP-21.
+
+Built as planned: `PaperFlowView` (a plain `Control` with a `SkinBase`-derived `PaperFlowViewSkin`) in
+`lib/layouting-fx`, package `...layouting.fx.paper`, beside `PaperPageView`. One native `TextArea` per
+block is built by grouping the `DocumentLayout`'s laid out lines by `LaidOutLine.blockIndex` and
+rejoining their text; a page break landing between two blocks renders as a real gap region the size of
+`PaperPageViewSkin`'s own page gap, a break landing inside one block renders as a dashed
+`paper-flow-view-break-mark` line carrying the target page number, positioned by the character
+fraction the break falls at - `TextArea` keeps its own text layout private, so the mark cannot reach
+the exact pixel of the broken line without the toolkit reflection this codebase never uses. The
+reported `columnWidthProperty` subtracts the text control's own insets from the page geometry's
+content width. Every change is reported only, never applied: a `PaperFlowListener` interface
+(`onTextChanged`, `onCaretMoved`, `onFocusChanged`, `onSplitRequested`, `onMergeRequested`,
+`onRemoveRequested`, all default no-op) is what the control talks to a caller through, modelled after
+the request/callback shape of IP-17's `AiAction` port rather than kept as several separate listener
+lists. Enter is intercepted into a split request instead of inserting a newline, since a block is a
+paragraph, not a multi-line field; Backspace at a block's start and Delete at its end become merge
+requests instead of being applied. Pasted content always goes in through `insertText` with the
+clipboard's plain string, never its rich content. Column width recomputation and the break marks are
+debounced 100 ms behind a `PauseTransition` on a resize, so a rebuild from a genuinely new
+`DocumentLayout` stays instant; rebuilding also memorises which block carried focus and its caret
+position and restores both once the new text controls exist, so handing in a freshly recomputed layout
+never interrupts typing. The `.paper` package of `lib/layouting-fx` - carrying both `PaperPageView`
+and `PaperFlowView` - is now exported from `module-info.java`, closing a gap left open since IP-07 (it
+had never been exported, since nothing outside the module read it yet). `:lib:ai-ghost-layouting-fx:build`
+is green, 8 new developer tests. The CHANGELOG and MkDocs stayed untouched, since neither view is wired
+into an `app/ui` screen yet - IP-10 does that. IP-06 and IP-27 are now unblocked; IP-10 is unblocked
+together with the already completed IP-09.
 
 ### IP-27: Library Styling And Theming API
 
@@ -521,13 +548,13 @@ destroys nothing - it is still one undo entry.
 IP-01✅┬─> IP-22✅
        └─┐
 IP-25✅┬─┴─> IP-26✅─┬─> IP-07✅┬─> IP-27 ──> IP-28
-                    ├─> IP-08 ─┘
+                    ├─> IP-08✅┘
                     └─> IP-13   (with IP-02, IP-12✅)
 IP-02✅┬───> IP-03✅ ──> IP-04✅┬─> IP-05 ──────────────┐
 IP-24✅┤  │                   │                       │
        └─> IP-14✅              ├─> IP-07✅┬────────────┤
                                 │          ├─> IP-06    │
-                                └─> IP-08 ─┘            │
+                                └─> IP-08✅┘            │
                                       │                 │
                                       └─> IP-10 ────────┼──> IP-18   (with IP-17✅)
                                       (with IP-09✅)     │
@@ -541,7 +568,7 @@ IP-12✅┬─> IP-13
 IP-17✅┬─> IP-18
        └─> IP-19
 IP-05, IP-07, IP-15 ──> IP-16
-IP-07, IP-08 ──> IP-06, IP-27
+IP-07✅, IP-08✅ ──> IP-06, IP-27
 ```
 
 The graph is drawn as two trees that grow from different roots and meet only at one seam.
@@ -569,7 +596,7 @@ with the library views. IP-13 (design style sections) is the second link: it nee
 upper tree together with IP-02 and IP-12 ✅ of the lower one. Nothing else crosses between the two.
 
 Completed: **IP-01** ✅, **IP-22** ✅, **IP-02** ✅, **IP-24** ✅, **IP-03** ✅, **IP-25** ✅, **IP-26** ✅,
-**IP-09** ✅, **IP-12** ✅, **IP-17** ✅, **IP-04** ✅, **IP-07** ✅.
+**IP-09** ✅, **IP-12** ✅, **IP-17** ✅, **IP-04** ✅, **IP-07** ✅, **IP-08** ✅.
 Independent starting points: **IP-09** ✅, **IP-12** ✅, **IP-17** ✅.
 
 ## 9. Risks and Open Questions
@@ -591,6 +618,9 @@ Independent starting points: **IP-09** ✅, **IP-12** ✅, **IP-17** ✅.
   installed everywhere; a default resolving through the fallback chain is needed.
 * **The insets of the native text control** shift its wrapping against the engine's. IP-08 takes them
   out of the column width; IP-06 catches a remaining drift.
+* **A block's full text is reconstructed, not stored.** `DocumentLayout` only carries wrapped lines,
+  so `PaperFlowView` rejoins a block's lines with a single space between them; a hard line break
+  inside a block, should one ever exist, would not survive the round trip. No such case exists yet.
 * **The correspondence is per machine.** IP-22 makes a substitution visible; it cannot make it go
   away.
 * **Kerning across word boundaries is lost.** Words are measured one by one, so a justified line is

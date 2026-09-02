@@ -17,7 +17,7 @@ Status: IN_PROGRESS
 | IP-05 | Incremental Layout And Caching            | NOT_STARTED |
 | IP-06 | Layout Regression Harness                 | NOT_STARTED |
 | IP-07 | Paper Page View                           | COMPLETED   |
-| IP-08 | Paper Flow View                           | NOT_STARTED |
+| IP-08 | Paper Flow View                           | COMPLETED   |
 | IP-27 | Library Styling And Theming API           | NOT_STARTED |
 | IP-28 | Standalone Reuse And Documentation        | NOT_STARTED |
 | IP-09 | Undo And Redo Infrastructure              | COMPLETED   |
@@ -36,12 +36,46 @@ Status: IN_PROGRESS
 
 ## Overall Progress
 
-48%
+52%
 
 ## Notes
 
-IP-01, IP-22, IP-02, IP-24, IP-03, IP-25, IP-14, IP-26, IP-17, IP-04 and IP-07 are implemented; IP-08,
-IP-13, IP-18 and IP-19 are unblocked.
+IP-01, IP-22, IP-02, IP-24, IP-03, IP-25, IP-14, IP-26, IP-17, IP-04, IP-07 and IP-08 are implemented;
+IP-06, IP-10, IP-13, IP-18, IP-19 and IP-27 are unblocked.
+
+IP-08 was built as planned: `PaperFlowView` (a plain `javafx.scene.control.Control` with a
+`SkinBase`-derived `PaperFlowViewSkin`, no FXML) landed in `lib/layouting-fx`, package
+`org.pcsoft.app.aighost.layouting.fx.paper`, beside `PaperPageView`, plus `PaperFlowListener` (six
+default-empty callbacks: `onTextChanged`, `onCaretMoved`, `onFocusChanged`, `onSplitRequested`,
+`onMergeRequested`, `onRemoveRequested`) and a neutral default stylesheet
+(`src/main/resources/.../paper/paper-flow-view.css`). One native `TextArea` per block is built by
+grouping the laid out lines of a `DocumentLayout` by `LaidOutLine.blockIndex` and rejoining their
+text with a single space; the feature plan's risk list now names that a hard line break inside a
+block would not survive this round trip, since none exists in the model today. A page break landing
+between two blocks renders a real gap the size of `PaperPageViewSkin`'s own page gap; a break landing
+inside one block draws a dashed `paper-flow-view-break-mark` line with the target page number,
+positioned by the character-offset fraction of the break, since a `TextArea`'s own text layout is
+private and reaching into it would be the toolkit reflection this codebase never does. The reported
+`columnWidthProperty` subtracts the text control's own insets from `PageGeometry`'s content width
+(`width - innerMargin - outerMargin`). Every user action is only reported, never applied, through
+`PaperFlowListener` - shaped after IP-17's `AiAction` request/callback port rather than several
+separate listener lists, since it is the strongest existing "report intent, never mutate" precedent in
+this codebase. Enter is intercepted into a split request instead of a newline, since a block is a
+paragraph, not a multi-line field; Backspace at a block's start and Delete at its end become merge
+requests; pasted content always goes in through `insertText` with the clipboard's plain string only.
+Column width and break marks recompute debounced 100 ms behind a `PauseTransition` on a resize; text
+itself is never debounced. Rebuilding a block's controls from a fresh `DocumentLayout` first memorises
+which block carried focus and its caret position and restores both afterwards, so handing in a newly
+computed layout - as IP-10's consumer will after applying a reported change - never interrupts typing.
+One gap closed along the way, affecting IP-07 as well: the `.paper` package of `lib/layouting-fx` had
+never been added to `exports` in `module-info.java` since IP-07 landed, because nothing outside the
+module read it yet; it is exported now that a consumer (`app/ui`, from IP-10 on) needs both views.
+The component registers no listener outside its own node subtree, so `fx-component-lifecycle`'s
+`showingBinding()` pattern does not apply, the same as `PaperPageView`. The CHANGELOG and MkDocs stayed
+untouched, since nothing here is wired into an `app/ui` screen yet and so nothing is visible to an end
+user. `:lib:ai-ghost-layouting-fx:build` is green, with 8 new developer tests for `PaperFlowViewTest`.
+IP-10 is now unblocked together with the already completed IP-09; IP-06 and IP-27 are now unblocked as
+well.
 
 IP-07 was built as planned: `PaperPageView` (a plain `javafx.scene.control.Control` with a
 `SkinBase`-derived `PaperPageViewSkin`, Canvas-based drawing, no FXML) landed in `lib/layouting-fx`,
@@ -237,8 +271,7 @@ new values is read with their defaults.
 The remaining implementation plans are written out under `.claude/plans/implementation`, each with
 its own status file and with its origin and its dependencies named in it; `FP-001-Overview.md` lists
 them in order. The files of a finished plan are removed, so the table above is the only record that
-it is done. Every open plan, IP-25 to IP-28 and the library scoped IP-07 and IP-08 included, is
-written out.
+it is done. Every open plan, IP-25 to IP-28 and the library scoped IP-27 included, is written out.
 
 The Feature Plan is orientation only: it carries the objective, the architecture, the plan overview,
 the dependency graph, the decisions and the completion criteria. Tasks, constraints and tests of a
