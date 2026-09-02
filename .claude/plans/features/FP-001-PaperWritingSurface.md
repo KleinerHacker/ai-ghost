@@ -125,7 +125,9 @@ lib/ai-ghost-layouting-model   lib/ai-ghost-layouting-fx   (JavaFX component lib
 * **`lib/layouting-fx`** - measuring (font catalogue, resolution, JavaFX `TextMetrics`) and drawing
   (`PaperPageView`, `PaperFlowView`) in one module, packages `...layouting.fx.font`, `.control`,
   `.skin` plus its own stylesheet.
-* **`lib/ai-ghost-ai`** - the action port (`rewrite`, `expand`, `shorten`, `generatePart`) and a stub.
+* **`lib/ai-ghost-ai`** - the action port (`rewrite`, `expand`, `shorten`, `generatePart`) only. No
+  implementation, stub or real, ships in this feature; a provider is wired later through the plugin
+  system of its own feature. Every call site carries an open TODO until then.
 * **`app/ui`** - `BookPartEditor`, `Inspector`, `AiActionBar`, the reworked `Editor` and its routing,
   undo, the `FontData` translation and the metrics fingerprint.
 
@@ -174,9 +176,9 @@ numbering is kept stable rather than renumbered.
 | IP-14 | Project Settings Dialog ✅                 | Page format, margins and empty pages in a dialog                      | IP-02                |
 | IP-15 | Editor Arrangement And Tree Routing       | Three zones, routing of every tree node, view state persisted         | IP-11, IP-12         |
 | IP-16 | Writing And Preview Modes                 | Mode switch, whole book preview, scrolling, virtualisation            | IP-05, IP-07, IP-15  |
-| IP-17 | AI Action Port                            | Action interface in `lib/ai` with a stub implementation               | -                    |
-| IP-18 | AI Actions On Paragraph And Heading       | Floating action bar, replace with undo                                | IP-10, IP-17         |
-| IP-19 | AI Part Generation With Provisional State | Generating a part, provisional display, accept or discard             | IP-12, IP-17         |
+| IP-17 | AI Action Port ✅                          | Action interface in `lib/ai`, no implementation, TODO for the provider | -                    |
+| IP-18 | AI Actions On Paragraph And Heading       | Floating action bar wired to the port, TODO where it would fire       | IP-10, IP-17         |
+| IP-19 | AI Part Generation With Provisional State | Provisional display wired to the port, TODO where it would fire       | IP-12, IP-17         |
 | IP-21 | In-Paragraph Sheet Split                  | Real sheet gap inside a paragraph while writing (optional)            | IP-11                |
 | IP-23 | Optional Book Parts In The Tree           | Checkbox switching prolog, epilog and blurb into and out of the book  | IP-15, IP-24         |
 
@@ -436,12 +438,25 @@ before its page count is known. A progress indication for the first layout has t
 rather than hoped away. The reading position is a paragraph reference, not a scroll offset, because
 the modes have different geometry.
 
-### IP-17: AI Action Port
+### IP-17: AI Action Port ✅
 
-Plan: `FP-001-IP-17-AiAktionsPort.md`
+Plan removed, was `FP-001-IP-17-AiAktionsPort.md`.
 
 Streaming is in the interface from the start, because retrofitting it changes every caller. A defined
-split rule keeps a generated chapter from landing in one paragraph.
+split rule keeps a generated chapter from landing in one paragraph. No stub and no real provider ship
+here - a concrete AI provider is out of scope for this feature entirely and arrives only through the
+plugin system of its own, later feature. Every place that would call into an implementation carries an
+open `TODO`.
+
+Built as planned, narrowed to exactly that constraint: `lib/ai` gained package
+`org.pcsoft.app.aighost.ai.action` with the sealed `AiActionRequest` (`Rewrite`, `Expand`, `Shorten`,
+`GenerateChapter`), the port `AiAction` (streaming callback, cancel handle, no implementation, a `TODO`
+naming the future provider feature), `AiActionCallback`, `AiActionHandle`, the sealed `AiActionError`
+(`LimitExceeded`, `Cancelled`, `Failed`), the standalone `AiActionLimits.check` (reads
+`Preferences.Ai`, returns Arrow `Either`, reports the `TokenUtils` estimate alongside the character
+limit) and `ParagraphSplitter`. `lib/ai` depends on `lib/model` and Arrow from here on. Tests cover only
+the two pure functions, `AiActionLimits` and `ParagraphSplitter`, since no `AiAction` implementation
+exists to test against.
 
 ### IP-18: AI Actions On Paragraph And Heading
 
@@ -449,7 +464,9 @@ Plan: `FP-001-IP-18-AiAktionenAmAbsatz.md`
 
 A paragraph result replaces directly because undo already exists; a comparison step would cost more
 than it protects. The action bar is an overlay of the application above the library's node and finds
-its block through the focus events of IP-08 - the library gains no notion of an AI.
+its block through the focus events of IP-08 - the library gains no notion of an AI. The bar and its
+wiring to `lib/ai` are built end to end; only the call into an actual provider is missing, marked with
+an open `TODO` pointing at the future plugin-based provider feature.
 
 ### IP-19: AI Part Generation With Provisional State
 
@@ -457,7 +474,9 @@ Plan: `FP-001-IP-19-AiTeilGenerierung.md`
 
 Generating a part overwrites a lot, so the size of the destruction, not the origin of the text,
 decides how explicit the confirmation is. Streamed text arrives off the FX thread and is measured and
-shown on it, so chunks are handed over in batches rather than per token.
+shown on it, so chunks are handed over in batches rather than per token. As with IP-18, the provisional
+display and its accept/discard flow are built completely; only the call into an actual provider is
+missing, marked with an open `TODO`.
 
 ### IP-21: In-Paragraph Sheet Split
 
@@ -491,7 +510,7 @@ IP-24✅┤  │                   │                       │
                                 │          ├─> IP-06    │
                                 └─> IP-08 ─┘            │
                                       │                 │
-                                      └─> IP-10 ────────┼──> IP-18   (with IP-17)
+                                      └─> IP-10 ────────┼──> IP-18   (with IP-17✅)
                                       (with IP-09✅)     │
                                                 └─> IP-11 ─┬─> IP-15 ─┬─> IP-16
                                                            │          └─> IP-23   (with IP-24)
@@ -499,8 +518,8 @@ IP-24✅┤  │                   │                       │
 IP-09✅ ──> IP-10, IP-18, IP-19
 IP-12✅┬─> IP-13
        ├─> IP-15
-       └─> IP-19   (with IP-17)
-IP-17 ─┬─> IP-18
+       └─> IP-19   (with IP-17✅)
+IP-17✅┬─> IP-18
        └─> IP-19
 IP-05, IP-07, IP-15 ──> IP-16
 IP-07, IP-08 ──> IP-06, IP-27
@@ -517,7 +536,7 @@ standalone-reuse proof with its documentation (IP-28). The tree owns everything 
 this repository would also get.
 
 **Lower tree - the writing surface in `app/ui`.** Roots: IP-02 and IP-24, plus the independent
-strands IP-09 ✅, IP-12 ✅ and IP-17. It builds the editor feature on top of the library: the design page
+strands IP-09 ✅, IP-12 ✅ and IP-17 ✅. It builds the editor feature on top of the library: the design page
 format model (IP-02) and the always-present optional parts (IP-24), the toolkit-free layout core
 (IP-03), pagination and the page-break policy (IP-04), incremental layout and caching (IP-05), the
 project settings dialog (IP-14), the layout regression harness (IP-06), the editing surface and
@@ -531,8 +550,8 @@ with the library views. IP-13 (design style sections) is the second link: it nee
 upper tree together with IP-02 and IP-12 ✅ of the lower one. Nothing else crosses between the two.
 
 Completed: **IP-01** ✅, **IP-22** ✅, **IP-02** ✅, **IP-24** ✅, **IP-03** ✅, **IP-25** ✅, **IP-26** ✅,
-**IP-09** ✅, **IP-12** ✅.
-Independent starting points: **IP-09** ✅, **IP-12** ✅, **IP-17**.
+**IP-09** ✅, **IP-12** ✅, **IP-17** ✅.
+Independent starting points: **IP-09** ✅, **IP-12** ✅, **IP-17** ✅.
 
 ## 9. Risks and Open Questions
 
@@ -560,6 +579,11 @@ Independent starting points: **IP-09** ✅, **IP-12** ✅, **IP-17**.
   be checked in IP-26.
 * **Widows, orphans, hyphenation** are excluded; the hook exists, no implementation ships.
 * **Resolving a provisional AI part** on part change or project close (IP-19) is undecided.
+* **No AI provider ships with this feature**, not even a stub. `lib/ai` (IP-17) is an interface only;
+  IP-18 and IP-19 wire the UI up to it and stop at an open `TODO` where a provider would be called. The
+  provider - built-in and user supplied alike - arrives only with the later plugin system feature,
+  through the same mechanism. This is a hard constraint, not an implementation detail: no plan of this
+  feature may add a stub, a mock provider or any other interaction with an actual or simulated AI.
 * **Three new Gradle modules** require a check against the `ci-pipeline` skill.
 
 ### Rejected third party libraries
@@ -603,6 +627,12 @@ JavaFX measurement is not a combination that exists, and the fidelity chain rule
 * **Plugin infrastructure.** `ai-ghost-plugin-api` carries only `ProjectPart` and `ProjectPartInfo`;
   there is no plugin interface, no loader and no service registration. A plugin based export needs
   that built first - a feature of its own and a prerequisite of the export, not of this one.
+* **Any AI provider, stub or real.** `lib/ai` carries the action interface only (IP-17). No
+  implementation is written, tested or wired in this feature - not even a deterministic stub for
+  testing. A future feature introduces a plugin system for providers, ships the built-in providers
+  through that same mechanism, and is the only place a provider is allowed to appear. Every call site
+  the UI needs (IP-18, IP-19) is built up to the point of calling `lib/ai` and carries an open `TODO`
+  there instead.
 
 ## 10. Feature Completion Criteria
 
@@ -622,8 +652,9 @@ JavaFX measurement is not a combination that exists, and the fidelity chain rule
   appear as a frozen window.
 * Prompts, part data and design are reachable beside the sheet and never interrupt the text.
 * Every text change, structural change and applied AI result can be undone and redone.
-* An AI action runs for a paragraph, a heading and a whole part; a paragraph result is applied
-  directly, a part result is accepted or discarded.
+* An AI action bar is reachable for a paragraph, a heading and a whole part, and its full flow -
+  replace with undo, accept or discard for a generated part - works up to the point of calling
+  `lib/ai`; the actual call is an open `TODO`, since no provider ships with this feature.
 * The layout result carries no toolkit type, so a later export plugin consumes it unchanged.
 * `lib/layouting-fx` builds, tests and is covered as a JavaFX library module; its dependency set is
   `ai-ghost-layouting` plus JavaFX and the build fails when it grows. Both surfaces and the measuring

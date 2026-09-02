@@ -22,6 +22,12 @@
 * `icons`
 * `project-docs`
 
+## Harte Einschränkung
+
+* KEIN Stub, KEIN Mock, KEINE reale Anbindung an ein AI-System in diesem Plan
+* `AiAction` aus IP-17 hat keine Implementierung; der eigentliche Aufruf bleibt ein offenes TODO
+* Ein Provider kommt erst über das künftige Plugin-System-Feature
+
 ## Aufgaben
 
 ### 1. Aktionsleiste
@@ -32,20 +38,21 @@
 
 ### 2. Ablauf
 
-* Aktion außerhalb des FX-Threads ausführen.
+* Verdrahtung bis zum Aufruf von `lib/ai` bauen, außerhalb des FX-Threads.
 * Nur den betroffenen Block als beschäftigt kennzeichnen.
-* Abbruch anbieten.
+* Abbruch anbieten (Aufruf von `AiActionHandle.cancel()` vorgesehen).
+* Stelle des tatsächlichen `AiAction.execute(...)`-Aufrufs mit TODO markieren, nicht implementieren.
 
 ### 3. Ergebnis
 
-* Text unmittelbar ersetzen.
+* Ersetzungspfad bauen: `onComplete`-Callback ersetzt Text unmittelbar, sobald ein Provider existiert.
 * Ersetzung als einen Undo-Eintrag aufzeichnen.
-* Fehler über die bestehenden Dialoge melden.
+* Fehler über die bestehenden Dialoge melden (`onError`-Callback verdrahtet).
 
 ### 4. Tests
 
-* Aktionsleiste, Beschäftigt-Zustand und Undo headless prüfen.
-* Abbruch und Fehlerweg prüfen.
+* Aktionsleiste, Beschäftigt-Zustand und Undo headless prüfen, mit einem Test-Callback anstelle eines Providers.
+* Abbruch- und Fehlerweg gegen den Test-Callback prüfen.
 
 ### 5. Abschluss
 
@@ -54,5 +61,5 @@
 
 ## Ergebnis
 
-* Ein Absatz wird vom Blatt aus umgeschrieben.
-* Das Ergebnis wird mit einem Undo zurückgenommen.
+* Die Aktionsleiste, ihr Beschäftigt-Zustand, Abbruch, Undo und Fehlerweg stehen vollständig, verdrahtet bis zum offenen TODO an der `lib/ai`-Aufrufstelle.
+* KEIN Absatz wird tatsächlich von einem AI-System umgeschrieben; das folgt erst mit dem Plugin-System-Feature.

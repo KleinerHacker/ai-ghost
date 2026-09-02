@@ -28,7 +28,7 @@ Status: IN_PROGRESS
 | IP-14 | Project Settings Dialog                   | COMPLETED   |
 | IP-15 | Editor Arrangement And Tree Routing       | NOT_STARTED |
 | IP-16 | Writing And Preview Modes                 | NOT_STARTED |
-| IP-17 | AI Action Port                            | NOT_STARTED |
+| IP-17 | AI Action Port                            | COMPLETED   |
 | IP-18 | AI Actions On Paragraph And Heading       | NOT_STARTED |
 | IP-19 | AI Part Generation With Provisional State | NOT_STARTED |
 | IP-21 | In-Paragraph Sheet Split                  | NOT_STARTED |
@@ -36,12 +36,30 @@ Status: IN_PROGRESS
 
 ## Overall Progress
 
-31%
+41%
 
 ## Notes
 
-IP-01, IP-22, IP-02, IP-24, IP-03, IP-25, IP-14 and IP-26 are implemented; IP-04, IP-07, IP-08 and
-IP-13 are unblocked.
+IP-01, IP-22, IP-02, IP-24, IP-03, IP-25, IP-14, IP-26 and IP-17 are implemented; IP-04, IP-07, IP-08,
+IP-13, IP-18 and IP-19 are unblocked.
+
+IP-17 was built as an interface only, per an explicit constraint clarified by the user: no stub and no
+real AI interaction ship anywhere in this feature, not even for testing. `lib/ai` (`ai-ghost-ai`) gained
+package `org.pcsoft.app.aighost.ai.action` with `AiActionRequest` (sealed: `Rewrite`, `Expand`,
+`Shorten`, `GenerateChapter`), `AiAction` (the port, `execute(request, callback): AiActionHandle`, no
+implementation - carries a `TODO` pointing at the future plugin-based provider feature),
+`AiActionCallback` (`onChunk`/`onComplete`/`onError`/`onCancelled`), `AiActionHandle` (`cancel()`),
+`AiActionError` (sealed: `LimitExceeded`, `Cancelled`, `Failed`), the standalone `AiActionLimits.check`
+(character limits from `Preferences.Ai`, via Arrow `Either`, informed by `TokenUtils` for the reported
+token estimate) and `ParagraphSplitter` (blank line ends a paragraph, folds a surviving line break into
+a space, drops empty paragraphs). `lib/ai` gained a dependency on `lib/model` (`ai-ghost-model`, for
+`Preferences.Ai`) and on Arrow (`arrow-core`, for `Either`), both `api` since they appear in the port's
+public signatures. Only the two pure, implementation-independent pieces - the limit check and the
+paragraph rule - are tested; there is nothing else to test since no `AiAction` implementation exists.
+IP-18 and IP-19 were adjusted to match: their action call sites stop at an open `TODO` instead of
+calling a stub. The Feature Plan itself was corrected in the same pass - architecture, plan overview,
+out-of-scope section, risks and completion criteria all now state that no AI provider, stub or real,
+ships with this feature; it arrives only through a later, dedicated plugin-system feature.
 
 IP-14 was built wider than first planned, on the user's request: a master-detail dialog with a
 `ProjectSettingsTree` (root hidden) on the left and the section editor on the right. Only the

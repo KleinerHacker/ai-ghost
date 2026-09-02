@@ -10,10 +10,18 @@
  * See the License for the specific language governing permissions and limitations.
  */
 
+@SuppressWarnings("requires-transitive-automatic")
 module org.pcsoft.app.aighost.ai {
     requires kotlin.stdlib;
+
+    // The limit check takes Preferences.Ai, so consumers need the model as well.
+    requires transitive org.pcsoft.app.aighost.model;
+
+    // Arrow's Either appears in the signatures of the action port.
+    requires transitive arrow.core;
 
     requires org.slf4j;
 
     exports org.pcsoft.app.aighost.ai.util;
+    exports org.pcsoft.app.aighost.ai.action;
 }

@@ -16,7 +16,15 @@ plugins {
     `java-library`
 }
 
+// Arrow's Either appears in the signatures of the action port, so it is part of the API as well.
+val arrowVersion = "2.1.2"
+
 dependencies {
+    // The limit check reads Preferences.Ai, so the model is part of the public API.
+    api(project(":lib:ai-ghost-model"))
+
+    api("io.arrow-kt:arrow-core:${arrowVersion}")
+
     implementation("org.slf4j:slf4j-api:2.0.17")
 }
 
