@@ -13,8 +13,6 @@
 package org.pcsoft.app.aighost.app.ui.component
 
 import de.saxsys.mvvmfx.ViewModel
-import javafx.beans.binding.Bindings
-import javafx.beans.binding.BooleanBinding
 import javafx.beans.property.ObjectProperty
 import javafx.beans.property.SimpleObjectProperty
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
@@ -28,7 +26,8 @@ import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
  * the user opens another one.
  *
  * [onProjectBound] is what [EditorView] uses to pass the model on to the parts of the editor, because
- * the view is built before the window hands the project over.
+ * the view is built before the window hands the project over. [selectedProjectTreeItem] mirrors the
+ * selection of the project tree, so [Inspector] can follow it without reading [ProjectList] itself.
  */
 class EditorViewModel : ViewModel {
 
@@ -36,17 +35,13 @@ class EditorViewModel : ViewModel {
     var project: ProjectProperty? = null
         private set
 
+    /** The node picked in the project tree, mirrored from [ProjectList.selectedItem]. */
     val selectedProjectTreeItem: ObjectProperty<ProjectListItem?> = SimpleObjectProperty()
-    val showBookEditor: BooleanBinding = Bindings.createBooleanBinding(
-        { selectedProjectTreeItem.value is ProjectListItem.Root },
-        selectedProjectTreeItem
-    )
-
 
     /**
      * Called with the project model as soon as it is handed over.
      *
-     * Set by [EditorView], which passes the model on to the project tree and the manuscript editor.
+     * Set by [EditorView], which passes the model on to the project tree and the inspector.
      */
     internal var onProjectBound: ((ProjectProperty) -> Unit)? = null
 

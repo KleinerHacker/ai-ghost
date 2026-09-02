@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+* Editor gains an Inspector on the right of the manuscript, next to the project tree: a "Book"
+  section holds the title, its title lines, the author, the copyright notice and both prompts of the
+  manuscript, and a "Chapter" section shows the name and both prompts of whatever chapter is picked
+  in the project tree, or the prompt of the blurb once it is picked; either section shows a short
+  explanation instead of fields while nothing matching is picked, and both can be collapsed and
+  expanded on their own
+
 * Edit menu and tool bar carry Undo and Redo: each button shows the name of the change it would take
   back or apply again as its tooltip, and its dropdown - opened like a browser's back button - lists
   the most recent steps so several of them can be jumped at once; consecutive typing falls together

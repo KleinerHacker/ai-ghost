@@ -169,7 +169,7 @@ numbering is kept stable rather than renumbered.
 | IP-09 | Undo And Redo Infrastructure ✅            | One undo stack over model changes of the editor                       | -                    |
 | IP-10 | Book Part Writing Surface                 | Caret, typing and binding of headings and paragraphs                  | IP-08, IP-09         |
 | IP-11 | Paragraph Structure Operations            | Split, join, delete and reorder paragraphs                            | IP-10                |
-| IP-12 | Inspector Shell And Content Sections      | Context panel with book and part sections, absorbs `BookEditor`       | -                    |
+| IP-12 | Inspector Shell And Content Sections ✅    | Context panel with book and part sections, absorbs `BookEditor`       | -                    |
 | IP-13 | Design Style Sections                     | Editing the styles in the inspector with live effect                  | IP-02, IP-12, IP-26  |
 | IP-14 | Project Settings Dialog ✅                 | Page format, margins and empty pages in a dialog                      | IP-02                |
 | IP-15 | Editor Arrangement And Tree Routing       | Three zones, routing of every tree node, view state persisted         | IP-11, IP-12         |
@@ -358,12 +358,24 @@ Block list, layout and caret target change together and are one transaction. Spl
 is the case that exposes an off-by-one in the character range mapping of IP-03. The library requests
 the operation, the application performs it.
 
-### IP-12: Inspector Shell And Content Sections
+### IP-12: Inspector Shell And Content Sections ✅
 
-Plan: `FP-001-IP-12-InspectorGrundgeruest.md`
+Plan: `FP-001-IP-12-InspectorGrundgeruest.md` (removed on completion)
 
 Sections stay fixed and identically named, because the inspector mixes part scoped and project scoped
 data and a panel that silently changes shape makes it unclear what is being edited.
+
+Built as planned: a new `Inspector` MVVM-FX trio (`Inspector`, `InspectorView`, `InspectorViewModel`,
+`InspectorView.fxml`) with two fixed `TitledPane` sections, "Book" and "Chapter", each with its own
+runtime-only `expandedProperty` in the view model. The `BookEditor` trio, its FXML, CSS and tests were
+removed entirely via `git rm` rather than merely trimmed - once title, title lines, author, copyright
+and the book-level prompts moved into the inspector's "Book" section, nothing user-facing was left in
+`BookEditor`. `Editor`/`EditorView`/`EditorViewModel` now wire `Inspector` into the split pane instead.
+One addition beyond the original scope: `lib/fx-model` gained a public factory
+`ChapterProperty.of(chapter: Chapter): ChapterProperty` (in the same package as `ChapterProperty`,
+using its existing internal no-arg constructor plus `set(chapter)`), because building a bindable
+`ChapterProperty` from a plain `Chapter` selected in the project tree had no prior counterpart; its
+KDoc was corrected accordingly and a developer test (`ChapterPropertyOfTest`) was added.
 
 ### IP-13: Design Style Sections
 
@@ -472,7 +484,7 @@ IP-01✅┬─> IP-22✅
        └─┐
 IP-25✅┬─┴─> IP-26✅─┬─> IP-07 ─┬─> IP-27 ──> IP-28
                     ├─> IP-08 ─┘
-                    └─> IP-13   (with IP-02, IP-12)
+                    └─> IP-13   (with IP-02, IP-12✅)
 IP-02✅┬───> IP-03✅ ──> IP-04 ─┬─> IP-05 ──────────────┐
 IP-24✅┤  │                   │                       │
        └─> IP-14✅              ├─> IP-07 ─┬────────────┤
@@ -485,7 +497,7 @@ IP-24✅┤  │                   │                       │
                                                            │          └─> IP-23   (with IP-24)
                                                            └─> IP-21
 IP-09✅ ──> IP-10, IP-18, IP-19
-IP-12 ─┬─> IP-13
+IP-12✅┬─> IP-13
        ├─> IP-15
        └─> IP-19   (with IP-17)
 IP-17 ─┬─> IP-18
@@ -505,22 +517,22 @@ standalone-reuse proof with its documentation (IP-28). The tree owns everything 
 this repository would also get.
 
 **Lower tree - the writing surface in `app/ui`.** Roots: IP-02 and IP-24, plus the independent
-strands IP-09 ✅, IP-12 and IP-17. It builds the editor feature on top of the library: the design page
+strands IP-09 ✅, IP-12 ✅ and IP-17. It builds the editor feature on top of the library: the design page
 format model (IP-02) and the always-present optional parts (IP-24), the toolkit-free layout core
 (IP-03), pagination and the page-break policy (IP-04), incremental layout and caching (IP-05), the
 project settings dialog (IP-14), the layout regression harness (IP-06), the editing surface and
 paragraph operations (IP-10, IP-11), editor arrangement with write and preview modes (IP-15, IP-16),
-undo and redo (IP-09 ✅), the inspector shell and its content sections (IP-12), the AI action port and
+undo and redo (IP-09 ✅), the inspector shell and its content sections (IP-12 ✅), the AI action port and
 the actions built on it (IP-17, IP-18, IP-19), the optional parts in the project tree (IP-23) and
 the in-paragraph sheet split (IP-21).
 
 **The seam.** The lower tree consumes IP-07 and IP-08 of the upper one - the app draws its pages
 with the library views. IP-13 (design style sections) is the second link: it needs IP-26 of the
-upper tree together with IP-02 and IP-12 of the lower one. Nothing else crosses between the two.
+upper tree together with IP-02 and IP-12 ✅ of the lower one. Nothing else crosses between the two.
 
 Completed: **IP-01** ✅, **IP-22** ✅, **IP-02** ✅, **IP-24** ✅, **IP-03** ✅, **IP-25** ✅, **IP-26** ✅,
-**IP-09** ✅.
-Independent starting points: **IP-09** ✅, **IP-12**, **IP-17**.
+**IP-09** ✅, **IP-12** ✅.
+Independent starting points: **IP-09** ✅, **IP-12** ✅, **IP-17**.
 
 ## 9. Risks and Open Questions
 

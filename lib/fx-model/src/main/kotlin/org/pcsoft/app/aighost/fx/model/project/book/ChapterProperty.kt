@@ -24,7 +24,9 @@ import org.pcsoft.app.aighost.model.project.book.Chapter
  * with a neutral value and drops what is written to it until a chapter sits behind this property.
  *
  * This property model is handed out with its own type, so a caller reaches every field of the chapter
- * directly; it is built by the book alone and therefore carries an internal constructor.
+ * directly. Unlike the parts nested in [BookProperty] a chapter is only one entry of a plain list, so
+ * this property is not built by the book itself; a caller that picked a chapter out of that list builds
+ * one through [of] instead.
  */
 class ChapterProperty internal constructor() : BookPartProperty<Chapter?>() {
 
@@ -42,6 +44,25 @@ class ChapterProperty internal constructor() : BookPartProperty<Chapter?>() {
 
     init {
         fields.string(nameProperty, "name")
+    }
+
+    companion object {
+        /**
+         * Builds a chapter property already bound to the given chapter.
+         *
+         * The chapter is a plain entry of [BookProperty.chaptersProperty] and therefore carries no
+         * property model of its own; this factory is the way a caller that picked one out of that
+         * list reaches its fields as properties.
+         *
+         * @param chapter the chapter to wrap
+         * @return a chapter property wrapping the given chapter
+         */
+        @JvmStatic
+        fun of(chapter: Chapter): ChapterProperty {
+            val property = ChapterProperty()
+            property.set(chapter)
+            return property
+        }
     }
 
 }

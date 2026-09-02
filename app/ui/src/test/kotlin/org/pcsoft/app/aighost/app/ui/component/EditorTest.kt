@@ -101,15 +101,20 @@ class EditorTest : ApplicationTest() {
         book = book
     )
 
+    private val inspector: Inspector
+        get() = splitPane.items.last() as Inspector
+
     /**
-     * Use case: the user opens the editor, so the project tree sits on the left of a horizontal split
-     * and the editing area fills the rest, which is what the splitter divides.
+     * Use case: the user opens the editor, so the project tree sits on the left of a horizontal split,
+     * the editing area sits in the middle and the inspector sits on the right, which is what the two
+     * splitters divide.
      */
     @Test
     fun showsTheProjectTreeLeftOfTheEditingArea() {
         assertEquals(Orientation.HORIZONTAL, splitPane.orientation)
-        assertEquals(2, splitPane.items.size, "the split holds the tree and the editing area")
+        assertEquals(3, splitPane.items.size, "the split holds the tree, the editing area and the inspector")
         assertTrue(splitPane.items.first() is ProjectList, "the tree sits on the left")
+        assertTrue(splitPane.items.last() is Inspector, "the inspector sits on the right")
     }
 
     /**
@@ -142,8 +147,8 @@ class EditorTest : ApplicationTest() {
     }
 
     /**
-     * Use case: nothing can be edited yet, so the area right of the splitter shows a placeholder
-     * instead of staying empty.
+     * Use case: nothing can be edited yet, so the middle area between the tree and the inspector shows
+     * a placeholder instead of staying empty.
      */
     @Test
     fun showsAPlaceholderInTheEditingArea() {
@@ -152,9 +157,9 @@ class EditorTest : ApplicationTest() {
         assertNotNull(placeholder)
         assertEquals("Not implemented yet.", placeholder.text)
         assertSame(
-            splitPane.items.last(),
+            splitPane.items[1],
             placeholder.parent,
-            "the placeholder belongs to the area right of the splitter"
+            "the placeholder belongs to the middle area of the split"
         )
     }
 
@@ -200,14 +205,14 @@ class EditorTest : ApplicationTest() {
     }
 
     /**
-     * Use case: the manuscript of the bound project reaches the editing area, so its title stands in
-     * the title field without the surrounding window binding that field itself.
+     * Use case: the manuscript of the bound project reaches the inspector, so its title stands in the
+     * title field of the "Book" section without the surrounding window binding that field itself.
      */
     @Test
-    fun handsTheManuscriptOnToTheBookEditor() {
+    fun handsTheManuscriptOnToTheInspector() {
         setProject(project(Book(title = "My Novel")))
 
-        val title = editor.lookup("#txtTitle").lookup(".text-field") as TextField
+        val title = editor.lookup("#txtBookTitle").lookup(".text-field") as TextField
 
         assertEquals("My Novel", title.text)
     }

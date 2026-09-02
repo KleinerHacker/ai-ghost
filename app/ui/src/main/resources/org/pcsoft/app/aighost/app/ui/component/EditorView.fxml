@@ -18,12 +18,12 @@
 <?import javafx.scene.layout.StackPane?>
 <?import org.pcsoft.app.aighost.app.ui.component.ProjectList?>
 <?import javafx.geometry.Insets?>
-<?import org.pcsoft.app.aighost.app.ui.component.BookEditor?>
+<?import org.pcsoft.app.aighost.app.ui.component.Inspector?>
 <fx:root type="BorderPane" xmlns="http://javafx.com/javafx"
          xmlns:fx="http://javafx.com/fxml"
          fx:controller="org.pcsoft.app.aighost.app.ui.component.EditorView">
     <center>
-        <SplitPane dividerPositions="0.25">
+        <SplitPane dividerPositions="0.22, 0.72">
             <ProjectList fx:id="pnlProjectList" minWidth="250" SplitPane.resizableWithParent="false">
                 <padding>
                     <Insets right="10"/>
@@ -31,12 +31,16 @@
             </ProjectList>
             <StackPane>
                 <padding>
-                    <Insets left="10"/>
+                    <Insets left="10" right="10"/>
                 </padding>
                 <!-- Hard coded on purpose: temporary placeholder until the editing parts exist. -->
                 <Label styleClass="editor-placeholder" text="Not implemented yet."/>
-                <BookEditor fx:id="bookEditor"/>
             </StackPane>
+            <Inspector fx:id="inspector" minWidth="280" SplitPane.resizableWithParent="false">
+                <padding>
+                    <Insets left="10"/>
+                </padding>
+            </Inspector>
         </SplitPane>
     </center>
 </fx:root>

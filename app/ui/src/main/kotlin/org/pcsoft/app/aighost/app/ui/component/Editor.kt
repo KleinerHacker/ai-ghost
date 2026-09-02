@@ -17,10 +17,11 @@ import javafx.scene.layout.BorderPane
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
 
 /**
- * Puts the project tree and the editing area side by side, separated by a splitter the user moves.
+ * Puts the project tree, the editing area and the inspector side by side, separated by splitters the
+ * user moves.
  *
  * The component owns no data of its own: [bindProject] hands it the property model of the project,
- * which it passes on to the [ProjectList] on the left and to the [BookEditor] on the right.
+ * which it passes on to the [ProjectList] on the left and to the [Inspector] on the right.
  */
 class Editor : BorderPane() {
 

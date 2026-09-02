@@ -21,10 +21,13 @@ import java.net.URL
 import java.util.*
 
 /**
- * View of [Editor], holding the project tree and the editing area in a horizontal split.
+ * View of [Editor], holding the project tree, the editing area and the inspector in a horizontal
+ * split.
  *
  * The split itself is described in the FXML; the view only passes the project model on to the tree
- * and to the manuscript editor, so neither of them reads the project from anywhere else.
+ * and to the inspector, so neither of them reads the project from anywhere else. The inspector also
+ * follows the node picked in the tree, which is why [pnlProjectList]'s selection is bound onto the
+ * view model here and handed to it.
  *
  * The model arrives after this view was built, which is why the view is told about it through the
  * view model instead of reading it in [initialize].
@@ -32,7 +35,7 @@ import java.util.*
 class EditorView : FxmlView<EditorViewModel>, Initializable {
 
     @FXML
-    private lateinit var bookEditor: BookEditor
+    private lateinit var inspector: Inspector
 
     @FXML
     private lateinit var pnlProjectList: ProjectList
@@ -45,20 +48,16 @@ class EditorView : FxmlView<EditorViewModel>, Initializable {
         viewModel.project?.also(::bindProject)
 
         viewModel.selectedProjectTreeItem.bind(pnlProjectList.selectedItem)
-
-        bookEditor.visibleProperty().bind(viewModel.showBookEditor)
+        inspector.bindSelection(viewModel.selectedProjectTreeItem)
     }
 
     /**
      * Passes the property model of the project on to the parts of the editor.
      *
-     * The manuscript editor works on the book of that project, which is a property model of its own
-     * and stays the same instance while the project inside it is exchanged.
-     *
      * @param project the project model of the surrounding window
      */
     private fun bindProject(project: ProjectProperty) {
         pnlProjectList.bindProject(project)
-        bookEditor.bindBook(project.bookProperty)
+        inspector.bindProject(project)
     }
 }

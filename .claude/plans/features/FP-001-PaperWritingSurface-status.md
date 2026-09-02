@@ -23,7 +23,7 @@ Status: IN_PROGRESS
 | IP-09 | Undo And Redo Infrastructure              | COMPLETED   |
 | IP-10 | Book Part Writing Surface                 | NOT_STARTED |
 | IP-11 | Paragraph Structure Operations            | NOT_STARTED |
-| IP-12 | Inspector Shell And Content Sections      | NOT_STARTED |
+| IP-12 | Inspector Shell And Content Sections      | COMPLETED   |
 | IP-13 | Design Style Sections                     | NOT_STARTED |
 | IP-14 | Project Settings Dialog                   | COMPLETED   |
 | IP-15 | Editor Arrangement And Tree Routing       | NOT_STARTED |
@@ -36,7 +36,7 @@ Status: IN_PROGRESS
 
 ## Overall Progress
 
-27%
+31%
 
 ## Notes
 
@@ -152,7 +152,7 @@ built first. IP-22 was added when it was decided that no manuscript font is ship
 IP-01 because it belongs to the font foundation. IP-25 to IP-28 were added when the renderer was
 decided to be an independent library. The numbering was kept stable instead of renumbering the plans.
 
-Independent starting points: IP-09, IP-12, IP-17.
+Independent starting points: IP-09, IP-12 (completed), IP-17.
 
 Besides the JavaFX decision of IP-25, two questions of the renderer library are open and do not block
 it: the naming of module and package, which carries the application name into a reusable library, and
