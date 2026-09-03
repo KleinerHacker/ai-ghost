@@ -26,5 +26,20 @@ so the tree keeps the width it was given.
 
 ## Editing area
 
-The editing area currently shows a placeholder. The editors for the individual parts of the book -
-prolog, chapters, epilog and blurb - are added in a later version.
+The editing area is the **writing surface**: the part picked in the project tree is shown on a sheet
+that already carries the typography, the margins and the page structure of the finished book.
+
+* **Prolog, chapters and epilog** are written directly on the sheet - the heading, its further lines
+  and every paragraph. Each paragraph is its own text block; a change is taken over into the project
+  with every keystroke.
+* **The blurb** is written the same way, without a heading.
+* **The title page and the copyright page** are shown as they will be printed, but are not edited
+  here: their text comes from the *Book* section of the inspector and from the project settings.
+
+A design change made in the inspector - a different font, size or line spacing - is applied to the
+sheet at once, without the caret leaving the place it was in.
+
+Every text change is undone and redone through the Undo and Redo buttons of the tool bar. Consecutive
+typing in the same block falls together into a single step; moving to another block or leaving the
+sheet closes that step.
+

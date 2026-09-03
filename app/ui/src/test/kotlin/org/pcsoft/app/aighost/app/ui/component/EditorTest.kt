@@ -15,37 +15,25 @@ package org.pcsoft.app.aighost.app.ui.component
 import de.saxsys.mvvmfx.MvvmFX
 import javafx.geometry.Orientation
 import javafx.scene.Scene
-import javafx.scene.control.Label
 import javafx.scene.control.SplitPane
 import javafx.scene.control.TextField
 import javafx.scene.control.TreeView
 import javafx.stage.Stage
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertSame
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.app.Messages
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
 import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.FontData
 import org.pcsoft.app.aighost.model.common.StyleData
+import org.pcsoft.app.aighost.model.project.Project
 import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.book.Chapter
-import org.pcsoft.app.aighost.model.project.Project
-import org.pcsoft.app.aighost.model.project.design.BlurbPageDesign
-import org.pcsoft.app.aighost.model.project.design.ChapterPageDesign
-import org.pcsoft.app.aighost.model.project.design.CopyrightPageDesign
-import org.pcsoft.app.aighost.model.project.design.Design
-import org.pcsoft.app.aighost.model.project.design.EpilogPageDesign
-import org.pcsoft.app.aighost.model.project.design.PrologPageDesign
-import org.pcsoft.app.aighost.model.project.design.TitlePageDesign
+import org.pcsoft.app.aighost.model.project.design.*
 import org.pcsoft.app.aighost.model.project.meta.Meta
 import org.testfx.framework.junit5.ApplicationTest
 import org.testfx.util.WaitForAsyncUtils
-import java.util.Locale
-import java.util.ResourceBundle
+import java.util.*
 
 /**
  * Developer tests for [Editor].
@@ -147,19 +135,14 @@ class EditorTest : ApplicationTest() {
     }
 
     /**
-     * Use case: nothing can be edited yet, so the middle area between the tree and the inspector shows
-     * a placeholder instead of staying empty.
+     * Use case: the middle area between the tree and the inspector is the writing surface, so the
+     * split holds a [BookPartEditor] there instead of the former placeholder.
      */
     @Test
-    fun showsAPlaceholderInTheEditingArea() {
-        val placeholder = editor.lookup(".editor-placeholder") as Label
-
-        assertNotNull(placeholder)
-        assertEquals("Not implemented yet.", placeholder.text)
-        assertSame(
-            splitPane.items[1],
-            placeholder.parent,
-            "the placeholder belongs to the middle area of the split"
+    fun showsTheWritingSurfaceInTheEditingArea() {
+        assertTrue(
+            splitPane.items[1] is BookPartEditor,
+            "the writing surface belongs to the middle area of the split"
         )
     }
 

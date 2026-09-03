@@ -169,7 +169,7 @@ numbering is kept stable rather than renumbered.
 | IP-27 | Library Styling And Theming API           | Own stylesheet, style classes, override by the ai-ghost palette       | IP-07, IP-08         |
 | IP-28 | Standalone Reuse And Documentation        | Demo without ai-ghost, published artifact, docs, dependency check     | IP-27                |
 | IP-09 | Undo And Redo Infrastructure ✅            | One undo stack over model changes of the editor                       | -                    |
-| IP-10 | Book Part Writing Surface                 | Caret, typing and binding of headings and paragraphs                  | IP-08, IP-09         |
+| IP-10 | Book Part Writing Surface ✅               | Caret, typing and binding of headings and paragraphs                  | IP-08, IP-09         |
 | IP-11 | Paragraph Structure Operations            | Split, join, delete and reorder paragraphs                            | IP-10                |
 | IP-12 | Inspector Shell And Content Sections ✅    | Context panel with book and part sections, absorbs `BookEditor`       | -                    |
 | IP-13 | Design Style Sections ✅                   | Editing the styles in the inspector with live effect                  | IP-02, IP-12, IP-26  |
@@ -388,15 +388,29 @@ as a plain property rather than a persisted preference. The `icon-creator` agent
 tool available in this environment, so `undo@32.png`/`redo@32.png` were drawn with a small Pillow
 script instead, matching the existing icon palette - confirmed with the user.
 
-### IP-10: Book Part Writing Surface
+### IP-10: Book Part Writing Surface ✅
 
-Plan: `FP-001-IP-10-Schreibflaeche.md`
+Plan removed, was `FP-001-IP-10-Schreibflaeche.md`.
 
 Prolog, chapter and epilog are one editor over one `BookPartProperty`, not three; the blurb is the
 exception that has to be built. The caret is a paragraph index plus a character offset, never a
 coordinate, so editing survives a design change. A switched off part stays writable - greying says it
 is not in the book, not that it is locked. Everything ai-ghost specific is answered by an API of the
 library, never by a dependency back into the application.
+
+Built wider than the plan header on the user's request. The project tree gained two real nodes,
+`TitlePageItem` and `CopyrightPageItem`, ahead of the prolog (full node routing still belongs to
+IP-15); the title page and the copyright page are shown on the sheet read only, their text staying
+with the inspector and the project settings. The typing pause that closes undo coalescing became a
+new preferences group `Editor` (`paragraphMergePauseMillis`, default 600), mirrored per `fx-model`
+and read once when the undo stack is handed `MainWindowView -> Editor -> BookPartEditor`; no
+settings-dialog control for it yet. `BookPartEditor` (`app/ui`) embeds `PaperFlowView` and, on every
+reported edit and every design change, rebuilds the model through the `lib/layouting-model` builders,
+`GreedyLineBreaker(JavaFxTextMetrics)` and `LayoutEngine.layout`, then hands the fresh layout back;
+the first layout falls back to the plain page content width until `PaperFlowView` reports its own,
+and an empty writable part is seeded with one empty paragraph block. `app/ui` now depends on
+`lib/ai-ghost-layouting-model`. Split at a break stays with IP-21, structural paragraph operations
+with IP-11.
 
 ### IP-11: Paragraph Structure Operations
 
@@ -572,12 +586,12 @@ IP-24✅┤  │                   │                       │
                                 │          ├─> IP-06    │
                                 └─> IP-08✅┘            │
                                       │                 │
-                                      └─> IP-10 ────────┼──> IP-18   (with IP-17✅)
+                                      └─> IP-10✅ ───────┼──> IP-18   (with IP-17✅)
                                       (with IP-09✅)     │
                                                 └─> IP-11 ─┬─> IP-15 ─┬─> IP-16
                                                            │          └─> IP-23   (with IP-24)
                                                            └─> IP-21
-IP-09✅ ──> IP-10, IP-18, IP-19
+IP-09✅ ──> IP-10✅, IP-18, IP-19
 IP-12✅┬─> IP-13✅
        ├─> IP-15
        └─> IP-19   (with IP-17✅)
@@ -612,7 +626,7 @@ with the library views. IP-13 (design style sections) is the second link: it nee
 upper tree together with IP-02 and IP-12 ✅ of the lower one. Nothing else crosses between the two.
 
 Completed: **IP-01** ✅, **IP-22** ✅, **IP-02** ✅, **IP-24** ✅, **IP-03** ✅, **IP-25** ✅, **IP-26** ✅,
-**IP-09** ✅, **IP-12** ✅, **IP-17** ✅, **IP-04** ✅, **IP-07** ✅, **IP-08** ✅.
+**IP-09** ✅, **IP-12** ✅, **IP-17** ✅, **IP-04** ✅, **IP-07** ✅, **IP-08** ✅, **IP-13** ✅, **IP-10** ✅.
 Independent starting points: **IP-09** ✅, **IP-12** ✅, **IP-17** ✅.
 
 ## 9. Risks and Open Questions

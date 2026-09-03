@@ -120,7 +120,8 @@ class MainWindowView : FxmlView<MainWindowViewModel>, Initializable {
         // through a property of its own, so a property never carries another property.
         editor.bindProject(viewModel.project)
 
-
+        // The writing surface records every text change into the one undo history of the open project.
+        editor.bindUndoStack(viewModel.undoStack)
     }
 
     /**

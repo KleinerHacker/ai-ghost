@@ -26,9 +26,10 @@ import java.util.ResourceBundle
 /**
  * View of [ProjectList], showing the open project as a tree.
  *
- * The shape of the tree is fixed: below the project sit prolog, chapters, epilog and blurb, and the
- * chapters branch carries one node per chapter of the book. The four fixed nodes exist even while
- * their part has not been written yet, so the user sees where to add it.
+ * The shape of the tree is fixed: below the project sit the title page, the copyright page, the
+ * prolog, chapters, epilog and blurb, and the chapters branch carries one node per chapter of the
+ * book. The fixed nodes exist even while their part has not been written yet, so the user sees where
+ * to add it.
  */
 class ProjectListView : FxmlView<ProjectListViewModel>, Initializable {
     @FXML
@@ -37,6 +38,8 @@ class ProjectListView : FxmlView<ProjectListViewModel>, Initializable {
     @InjectViewModel
     private lateinit var viewModel: ProjectListViewModel
 
+    private val titlePageItem = TreeItem<ProjectListItem>(ProjectListItem.TitlePageItem)
+    private val copyrightPageItem = TreeItem<ProjectListItem>(ProjectListItem.CopyrightPageItem)
     private val prologItem = TreeItem<ProjectListItem>(ProjectListItem.PrologItem(null))
     private val chaptersItem = TreeItem<ProjectListItem>(ProjectListItem.Chapters)
     private val epilogItem = TreeItem<ProjectListItem>(ProjectListItem.EpilogItem(null))
@@ -48,7 +51,7 @@ class ProjectListView : FxmlView<ProjectListViewModel>, Initializable {
         val messages = resources ?: Messages.bundle
 
         val rootItem = TreeItem<ProjectListItem>(ProjectListItem.Root)
-        rootItem.children.setAll(prologItem, chaptersItem, epilogItem, blurbItem)
+        rootItem.children.setAll(titlePageItem, copyrightPageItem, prologItem, chaptersItem, epilogItem, blurbItem)
         rootItem.isExpanded = true
         chaptersItem.isExpanded = true
 

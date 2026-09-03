@@ -16,6 +16,7 @@ import javafx.beans.property.SimpleObjectProperty
 import org.pcsoft.app.aighost.fx.model.internal.BeanFields
 import org.pcsoft.app.aighost.model.pref.Ai
 import org.pcsoft.app.aighost.model.pref.Appearance
+import org.pcsoft.app.aighost.model.pref.Editor
 import org.pcsoft.app.aighost.model.pref.Preferences
 import org.pcsoft.app.aighost.model.pref.RecentOpened
 
@@ -29,8 +30,8 @@ import org.pcsoft.app.aighost.model.pref.RecentOpened
  * any level shows the current value.
  *
  * Every block nested in the preferences is handed out with its own type, so a user interface reaches
- * the fields of the recently opened files, of the appearance and of the AI settings through the
- * property standing for that block.
+ * the fields of the recently opened files, of the appearance, of the AI settings and of the writing
+ * surface through the property standing for that block.
  *
  * The preferences object stays the same instance while one of its fields changes, so such a change
  * reaches a listener registered here as an invalidation. A `ChangeListener` registered directly on
@@ -71,10 +72,21 @@ class PreferencesProperty(preferences: Preferences) : SimpleObjectProperty<Prefe
             aiProperty.set(value)
         }
 
+    /** Settings of the writing surface, as a property of its own. */
+    val editorProperty: EditorProperty = EditorProperty()
+
+    /** Settings of the writing surface. */
+    var editor: Editor
+        get() = editorProperty.get()
+        set(value) {
+            editorProperty.set(value)
+        }
+
     init {
         fields.model(recentOpenedProperty, "recentOpened", recentOpenedProperty::refresh)
         fields.model(appearanceProperty, "appearance", appearanceProperty::refresh)
         fields.model(aiProperty, "ai", aiProperty::refresh)
+        fields.model(editorProperty, "editor", editorProperty::refresh)
 
         // The field properties belong to another object after every exchange, so they are tied to the
         // one this property carries now. The constructor of the base class stored the object without

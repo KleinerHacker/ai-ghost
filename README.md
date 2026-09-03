@@ -60,8 +60,9 @@ opened once the user accepts it. Both documents are written with Jackson.
 | Internationalisation of the UI (English, German)  | Implemented |
 | Menu bar with icons and keyboard shortcuts        | Implemented |
 | Editor and preview tabs of the main window        | Implemented |
-| Project tree with prolog, chapters, epilog, blurb | Implemented |
-| Editor split into project tree and editing area   | Implemented |
+| Project tree with title page, copyright page, prolog, chapters, epilog, blurb | Implemented |
+| Editor split into project tree, writing surface and inspector | Implemented |
+| Writing surface: book parts and front matter written on the paginated sheet | Implemented |
 | Inspector with collapsible Book, Chapter and Design sections | Implemented |
 | Project settings dialog: page format and blank pages (Design section) | Implemented |
 | Live typography editing of title, chapter heading and body text in the Inspector | Implemented |

@@ -30,6 +30,12 @@ sealed interface ProjectListItem {
     /** The root of the tree, standing for the project itself. */
     data object Root : ProjectListItem
 
+    /** The title page of the book, the first sheet of the front matter. */
+    data object TitlePageItem : ProjectListItem
+
+    /** The copyright page of the book, following the title page directly. */
+    data object CopyrightPageItem : ProjectListItem
+
     /**
      * The prolog of the book.
      *

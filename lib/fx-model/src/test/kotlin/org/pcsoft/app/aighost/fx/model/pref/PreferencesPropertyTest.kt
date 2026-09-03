@@ -24,6 +24,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.model.pref.Ai
 import org.pcsoft.app.aighost.model.pref.Appearance
+import org.pcsoft.app.aighost.model.pref.Editor
 import org.pcsoft.app.aighost.model.pref.Preferences
 import org.pcsoft.app.aighost.model.pref.RecentOpened
 import org.pcsoft.app.aighost.model.pref.ThemeMode
@@ -34,9 +35,10 @@ import org.pcsoft.app.aighost.model.pref.ThemeMode
  * The property wraps the preferences of the user and offers every field of that object - and every
  * field of the objects nested in it - as a property of its own. Every test checks the object tree the
  * way the user interface uses it: a binding hangs on each property of the tree - the preferences
- * themselves, the recently opened files, the appearance and the AI settings below them and every
- * single field of those - and the tests assert that a change reaches every binding that has to know
- * about it, upwards to the root as well as downwards into the fields of an exchanged object.
+ * themselves, the recently opened files, the appearance, the AI settings and the writing-surface
+ * settings below them and every single field of those - and the tests assert that a change reaches
+ * every binding that has to know about it, upwards to the root as well as downwards into the fields of
+ * an exchanged object.
  *
  * Every block nested in the preferences is handed out with its own type, so the tests reach the fields
  * of a block through the property standing for that block instead of through a cast.
@@ -48,6 +50,7 @@ class PreferencesPropertyTest {
     private lateinit var recentOpenedProperty: RecentOpenedProperty
     private lateinit var appearanceProperty: AppearanceProperty
     private lateinit var aiProperty: AiProperty
+    private lateinit var editorProperty: EditorProperty
 
     /** Binding on the whole preferences, standing for a view bound to the root of the object tree. */
     private lateinit var rootView: StringProperty
@@ -85,17 +88,27 @@ class PreferencesPropertyTest {
     private lateinit var styleView: StringProperty
     private var styleViewChanges = 0
 
+    /** Binding on the writing-surface settings, standing for a view bound to that nested object. */
+    private lateinit var editorView: StringProperty
+    private var editorViewChanges = 0
+
+    /** Binding on the typing pause nested in the writing-surface settings. */
+    private lateinit var pauseView: StringProperty
+    private var pauseViewChanges = 0
+
     @BeforeEach
     fun setUp() {
         preferences = Preferences(
             recentOpened = RecentOpened(max = 10, entries = emptyList()),
             appearance = Appearance(themeMode = ThemeMode.SYSTEM),
-            ai = Ai(maxStoryCharacters = 5000, maxStyleCharacters = 1000)
+            ai = Ai(maxStoryCharacters = 5000, maxStyleCharacters = 1000),
+            editor = Editor(paragraphMergePauseMillis = 600)
         )
         property = PreferencesProperty(preferences)
         recentOpenedProperty = property.recentOpenedProperty
         appearanceProperty = property.appearanceProperty
         aiProperty = property.aiProperty
+        editorProperty = property.editorProperty
 
         rootView = SimpleStringProperty()
         val rootBinding = Bindings.createStringBinding({ state(property.value) }, property)
@@ -153,6 +166,16 @@ class PreferencesPropertyTest {
         styleBinding.addListener { _, _, _ -> styleViewChanges++ }
         styleView.bind(styleBinding)
 
+        editorView = SimpleStringProperty()
+        val editorBinding = Bindings.createStringBinding({ state(editorProperty.value) }, editorProperty)
+        editorBinding.addListener { _, _, _ -> editorViewChanges++ }
+        editorView.bind(editorBinding)
+
+        pauseView = SimpleStringProperty()
+        val pauseBinding = editorProperty.paragraphMergePauseMillisProperty.asString()
+        pauseBinding.addListener { _, _, _ -> pauseViewChanges++ }
+        pauseView.bind(pauseBinding)
+
         rootViewChanges = 0
         recentOpenedViewChanges = 0
         maxViewChanges = 0
@@ -162,11 +185,14 @@ class PreferencesPropertyTest {
         aiViewChanges = 0
         storyViewChanges = 0
         styleViewChanges = 0
+        editorViewChanges = 0
+        pauseViewChanges = 0
     }
 
     /** Text form of the whole preferences, used as the value of the binding on the root. */
     private fun state(preferences: Preferences): String =
-        "${state(preferences.recentOpened)}|${state(preferences.appearance)}|${state(preferences.ai)}"
+        "${state(preferences.recentOpened)}|${state(preferences.appearance)}|" +
+            "${state(preferences.ai)}|${state(preferences.editor)}"
 
     /** Text form of the recently opened files, used as the value of the binding on that object. */
     private fun state(recentOpened: RecentOpened): String =
@@ -178,6 +204,9 @@ class PreferencesPropertyTest {
     /** Text form of the AI settings, used as the value of the binding on that object. */
     private fun state(ai: Ai): String = "${ai.maxStoryCharacters}|${ai.maxStyleCharacters}"
 
+    /** Text form of the writing-surface settings, used as the value of the binding on that object. */
+    private fun state(editor: Editor): String = editor.paragraphMergePauseMillis.toString()
+
     /**
      * Asserts that every binding of the object tree delivers the given state, so no view keeps the
      * value of a previous object or of a previous field value.
@@ -187,13 +216,15 @@ class PreferencesPropertyTest {
         entries: List<String>,
         themeMode: ThemeMode,
         maxStoryCharacters: Long,
-        maxStyleCharacters: Long
+        maxStyleCharacters: Long,
+        paragraphMergePauseMillis: Long
     ) {
         val entriesText = entries.joinToString(";")
         val recentOpenedText = "$max|$entriesText"
         val aiText = "$maxStoryCharacters|$maxStyleCharacters"
+        val editorText = paragraphMergePauseMillis.toString()
 
-        assertEquals("$recentOpenedText|$themeMode|$aiText", rootView.get()) {
+        assertEquals("$recentOpenedText|$themeMode|$aiText|$editorText", rootView.get()) {
             "the binding on the preferences delivers an outdated state"
         }
         assertEquals(recentOpenedText, recentOpenedView.get()) {
@@ -220,6 +251,12 @@ class PreferencesPropertyTest {
         assertEquals(maxStyleCharacters.toString(), styleView.get()) {
             "the binding on the style limit delivers an outdated value"
         }
+        assertEquals(editorText, editorView.get()) {
+            "the binding on the writing-surface settings delivers an outdated state"
+        }
+        assertEquals(editorText, pauseView.get()) {
+            "the binding on the typing pause delivers an outdated value"
+        }
     }
 
     /**
@@ -233,7 +270,8 @@ class PreferencesPropertyTest {
             entries = emptyList(),
             themeMode = ThemeMode.SYSTEM,
             maxStoryCharacters = 5000,
-            maxStyleCharacters = 1000
+            maxStyleCharacters = 1000,
+            paragraphMergePauseMillis = 600
         )
     }
 
@@ -251,7 +289,8 @@ class PreferencesPropertyTest {
             entries = emptyList(),
             themeMode = ThemeMode.DARK,
             maxStoryCharacters = 5000,
-            maxStyleCharacters = 1000
+            maxStyleCharacters = 1000,
+            paragraphMergePauseMillis = 600
         )
         assertTrue(themeViewChanges > 0) { "the binding on the theme was not re-evaluated" }
         assertTrue(appearanceViewChanges > 0) { "the binding on the appearance was not re-evaluated" }
@@ -275,7 +314,8 @@ class PreferencesPropertyTest {
             entries = emptyList(),
             themeMode = ThemeMode.DARK,
             maxStoryCharacters = 5000,
-            maxStyleCharacters = 1000
+            maxStyleCharacters = 1000,
+            paragraphMergePauseMillis = 600
         )
         assertTrue(themeViewChanges > 0) { "the binding on the theme was not re-evaluated" }
         assertTrue(appearanceViewChanges > 0) { "the binding on the appearance was not re-evaluated" }
@@ -296,7 +336,8 @@ class PreferencesPropertyTest {
             entries = emptyList(),
             themeMode = ThemeMode.LIGHT,
             maxStoryCharacters = 5000,
-            maxStyleCharacters = 1000
+            maxStyleCharacters = 1000,
+            paragraphMergePauseMillis = 600
         )
         assertTrue(themeViewChanges > 0) { "the binding on the theme was not re-evaluated" }
         assertTrue(appearanceViewChanges > 0) { "the binding on the appearance was not re-evaluated" }
@@ -317,7 +358,8 @@ class PreferencesPropertyTest {
             entries = emptyList(),
             themeMode = ThemeMode.SYSTEM,
             maxStoryCharacters = 12000,
-            maxStyleCharacters = 1000
+            maxStyleCharacters = 1000,
+            paragraphMergePauseMillis = 600
         )
         assertTrue(storyViewChanges > 0) { "the binding on the story limit was not re-evaluated" }
         assertTrue(aiViewChanges > 0) { "the binding on the AI settings was not re-evaluated" }
@@ -341,7 +383,8 @@ class PreferencesPropertyTest {
             entries = emptyList(),
             themeMode = ThemeMode.SYSTEM,
             maxStoryCharacters = 5000,
-            maxStyleCharacters = 750
+            maxStyleCharacters = 750,
+            paragraphMergePauseMillis = 600
         )
         assertTrue(styleViewChanges > 0) { "the binding on the style limit was not re-evaluated" }
         assertTrue(aiViewChanges > 0) { "the binding on the AI settings was not re-evaluated" }
@@ -362,11 +405,57 @@ class PreferencesPropertyTest {
             entries = emptyList(),
             themeMode = ThemeMode.SYSTEM,
             maxStoryCharacters = 3000,
-            maxStyleCharacters = 800
+            maxStyleCharacters = 800,
+            paragraphMergePauseMillis = 600
         )
         assertTrue(storyViewChanges > 0) { "the binding on the story limit was not re-evaluated" }
         assertTrue(styleViewChanges > 0) { "the binding on the style limit was not re-evaluated" }
         assertTrue(aiViewChanges > 0) { "the binding on the AI settings was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the preferences was not re-evaluated" }
+    }
+
+    /**
+     * Use case: the user changes the typing pause in the settings, so the new value lands in the
+     * nested model object and the bindings on that field, on the writing-surface settings and on the
+     * root show it.
+     */
+    @Test
+    fun writesParagraphMergePauseMillisToModelAndNotifiesTree() {
+        editorProperty.paragraphMergePauseMillis = 900
+
+        assertEquals(900, preferences.editor.paragraphMergePauseMillis)
+        assertTreeShows(
+            max = 10,
+            entries = emptyList(),
+            themeMode = ThemeMode.SYSTEM,
+            maxStoryCharacters = 5000,
+            maxStyleCharacters = 1000,
+            paragraphMergePauseMillis = 900
+        )
+        assertTrue(pauseViewChanges > 0) { "the binding on the typing pause was not re-evaluated" }
+        assertTrue(editorViewChanges > 0) { "the binding on the writing-surface settings was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the preferences was not re-evaluated" }
+    }
+
+    /**
+     * Use case: the whole writing-surface block is replaced, so the field property below it belongs to
+     * another object afterwards and every binding of the object tree shows the value of that object.
+     */
+    @Test
+    fun writesEditorToModelAndNotifiesTree() {
+        property.editor = Editor(paragraphMergePauseMillis = 450)
+
+        assertEquals(Editor(paragraphMergePauseMillis = 450), preferences.editor)
+        assertTreeShows(
+            max = 10,
+            entries = emptyList(),
+            themeMode = ThemeMode.SYSTEM,
+            maxStoryCharacters = 5000,
+            maxStyleCharacters = 1000,
+            paragraphMergePauseMillis = 450
+        )
+        assertTrue(pauseViewChanges > 0) { "the binding on the typing pause was not re-evaluated" }
+        assertTrue(editorViewChanges > 0) { "the binding on the writing-surface settings was not re-evaluated" }
         assertTrue(rootViewChanges > 0) { "the binding on the preferences was not re-evaluated" }
     }
 
@@ -384,7 +473,8 @@ class PreferencesPropertyTest {
             entries = emptyList(),
             themeMode = ThemeMode.SYSTEM,
             maxStoryCharacters = 5000,
-            maxStyleCharacters = 1000
+            maxStyleCharacters = 1000,
+            paragraphMergePauseMillis = 600
         )
         assertTrue(maxViewChanges > 0) { "the binding on the maximum was not re-evaluated" }
         assertTrue(recentOpenedViewChanges > 0) { "the binding on the recently opened files was not re-evaluated" }
@@ -406,7 +496,8 @@ class PreferencesPropertyTest {
             entries = listOf("/books/third.md"),
             themeMode = ThemeMode.SYSTEM,
             maxStoryCharacters = 5000,
-            maxStyleCharacters = 1000
+            maxStyleCharacters = 1000,
+            paragraphMergePauseMillis = 600
         )
         assertTrue(entriesViewChanges > 0) { "the binding on the entries was not re-evaluated" }
         assertTrue(recentOpenedViewChanges > 0) { "the binding on the recently opened files was not re-evaluated" }
@@ -430,7 +521,8 @@ class PreferencesPropertyTest {
             entries = listOf("/books/second.md"),
             themeMode = ThemeMode.SYSTEM,
             maxStoryCharacters = 5000,
-            maxStyleCharacters = 1000
+            maxStyleCharacters = 1000,
+            paragraphMergePauseMillis = 600
         )
         assertTrue(entriesViewChanges > 0) { "the binding on the entries was not re-evaluated" }
         assertTrue(recentOpenedViewChanges > 0) { "the binding on the recently opened files was not re-evaluated" }
@@ -452,7 +544,8 @@ class PreferencesPropertyTest {
             entries = listOf("/books/second.md"),
             themeMode = ThemeMode.SYSTEM,
             maxStoryCharacters = 5000,
-            maxStyleCharacters = 1000
+            maxStyleCharacters = 1000,
+            paragraphMergePauseMillis = 600
         )
         assertTrue(maxViewChanges > 0) { "the binding on the maximum was not re-evaluated" }
         assertTrue(entriesViewChanges > 0) { "the binding on the entries was not re-evaluated" }
@@ -470,7 +563,8 @@ class PreferencesPropertyTest {
         property.value = Preferences(
             recentOpened = RecentOpened(max = 2, entries = listOf("/books/fourth.md")),
             appearance = Appearance(themeMode = ThemeMode.LIGHT),
-            ai = Ai(maxStoryCharacters = 2500, maxStyleCharacters = 600)
+            ai = Ai(maxStoryCharacters = 2500, maxStyleCharacters = 600),
+            editor = Editor(paragraphMergePauseMillis = 300)
         )
 
         assertTreeShows(
@@ -478,7 +572,8 @@ class PreferencesPropertyTest {
             entries = listOf("/books/fourth.md"),
             themeMode = ThemeMode.LIGHT,
             maxStoryCharacters = 2500,
-            maxStyleCharacters = 600
+            maxStyleCharacters = 600,
+            paragraphMergePauseMillis = 300
         )
         assertTrue(maxViewChanges > 0) { "the binding on the maximum was not re-evaluated" }
         assertTrue(entriesViewChanges > 0) { "the binding on the entries was not re-evaluated" }
@@ -488,6 +583,8 @@ class PreferencesPropertyTest {
         assertTrue(storyViewChanges > 0) { "the binding on the story limit was not re-evaluated" }
         assertTrue(styleViewChanges > 0) { "the binding on the style limit was not re-evaluated" }
         assertTrue(aiViewChanges > 0) { "the binding on the AI settings was not re-evaluated" }
+        assertTrue(pauseViewChanges > 0) { "the binding on the typing pause was not re-evaluated" }
+        assertTrue(editorViewChanges > 0) { "the binding on the writing-surface settings was not re-evaluated" }
         assertTrue(rootViewChanges > 0) { "the binding on the preferences was not re-evaluated" }
     }
 
@@ -500,7 +597,8 @@ class PreferencesPropertyTest {
         property.value = Preferences(
             recentOpened = RecentOpened(max = 10, entries = emptyList()),
             appearance = Appearance(themeMode = ThemeMode.SYSTEM),
-            ai = Ai(maxStoryCharacters = 5000, maxStyleCharacters = 1000)
+            ai = Ai(maxStoryCharacters = 5000, maxStyleCharacters = 1000),
+            editor = Editor(paragraphMergePauseMillis = 600)
         )
 
         assertTreeShows(
@@ -508,13 +606,15 @@ class PreferencesPropertyTest {
             entries = emptyList(),
             themeMode = ThemeMode.SYSTEM,
             maxStoryCharacters = 5000,
-            maxStyleCharacters = 1000
+            maxStyleCharacters = 1000,
+            paragraphMergePauseMillis = 600
         )
         assertEquals(0, maxViewChanges) { "the maximum was reported as changed although it did not change" }
         assertEquals(0, entriesViewChanges) { "the entries were reported as changed although they did not change" }
         assertEquals(0, themeViewChanges) { "the theme was reported as changed although it did not change" }
         assertEquals(0, storyViewChanges) { "the story limit was reported as changed although it did not change" }
         assertEquals(0, styleViewChanges) { "the style limit was reported as changed although it did not change" }
+        assertEquals(0, pauseViewChanges) { "the typing pause was reported as changed although it did not change" }
     }
 
     /**
@@ -529,6 +629,7 @@ class PreferencesPropertyTest {
         preferences.ai.maxStyleCharacters = 600
         preferences.recentOpened.max = 4
         preferences.recentOpened.entries = listOf("/books/third.md")
+        preferences.editor.paragraphMergePauseMillis = 250
 
         property.refresh()
 
@@ -537,12 +638,14 @@ class PreferencesPropertyTest {
         assertEquals(600, aiProperty.maxStyleCharacters)
         assertEquals(4, recentOpenedProperty.max)
         assertEquals(listOf("/books/third.md"), recentOpenedProperty.entries)
+        assertEquals(250, editorProperty.paragraphMergePauseMillis)
         assertTreeShows(
             max = 4,
             entries = listOf("/books/third.md"),
             themeMode = ThemeMode.DARK,
             maxStoryCharacters = 2500,
-            maxStyleCharacters = 600
+            maxStyleCharacters = 600,
+            paragraphMergePauseMillis = 250
         )
     }
 }

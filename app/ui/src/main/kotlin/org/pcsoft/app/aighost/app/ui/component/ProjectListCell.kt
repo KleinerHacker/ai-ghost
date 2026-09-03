@@ -41,6 +41,8 @@ internal class ProjectListCell(private val messages: ResourceBundle) : TreeCell<
 
         text = when (item) {
             is ProjectListItem.Root -> messages.getString("component.projectList.root")
+            is ProjectListItem.TitlePageItem -> messages.getString("component.projectList.titlePage")
+            is ProjectListItem.CopyrightPageItem -> messages.getString("component.projectList.copyrightPage")
             is ProjectListItem.PrologItem -> messages.getString("component.projectList.prolog")
             is ProjectListItem.Chapters -> messages.getString("component.projectList.chapter")
             is ProjectListItem.ChapterItem -> item.chapter.name
@@ -50,6 +52,8 @@ internal class ProjectListCell(private val messages: ResourceBundle) : TreeCell<
 
         graphic = when (item) {
             is ProjectListItem.Root -> null
+            is ProjectListItem.TitlePageItem -> null
+            is ProjectListItem.CopyrightPageItem -> null
             is ProjectListItem.PrologItem -> AiGhostIcons.treeProlog()
             is ProjectListItem.Chapters -> AiGhostIcons.treeChapter()
             is ProjectListItem.ChapterItem -> AiGhostIcons.treeChapter()
@@ -59,6 +63,8 @@ internal class ProjectListCell(private val messages: ResourceBundle) : TreeCell<
 
         contextMenu = when (item) {
             is ProjectListItem.Root -> null
+            is ProjectListItem.TitlePageItem -> null
+            is ProjectListItem.CopyrightPageItem -> null
             is ProjectListItem.PrologItem -> null
             is ProjectListItem.Chapters -> ContextMenu(
                 MenuItem(messages.getString("component.projectList.menu.addChapter"), AiGhostIcons.treeChapter())

@@ -21,13 +21,13 @@ import java.net.URL
 import java.util.*
 
 /**
- * View of [Editor], holding the project tree, the editing area and the inspector in a horizontal
+ * View of [Editor], holding the project tree, the writing surface and the inspector in a horizontal
  * split.
  *
- * The split itself is described in the FXML; the view only passes the project model on to the tree
- * and to the inspector, so neither of them reads the project from anywhere else. The inspector also
- * follows the node picked in the tree, which is why [pnlProjectList]'s selection is bound onto the
- * view model here and handed to it.
+ * The split itself is described in the FXML; the view only passes the project model on to the tree,
+ * the writing surface and the inspector, so none of them reads the project from anywhere else. The
+ * writing surface and the inspector also follow the node picked in the tree, which is why
+ * [pnlProjectList]'s selection is bound onto the view model here and handed to them.
  *
  * The model arrives after this view was built, which is why the view is told about it through the
  * view model instead of reading it in [initialize].
@@ -40,6 +40,9 @@ class EditorView : FxmlView<EditorViewModel>, Initializable {
     @FXML
     private lateinit var pnlProjectList: ProjectList
 
+    @FXML
+    private lateinit var bookPartEditor: BookPartEditor
+
     @InjectViewModel
     private lateinit var viewModel: EditorViewModel
 
@@ -47,8 +50,12 @@ class EditorView : FxmlView<EditorViewModel>, Initializable {
         viewModel.onProjectBound = ::bindProject
         viewModel.project?.also(::bindProject)
 
+        viewModel.onUndoStackBound = bookPartEditor::bindUndoStack
+        viewModel.undoStack?.also(bookPartEditor::bindUndoStack)
+
         viewModel.selectedProjectTreeItem.bind(pnlProjectList.selectedItem)
         inspector.bindSelection(viewModel.selectedProjectTreeItem)
+        bookPartEditor.bindSelection(viewModel.selectedProjectTreeItem)
     }
 
     /**
@@ -59,5 +66,6 @@ class EditorView : FxmlView<EditorViewModel>, Initializable {
     private fun bindProject(project: ProjectProperty) {
         pnlProjectList.bindProject(project)
         inspector.bindProject(project)
+        bookPartEditor.bindProject(project)
     }
 }

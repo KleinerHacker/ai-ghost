@@ -110,13 +110,16 @@ class ProjectListTest : ApplicationTest() {
 
     /**
      * Use case: the user looks at a project that has not been written yet, so the tree shows the
-     * project with its four branches and hands on the empty parts every book carries.
+     * project with its fixed branches - front matter first - and hands on the empty parts every book
+     * carries.
      */
     @Test
     fun showsTheFixedBranchesBelowTheProject() {
         assertEquals(ProjectListItem.Root, tree.root.value)
         assertEquals(
             listOf(
+                ProjectListItem.TitlePageItem,
+                ProjectListItem.CopyrightPageItem,
                 ProjectListItem.PrologItem(Prolog()),
                 ProjectListItem.Chapters,
                 ProjectListItem.EpilogItem(Epilog()),
@@ -124,6 +127,24 @@ class ProjectListTest : ApplicationTest() {
             ),
             tree.root.children.map { it.value }
         )
+    }
+
+    /**
+     * Use case: the front matter is written on the paper as well, so the title page and the copyright
+     * page each get a node of their own, labelled from the message bundle and placed ahead of the
+     * prolog.
+     */
+    @Test
+    fun showsTheFrontMatterBranchesLabelledAheadOfTheProlog() {
+        val titleItem = tree.root.children[0]
+        val copyrightItem = tree.root.children[1]
+
+        assertEquals(ProjectListItem.TitlePageItem, titleItem.value)
+        assertEquals(ProjectListItem.CopyrightPageItem, copyrightItem.value)
+
+        val cells = tree.lookupAll(".tree-cell").filterIsInstance<ProjectListCell>()
+        assertEquals("Title Page", cells.first { it.treeItem === titleItem }.text)
+        assertEquals("Copyright Page", cells.first { it.treeItem === copyrightItem }.text)
     }
 
     /**
@@ -193,6 +214,8 @@ class ProjectListTest : ApplicationTest() {
 
         assertEquals(
             listOf(
+                ProjectListItem.TitlePageItem,
+                ProjectListItem.CopyrightPageItem,
                 ProjectListItem.PrologItem(prolog),
                 ProjectListItem.Chapters,
                 ProjectListItem.EpilogItem(epilog),
@@ -234,6 +257,17 @@ class ProjectListTest : ApplicationTest() {
     }
 
     /**
+     * Use case: the user picks the title page branch, so the component reports it, which lets the
+     * surrounding window open the title page on the paper.
+     */
+    @Test
+    fun reportsTheSelectedTitlePageBranch() {
+        interact { tree.selectionModel.select(tree.root.children.first()) }
+
+        assertEquals(ProjectListItem.TitlePageItem, projectList.selectedItem.value)
+    }
+
+    /**
      * Use case: another project is opened while a chapter of the previous one was selected, so the
      * selection is dropped instead of reporting a chapter that is no longer part of the tree.
      */
@@ -262,6 +296,6 @@ class ProjectListTest : ApplicationTest() {
         setProject(Project())
 
         assertEquals(emptyList<ProjectListItem>(), chaptersItem().children.map { it.value })
-        assertEquals(4, tree.root.children.size)
+        assertEquals(6, tree.root.children.size)
     }
 }

@@ -125,7 +125,8 @@ class PreferencesTest {
         assertEquals(
             """{"recentOpened":{"max":10,"entries":[]},""" +
                 """"appearance":{"themeMode":"DARK"},""" +
-                """"ai":{"maxStoryCharacters":5000,"maxStyleCharacters":1000}}""",
+                """"ai":{"maxStoryCharacters":5000,"maxStyleCharacters":1000},""" +
+                """"editor":{"paragraphMergePauseMillis":600}}""",
             json
         )
     }

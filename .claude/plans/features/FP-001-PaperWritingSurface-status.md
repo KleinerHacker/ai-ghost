@@ -21,7 +21,7 @@ Status: IN_PROGRESS
 | IP-27 | Library Styling And Theming API           | NOT_STARTED |
 | IP-28 | Standalone Reuse And Documentation        | NOT_STARTED |
 | IP-09 | Undo And Redo Infrastructure              | COMPLETED   |
-| IP-10 | Book Part Writing Surface                 | NOT_STARTED |
+| IP-10 | Book Part Writing Surface                 | COMPLETED   |
 | IP-11 | Paragraph Structure Operations            | NOT_STARTED |
 | IP-12 | Inspector Shell And Content Sections      | COMPLETED   |
 | IP-13 | Design Style Sections                     | COMPLETED   |
@@ -36,12 +36,38 @@ Status: IN_PROGRESS
 
 ## Overall Progress
 
-56%
+57%
 
 ## Notes
 
-IP-01, IP-22, IP-02, IP-24, IP-03, IP-25, IP-14, IP-26, IP-17, IP-04, IP-07, IP-08 and IP-13 are
-implemented; IP-06, IP-10, IP-18, IP-19 and IP-27 are unblocked.
+IP-01, IP-22, IP-02, IP-24, IP-03, IP-25, IP-14, IP-26, IP-17, IP-04, IP-07, IP-08, IP-13 and IP-10
+are implemented; IP-06, IP-11, IP-18, IP-19 and IP-27 are unblocked.
+
+IP-10 was built wider than the original plan header, on the user's request. The project tree gained
+two real nodes, `TitlePageItem` and `CopyrightPageItem` (`ProjectListItem`, `ProjectListView`,
+`ProjectListCell`), placed ahead of the prolog and labelled from the bundle; the full tree routing of
+every node stays with IP-15. The typing pause that ends undo coalescing became a new preferences
+group `Editor` (`Preferences.editor.paragraphMergePauseMillis`, default 600, range 100..5000),
+mirrored as `EditorProperty` per `fx-model` and read once by the writing surface when the undo stack
+is handed over - there is no settings-dialog control for it yet. The undo stack is passed
+`MainWindowView -> Editor.bindUndoStack -> BookPartEditor`.
+
+The surface itself is a new MVVM-FX trio `BookPartEditor` in `app/ui`, embedding `PaperFlowView` of
+`lib/layouting-fx` (app/ui now `requires`/depends on `lib/ai-ghost-layouting-model` as well). One
+`BookPartEditorViewModel` routes the picked node onto a `PartMode` (NONE, TITLE_PAGE, COPYRIGHT_PAGE,
+BOOK_PART, BLURB); prolog, chapter and epilog run through one `BookPartProperty` (chapter via
+`ChapterProperty.of`), the title page and the copyright page are read only, the blurb is a flow
+without a heading. On every reported change and every design change the model is rebuilt into blocks
+via `BookPartBuilder`/`TitlePageBuilder`/`CopyrightPageBuilder`/`BlurbBuilder`, broken with
+`GreedyLineBreaker(JavaFxTextMetrics)` and paginated with `LayoutEngine.layout`, then handed back to
+the view. Because `PaperFlowView` derives its column width from its own text controls, the first
+layout uses the plain page content width and the column-width listener recomputes once the real width
+is reported; an empty writable part is given one empty paragraph block so there is somewhere to type.
+Each block target (heading, appendix line, paragraph) carries a `StringProperty` so a keystroke is
+recorded through `UndoStack.record` with a `(partId, target)` merge key and an undo replays it the
+same way. The placeholder `Label` of `EditorView.fxml` is replaced by `BookPartEditor`; the dead
+`.editor-placeholder` rule in `editor.css` was left in place. `styles/component/book-part-editor.css`
+is registered in `AiGhostTheme`. The full `build` (all modules, all tests) is green.
 
 IP-13 was built narrower than planned: the family catalogue restriction, the per-family sample text
 and the uninstalled-family marking already existed in `StyleDataEditor` (built for IP-14's

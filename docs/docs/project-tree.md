@@ -1,12 +1,15 @@
 # Project tree
 
 The `Editor` tab shows the open project as a tree. It is the place to navigate the manuscript: every
-part of the book has its own node, and picking one selects the part to work on.
+part of the book has its own node, and picking one selects the part to work on. The picked part is
+shown on the [writing surface](editor.md) in the middle of the editor.
 
 ## Structure
 
 ```
 Project
+├── Title Page
+├── Copyright Page
 ├── Prolog
 ├── Chapter
 │   ├── <chapter name>
@@ -15,16 +18,20 @@ Project
 └── Blurb
 ```
 
-| Node      | What it stands for                                              |
-|-----------|-----------------------------------------------------------------|
-| `Project` | The open project, the root of the tree                          |
-| `Prolog`  | The text printed before the first chapter                       |
-| `Chapter` | The branch collecting every chapter of the book                 |
-| `Epilog`  | The text printed after the last chapter                         |
-| `Blurb`   | The advertising text printed on the cover                       |
+| Node             | What it stands for                                              |
+|------------------|-----------------------------------------------------------------|
+| `Project`        | The open project, the root of the tree                          |
+| `Title Page`     | The first sheet of the book: title, further title lines, author |
+| `Copyright Page` | The copyright notice, printed directly after the title page     |
+| `Prolog`         | The text printed before the first chapter                       |
+| `Chapter`        | The branch collecting every chapter of the book                 |
+| `Epilog`         | The text printed after the last chapter                         |
+| `Blurb`          | The advertising text printed on the cover                       |
 
-The four branches are always shown, also while the part behind them has not been written yet, so
-there is always a place to start from.
+The fixed branches are always shown, also while the part behind them has not been written yet, so
+there is always a place to start from. The title page and the copyright page are shown read only:
+their content is edited through the *Book* section of the [inspector](editor.md) and the
+[project settings](project-settings.md).
 
 ## Chapters
 
@@ -39,4 +46,4 @@ away.
 ## Language
 
 The node labels follow the language of the user interface: in German the tree reads `Projekt`,
-`Prolog`, `Kapitel`, `Epilog` and `Klappentext`.
+`Titelseite`, `Copyright-Seite`, `Prolog`, `Kapitel`, `Epilog` and `Klappentext`.

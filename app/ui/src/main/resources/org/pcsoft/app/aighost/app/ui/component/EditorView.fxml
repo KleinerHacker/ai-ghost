@@ -12,13 +12,12 @@
   ~ See the License for the specific language governing permissions and limitations.
   -->
 
-<?import javafx.scene.control.Label?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.StackPane?>
 <?import org.pcsoft.app.aighost.app.ui.component.ProjectList?>
 <?import javafx.geometry.Insets?>
 <?import org.pcsoft.app.aighost.app.ui.component.Inspector?>
+<?import org.pcsoft.app.aighost.app.ui.component.BookPartEditor?>
 <fx:root type="BorderPane" xmlns="http://javafx.com/javafx"
          xmlns:fx="http://javafx.com/fxml"
          fx:controller="org.pcsoft.app.aighost.app.ui.component.EditorView">
@@ -29,13 +28,11 @@
                     <Insets right="10"/>
                 </padding>
             </ProjectList>
-            <StackPane>
+            <BookPartEditor fx:id="bookPartEditor">
                 <padding>
                     <Insets left="10" right="10"/>
                 </padding>
-                <!-- Hard coded on purpose: temporary placeholder until the editing parts exist. -->
-                <Label styleClass="editor-placeholder" text="Not implemented yet."/>
-            </StackPane>
+            </BookPartEditor>
             <Inspector fx:id="inspector" minWidth="450" SplitPane.resizableWithParent="false">
                 <padding>
                     <Insets left="10"/>

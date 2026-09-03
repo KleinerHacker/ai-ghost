@@ -43,6 +43,8 @@ dependencies {
     implementation(project(":lib:ai-ghost-layouting"))
     // The identity of a font family is measured with the toolkit, which the component library owns.
     implementation(project(":lib:ai-ghost-layouting-fx"))
+    // The block builders that turn a book part, the title page and the copyright page into layout input.
+    implementation(project(":lib:ai-ghost-layouting-model"))
 
     implementation("io.arrow-kt:arrow-core:2.1.2")
     implementation("org.apache.commons:commons-lang3:3.20.0")

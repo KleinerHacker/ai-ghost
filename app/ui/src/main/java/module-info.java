@@ -19,6 +19,8 @@ module org.pcsoft.app.aighost.ui {
     requires transitive org.pcsoft.app.aighost.layouting;
     // The renderer library resolves a design font, measures text and takes the family fingerprint.
     requires org.pcsoft.app.aighost.layouting.fx;
+    // The block builders turn a book part, the title page and the copyright page into layout input.
+    requires org.pcsoft.app.aighost.layouting.model;
 
     opens org.pcsoft.app.aighost.app to javafx.fxml, de.saxsys.mvvmfx;
     opens org.pcsoft.app.aighost.app.ui.window to javafx.fxml, de.saxsys.mvvmfx;
