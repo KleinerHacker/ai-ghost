@@ -1,7 +1,7 @@
 # Global Rules
 
 * NEVER EVER save memories!!!
-* You MUST use embedded Read and Write Action!
+* Create subagents IS LIMITED to a DEPTH of one agent 
 
 ## Skills
 

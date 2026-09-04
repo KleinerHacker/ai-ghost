@@ -18,6 +18,7 @@ import javafx.beans.value.ObservableValue
 import javafx.fxml.FXML
 import javafx.fxml.Initializable
 import javafx.scene.Node
+import javafx.scene.control.Button
 import javafx.scene.control.TextField
 import javafx.scene.control.TitledPane
 import javafx.scene.layout.VBox
@@ -91,6 +92,9 @@ class InspectorView : FxmlView<InspectorViewModel>, Initializable {
 
     @FXML
     private lateinit var txaBlurbPrompt: AiPromptArea
+
+    @FXML
+    private lateinit var btnGenerateChapter: Button
 
     @FXML
     private lateinit var pnlDesignSection: TitledPane
@@ -216,6 +220,16 @@ class InspectorView : FxmlView<InspectorViewModel>, Initializable {
     private fun showExactly(node: Node, condition: ObservableValue<Boolean>) {
         node.visibleProperty().bind(condition)
         node.managedProperty().bind(condition)
+    }
+
+    /**
+     * Bound to the "Generate chapter" button of the "Chapter" section.
+     *
+     * The actual generation belongs to the future plugin system feature; this method is intentionally
+     * left unimplemented until that infrastructure exists.
+     */
+    fun generatePart() {
+        TODO("AI action: generate-part")
     }
 
     private companion object {

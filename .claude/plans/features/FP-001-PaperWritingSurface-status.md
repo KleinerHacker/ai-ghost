@@ -30,18 +30,18 @@ Status: IN_PROGRESS
 | IP-16 | Writing And Preview Modes                 | NOT_STARTED |
 | IP-17 | AI Action Port                            | COMPLETED   |
 | IP-18 | AI Actions On Paragraph And Heading       | NOT_STARTED |
-| IP-19 | AI Part Generation (button only)          | NOT_STARTED |
+| IP-19 | AI Part Generation (button only)          | COMPLETED   |
 | IP-21 | In-Paragraph Sheet Split                  | NOT_STARTED |
 | IP-23 | Optional Book Parts In The Tree           | NOT_STARTED |
 
 ## Gesamtfortschritt
 
-65 %
+70 %
 
 ## Anmerkungen
 
 IP-01, IP-22, IP-02, IP-24, IP-03, IP-25, IP-14, IP-26, IP-17, IP-04, IP-07, IP-08, IP-13, IP-10,
-IP-06 und IP-05 sind umgesetzt; IP-11, IP-18, IP-19 und IP-27 sind entsperrt, und IP-16 ist durch
+IP-06, IP-05 und IP-19 sind umgesetzt; IP-11, IP-18 und IP-27 sind entsperrt, und IP-16 ist durch
 IP-05 entsperrt (wartet noch auf IP-15).
 
 IP-18 und IP-19 wurden zurückgeschnitten: Ihre KI-Schaltflächen sind per FXML `onAction` an eine
@@ -54,6 +54,21 @@ Abhängigkeitsgraph, Abschnitt „außerhalb des Umfangs“, Risiken und Abschlu
 dass die KI-Schaltflächen an eine leere `*View`-Methode gebunden sind und der Port ungenutzt für
 später stehen bleibt; ein Provider kommt weiterhin erst über ein späteres, eigenes
 Plugin-System-Feature.
+
+IP-19 wurde wie geplant gebaut, mit einer vom Nutzer korrigierten Beschriftung: Der Feature-Plan
+nannte die Schaltfläche „Teil generieren“, der Nutzer wollte stattdessen „Kapitel generieren“
+(`component.inspector.chapter.generate.label`/`...generate.tooltip` in `bundle.properties` und
+`bundle_de.properties`). Die Schaltfläche sitzt am Ende der Felder des Kapitel-Abschnitts im
+`InspectorView.fxml` (`boxChapterFields`), zeigt das bereits vorhandene `AiGhostIcons.aiAction`-Icon
+(kein neues Icon nötig, da es bereits „Text der KI übergeben“ bedeutet) und ist per `onAction="#generatePart"`
+an `InspectorView.generatePart()` gebunden, deren einziger Rumpf `TODO("AI action: generate-part")`
+ist – keine Verdrahtung an den `AiAction`-Port aus IP-17, keinen ViewModel-Zustand. Neue Entwicklertests
+in `InspectorViewTest.kt` laden `InspectorView` direkt über `FluentViewLoader.fxmlView(...).root(BorderPane()).load()`
+(die FXML ist ein `fx:root`-Dokument, daher muss der Root vorab gesetzt werden) und prüfen, dass die
+Schaltfläche vorhanden/aktivierbar ist und dass `generatePart()` `NotImplementedError` wirft. CHANGELOG
+erhielt einen Eintrag, da die Schaltfläche für den Endnutzer sichtbar ist, auch wenn sie noch nichts
+tut. Der volle `build` ist grün. Die Plandatei wurde bei Abschluss per `git rm` entfernt; diese
+Anmerkung ist der einzige Nachweis. Kein anderer Plan wird durch ihn entsperrt.
 
 IP-05 wurde wie geplant gebaut. `lib/layouting` erhielt `IncrementalLineBreaker`, einen
 `LineBreaker`, der einem echten Umbrecher (`GreedyLineBreaker`) vorgeschaltet ist und das Ergebnis

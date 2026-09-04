@@ -23,6 +23,9 @@
   explanation instead of fields while nothing matching is picked, and both can be collapsed and
   expanded on their own
 
+* Inspector's "Chapter" section gains a "Generate chapter" AI button; pressing it does nothing yet -
+  the actual generation is coming with a future feature
+
 * Inspector gains a third section, "Design", showing the appearance of the book title, the chapter
   heading, its further heading lines and the body text - family, size, weight, slant, alignment and
   line spacing for each; unlike the other two sections it stays filled as long as a project is open,

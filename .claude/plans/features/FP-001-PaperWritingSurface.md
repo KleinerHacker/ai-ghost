@@ -198,7 +198,7 @@ entfernt. Die Nummerierung wird stabil gehalten statt neu nummeriert.
 | IP-16 | Writing And Preview Modes                 | Modus-Schalter, Vorschau des ganzen Buches, Scrollen, Virtualisierung| IP-05, IP-07, IP-15  |
 | IP-17 | AI Action Port ✅                          | Aktionsschnittstelle in `lib/ai`, keine Implementierung, bleibt für spätere Wiederverwendung | -          |
 | IP-18 | AI Actions On Paragraph And Heading       | Schwebende KI-Leiste; jede Schaltfläche ruft eine leere `*View`-Methode mit `TODO(...)` | IP-10                |
-| IP-19 | AI Part Generation (nur Schaltfläche)     | KI-Schaltfläche im Inspector-Teilabschnitt, ruft eine leere `*View`-Methode mit `TODO(...)` | IP-12         |
+| IP-19 | AI Part Generation (nur Schaltfläche) ✅   | KI-Schaltfläche im Inspector-Teilabschnitt, ruft eine leere `*View`-Methode mit `TODO(...)` | IP-12         |
 | IP-21 | In-Paragraph Sheet Split                  | Echte Blattlücke innerhalb eines Absatzes beim Schreiben (optional)  | IP-11                |
 | IP-23 | Optional Book Parts In The Tree           | Kontrollkästchen schaltet Prolog, Epilog und Klappentext ins Buch    | IP-15, IP-24         |
 
@@ -638,15 +638,14 @@ Ersetzungspfad, kein Undo-Eintrag, kein Fehlerweg, keine Verdrahtung an den `AiA
 IP-17 – all das kommt mit dem Plugin-System-Feature. Die Bibliothek bekommt keinen Begriff von einer
 KI.
 
-### IP-19: AI Part Generation (nur Schaltfläche)
+### IP-19: AI Part Generation (nur Schaltfläche) ✅
 
-Plan: `FP-001-IP-19-AiTeilGenerierung.md`
-
-Im Inspector-Abschnitt des Teils steht eine einzige KI-Schaltfläche „Teil generieren“. Sie ist per
-FXML `onAction` an eine parameterlose Methode des `InspectorView`-Controllers gebunden, deren
-einziger Rumpf `TODO("AI action: generate-part")` ist. Keine Streaming-Anzeige, kein vorläufiger
-Zustand, kein Annehmen/Verwerfen, kein Auflösen bei Teilwechsel, keine Verdrahtung an den
-`AiAction`-Port aus IP-17 – die gesamte Generierung gehört zum Plugin-System-Feature.
+Im Inspector-Abschnitt des Kapitels steht eine einzige KI-Schaltfläche „Kapitel generieren“ (auf
+Nutzerwunsch statt „Teil generieren“). Sie ist per FXML `onAction` an eine parameterlose Methode des
+`InspectorView`-Controllers gebunden, deren einziger Rumpf `TODO("AI action: generate-part")` ist.
+Keine Streaming-Anzeige, kein vorläufiger Zustand, kein Annehmen/Verwerfen, kein Auflösen bei
+Teilwechsel, keine Verdrahtung an den `AiAction`-Port aus IP-17 – die gesamte Generierung gehört zum
+Plugin-System-Feature.
 
 ### IP-21: In-Paragraph Sheet Split
 
@@ -688,7 +687,7 @@ IP-24✅┤  │                   │                       │
 IP-09✅ ──> IP-10✅
 IP-12✅┬─> IP-13✅
        ├─> IP-15
-       └─> IP-19
+       └─> IP-19✅
 IP-17✅  (Port bleibt für spätere Wiederverwendung; von IP-18/IP-19 nicht verdrahtet)
 IP-05✅, IP-07✅, IP-15 ──> IP-16
 IP-07✅, IP-08✅ ──> IP-06✅, IP-27
