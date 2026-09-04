@@ -150,21 +150,34 @@ class PaperFlowViewSkin(control: PaperFlowView) : SkinBase<PaperFlowView>(contro
      * the caret exactly where it was.
      */
     private fun rebuildStructure() {
+        // Step 1: remember which block (if any) currently has the caret, and at which offset, before
+        // every text control is thrown away below - `focusMemo` is the only way to find that block
+        // again afterwards, since its old `BlockPane` will no longer exist.
         val focused = blockPanes.values.firstOrNull { it.textArea.isFocused }
         val focusMemo = focused?.let { FocusMemo(it.blockIndex, it.textArea.caretPosition) }
+        // Snapshot of `lastRenderedText` as it stood after the *previous* rebuild - needed further
+        // below to tell whether the focused block's text actually changed, see the KDoc above.
         val previousText = lastRenderedText
 
+        // Step 2: throw away every existing block control and its node - the rebuild always starts
+        // from a blank container, there is no incremental diffing of old vs. new blocks.
         blockPanes.clear()
         blockContainer.children.clear()
 
         val geometry = skinnable.pageGeometry
         val layout = skinnable.documentLayout
         if (geometry == null || layout == null || layout.pages.isEmpty()) {
+            // Nothing to lay out yet (e.g. before the first layout pass ran): leave the container
+            // empty and reset the column width so no stale value survives into the next real layout.
             skinnable.setColumnWidth(0.0)
             lastRenderedText = emptyMap()
             return
         }
 
+        // Step 3: turn the layout's lines back into one BlockSegment per block (see segmentsOf), then
+        // create one BlockPane per segment and add it to the container, in reading order. A gap node
+        // is inserted before a segment whenever its own gapBefore says a real page turn happened, or -
+        // for segments that share a page - the small BLOCK_SPACING between two ordinary paragraphs.
         val segments = segmentsOf(layout)
         for (segment in segments) {
             if (segment.gapBefore) {
@@ -174,10 +187,18 @@ class PaperFlowViewSkin(control: PaperFlowView) : SkinBase<PaperFlowView>(contro
             }
             blockContainer.children.add(buildBlockPane(segment).stack)
         }
+        // Remember this rebuild's text per block, so the *next* rebuild can detect which block (if
+        // any) was actually edited by comparing against this map - see the class-level field's KDoc.
         lastRenderedText = segments.associate { it.blockIndex to it.text }
 
+        // Step 4: the column width every block reports and every break mark's on-screen position both
+        // depend on the freshly built controls' geometry, so this must run after they exist.
         relayout()
 
+        // Step 5: decide where the caret should end up after the rebuild. A caller-requested position
+        // (e.g. right after a split or merge) always wins; otherwise, if a block was focused before
+        // the rebuild, its caret is restored - shifted by the block's length delta when its own text
+        // changed underneath it, see rebuildStructure's own KDoc for why that shift is necessary.
         val caretTarget = skinnable.consumePendingCaretRequest() ?: focusMemo?.let { memo ->
             val oldText = previousText[memo.blockIndex]
             val newText = lastRenderedText[memo.blockIndex]
@@ -188,6 +209,8 @@ class PaperFlowViewSkin(control: PaperFlowView) : SkinBase<PaperFlowView>(contro
             }
             memo.blockIndex to caretPosition
         }
+        // Step 6: apply the decided caret target, if any block still exists at that index - a merge
+        // or removal can make the target index vanish, in which case no control is focused at all.
         caretTarget?.let { (blockIndex, caretPosition) ->
             blockPanes[blockIndex]?.let { pane ->
                 pane.textArea.requestFocus()
@@ -196,6 +219,7 @@ class PaperFlowViewSkin(control: PaperFlowView) : SkinBase<PaperFlowView>(contro
         }
     }
 
+    /** Builds a fixed-height spacer [Region] of [height], used between two neighbouring blocks. */
     private fun gapRegion(height: Double): Region {
         val region = Region()
         region.minHeight = height
@@ -208,6 +232,16 @@ class PaperFlowViewSkin(control: PaperFlowView) : SkinBase<PaperFlowView>(contro
     /**
      * Groups the lines of [layout] by the block they were set from, in reading order, reconstructing
      * each block's text and the offsets any page break inside it falls at.
+     *
+     * [DocumentLayout.pages] carries lines grouped by page, not by block, and a block may be wrapped
+     * across several pages - so the lines are first flattened back into one reading-order sequence
+     * ([PlacedLine]) and then re-grouped by [PlacedLine.blockIndex], one group per loop of the outer
+     * `while`. Walking a group's lines with the inner `while`, a page change between two consecutive
+     * lines - `previousPage.position != line.page.position` - is where the block's text keeps running
+     * but a page break falls inside it, recorded as a [PageBreakMark] at the current text length. A
+     * page change between the *last* line of one group and the *first* line of the next instead means
+     * the break falls between two blocks, becoming [BlockSegment.gapBefore] on the following segment
+     * rather than a mark inside either one.
      */
     private fun segmentsOf(layout: DocumentLayout): List<BlockSegment> {
         data class PlacedLine(val page: Page, val text: String, val blockIndex: Int)
@@ -216,6 +250,7 @@ class PaperFlowViewSkin(control: PaperFlowView) : SkinBase<PaperFlowView>(contro
         val segments = mutableListOf<BlockSegment>()
 
         var index = 0
+        // The page the previous group's last line sat on, to detect a gap *between* two blocks below.
         var previousGroupLastPage: Page? = null
         while (index < placedLines.size) {
             val blockIndex = placedLines[index].blockIndex
@@ -226,12 +261,15 @@ class PaperFlowViewSkin(control: PaperFlowView) : SkinBase<PaperFlowView>(contro
             var firstLineEnd = 0
             var lastLineStart = 0
 
+            // Consume every line of this one block, in order, before moving on to the next block.
             while (index < placedLines.size && placedLines[index].blockIndex == blockIndex) {
                 val line = placedLines[index]
                 if (firstPage == null) firstPage = line.page
+                // A page change *within* the block: record a mark, the text itself stays one run.
                 if (previousPage != null && previousPage.position != line.page.position) {
                     breaks.add(PageBreakMark(builder.length, line.page.pageNumber))
                 }
+                // Wrapped lines are rejoined with a single space, mirroring how the layout engine wraps.
                 if (builder.isNotEmpty()) builder.append(' ')
                 builder.append(line.text)
                 lastLineStart = builder.length - line.text.length
@@ -240,6 +278,7 @@ class PaperFlowViewSkin(control: PaperFlowView) : SkinBase<PaperFlowView>(contro
                 index++
             }
 
+            // A page change *between* this block's first line and the previous block's last one.
             val gapBefore = previousGroupLastPage != null && firstPage != null &&
                 previousGroupLastPage.position != firstPage.position
             segments.add(BlockSegment(blockIndex, builder.toString(), breaks, gapBefore, firstLineEnd, lastLineStart))
@@ -249,6 +288,7 @@ class PaperFlowViewSkin(control: PaperFlowView) : SkinBase<PaperFlowView>(contro
         return segments
     }
 
+    /** Builds one block's [BlockPane] - its [TextArea] and break-mark overlay - from [segment]. */
     private fun buildBlockPane(segment: BlockSegment): BlockPane {
         val pane = BlockPane(segment.blockIndex)
         pane.breaks = segment.breaks
@@ -435,7 +475,14 @@ class PaperFlowViewSkin(control: PaperFlowView) : SkinBase<PaperFlowView>(contro
         }
     }
 
-    /** @see PaperFlowView.scrollToBlock */
+    /**
+     * Scrolls [scrollPane] so that block [blockIndex] comes into view, converting its pixel offset
+     * inside [blockContainer] into the `0.0`..`1.0` fraction [ScrollPane.vvalue] expects. A container
+     * shorter than the viewport has nothing to scroll, so [maxScroll] is clamped to `0.0` and the
+     * fraction defaults to the top rather than dividing by a non-positive range.
+     *
+     * @see PaperFlowView.scrollToBlock
+     */
     fun scrollToBlock(blockIndex: Int) {
         val pane = blockPanes[blockIndex] ?: return
         val totalHeight = blockContainer.height.takeIf { it > 0.0 } ?: return
