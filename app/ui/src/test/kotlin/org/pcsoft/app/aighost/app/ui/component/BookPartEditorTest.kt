@@ -16,6 +16,8 @@ import de.saxsys.mvvmfx.MvvmFX
 import javafx.beans.property.SimpleObjectProperty
 import javafx.scene.Scene
 import javafx.scene.control.TextArea
+import javafx.scene.input.KeyCode
+import javafx.scene.input.KeyEvent
 import javafx.stage.Stage
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -210,4 +212,149 @@ class BookPartEditorTest : ApplicationTest() {
         assertEquals("My Novel", projectModel.value.book.title, "the title page must not be writable")
         assertFalse(undoStack.canUndoProperty.get(), "a read-only sheet records no undo entry")
     }
+
+    /**
+     * Use case: the user presses Enter in the middle of a paragraph, so it splits into two paragraphs
+     * and the caret lands at the start of the new second one; undoing restores the single paragraph.
+     */
+    @Test
+    fun splitsAParagraphAtTheCaretAndPlacesCaretAtTheNewParagraph() {
+        select(ProjectListItem.PrologItem(prolog))
+        val area = blocks().first { it.text == "The first paragraph." }
+        interact {
+            area.requestFocus()
+            area.positionCaret(10)
+        }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        interact { area.fireEvent(keyPressed(KeyCode.ENTER)) }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        assertEquals(listOf("The first ", "paragraph."), prolog.paragraph)
+        assertTrue(undoStack.canUndoProperty.get(), "a split must be undoable")
+        val newArea = blocks().first { it.text == "paragraph." }
+        assertTrue(newArea.isFocused, "the caret must land in the new second paragraph")
+        assertEquals(0, newArea.caretPosition, "the caret must sit at the start of the new paragraph")
+
+        interact { undoStack.undo() }
+        WaitForAsyncUtils.waitForFxEvents()
+        assertEquals(listOf("The first paragraph."), prolog.paragraph)
+    }
+
+    /**
+     * Use case: the user presses Backspace at the start of a paragraph, so it merges with the previous
+     * one and the caret lands at the former paragraph boundary; undoing restores both paragraphs.
+     */
+    @Test
+    fun mergesWithPreviousAndPlacesCaretAtTheFormerBoundary() {
+        interact {
+            projectModel.bookProperty.prologProperty.paragraphProperty
+                .setAll(listOf("First paragraph.", "Second paragraph."))
+        }
+        select(ProjectListItem.PrologItem(prolog))
+        val area = blocks().first { it.text == "Second paragraph." }
+        interact {
+            area.requestFocus()
+            area.positionCaret(0)
+        }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        interact { area.fireEvent(keyPressed(KeyCode.BACK_SPACE)) }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        assertEquals(listOf("First paragraph.Second paragraph."), prolog.paragraph)
+        assertTrue(undoStack.canUndoProperty.get(), "a merge must be undoable")
+        val mergedArea = blocks().first { it.text == "First paragraph.Second paragraph." }
+        assertTrue(mergedArea.isFocused, "the caret must stay on the merged paragraph")
+        assertEquals(16, mergedArea.caretPosition, "the caret must sit at the former paragraph boundary")
+
+        interact { undoStack.undo() }
+        WaitForAsyncUtils.waitForFxEvents()
+        assertEquals(listOf("First paragraph.", "Second paragraph."), prolog.paragraph)
+    }
+
+    /**
+     * Use case: the user moves a paragraph down with Ctrl+Shift+Down, so it swaps places with its
+     * neighbour and keeps the caret at the same offset it carried; undoing restores the order.
+     */
+    @Test
+    fun movesAParagraphDownAndKeepsItsCaretOffset() {
+        interact {
+            projectModel.bookProperty.prologProperty.paragraphProperty
+                .setAll(listOf("First paragraph.", "Second paragraph."))
+        }
+        select(ProjectListItem.PrologItem(prolog))
+        val area = blocks().first { it.text == "First paragraph." }
+        interact {
+            area.requestFocus()
+            area.positionCaret(3)
+        }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        interact { area.fireEvent(keyPressed(KeyCode.DOWN, control = true, shift = true)) }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        assertEquals(listOf("Second paragraph.", "First paragraph."), prolog.paragraph)
+        assertTrue(undoStack.canUndoProperty.get(), "a move must be undoable")
+        val movedArea = blocks().first { it.text == "First paragraph." }
+        assertTrue(movedArea.isFocused, "the caret must stay on the moved paragraph")
+        assertEquals(3, movedArea.caretPosition, "the caret must keep its offset after the move")
+
+        interact { undoStack.undo() }
+        WaitForAsyncUtils.waitForFxEvents()
+        assertEquals(listOf("First paragraph.", "Second paragraph."), prolog.paragraph)
+    }
+
+    /**
+     * Use case: Backspace at the start of the very first paragraph has no previous paragraph to merge
+     * with, so nothing changes and no undo entry is recorded.
+     */
+    @Test
+    fun mergingAtTheFirstParagraphIsANoOp() {
+        select(ProjectListItem.PrologItem(prolog))
+        val area = blocks().first { it.text == "The first paragraph." }
+        interact {
+            area.requestFocus()
+            area.positionCaret(0)
+        }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        interact { area.fireEvent(keyPressed(KeyCode.BACK_SPACE)) }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        assertEquals(listOf("The first paragraph."), prolog.paragraph)
+        assertFalse(undoStack.canUndoProperty.get(), "merging at the first paragraph must record no undo entry")
+    }
+
+    /**
+     * Use case: the user types several characters in a row at the end of a paragraph, so each one
+     * lands after the one typed before it - proving the fix for a defect where the caret was reset to
+     * its pre-edit offset on every rebuild, so a fast typist saw every new character appear in front
+     * of the previous one instead of after it.
+     */
+    @Test
+    fun caretAdvancesWhileTypingSeveralCharactersInARow() {
+        select(ProjectListItem.PrologItem(prolog))
+        var area = blocks().first { it.text == "The first paragraph." }
+        interact {
+            area.requestFocus()
+            area.positionCaret(area.text.length)
+        }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        for (character in "XYZ") {
+            area = blocks().first { it.isFocused }
+            write(character.toString())
+            WaitForAsyncUtils.waitForFxEvents()
+        }
+
+        area = blocks().first { it.isFocused }
+        assertEquals("The first paragraph.XYZ", area.text, "each character must land after the one typed before it")
+        assertEquals(23, area.caretPosition, "the caret must sit right after the last character typed")
+    }
+
+    private fun keyPressed(code: KeyCode, control: Boolean = false, shift: Boolean = false) = KeyEvent(
+        KeyEvent.KEY_PRESSED, "", "", code,
+        shift, control, false, false
+    )
 }

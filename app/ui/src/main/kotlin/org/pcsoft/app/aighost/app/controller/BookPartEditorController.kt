@@ -12,6 +12,7 @@
 
 package org.pcsoft.app.aighost.app.controller
 
+import javafx.beans.property.ListProperty
 import org.pcsoft.app.aighost.app.ui.component.ProjectListItem
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
 import org.pcsoft.app.aighost.fx.model.project.book.BookPartProperty
@@ -226,9 +227,7 @@ object BookPartEditorController {
             }
 
             is PartTarget.Paragraph -> {
-                val list =
-                    if (resolution.mode == PartMode.BLURB) blurbParagraphs(project) else boundPart?.paragraphProperty
-                list ?: return
+                val list = paragraphListProperty(project, resolution) ?: return
                 if (target.index in list.indices) {
                     list[target.index] = value
                 } else if (target.index == list.size) {
@@ -238,8 +237,92 @@ object BookPartEditorController {
         }
     }
 
+    /**
+     * Resolves the paragraph list a structural operation - split, merge, move or removal - acts on.
+     *
+     * @param project the open project, needed for the blurb whose paragraphs are not on [PartResolution.boundPart]
+     * @param resolution the resolved part
+     * @return the paragraph list, or `null` for a mode with no paragraphs of its own
+     */
+    fun paragraphListProperty(project: ProjectProperty, resolution: PartResolution): ListProperty<String>? =
+        when (resolution.mode) {
+            PartMode.BLURB -> blurbParagraphs(project)
+            PartMode.BOOK_PART -> resolution.boundPart?.paragraphProperty
+            else -> null
+        }
+
     private fun blurbParagraphs(project: ProjectProperty) =
         project.bookProperty.blurbProperty.paragraphProperty
+
+    /**
+     * Splits the paragraph at [index] into two, at [charOffset].
+     *
+     * @param paragraphs the paragraph list to split in
+     * @param index the paragraph to split
+     * @param charOffset the character offset the split falls at; `0` and the paragraph's own length
+     * are valid and yield an empty first or second half
+     * @return the paragraph list with the split applied
+     */
+    fun splitParagraph(paragraphs: List<String>, index: Int, charOffset: Int): List<String> {
+        val text = paragraphs[index]
+        val offset = charOffset.coerceIn(0, text.length)
+        val result = paragraphs.toMutableList()
+        result[index] = text.substring(0, offset)
+        result.add(index + 1, text.substring(offset))
+        return result
+    }
+
+    /**
+     * Merges the paragraph at [index] with a neighbour.
+     *
+     * @param paragraphs the paragraph list to merge in
+     * @param index the paragraph the merge was requested from
+     * @param withPrevious `true` to merge with the paragraph before it, `false` for the one after it
+     * @return the paragraph list with the merge applied, or `null` when [index] has no such neighbour
+     */
+    fun mergeParagraph(paragraphs: List<String>, index: Int, withPrevious: Boolean): List<String>? {
+        val otherIndex = if (withPrevious) index - 1 else index + 1
+        if (otherIndex !in paragraphs.indices) return null
+
+        val firstIndex = if (withPrevious) otherIndex else index
+        val secondIndex = if (withPrevious) index else otherIndex
+        val result = paragraphs.toMutableList()
+        result[firstIndex] = paragraphs[firstIndex] + paragraphs[secondIndex]
+        result.removeAt(secondIndex)
+        return result
+    }
+
+    /**
+     * Removes the paragraph at [index], keeping at least one paragraph.
+     *
+     * @param paragraphs the paragraph list to remove from
+     * @param index the paragraph to remove
+     * @return the paragraph list without that paragraph, or `null` when it is the only one left
+     */
+    fun removeParagraph(paragraphs: List<String>, index: Int): List<String>? {
+        if (paragraphs.size <= 1) return null
+        val result = paragraphs.toMutableList()
+        result.removeAt(index)
+        return result
+    }
+
+    /**
+     * Moves the paragraph at [index] one position towards the start or the end of the part.
+     *
+     * @param paragraphs the paragraph list to move in
+     * @param index the paragraph to move
+     * @param up `true` to move it towards the start, `false` towards the end
+     * @return the paragraph list with the move applied, or `null` when [index] already sits at that end
+     */
+    fun moveParagraph(paragraphs: List<String>, index: Int, up: Boolean): List<String>? {
+        val otherIndex = if (up) index - 1 else index + 1
+        if (otherIndex !in paragraphs.indices) return null
+
+        val result = paragraphs.toMutableList()
+        val moved = result.removeAt(index)
+        result.add(otherIndex, moved)
+        return result
+    }
 
     // A writable part needs at least one text control; an empty prolog gets one empty paragraph block.
     private fun ensureWritableBlock(

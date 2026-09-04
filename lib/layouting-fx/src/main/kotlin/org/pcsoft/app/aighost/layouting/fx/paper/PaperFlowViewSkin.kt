@@ -76,7 +76,11 @@ class PaperFlowViewSkin(control: PaperFlowView) : SkinBase<PaperFlowView>(contro
         val blockIndex: Int,
         val text: String,
         val breaks: List<PageBreakMark>,
-        val gapBefore: Boolean
+        val gapBefore: Boolean,
+        /** Character offset the block's first wrapped line ends at, exclusive. */
+        val firstLineEnd: Int,
+        /** Character offset the block's last wrapped line starts at. */
+        val lastLineStart: Int
     )
 
     /** The nodes making up one block: its text control and the overlay its break marks are drawn on. */
@@ -85,12 +89,27 @@ class PaperFlowViewSkin(control: PaperFlowView) : SkinBase<PaperFlowView>(contro
         val overlay = Pane()
         val stack = StackPane(textArea, overlay)
         var breaks: List<PageBreakMark> = emptyList()
+
+        // Real wrapped-line boundaries from the layout engine, the same source of truth the break
+        // marks use - not the control's own text layout, which this codebase never reaches into. Up
+        // and Down only cross into the neighbouring block once the caret sits on the outermost of
+        // these wrapped lines, the same way a native multi-line field only exits at its own edge.
+        var firstLineEnd: Int = 0
+        var lastLineStart: Int = 0
     }
 
     private val scrollPane = ScrollPane()
     private val blockContainer = VBox()
     private val blockPanes: MutableMap<Int, BlockPane> = LinkedHashMap()
     private val relayoutDebounce = PauseTransition(Duration.millis(RELAYOUT_DEBOUNCE_MS))
+
+    // The text every block carried right after the previous rebuild, keyed by block index. A text
+    // control's own textProperty already reports the new value by the time its invalidation listener
+    // runs - only its caretPosition still lags behind, updated by the control's default behaviour only
+    // once that notification returns - so the *old* text a rebuild needs to detect an edit against can
+    // never be read off the control being rebuilt itself; it has to be remembered from the rebuild
+    // before.
+    private var lastRenderedText: Map<Int, String> = emptyMap()
 
     init {
         blockContainer.styleClass.add("paper-flow-view-container")
@@ -114,13 +133,26 @@ class PaperFlowViewSkin(control: PaperFlowView) : SkinBase<PaperFlowView>(contro
     private fun contentWidth(geometry: PageGeometry): Double =
         (geometry.width - geometry.innerMargin - geometry.outerMargin).coerceAtLeast(0.0)
 
+    /** The focused block's identity right before a rebuild: its index and its (still stale) caret. */
+    private data class FocusMemo(val blockIndex: Int, val caretPosition: Int)
+
     /**
      * Rebuilds every block's text control from scratch, keeping the caret and the focus of the block
      * that carried it before the rebuild - a fresh [DocumentLayout] must not interrupt typing.
+     *
+     * A rebuild reacting to the very keystroke that changed the focused block's own text runs from
+     * inside that block's own `textProperty` invalidation: the property already reports the new text
+     * at that point, but [TextArea.caretPositionProperty] is only advanced by the control's default
+     * behaviour once that notification returns - so the caret memorised here is the *pre-edit* offset.
+     * Comparing [lastRenderedText] - the text the block carried after the previous rebuild - against
+     * the new text handed in this time and shifting the memorised caret by the length difference
+     * corrects for that; a plain restyling, where the text at that block index never changes, leaves
+     * the caret exactly where it was.
      */
     private fun rebuildStructure() {
         val focused = blockPanes.values.firstOrNull { it.textArea.isFocused }
-        val caretMemo = focused?.let { it.blockIndex to it.textArea.caretPosition }
+        val focusMemo = focused?.let { FocusMemo(it.blockIndex, it.textArea.caretPosition) }
+        val previousText = lastRenderedText
 
         blockPanes.clear()
         blockContainer.children.clear()
@@ -129,10 +161,12 @@ class PaperFlowViewSkin(control: PaperFlowView) : SkinBase<PaperFlowView>(contro
         val layout = skinnable.documentLayout
         if (geometry == null || layout == null || layout.pages.isEmpty()) {
             skinnable.setColumnWidth(0.0)
+            lastRenderedText = emptyMap()
             return
         }
 
-        for (segment in segmentsOf(layout)) {
+        val segments = segmentsOf(layout)
+        for (segment in segments) {
             if (segment.gapBefore) {
                 blockContainer.children.add(gapRegion(PAGE_GAP))
             } else if (blockContainer.children.isNotEmpty()) {
@@ -140,13 +174,24 @@ class PaperFlowViewSkin(control: PaperFlowView) : SkinBase<PaperFlowView>(contro
             }
             blockContainer.children.add(buildBlockPane(segment).stack)
         }
+        lastRenderedText = segments.associate { it.blockIndex to it.text }
 
         relayout()
 
-        caretMemo?.let { (blockIndex, caretPosition) ->
+        val caretTarget = skinnable.consumePendingCaretRequest() ?: focusMemo?.let { memo ->
+            val oldText = previousText[memo.blockIndex]
+            val newText = lastRenderedText[memo.blockIndex]
+            val caretPosition = if (oldText != null && newText != null && newText != oldText) {
+                memo.caretPosition + (newText.length - oldText.length)
+            } else {
+                memo.caretPosition
+            }
+            memo.blockIndex to caretPosition
+        }
+        caretTarget?.let { (blockIndex, caretPosition) ->
             blockPanes[blockIndex]?.let { pane ->
                 pane.textArea.requestFocus()
-                pane.textArea.positionCaret(caretPosition.coerceAtMost(pane.textArea.text.length))
+                pane.textArea.positionCaret(caretPosition.coerceIn(0, pane.textArea.text.length))
             }
         }
     }
@@ -178,6 +223,8 @@ class PaperFlowViewSkin(control: PaperFlowView) : SkinBase<PaperFlowView>(contro
             val breaks = mutableListOf<PageBreakMark>()
             var previousPage: Page? = null
             var firstPage: Page? = null
+            var firstLineEnd = 0
+            var lastLineStart = 0
 
             while (index < placedLines.size && placedLines[index].blockIndex == blockIndex) {
                 val line = placedLines[index]
@@ -187,13 +234,15 @@ class PaperFlowViewSkin(control: PaperFlowView) : SkinBase<PaperFlowView>(contro
                 }
                 if (builder.isNotEmpty()) builder.append(' ')
                 builder.append(line.text)
+                lastLineStart = builder.length - line.text.length
+                if (previousPage == null) firstLineEnd = builder.length
                 previousPage = line.page
                 index++
             }
 
             val gapBefore = previousGroupLastPage != null && firstPage != null &&
                 previousGroupLastPage.position != firstPage.position
-            segments.add(BlockSegment(blockIndex, builder.toString(), breaks, gapBefore))
+            segments.add(BlockSegment(blockIndex, builder.toString(), breaks, gapBefore, firstLineEnd, lastLineStart))
             previousGroupLastPage = previousPage
         }
 
@@ -203,6 +252,8 @@ class PaperFlowViewSkin(control: PaperFlowView) : SkinBase<PaperFlowView>(contro
     private fun buildBlockPane(segment: BlockSegment): BlockPane {
         val pane = BlockPane(segment.blockIndex)
         pane.breaks = segment.breaks
+        pane.firstLineEnd = segment.firstLineEnd
+        pane.lastLineStart = segment.lastLineStart
         pane.overlay.isMouseTransparent = true
         pane.overlay.styleClass.add("paper-flow-view-break-overlay")
 
@@ -241,7 +292,17 @@ class PaperFlowViewSkin(control: PaperFlowView) : SkinBase<PaperFlowView>(contro
 
         val pasteMenuItem = MenuItem("Paste as plain text")
         pasteMenuItem.setOnAction { pastePlainText(textArea) }
-        textArea.contextMenu = ContextMenu(pasteMenuItem, MenuItem("Remove block").apply {
+        val moveUpMenuItem = MenuItem("Move paragraph up").apply {
+            setOnAction {
+                skinnable.paperFlowListeners.forEach { it.onMoveRequested(blockIndex, up = true) }
+            }
+        }
+        val moveDownMenuItem = MenuItem("Move paragraph down").apply {
+            setOnAction {
+                skinnable.paperFlowListeners.forEach { it.onMoveRequested(blockIndex, up = false) }
+            }
+        }
+        textArea.contextMenu = ContextMenu(pasteMenuItem, moveUpMenuItem, moveDownMenuItem, MenuItem("Remove block").apply {
             setOnAction {
                 skinnable.paperFlowListeners.forEach { it.onRemoveRequested(blockIndex) }
             }
@@ -282,8 +343,52 @@ class PaperFlowViewSkin(control: PaperFlowView) : SkinBase<PaperFlowView>(contro
                 event.consume()
             }
 
+            KeyCode.UP -> when {
+                event.isControlDown && event.isShiftDown -> {
+                    skinnable.paperFlowListeners.forEach { it.onMoveRequested(pane.blockIndex, up = true) }
+                    event.consume()
+                }
+
+                !event.isControlDown && !event.isShiftDown && !event.isAltDown &&
+                    textArea.caretPosition <= pane.firstLineEnd && textArea.selectedText.isEmpty() -> {
+                    if (focusAdjacentBlock(pane.blockIndex, delta = -1, caretAtEnd = true)) event.consume()
+                }
+            }
+
+            KeyCode.DOWN -> when {
+                event.isControlDown && event.isShiftDown -> {
+                    skinnable.paperFlowListeners.forEach { it.onMoveRequested(pane.blockIndex, up = false) }
+                    event.consume()
+                }
+
+                !event.isControlDown && !event.isShiftDown && !event.isAltDown &&
+                    textArea.caretPosition >= pane.lastLineStart && textArea.selectedText.isEmpty() -> {
+                    if (focusAdjacentBlock(pane.blockIndex, delta = 1, caretAtEnd = false)) event.consume()
+                }
+            }
+
             else -> {}
         }
+    }
+
+    /**
+     * Moves the focus from [blockIndex] to the block right before or after it, placing the caret at
+     * the end or the start of its text - the plain Up/Down counterpart to Ctrl+Shift+Up/Down
+     * ([PaperFlowListener.onMoveRequested]), staying entirely inside this skin since no block, no text
+     * and no order changes, only where the caret sits.
+     *
+     * @param blockIndex the block the arrow key was pressed in
+     * @param delta `-1` for the block before it, `1` for the block after it
+     * @param caretAtEnd `true` to place the caret at the end of the target block's text, `false` for
+     * its start
+     * @return `true` if such a neighbouring block exists and took the focus, `false` at the first or
+     * the last block, where the key press is left for the control's own default handling
+     */
+    private fun focusAdjacentBlock(blockIndex: Int, delta: Int, caretAtEnd: Boolean): Boolean {
+        val pane = blockPanes[blockIndex + delta] ?: return false
+        pane.textArea.requestFocus()
+        pane.textArea.positionCaret(if (caretAtEnd) pane.textArea.text.length else 0)
+        return true
     }
 
     /**

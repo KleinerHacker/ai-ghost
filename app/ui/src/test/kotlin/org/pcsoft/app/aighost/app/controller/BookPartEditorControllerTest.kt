@@ -323,4 +323,105 @@ class BookPartEditorControllerTest {
         assertEquals("", BookPartEditorController.readModel(project, resolution, PartTarget.Title))
         assertFalse(BookPartEditorController.readModel(project, resolution, PartTarget.Paragraph(0)).isEmpty())
     }
+
+    /**
+     * Use case: the resolved part's paragraph list is looked up for a book part, for the blurb, and
+     * not at all for a read-only or empty mode.
+     */
+    @Test
+    fun resolvesTheParagraphListPerMode() {
+        val bookPartResolution =
+            BookPartEditorController.resolve(project, ProjectListItem.PrologItem(project.value.book.prolog))
+        val blurbResolution = BookPartEditorController.resolve(project, ProjectListItem.BlurbItem(project.value.book.blurb))
+        val titleResolution = BookPartEditorController.resolve(project, ProjectListItem.TitlePageItem)
+
+        assertSame(
+            project.bookProperty.prologProperty.paragraphProperty,
+            BookPartEditorController.paragraphListProperty(project, bookPartResolution)
+        )
+        assertSame(
+            project.bookProperty.blurbProperty.paragraphProperty,
+            BookPartEditorController.paragraphListProperty(project, blurbResolution)
+        )
+        assertNull(BookPartEditorController.paragraphListProperty(project, titleResolution))
+    }
+
+    /**
+     * Use case: splitting in the middle of a paragraph yields two paragraphs whose concatenation
+     * reconstructs the original text exactly - the character-range round trip the sheet relies on.
+     */
+    @Test
+    fun splitsAParagraphAtTheGivenOffset() {
+        val result = BookPartEditorController.splitParagraph(listOf("Once upon a time."), 0, 10)
+
+        assertEquals(listOf("Once upon ", "a time."), result)
+        assertEquals("Once upon a time.", result[0] + result[1])
+    }
+
+    /**
+     * Use case: splitting at offset zero or at the paragraph's own length yields an empty first or
+     * second half instead of merging back with a neighbour.
+     */
+    @Test
+    fun splitsAtTheParagraphBoundaryWithoutMerging() {
+        assertEquals(listOf("", "Text"), BookPartEditorController.splitParagraph(listOf("Text"), 0, 0))
+        assertEquals(listOf("Text", ""), BookPartEditorController.splitParagraph(listOf("Text"), 0, 4))
+    }
+
+    /**
+     * Use case: merging a paragraph with its previous or its next neighbour concatenates the two texts
+     * and removes the other paragraph from the list.
+     */
+    @Test
+    fun mergesAParagraphWithEitherNeighbour() {
+        val paragraphs = listOf("First.", "Second.", "Third.")
+
+        assertEquals(
+            listOf("First.Second.", "Third."),
+            BookPartEditorController.mergeParagraph(paragraphs, 1, withPrevious = true)
+        )
+        assertEquals(
+            listOf("First.", "Second.Third."),
+            BookPartEditorController.mergeParagraph(paragraphs, 1, withPrevious = false)
+        )
+    }
+
+    /**
+     * Use case: merging at the very first or the very last paragraph has no such neighbour, so nothing
+     * happens.
+     */
+    @Test
+    fun mergingAtTheOuterEdgesIsANoOp() {
+        val paragraphs = listOf("First.", "Second.")
+
+        assertNull(BookPartEditorController.mergeParagraph(paragraphs, 0, withPrevious = true))
+        assertNull(BookPartEditorController.mergeParagraph(paragraphs, 1, withPrevious = false))
+    }
+
+    /**
+     * Use case: removing a paragraph drops it from the list, but the only remaining paragraph of a
+     * part is never removed, so there is always somewhere left to type.
+     */
+    @Test
+    fun removesAParagraphButKeepsTheLastOne() {
+        assertEquals(
+            listOf("First.", "Third."),
+            BookPartEditorController.removeParagraph(listOf("First.", "Second.", "Third."), 1)
+        )
+        assertNull(BookPartEditorController.removeParagraph(listOf("Only one."), 0))
+    }
+
+    /**
+     * Use case: moving a paragraph up or down swaps it with its neighbour; moving it past the start or
+     * the end of the list is a no-op.
+     */
+    @Test
+    fun movesAParagraphUpAndDown() {
+        val paragraphs = listOf("First.", "Second.", "Third.")
+
+        assertEquals(listOf("Second.", "First.", "Third."), BookPartEditorController.moveParagraph(paragraphs, 1, up = true))
+        assertEquals(listOf("First.", "Third.", "Second."), BookPartEditorController.moveParagraph(paragraphs, 1, up = false))
+        assertNull(BookPartEditorController.moveParagraph(paragraphs, 0, up = true))
+        assertNull(BookPartEditorController.moveParagraph(paragraphs, 2, up = false))
+    }
 }

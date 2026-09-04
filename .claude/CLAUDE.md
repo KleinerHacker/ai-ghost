@@ -1,7 +1,9 @@
 # Global Rules
 
 * NEVER EVER save memories!!!
-* Create subagents IS LIMITED to a DEPTH of one agent 
+* Create subagents chain IS LIMITED to a DEPTH of one agent - ONLY the top-level session ("main",
+  never a subagent) MAY start an agent, of any subagent_type including "fork" and remote/isolated
+  ones; resuming an already-running agent via SendMessage is not creation and stays allowed
 
 ## Skills
 
@@ -28,14 +30,14 @@
 
 ## Limiting search
 
-* NEVER decompile or reflect depending on third party class
+* NEVER decompile or reflect on a third-party class
   * If this is required, ask the user first
 
 ## Console / CLI Output
 
-* On Console or in CLI: MUST ALWAYS in GERMANY
-* Plans printed on Console MUST ALWAYS in GERMANY
+* On Console or in CLI: MUST ALWAYS BE IN GERMAN
+* Plans printed on Console MUST ALWAYS BE IN GERMAN
 
 ## File Output
 
-* Into files: MUST ALWAYS in ENGLISH
+* Into files: MUST ALWAYS BE IN ENGLISH

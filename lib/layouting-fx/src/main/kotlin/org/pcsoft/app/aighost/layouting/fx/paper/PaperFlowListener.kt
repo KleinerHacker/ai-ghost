@@ -72,4 +72,12 @@ interface PaperFlowListener {
      * @param blockIndex Index of the block to remove.
      */
     fun onRemoveRequested(blockIndex: Int) {}
+
+    /**
+     * The person asked to move the block at [blockIndex] one position towards the start or the end.
+     *
+     * @param blockIndex Index of the block to move.
+     * @param up `true` to move it towards the start of the document, `false` towards the end.
+     */
+    fun onMoveRequested(blockIndex: Int, up: Boolean) {}
 }

@@ -123,6 +123,33 @@ class PaperFlowView : Control() {
         (skin as? PaperFlowViewSkin)?.scrollToBlock(blockIndex)
     }
 
+    private var pendingCaretRequest: Pair<Int, Int>? = null
+
+    /**
+     * Places the caret at [charOffset] of the block at [blockIndex] once the next
+     * [documentLayoutProperty] is applied, taking priority over the caret this view would otherwise
+     * keep at the block it sat in before.
+     *
+     * A caller uses this after it applied a structural change - a split, a merge, a move or a removal
+     * of a block - where the caret must land on a block or an offset different from the one it sat at
+     * before the change, right before handing the freshly recomputed
+     * [org.pcsoft.app.aighost.layouting.DocumentLayout] back in.
+     *
+     * @param blockIndex Index of the block the caret should land in, matching
+     *   [org.pcsoft.app.aighost.layouting.LaidOutLine.blockIndex] of the layout about to be applied.
+     * @param charOffset Character offset inside that block's text the caret should land at.
+     */
+    fun requestCaret(blockIndex: Int, charOffset: Int) {
+        pendingCaretRequest = blockIndex to charOffset
+    }
+
+    /** Consumes the caret request set by [requestCaret], if any; called by the skin only. */
+    internal fun consumePendingCaretRequest(): Pair<Int, Int>? {
+        val request = pendingCaretRequest
+        pendingCaretRequest = null
+        return request
+    }
+
     override fun createDefaultSkin(): Skin<*> = PaperFlowViewSkin(this)
 
     override fun getUserAgentStylesheet(): String =

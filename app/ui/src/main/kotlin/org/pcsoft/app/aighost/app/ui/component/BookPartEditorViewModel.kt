@@ -27,6 +27,7 @@ import org.pcsoft.app.aighost.app.controller.BookPartEditorController
 import org.pcsoft.app.aighost.app.controller.IoController
 import org.pcsoft.app.aighost.app.controller.PartMode
 import org.pcsoft.app.aighost.app.controller.PartTarget
+import org.pcsoft.app.aighost.app.undo.ParagraphListUndoEntry
 import org.pcsoft.app.aighost.app.undo.UndoStack
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
 import org.pcsoft.app.aighost.layouting.DocumentLayout
@@ -46,15 +47,21 @@ import org.pcsoft.app.aighost.layouting.model.common.toPageGeometry
  * in once through [attach].
  *
  * The domain logic - routing a tree node onto a part, assembling the sheet from the model and the
- * design, mapping a block back onto a manuscript field - lives in [BookPartEditorController]. This
- * view model keeps only what has a lifetime: the flow view it drives, the [IncrementalLineBreaker]
- * with its per-keystroke cache, one [StringProperty] per editable block for the undo history, the
- * caret and the current [BookPartEditorController.PartResolution].
+ * design, mapping a block back onto a manuscript field, and the pure paragraph-list transforms behind
+ * split, merge, move and removal - lives in [BookPartEditorController]. This view model keeps only
+ * what has a lifetime: the flow view it drives, the [IncrementalLineBreaker] with its per-keystroke
+ * cache, one [StringProperty] per editable block for the undo history, the caret and the current
+ * [BookPartEditorController.PartResolution].
  *
  * Every keystroke reported by [PaperFlowView] is written into the model and folded into a single undo
  * entry per block for the length of a typing pause; the layout on the sheet is recomputed after every
  * change and after every design change, so the caret survives a restyling. Only the block that
  * changed is measured again, the rest is read from the incremental breaker.
+ *
+ * A split, a merge, a move or a removal reported by [PaperFlowView] is a structural change of a whole
+ * paragraph list instead of a single block's text: it is never folded with a keystroke, always ends a
+ * running merge first, always pushes exactly one [ParagraphListUndoEntry], and always moves the caret
+ * to the block and offset the operation implies before the sheet is recomputed.
  *
  * The component follows only models handed to it and registers nothing in a global registry, so the
  * `showingBinding` pattern of `fx-component-lifecycle` does not apply here, the same as for
@@ -155,6 +162,56 @@ class BookPartEditorViewModel : ViewModel {
                 undoStack?.endMerging()
                 focusedBlock = null
             }
+        }
+
+        override fun onSplitRequested(blockIndex: Int, charIndex: Int) {
+            applyParagraphOperation(
+                label = Messages["component.bookPartEditor.undo.split"],
+                blockIndex = blockIndex,
+                transform = { paragraphs, index ->
+                    BookPartEditorController.splitParagraph(paragraphs, index, charIndex)
+                },
+                caretAfterOf = { _, _, index, leadingCount -> (leadingCount + index + 1) to 0 },
+            )
+        }
+
+        override fun onMergeRequested(blockIndex: Int, withPrevious: Boolean) {
+            applyParagraphOperation(
+                label = Messages["component.bookPartEditor.undo.merge"],
+                blockIndex = blockIndex,
+                transform = { paragraphs, index ->
+                    BookPartEditorController.mergeParagraph(paragraphs, index, withPrevious)
+                },
+                caretAfterOf = { before, _, index, leadingCount ->
+                    if (withPrevious) {
+                        (leadingCount + index - 1) to before[index - 1].length
+                    } else {
+                        (leadingCount + index) to before[index].length
+                    }
+                },
+            )
+        }
+
+        override fun onRemoveRequested(blockIndex: Int) {
+            applyParagraphOperation(
+                label = Messages["component.bookPartEditor.undo.remove"],
+                blockIndex = blockIndex,
+                transform = { paragraphs, index -> BookPartEditorController.removeParagraph(paragraphs, index) },
+                caretAfterOf = { _, after, index, leadingCount ->
+                    if (index > 0) (leadingCount + index - 1) to after[index - 1].length else leadingCount to 0
+                },
+            )
+        }
+
+        override fun onMoveRequested(blockIndex: Int, up: Boolean) {
+            applyParagraphOperation(
+                label = Messages["component.bookPartEditor.undo.move"],
+                blockIndex = blockIndex,
+                transform = { paragraphs, index -> BookPartEditorController.moveParagraph(paragraphs, index, up) },
+                caretAfterOf = { _, _, index, leadingCount ->
+                    (leadingCount + (if (up) index - 1 else index + 1)) to caretOffset
+                },
+            )
         }
     }
 
@@ -264,6 +321,64 @@ class BookPartEditorViewModel : ViewModel {
             text,
             mergeKey = resolution.partId to target
         )
+        recompute()
+    }
+
+    /**
+     * Applies a structural change to the paragraph list of the resolved part - a split, a merge, a
+     * move or a removal - as a single transaction: the list, the layout and the caret target all move
+     * together, and exactly one undo entry is pushed for it.
+     *
+     * @param label undo label of the operation
+     * @param blockIndex block the operation was requested from; ignored unless it names a paragraph -
+     * a heading block never takes part in a structural change
+     * @param transform pure paragraph-list transform from [BookPartEditorController]; `null` signals
+     * that [blockIndex]'s paragraph has no such neighbour or position, so nothing happens
+     * @param caretAfterOf computes the caret's block index and character offset once [transform]
+     * succeeded, given the list before and after the change and the paragraph index the operation
+     * started from
+     */
+    private fun applyParagraphOperation(
+        label: String,
+        blockIndex: Int,
+        transform: (paragraphs: List<String>, index: Int) -> List<String>?,
+        caretAfterOf: (before: List<String>, after: List<String>, index: Int, leadingCount: Int) -> Pair<Int, Int>,
+    ) {
+        if (mode.value != PartMode.BOOK_PART && mode.value != PartMode.BLURB) return
+        val target = targets.getOrNull(blockIndex) as? PartTarget.Paragraph ?: return
+        val projectProperty = project ?: return
+        val list = BookPartEditorController.paragraphListProperty(projectProperty, resolution) ?: return
+
+        val before = list.toList()
+        val after = transform(before, target.index) ?: return
+
+        undoStack?.endMerging()
+        targetProperties.clear()
+
+        val leadingCount = targets.indexOfFirst { it is PartTarget.Paragraph }.let { if (it < 0) 0 else it }
+        val caretBefore = (leadingCount + target.index) to caretOffset
+        val caretAfter = caretAfterOf(before, after, target.index, leadingCount)
+
+        list.setAll(after)
+        restoreCaret(caretAfter.first, caretAfter.second)
+
+        undoStack?.push(
+            ParagraphListUndoEntry(
+                label = label,
+                paragraphs = list,
+                before = before,
+                after = after,
+                caretBefore = caretBefore,
+                caretAfter = caretAfter,
+                restoreCaret = ::restoreCaret,
+            )
+        )
+    }
+
+    // Places the caret at blockIndex/charOffset once the layout about to be pushed by recompute() is
+    // applied, and recomputes it - the one place that turns a caret target into both.
+    private fun restoreCaret(blockIndex: Int, charOffset: Int) {
+        paperFlowView.requestCaret(blockIndex, charOffset)
         recompute()
     }
 
