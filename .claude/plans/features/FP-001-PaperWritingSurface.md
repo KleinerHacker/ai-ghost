@@ -69,9 +69,13 @@ rechts, der alles trägt, was kein gedruckter Text ist, und ein **Modus-Schalter
   Buch, nicht über die Existenz.
 * **Der Klappentext** ist Umschlagtext: immer das letzte Blatt, durch eine harte Kante abgesetzt, ohne
   Seitenzahl.
-* **KI** sitzt dort, wo ihre Arbeitseinheit ist: eine schwebende Leiste am fokussierten Block, eine
-  Aktion auf Teil-Ebene im Inspector. Ein generierter Teil ist vorläufig und wird angenommen oder
-  verworfen; ein umgeschriebener Absatz wird sofort ersetzt und über Undo zurückgenommen.
+* **KI** ist in diesem Feature nur eine Schaltfläche ohne Wirkung: eine schwebende Leiste am
+  fokussierten Block mit Umschreiben, Ausbauen und Kürzen, dazu eine Aktion auf Teil-Ebene im
+  Inspector. Jede dieser Schaltflächen ruft im `*View`-Controller eine leere, parameterlose Methode,
+  deren einziger Rumpf `TODO("AI action: …")` ist. Kein Aufruf, kein Ergebnis, keine vorläufige
+  Anzeige. Der Aktions-Port aus IP-17 liegt fertig in `lib/ai`, wird von diesem Feature aber nicht
+  verdrahtet und bleibt für eine spätere Wiederverwendung stehen; ein Provider kommt erst mit dem
+  späteren Plugin-System-Feature.
 * **Design**-Änderungen wirken sofort auf dem Papier.
 
 ## 4. Anforderungen
@@ -90,7 +94,7 @@ rechts, der alles trägt, was kein gedruckter Text ist, und ein **Modus-Schalter
   als Markierungslinie mit der Seitenzahl innerhalb eines Absatzes.
 * Absätze sind die Bearbeitungseinheit: erstellen, teilen, verbinden, löschen, umsortieren.
 * Nirgends Inline-Zeichenformatierung; eingefügter Rich-Text wird auf reinen Text reduziert.
-* Jede Textänderung, jede Strukturänderung und jedes angewandte KI-Ergebnis ist undo- und redo-fähig.
+* Jede Textänderung und jede Strukturänderung ist undo- und redo-fähig.
 * Prompts, Teildaten und Designstile leben im Inspector, Seitenformat und Ränder im
   Projekteinstellungsdialog – nie auf dem Papier.
 * Die Vorschau rendert das ganze Buch und scrollt zu dem im Baum gewählten Teil; ein Absatz fällt in
@@ -137,12 +141,14 @@ lib/ai-ghost-layouting-model   lib/ai-ghost-layouting-fx   (JavaFX-Komponentenbi
 * **`lib/layouting-fx`** – Messen (Schriftkatalog, Auflösung, JavaFX-`TextMetrics`) und Zeichnen
   (`PaperPageView`, `PaperFlowView`) in einem Modul, Pakete `...layouting.fx.font`, `.control`,
   `.skin` plus eigenes Stylesheet.
-* **`lib/ai-ghost-ai`** – nur der Aktions-Port (`rewrite`, `expand`, `shorten`, `generatePart`). Keine
-  Implementierung, weder Stub noch echt, wird in diesem Feature ausgeliefert; ein Provider wird später
-  über das Plugin-System eines eigenen Features verdrahtet. Jede Aufrufstelle trägt bis dahin ein
-  offenes TODO.
-* **`app/ui`** – `BookPartEditor`, `Inspector`, `AiActionBar`, der überarbeitete `Editor` und sein
-  Routing, Undo, die `FontData`-Übersetzung und der Metrik-Fingerabdruck.
+* **`lib/ai-ghost-ai`** – trägt den Aktions-Port aus IP-17 (`AiAction`, `AiActionRequest`, Callbacks,
+  `AiActionLimits`, `ParagraphSplitter`), ohne Implementierung. Dieses Feature verdrahtet ihn nicht;
+  er bleibt für eine spätere Wiederverwendung stehen. Die KI-Schaltflächen rufen nur eine leere
+  `*View`-Methode mit `TODO(...)`. Ein Provider kommt erst über das Plugin-System eines eigenen,
+  späteren Features.
+* **`app/ui`** – `BookPartEditor`, `Inspector`, `AiActionBar` (nur Schaltflächen, jede ruft eine leere
+  `*View`-Methode mit `TODO(...)`), der überarbeitete `Editor` und sein Routing, Undo, die
+  `FontData`-Übersetzung und der Metrik-Fingerabdruck.
 
 **Modellerweiterung.** `Design` bekommt `PageFormat` und Zeilenabstand je Elementklasse; `FontData`
 bekommt den Metrik-Fingerabdruck; `Book` trägt Prolog, Epilog und Klappentext immer, jeweils mit
@@ -190,9 +196,9 @@ entfernt. Die Nummerierung wird stabil gehalten statt neu nummeriert.
 | IP-14 | Project Settings Dialog ✅                 | Seitenformat, Ränder und Leerseiten in einem Dialog                  | IP-02                |
 | IP-15 | Editor Arrangement And Tree Routing       | Drei Zonen, Routing jedes Baumknotens, View-Zustand persistiert      | IP-11, IP-12         |
 | IP-16 | Writing And Preview Modes                 | Modus-Schalter, Vorschau des ganzen Buches, Scrollen, Virtualisierung| IP-05, IP-07, IP-15  |
-| IP-17 | AI Action Port ✅                          | Aktionsschnittstelle in `lib/ai`, keine Implementierung, TODO für den Provider | -          |
-| IP-18 | AI Actions On Paragraph And Heading       | Schwebende Aktionsleiste an den Port verdrahtet, TODO wo sie feuern würde | IP-10, IP-17    |
-| IP-19 | AI Part Generation With Provisional State | Vorläufige Anzeige an den Port verdrahtet, TODO wo sie feuern würde  | IP-12, IP-17         |
+| IP-17 | AI Action Port ✅                          | Aktionsschnittstelle in `lib/ai`, keine Implementierung, bleibt für spätere Wiederverwendung | -          |
+| IP-18 | AI Actions On Paragraph And Heading       | Schwebende KI-Leiste; jede Schaltfläche ruft eine leere `*View`-Methode mit `TODO(...)` | IP-10                |
+| IP-19 | AI Part Generation (nur Schaltfläche)     | KI-Schaltfläche im Inspector-Teilabschnitt, ruft eine leere `*View`-Methode mit `TODO(...)` | IP-12         |
 | IP-21 | In-Paragraph Sheet Split                  | Echte Blattlücke innerhalb eines Absatzes beim Schreiben (optional)  | IP-11                |
 | IP-23 | Optional Book Parts In The Tree           | Kontrollkästchen schaltet Prolog, Epilog und Klappentext ins Buch    | IP-15, IP-24         |
 
@@ -616,26 +622,31 @@ an von `lib/model` und Arrow ab. Tests decken nur die beiden reinen Funktionen a
 und `ParagraphSplitter`, da keine `AiAction`-Implementierung existiert, gegen die getestet werden
 könnte.
 
+Der Port bleibt unverändert erhalten und wird auf Wunsch des Nutzers für eine spätere
+Wiederverwendung nicht zurückgebaut. IP-18 und IP-19 verdrahten ihn in diesem Feature dennoch nicht –
+ihre KI-Schaltflächen rufen nur eine leere `*View`-Methode mit `TODO(...)`.
+
 ### IP-18: AI Actions On Paragraph And Heading
 
 Plan: `FP-001-IP-18-AiAktionenAmAbsatz.md`
 
-Ein Absatzergebnis ersetzt direkt, da Undo bereits existiert; ein Vergleichsschritt würde mehr kosten
-als er schützt. Die Aktionsleiste ist ein Overlay der Anwendung über dem Knoten der Bibliothek und
-findet ihren Block über die Fokusereignisse von IP-08 – die Bibliothek bekommt keinen Begriff von
-einer KI. Die Leiste und ihre Verkabelung zu `lib/ai` werden durchgängig gebaut; nur der Aufruf in
-einen tatsächlichen Provider fehlt, markiert mit einem offenen `TODO`, das auf das künftige
-plugin-basierte Provider-Feature verweist.
+Die schwebende Leiste am fokussierten Block wird als reine Bedienoberfläche gebaut: Umschreiben,
+Ausbauen und Kürzen als Schaltflächen mit ihren Icons und ihrem Hover-/Fade-Verhalten. Jede
+Schaltfläche ist per FXML `onAction` an eine parameterlose Methode des `*View`-Controllers gebunden,
+deren einziger Rumpf `TODO("AI action: …")` ist. Keine Busy-Anzeige, kein Abbruch, kein
+Ersetzungspfad, kein Undo-Eintrag, kein Fehlerweg, keine Verdrahtung an den `AiAction`-Port aus
+IP-17 – all das kommt mit dem Plugin-System-Feature. Die Bibliothek bekommt keinen Begriff von einer
+KI.
 
-### IP-19: AI Part Generation With Provisional State
+### IP-19: AI Part Generation (nur Schaltfläche)
 
 Plan: `FP-001-IP-19-AiTeilGenerierung.md`
 
-Das Generieren eines Teils überschreibt viel, daher entscheidet die Größe der Zerstörung, nicht die
-Herkunft des Textes, wie ausdrücklich die Bestätigung ist. Gestreamter Text kommt außerhalb des
-FX-Threads an und wird darauf gemessen und gezeigt, daher werden Chunks in Stapeln übergeben statt pro
-Token. Wie bei IP-18 werden die vorläufige Anzeige und ihr Annehmen/Verwerfen-Ablauf vollständig
-gebaut; nur der Aufruf in einen tatsächlichen Provider fehlt, markiert mit einem offenen `TODO`.
+Im Inspector-Abschnitt des Teils steht eine einzige KI-Schaltfläche „Teil generieren“. Sie ist per
+FXML `onAction` an eine parameterlose Methode des `InspectorView`-Controllers gebunden, deren
+einziger Rumpf `TODO("AI action: generate-part")` ist. Keine Streaming-Anzeige, kein vorläufiger
+Zustand, kein Annehmen/Verwerfen, kein Auflösen bei Teilwechsel, keine Verdrahtung an den
+`AiAction`-Port aus IP-17 – die gesamte Generierung gehört zum Plugin-System-Feature.
 
 ### IP-21: In-Paragraph Sheet Split
 
@@ -669,17 +680,16 @@ IP-24✅┤  │                   │                       │
                                 │          ├─> IP-06✅   │
                                 └─> IP-08✅┘            │
                                       │                 │
-                                      └─> IP-10✅ ───────┼──> IP-18   (mit IP-17✅)
+                                      └─> IP-10✅ ───────┼──> IP-18
                                       (mit IP-09✅)      │
                                                 └─> IP-11 ─┬─> IP-15 ─┬─> IP-16
                                                            │          └─> IP-23   (mit IP-24)
                                                            └─> IP-21
-IP-09✅ ──> IP-10✅, IP-18, IP-19
+IP-09✅ ──> IP-10✅
 IP-12✅┬─> IP-13✅
        ├─> IP-15
-       └─> IP-19   (mit IP-17✅)
-IP-17✅┬─> IP-18
        └─> IP-19
+IP-17✅  (Port bleibt für spätere Wiederverwendung; von IP-18/IP-19 nicht verdrahtet)
 IP-05✅, IP-07✅, IP-15 ──> IP-16
 IP-07✅, IP-08✅ ──> IP-06✅, IP-27
 ```
@@ -702,9 +712,9 @@ toolkit-freien Layout-Kern (IP-03), Paginierung und die Seitenumbruch-Policy (IP
 Layout und Caching (IP-05 ✅), den Projekteinstellungsdialog (IP-14), den Layout-Regressionsprüfstand
 (IP-06 ✅), die Bearbeitungsfläche und Absatzoperationen (IP-10, IP-11), die Editor-Aufteilung mit
 Schreib- und Vorschaumodus (IP-15, IP-16), Undo und Redo (IP-09 ✅), die Inspector-Hülle und ihre
-Inhaltsabschnitte (IP-12 ✅), den KI-Aktions-Port und die darauf gebauten Aktionen (IP-17, IP-18,
-IP-19), die optionalen Teile im Projektbaum (IP-23) und das Blatt-Teilen innerhalb eines Absatzes
-(IP-21).
+Inhaltsabschnitte (IP-12 ✅), den KI-Aktions-Port für spätere Wiederverwendung (IP-17 ✅) und die
+KI-Schaltflächen ohne Wirkung, die ihn nicht verdrahten (IP-18, IP-19), die optionalen Teile im
+Projektbaum (IP-23) und das Blatt-Teilen innerhalb eines Absatzes (IP-21).
 
 **Die Naht.** Der untere Baum verbraucht IP-07 und IP-08 des oberen – die App zeichnet ihre Seiten mit
 den Bibliotheks-Views. IP-13 (Design-Stilabschnitte) ist die zweite Verbindung: Sie braucht IP-26 des
@@ -746,14 +756,13 @@ Unabhängige Ausgangspunkte: **IP-09** ✅, **IP-12** ✅, **IP-17** ✅.
   Treuekette hält. In IP-26 zu prüfen.
 * **Witwen, Waisen, Silbentrennung** sind ausgeschlossen; der Hook existiert, keine Implementierung
   wird ausgeliefert.
-* **Das Auflösen eines vorläufigen KI-Teils** bei Teilwechsel oder Projektschluss (IP-19) ist
-  unentschieden.
 * **Kein KI-Provider wird mit diesem Feature ausgeliefert**, nicht einmal ein Stub. `lib/ai` (IP-17)
-  ist nur eine Schnittstelle; IP-18 und IP-19 verdrahten die UI an sie und enden an einem offenen
-  `TODO`, wo ein Provider gerufen würde. Der Provider – eingebaut und nutzergeliefert gleichermaßen –
-  kommt erst mit dem späteren Plugin-System-Feature, über denselben Mechanismus. Dies ist eine harte
-  Einschränkung, kein Umsetzungsdetail: Kein Plan dieses Features darf einen Stub, einen Mock-Provider
-  oder irgendeine andere Interaktion mit einer tatsächlichen oder simulierten KI hinzufügen.
+  trägt nur die Aktionsschnittstelle; sie bleibt für eine spätere Wiederverwendung stehen und wird in
+  diesem Feature nicht verdrahtet. IP-18 und IP-19 bauen nur Schaltflächen, deren `onAction` auf eine
+  leere `*View`-Methode mit `TODO(...)` zeigt. Jeder Provider – eingebaut wie nutzergeliefert – kommt
+  erst mit dem späteren Plugin-System-Feature. Dies ist eine harte Einschränkung: Kein Plan dieses
+  Features darf einen Stub, einen Mock-Provider oder irgendeine andere Interaktion mit einer
+  tatsächlichen oder simulierten KI hinzufügen.
 * **Drei neue Gradle-Module** erfordern eine Prüfung gegen den `ci-pipeline`-Skill.
 
 ### Abgelehnte Drittanbieter-Bibliotheken
@@ -802,12 +811,13 @@ Treuekette schließt alle vier aus.
   gibt keine Plugin-Schnittstelle, keinen Loader und keine Service-Registrierung. Ein plugin-basierter
   Export braucht das zuerst gebaut – ein eigenes Feature und eine Voraussetzung des Exports, nicht
   dieses.
-* **Jeder KI-Provider, Stub oder echt.** `lib/ai` trägt nur die Aktionsschnittstelle (IP-17). Keine
-  Implementierung wird in diesem Feature geschrieben, getestet oder verdrahtet – nicht einmal ein
-  deterministischer Stub zum Testen. Ein künftiges Feature führt ein Plugin-System für Provider ein,
-  liefert die eingebauten Provider über denselben Mechanismus aus und ist der einzige Ort, an dem ein
-  Provider auftauchen darf. Jede Aufrufstelle, die die UI braucht (IP-18, IP-19), wird bis zum Punkt
-  des Aufrufs von `lib/ai` gebaut und trägt dort stattdessen ein offenes `TODO`.
+* **Jeder KI-Provider, Stub oder echt.** `lib/ai` trägt nur die Aktionsschnittstelle (IP-17); sie
+  bleibt für eine spätere Wiederverwendung stehen und wird in diesem Feature nicht verdrahtet. Keine
+  Implementierung wird geschrieben, getestet oder verdrahtet – nicht einmal ein deterministischer
+  Stub zum Testen. Ein künftiges Feature führt ein Plugin-System für Provider ein, liefert die
+  eingebauten Provider über denselben Mechanismus aus und ist der einzige Ort, an dem ein Provider
+  auftauchen darf. Die KI-Schaltflächen von IP-18 und IP-19 rufen nur eine leere `*View`-Methode,
+  deren Rumpf `TODO("AI action: …")` ist.
 
 ## 10. Abschlusskriterien des Features
 
@@ -828,12 +838,11 @@ Treuekette schließt alle vier aus.
 * Das Schreiben in einem buchgroßen Dokument bleibt reaktionsschnell, und das erste Layout eines
   langen Buches erscheint nicht als eingefrorenes Fenster.
 * Prompts, Teildaten und Design sind neben dem Blatt erreichbar und unterbrechen den Text nie.
-* Jede Textänderung, jede Strukturänderung und jedes angewandte KI-Ergebnis kann rückgängig gemacht
-  und wiederhergestellt werden.
-* Eine KI-Aktionsleiste ist für einen Absatz, eine Überschrift und einen ganzen Teil erreichbar, und
-  ihr voller Ablauf – Ersetzen mit Undo, Annehmen oder Verwerfen für einen generierten Teil –
-  funktioniert bis zum Punkt des Aufrufs von `lib/ai`; der tatsächliche Aufruf ist ein offenes `TODO`,
-  da kein Provider mit diesem Feature ausgeliefert wird.
+* Jede Textänderung und jede Strukturänderung kann rückgängig gemacht und wiederhergestellt werden.
+* Für einen Absatz, eine Überschrift und einen ganzen Teil ist je eine KI-Schaltfläche erreichbar;
+  jede ist per FXML `onAction` an eine leere, parameterlose `*View`-Methode gebunden, deren einziger
+  Rumpf `TODO("AI action: …")` ist. Keine weitere KI-Logik ist in diesem Feature enthalten; der
+  `lib/ai`-Aktions-Port aus IP-17 bleibt ungenutzt für eine spätere Wiederverwendung stehen.
 * Das Layout-Ergebnis trägt keinen Toolkit-Typ, sodass ein späteres Export-Plugin es unverändert
   verbraucht.
 * `lib/layouting-fx` baut, testet und ist als JavaFX-Bibliotheksmodul abgedeckt; seine

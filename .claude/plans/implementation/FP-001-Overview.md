@@ -5,6 +5,8 @@
 * Ein Plan startet erst, wenn jede Voraussetzung `COMPLETED` ist.
 * Ein erledigter Plan wird samt Statusdatei entfernt; erledigt sind IP-01, IP-02, IP-24, IP-03,
   IP-25, IP-22, IP-14, IP-26, IP-17, IP-04, IP-13, IP-06, IP-07, IP-08, IP-09, IP-10, IP-12 und IP-05.
+* Der `lib/ai`-Aktions-Port aus IP-17 bleibt bestehen (für spätere Wiederverwendung); IP-18 und IP-19
+  verdrahten ihn nicht, ihre KI-Schaltflächen rufen nur eine leere `*View`-Methode mit `TODO(...)`.
 * Den Stand jedes Plans führt `.claude/plans/features/FP-001-PaperWritingSurface-status.md`.
 * IP-25 bis IP-28 tragen die eigenständige JavaFX-Renderer-Bibliothek `lib/layouting-fx`.
 * IP-07 und IP-08 liegen in dieser Bibliothek; IP-06, IP-10, IP-16 und IP-21 sind darauf angepasst.
@@ -23,8 +25,8 @@
 | IP-12 | Inspector-Grundgerüst und Inhaltsabschnitte | `FP-001-IP-12-InspectorGrundgeruest.md` | - |
 | IP-15 | Editor-Aufteilung und Baum-Routing | `FP-001-IP-15-EditorAufteilungUndBaumRouting.md` | IP-11, IP-12 |
 | IP-16 | Schreib- und Vorschaumodus | `FP-001-IP-16-SchreibUndVorschauModus.md` | IP-05, IP-07, IP-15 |
-| IP-18 | AI-Aktionen an Absatz und Überschrift | `FP-001-IP-18-AiAktionenAmAbsatz.md` | IP-10, IP-17 |
-| IP-19 | AI-Generierung eines Teils | `FP-001-IP-19-AiTeilGenerierung.md` | IP-12, IP-17 |
+| IP-18 | KI-Schaltflächen an Absatz und Überschrift | `FP-001-IP-18-AiAktionenAmAbsatz.md` | IP-10 |
+| IP-19 | KI-Schaltfläche zur Teil-Generierung | `FP-001-IP-19-AiTeilGenerierung.md` | IP-12 |
 | IP-21 | Seitentrennung innerhalb eines Absatzes | `FP-001-IP-21-SeitentrennungImAbsatz.md` | IP-11 |
 | IP-23 | Optionale Teile im Projektbaum | `FP-001-IP-23-OptionaleTeileImBaum.md` | IP-15, IP-24 |
 

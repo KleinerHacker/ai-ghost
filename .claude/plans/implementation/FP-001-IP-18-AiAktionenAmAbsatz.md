@@ -1,4 +1,4 @@
-# IP-18: AI-Aktionen an Absatz und Überschrift
+# IP-18: KI-Schaltflächen an Absatz und Überschrift
 
 ## Herkunft
 
@@ -8,7 +8,7 @@
 
 ## Abhängigkeiten
 
-* Voraussetzung: IP-10, IP-17
+* Voraussetzung: IP-10
 * Start erst, wenn jede Voraussetzung im Feature-Status `COMPLETED` ist.
 * Blockiert: keinen weiteren Plan
 * Reihenfolge und Graph stehen in Abschnitt 8 des Feature Plans.
@@ -24,9 +24,12 @@
 
 ## Harte Einschränkung
 
-* KEIN Stub, KEIN Mock, KEINE reale Anbindung an ein AI-System in diesem Plan
-* `AiAction` aus IP-17 hat keine Implementierung; der eigentliche Aufruf bleibt ein offenes TODO
-* Ein Provider kommt erst über das künftige Plugin-System-Feature
+* KEINE Verdrahtung an den `lib/ai`-Aktions-Port, KEIN Stub, KEIN Mock, KEINE reale oder simulierte KI-Anbindung
+* Der Aktions-Port aus IP-17 bleibt bestehen, wird von diesem Plan aber nicht benutzt
+* Jede KI-Schaltfläche ist per FXML `onAction` an eine parameterlose Methode des `*View`-Controllers gebunden
+* Der einzige Rumpf dieser Methode ist `TODO("AI action: <name>")`
+* Keine Busy-Anzeige, kein Abbruch, kein Ersetzungspfad, kein Undo-Eintrag, kein Fehlerweg
+* Die gesamte KI-Aktionsinfrastruktur kommt erst mit dem künftigen Plugin-System-Feature
 
 ## Aufgaben
 
@@ -37,33 +40,29 @@
 * Halbtransparent, solange die Maus nicht direkt über der Leiste steht.
 * Volle Deckkraft erst beim Hover direkt über der Leiste.
 * Deckkraftwechsel als sanfte Animation (Fade), kein hartes Umschalten.
-* Aktionen Umschreiben, Ausbauen und Kürzen anbieten.
+* Schaltflächen Umschreiben, Ausbauen und Kürzen anbieten.
 * Icons nach `icons` anlegen.
+* Beschriftungen und Tooltips aus dem Nachrichtenbündel.
 
-### 2. Ablauf
+### 2. Leere Methoden
 
-* Verdrahtung bis zum Aufruf von `lib/ai` bauen, außerhalb des FX-Threads.
-* Nur den betroffenen Block als beschäftigt kennzeichnen.
-* Abbruch anbieten (Aufruf von `AiActionHandle.cancel()` vorgesehen).
-* Stelle des tatsächlichen `AiAction.execute(...)`-Aufrufs mit TODO markieren, nicht implementieren.
+* Je Schaltfläche eine parameterlose Methode im `*View`-Controller anlegen.
+* Methoden per FXML `onAction` verdrahten.
+* Rumpf jeweils nur `TODO("AI action: rewrite")`, `TODO("AI action: expand")`, `TODO("AI action: shorten")`.
+* Keine weitere Logik, kein Aufruf, keine Rückgabe.
 
-### 3. Ergebnis
+### 3. Tests
 
-* Ersetzungspfad bauen: `onComplete`-Callback ersetzt Text unmittelbar, sobald ein Provider existiert.
-* Ersetzung als einen Undo-Eintrag aufzeichnen.
-* Fehler über die bestehenden Dialoge melden (`onError`-Callback verdrahtet).
+* Aktionsleiste, Sichtbarkeit bei Hover und Fade-Zustand headless prüfen.
+* Prüfen, dass jede Methode `NotImplementedError` wirft.
 
-### 4. Tests
-
-* Aktionsleiste, Beschäftigt-Zustand und Undo headless prüfen, mit einem Test-Callback anstelle eines Providers.
-* Abbruch- und Fehlerweg gegen den Test-Callback prüfen.
-
-### 5. Abschluss
+### 4. Abschluss
 
 * Build über Agent ausführen.
 * Dokumentation nach `project-docs` prüfen.
 
 ## Ergebnis
 
-* Die Aktionsleiste, ihr Beschäftigt-Zustand, Abbruch, Undo und Fehlerweg stehen vollständig, verdrahtet bis zum offenen TODO an der `lib/ai`-Aufrufstelle.
-* KEIN Absatz wird tatsächlich von einem AI-System umgeschrieben; das folgt erst mit dem Plugin-System-Feature.
+* Die schwebende KI-Leiste steht sichtbar am fokussierten Block mit Umschreiben, Ausbauen und Kürzen.
+* Jede Schaltfläche endet an einer leeren `*View`-Methode mit `TODO("AI action: …")`.
+* KEINE KI-Infrastruktur, kein Port, kein Provider ist Teil dieses Plans.

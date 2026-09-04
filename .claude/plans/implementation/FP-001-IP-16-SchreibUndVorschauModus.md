@@ -32,7 +32,7 @@
 ### 2. Vorschau
 
 * Ganzes Buch über `PaperPageView` darstellen.
-* Caret und AI-Bedienelemente in der Vorschau ausblenden.
+* Caret und KI-Schaltflächen in der Vorschau ausblenden.
 
 ### 3. Erstes Layout
 

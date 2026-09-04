@@ -1,4 +1,4 @@
-# IP-19: AI-Generierung eines Teils
+# IP-19: KI-Schaltfläche zur Teil-Generierung
 
 ## Herkunft
 
@@ -8,7 +8,7 @@
 
 ## Abhängigkeiten
 
-* Voraussetzung: IP-12, IP-17
+* Voraussetzung: IP-12
 * Start erst, wenn jede Voraussetzung im Feature-Status `COMPLETED` ist.
 * Blockiert: keinen weiteren Plan
 * Reihenfolge und Graph stehen in Abschnitt 8 des Feature Plans.
@@ -23,42 +23,40 @@
 
 ## Harte Einschränkung
 
-* KEIN Stub, KEIN Mock, KEINE reale Anbindung an ein AI-System in diesem Plan
-* `AiAction` aus IP-17 hat keine Implementierung; der eigentliche Aufruf bleibt ein offenes TODO
-* Ein Provider kommt erst über das künftige Plugin-System-Feature
+* KEINE Verdrahtung an den `lib/ai`-Aktions-Port, KEIN Stub, KEIN Mock, KEINE reale oder simulierte KI-Anbindung
+* Der Aktions-Port aus IP-17 bleibt bestehen, wird von diesem Plan aber nicht benutzt
+* Die Schaltfläche ist per FXML `onAction` an eine parameterlose Methode des `InspectorView`-Controllers gebunden
+* Der einzige Rumpf dieser Methode ist `TODO("AI action: generate-part")`
+* Keine Streaming-Anzeige, kein vorläufiger Zustand, kein Annehmen/Verwerfen, kein Auflösen
+* Die gesamte Generierungsinfrastruktur kommt erst mit dem künftigen Plugin-System-Feature
 
 ## Aufgaben
 
-### 1. Auslöser
+### 1. Schaltfläche
 
-* Aktion im Inspector-Abschnitt des Teils anbieten.
-* Inhalts- und Stil-Prompt als Eingabe verwenden.
-* Stelle des tatsächlichen `AiAction.execute(...)`-Aufrufs mit TODO markieren, nicht implementieren.
+* Im Inspector-Abschnitt des Teils eine einzige KI-Schaltfläche „Teil generieren“ anbieten.
+* Icon nach `icons` anlegen.
+* Beschriftung und Tooltip aus dem Nachrichtenbündel.
 
-### 2. Darstellung während des Laufs
+### 2. Leere Methode
 
-* Verdrahtung bauen, die ein Ergebnis beim Eintreffen (`onChunk`) auf dem Blatt zeigen würde.
-* Eintreffende Teile gebündelt übergeben, nicht je Token.
-* Erzeugte Blöcke als vorläufig kennzeichnen.
+* Parameterlose Methode im `InspectorView`-Controller anlegen.
+* Methode per FXML `onAction` verdrahten.
+* Rumpf nur `TODO("AI action: generate-part")`.
+* Keine weitere Logik, kein Aufruf, keine Rückgabe.
 
-### 3. Übernehmen und Verwerfen
+### 3. Tests
 
-* Leiste mit Übernehmen und Verwerfen am Teil zeigen.
-* Verwerfen stellt den vorherigen Text wieder her.
-* Übernehmen als einen Undo-Eintrag aufzeichnen.
-* Vorläufigen Zustand nicht speichern.
-* Zustand beim Teilwechsel und beim Projektschluss auflösen.
+* Prüfen, dass die Schaltfläche vorhanden und aktivierbar ist.
+* Prüfen, dass die Methode `NotImplementedError` wirft.
 
-### 4. Tests
-
-* Vorläufiger Zustand, Übernehmen, Verwerfen und Auflösen headless prüfen, mit einem Test-Callback anstelle eines Providers.
-
-### 5. Abschluss
+### 4. Abschluss
 
 * Build über Agent ausführen.
 * Dokumentation nach `project-docs` prüfen.
 
 ## Ergebnis
 
-* Auslöser, Darstellung, Übernehmen/Verwerfen und Auflösen stehen vollständig, verdrahtet bis zum offenen TODO an der `lib/ai`-Aufrufstelle.
-* KEIN Teil wird tatsächlich von einem AI-System erzeugt; das folgt erst mit dem Plugin-System-Feature.
+* Eine KI-Schaltfläche „Teil generieren“ steht im Inspector-Teilabschnitt.
+* Sie endet an einer leeren `InspectorView`-Methode mit `TODO("AI action: generate-part")`.
+* KEINE Generierung, kein vorläufiger Zustand, kein Provider ist Teil dieses Plans.

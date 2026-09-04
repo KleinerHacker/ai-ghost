@@ -30,7 +30,7 @@ Status: IN_PROGRESS
 | IP-16 | Writing And Preview Modes                 | NOT_STARTED |
 | IP-17 | AI Action Port                            | COMPLETED   |
 | IP-18 | AI Actions On Paragraph And Heading       | NOT_STARTED |
-| IP-19 | AI Part Generation With Provisional State | NOT_STARTED |
+| IP-19 | AI Part Generation (button only)          | NOT_STARTED |
 | IP-21 | In-Paragraph Sheet Split                  | NOT_STARTED |
 | IP-23 | Optional Book Parts In The Tree           | NOT_STARTED |
 
@@ -43,6 +43,17 @@ Status: IN_PROGRESS
 IP-01, IP-22, IP-02, IP-24, IP-03, IP-25, IP-14, IP-26, IP-17, IP-04, IP-07, IP-08, IP-13, IP-10,
 IP-06 und IP-05 sind umgesetzt; IP-11, IP-18, IP-19 und IP-27 sind entsperrt, und IP-16 ist durch
 IP-05 entsperrt (wartet noch auf IP-15).
+
+IP-18 und IP-19 wurden zurückgeschnitten: Ihre KI-Schaltflächen sind per FXML `onAction` an eine
+parameterlose `*View`-Methode gebunden, deren einziger Rumpf `TODO("AI action: …")` ist – keine
+Verdrahtung, kein Ergebnis, kein vorläufiger Zustand. Der in IP-17 ausgelieferte `lib/ai`-Aktions-Port
+(`AiAction`, `AiActionRequest`, Callbacks, `AiActionLimits`, `ParagraphSplitter`) bleibt unverändert
+bestehen und wird für eine spätere Wiederverwendung nicht angetastet; dieses Feature verdrahtet ihn
+nur nicht. Der Feature-Plan wurde im selben Durchgang angepasst: Architektur, Planübersicht,
+Abhängigkeitsgraph, Abschnitt „außerhalb des Umfangs“, Risiken und Abschlusskriterien besagen jetzt,
+dass die KI-Schaltflächen an eine leere `*View`-Methode gebunden sind und der Port ungenutzt für
+später stehen bleibt; ein Provider kommt weiterhin erst über ein späteres, eigenes
+Plugin-System-Feature.
 
 IP-05 wurde wie geplant gebaut. `lib/layouting` erhielt `IncrementalLineBreaker`, einen
 `LineBreaker`, der einem echten Umbrecher (`GreedyLineBreaker`) vorgeschaltet ist und das Ergebnis
@@ -244,28 +255,6 @@ Zeilenumbruch und Ausrichtung zu benennen; der CHANGELOG blieb unberührt, da ni
 Erzeugtes in der laufenden Anwendung sichtbar ist – die neue Präferenz hat kein UI-Steuerelement, bis
 ein späterer Plan eines verdrahtet.
 
-IP-17 wurde nur als Schnittstelle gebaut, gemäß einer ausdrücklichen, vom Nutzer geklärten
-Einschränkung: Kein Stub und keine echte KI-Interaktion wird irgendwo in diesem Feature ausgeliefert,
-nicht einmal zum Testen. `lib/ai` (`ai-ghost-ai`) erhielt das Paket
-`org.pcsoft.app.aighost.ai.action` mit `AiActionRequest` (versiegelt: `Rewrite`, `Expand`, `Shorten`,
-`GenerateChapter`), `AiAction` (der Port, `execute(request, callback): AiActionHandle`, keine
-Implementierung – trägt ein `TODO`, das auf das künftige plugin-basierte Provider-Feature verweist),
-`AiActionCallback` (`onChunk`/`onComplete`/`onError`/`onCancelled`), `AiActionHandle` (`cancel()`),
-`AiActionError` (versiegelt: `LimitExceeded`, `Cancelled`, `Failed`), das eigenständige
-`AiActionLimits.check` (Zeichenbegrenzungen aus `Preferences.Ai`, über Arrow `Either`, unterstützt
-durch `TokenUtils` für die gemeldete Token-Schätzung) und `ParagraphSplitter` (eine Leerzeile beendet
-einen Absatz, faltet einen verbliebenen Zeilenumbruch in ein Leerzeichen, verwirft leere Absätze).
-`lib/ai` erhielt eine Abhängigkeit zu `lib/model` (`ai-ghost-model`, für `Preferences.Ai`) und zu
-Arrow (`arrow-core`, für `Either`), beide `api`, da sie in den öffentlichen Signaturen des Ports
-auftauchen. Nur die beiden reinen, implementierungsunabhängigen Teile – die Begrenzungsprüfung und
-die Absatzregel – werden getestet; es gibt nichts weiteres zu testen, da keine
-`AiAction`-Implementierung existiert. IP-18 und IP-19 wurden entsprechend angepasst: Ihre
-Aktionsaufrufstellen enden an einem offenen `TODO` statt am Aufruf eines Stubs. Der Feature-Plan
-selbst wurde im selben Durchgang korrigiert – Architektur, Planübersicht, Abschnitt „außerhalb des
-Umfangs“, Risiken und Abschlusskriterien besagen jetzt alle, dass kein KI-Provider, weder Stub noch
-echt, mit diesem Feature ausgeliefert wird; er kommt erst über ein späteres, eigenes
-Plugin-System-Feature.
-
 IP-14 wurde auf Wunsch des Nutzers breiter gebaut als zunächst geplant: ein Master-Detail-Dialog mit
 einem `ProjectSettingsTree` (Wurzel verborgen) links und dem Abschnitts-Editor rechts. Nur der
 `General`-Abschnitt ist echt (`GeneralSettings`: Seitengrößen-Vorgaben, vier Ränder in Millimetern,
@@ -348,7 +337,7 @@ Zwei Dinge wanderten mit ihm zwischen Plänen: die Seitenvirtualisierung von IP-
 Bibliothek, die kein langes Dokument zeigen kann, nicht wiederverwendbar ist, und der
 Oberflächenvergleich von IP-06 in das Test-Quellset der Bibliothek. `app/ui` behält die
 `FontData`-Übersetzung, den Metrik-Fingerabdruck aus IP-22, die Bindung von Buch und Design, Undo,
-Inspector und KI.
+Inspector und die KI-Schaltflächen.
 
 Der Layout-Kern ist wie geplant umgesetzt. `LaidOutLine` trägt zwei Felder, die der Plan nicht
 benannte: `width` und `wordSpacing` als den Abstand, um den eine Blocksatzzeile gedehnt wird – ohne
@@ -386,7 +375,8 @@ Manuskriptschrift ausgeliefert wird; es steht bei IP-01, da es zur Schriftgrundl
 IP-28 wurden hinzugefügt, als der Renderer als eigenständige Bibliothek beschlossen wurde. Die
 Nummerierung wurde stabil gehalten, statt die Pläne neu zu nummerieren.
 
-Unabhängige Ausgangspunkte: IP-09, IP-12 (abgeschlossen), IP-17.
+Unabhängige Ausgangspunkte: IP-09, IP-12 (abgeschlossen), IP-17 (abgeschlossen; Port bleibt für
+spätere Wiederverwendung, von IP-18/IP-19 nicht verdrahtet).
 
 Neben der JavaFX-Entscheidung von IP-25 sind zwei Fragen der Renderer-Bibliothek offen und blockieren
 sie nicht: die Benennung von Modul und Paket, die den Anwendungsnamen in eine wiederverwendbare
