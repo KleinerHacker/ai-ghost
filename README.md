@@ -52,7 +52,7 @@ opened once the user accepts it. Both documents are written with Jackson.
 | AI support library (`lib/ai-ghost-ai`)            | Implemented |
 | Layout core: line breaking, alignment and pagination (`lib/ai-ghost-layouting`) | Implemented |
 | Layout blocks from book, design and meta data (`lib/ai-ghost-layouting-model`) | Implemented |
-| JavaFX renderer of the layout core (`lib/ai-ghost-layouting-fx`) | Planned     |
+| JavaFX renderer of the layout core (`lib/ai-ghost-layouting-fx`) | Implemented |
 | Font identity of a project and report of a substitution | Implemented |
 | Prompt input with character limit and token estimate | Implemented |
 | ZIP distribution with start scripts and `libs`    | Implemented |

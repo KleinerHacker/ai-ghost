@@ -28,3 +28,27 @@ val compileKotlin = tasks.named<KotlinCompile>("compileKotlin")
 tasks.named<JavaCompile>("compileJava") {
     destinationDirectory.set(compileKotlin.flatMap { it.destinationDirectory })
 }
+
+// IP-06: regression tests ("...RT") pin the page structure of the layout core against checked in
+// golden files. They run apart from the plain developer tests so they can be re-run on their own,
+// but `check` - and with it `build` - always exercises them as well.
+tasks.named<Test>("test") {
+    filter { excludeTestsMatching("*RT") }
+}
+
+val regressionTest = tasks.register<Test>("regressionTest") {
+    group = "verification"
+    description = "Runs the layout regression tests (golden files) of IP-06"
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter { includeTestsMatching("*RT") }
+
+    // The test runs forked in its own JVM, which does not inherit the -D properties of the build's
+    // own JVM automatically; the golden file update mode of GoldenFileSupport therefore has to be
+    // relayed by hand, or `-DlayoutGoldenFiles.update=true` on the command line would never reach it.
+    System.getProperty("layoutGoldenFiles.update")?.let { systemProperty("layoutGoldenFiles.update", it) }
+}
+
+tasks.named("check") {
+    dependsOn(regressionTest)
+}

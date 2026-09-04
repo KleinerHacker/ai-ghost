@@ -47,7 +47,8 @@ jobs:
         run: ./gradlew licensee --stacktrace
 
   # JavaFX resolves to the classifier of the building host, so every host family produces its own
-  # archive. The tests of that platform run on the same runner.
+  # archive. Packaging skips every kind of test - they run as their own jobs below, each on the same
+  # host family, so a failing test cannot hide behind a passing package step.
   build:
     name: build (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -71,7 +72,9 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build and package
-        run: ./gradlew build packageDist -PreleaseVersion="${{ github.ref_name }}" --stacktrace
+        run: |
+          ./gradlew build -x test -x integrationTest -x regressionTest packageDist \
+            -PreleaseVersion="${{ github.ref_name }}" --stacktrace
 
       - name: Upload distribution
         uses: actions/upload-artifact@v7
@@ -79,6 +82,88 @@ jobs:
           name: distribution-${{ matrix.os }}
           path: app/ui/build/distributions/ghost-ui-*.zip
           if-no-files-found: error
+
+  # Developer tests (plain, unsuffixed test classes) run on every host family, since they exercise
+  # the real JavaFX toolkit.
+  developer-test:
+    name: developer-test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+
+      - name: Make Gradle wrapper executable
+        if: runner.os != 'Windows'
+        run: chmod +x ./gradlew
+
+      - name: Run developer tests
+        run: ./gradlew test --stacktrace
+
+  # Integration tests ("...IT") cover a complete feature or aim at performance, per the `testing`
+  # skill, and run apart from the plain developer tests, on every host family as well.
+  integration-test:
+    name: integration-test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+
+      - name: Make Gradle wrapper executable
+        if: runner.os != 'Windows'
+        run: chmod +x ./gradlew
+
+      - name: Run integration tests
+        run: ./gradlew integrationTest --stacktrace
+
+  # The layout regression harness (IP-06, "...RT" tests) pins the page structure of the layout core
+  # and the agreement of its two JavaFX surfaces, and runs apart from the plain developer tests, on
+  # every host family as well.
+  regression-test:
+    name: regression-test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+
+      - name: Make Gradle wrapper executable
+        if: runner.os != 'Windows'
+        run: chmod +x ./gradlew
+
+      - name: Run regression tests
+        run: ./gradlew regressionTest --stacktrace
 
   # Build the docs as a generation test (mkdocs --strict) before they get deployed.
   validate-docs:
@@ -156,6 +241,9 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - build
+      - developer-test
+      - integration-test
+      - regression-test
       - licences
       - deploy-docs
 

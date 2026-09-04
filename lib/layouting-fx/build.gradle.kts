@@ -63,3 +63,29 @@ tasks.withType<Test> {
     systemProperty("prism.order", "sw")
     systemProperty("java.awt.headless", "true")
 }
+
+// IP-06: regression tests ("...RT") compare the break positions PaperFlowView renders against the
+// pages PaperPageView renders for the very same DocumentLayout. They run apart from the plain
+// developer tests so they can be re-run on their own, but `check` - and with it `build` - always
+// exercises them as well.
+tasks.named<Test>("test") {
+    filter { excludeTestsMatching("*RT") }
+}
+
+val regressionTest = tasks.register<Test>("regressionTest") {
+    group = "verification"
+    description = "Runs the layout regression tests (flow/page comparison) of IP-06"
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter { includeTestsMatching("*RT") }
+    systemProperty("testfx.robot", "glass")
+    systemProperty("testfx.headless", "true")
+    systemProperty("glass.platform", "Monocle")
+    systemProperty("monocle.platform", "Headless")
+    systemProperty("prism.order", "sw")
+    systemProperty("java.awt.headless", "true")
+}
+
+tasks.named("check") {
+    dependsOn(regressionTest)
+}

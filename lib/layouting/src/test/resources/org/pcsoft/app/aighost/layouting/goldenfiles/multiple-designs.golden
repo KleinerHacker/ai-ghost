@@ -1,0 +1,5 @@
+# design=compact
+position=0 number=1 active=true lines=25 leftMargin=20.0 rightMargin=15.0
+position=1 number=2 active=true lines=13 leftMargin=20.0 rightMargin=15.0
+# design=wide
+position=0 number=1 active=true lines=20 leftMargin=40.0 rightMargin=40.0

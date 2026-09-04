@@ -72,11 +72,6 @@ dependencies {
 }
 
 tasks.withType<Test> {
-    // Monocle reaches into internals of javafx.graphics, which the module path does not allow, and
-    // ResourceBundle.Control is unsupported inside a named module - so the tests run on the classpath.
-    extensions.getByType(org.javamodularity.moduleplugin.extensions.TestModuleOptions::class.java)
-        .runOnClasspath = true
-
     // The UI tests must not open a window.
     systemProperty("testfx.robot", "glass")
     systemProperty("testfx.headless", "true")
@@ -84,6 +79,33 @@ tasks.withType<Test> {
     systemProperty("monocle.platform", "Headless")
     systemProperty("prism.order", "sw")
     systemProperty("java.awt.headless", "true")
+}
+
+// The module plugin only ever puts its own "test" task on the module path in the first place, so
+// only that task carries the TestModuleOptions extension; a Test task registered by hand, like
+// integrationTest below, already runs on the classpath and needs no override here.
+tasks.named<Test>("test") {
+    // Monocle reaches into internals of javafx.graphics, which the module path does not allow, and
+    // ResourceBundle.Control is unsupported inside a named module - so the tests run on the classpath.
+    extensions.getByType(org.javamodularity.moduleplugin.extensions.TestModuleOptions::class.java)
+        .runOnClasspath = true
+
+    // Integration tests ("...IT") cover a complete feature or aim at performance, per the `testing`
+    // skill; they run apart from the plain developer tests so they can be re-run on their own, but
+    // `check` - and with it `build` - always exercises them as well.
+    filter { excludeTestsMatching("*IT") }
+}
+
+val integrationTest = tasks.register<Test>("integrationTest") {
+    group = "verification"
+    description = "Runs the integration tests (\"...IT\") of app/ui"
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter { includeTestsMatching("*IT") }
+}
+
+tasks.named("check") {
+    dependsOn(integrationTest)
 }
 
 // The dialogs are looked at by a human being, not by an assertion: their icons have to keep their
