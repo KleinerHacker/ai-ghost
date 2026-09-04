@@ -14,7 +14,7 @@ package org.pcsoft.app.aighost.layouting.model.project.book
 
 import org.pcsoft.app.aighost.layouting.TextBlock
 import org.pcsoft.app.aighost.layouting.model.common.BlockSpacing
-import org.pcsoft.app.aighost.layouting.model.common.StyleTranslation
+import org.pcsoft.app.aighost.layouting.model.common.toTextStyle
 import org.pcsoft.app.aighost.model.project.book.Blurb
 import org.pcsoft.app.aighost.model.project.design.Design
 
@@ -34,8 +34,7 @@ object BlurbBuilder {
      * @return The blocks in the order they are set.
      */
     fun build(blurb: Blurb, design: Design): List<TextBlock> {
-        val style = StyleTranslation.toTextStyle(
-            style = design.blurbPage.textStyle,
+        val style = design.blurbPage.textStyle.toTextStyle(
             spaceAfter = BlockSpacing.AFTER_PARAGRAPH
         )
 

@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.app.controller.IoController
+import org.pcsoft.app.aighost.app.controller.PartMode
 import org.pcsoft.app.aighost.app.undo.UndoStack
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
 import org.pcsoft.app.aighost.model.project.Project
@@ -35,7 +36,8 @@ import org.pcsoft.app.aighost.model.project.book.Prolog
  *
  * These tests never hand a [org.pcsoft.app.aighost.layouting.fx.paper.PaperFlowView] to the view
  * model, so no layout is computed; the parts that need the real control are covered by
- * [BookPartEditorTest].
+ * [BookPartEditorTest], and the pure routing and assembly logic by
+ * [org.pcsoft.app.aighost.app.controller.BookPartEditorControllerTest].
  */
 class BookPartEditorViewModelTest {
 
@@ -74,7 +76,7 @@ class BookPartEditorViewModelTest {
      */
     @Test
     fun startsWithNothingToWrite() {
-        assertEquals(BookPartEditorViewModel.PartMode.NONE, viewModel.mode.value)
+        assertEquals(PartMode.NONE, viewModel.mode.value)
         assertFalse(viewModel.contentAvailable.get())
         assertFalse(viewModel.editable.get())
     }
@@ -89,7 +91,7 @@ class BookPartEditorViewModelTest {
 
         selection.value = ProjectListItem.PrologItem(project.value.book.prolog)
 
-        assertEquals(BookPartEditorViewModel.PartMode.BOOK_PART, viewModel.mode.value)
+        assertEquals(PartMode.BOOK_PART, viewModel.mode.value)
         assertTrue(viewModel.contentAvailable.get())
         assertTrue(viewModel.editable.get())
     }
@@ -104,7 +106,7 @@ class BookPartEditorViewModelTest {
 
         selection.value = ProjectListItem.ChapterItem(project.value.book.chapters.single())
 
-        assertEquals(BookPartEditorViewModel.PartMode.BOOK_PART, viewModel.mode.value)
+        assertEquals(PartMode.BOOK_PART, viewModel.mode.value)
         assertTrue(viewModel.editable.get())
     }
 
@@ -118,7 +120,7 @@ class BookPartEditorViewModelTest {
 
         selection.value = ProjectListItem.TitlePageItem
 
-        assertEquals(BookPartEditorViewModel.PartMode.TITLE_PAGE, viewModel.mode.value)
+        assertEquals(PartMode.TITLE_PAGE, viewModel.mode.value)
         assertTrue(viewModel.contentAvailable.get())
         assertFalse(viewModel.editable.get())
     }
@@ -134,7 +136,7 @@ class BookPartEditorViewModelTest {
 
         selection.value = ProjectListItem.CopyrightPageItem
 
-        assertEquals(BookPartEditorViewModel.PartMode.COPYRIGHT_PAGE, viewModel.mode.value)
+        assertEquals(PartMode.COPYRIGHT_PAGE, viewModel.mode.value)
         assertFalse(viewModel.editable.get())
     }
 
@@ -149,7 +151,7 @@ class BookPartEditorViewModelTest {
 
         selection.value = ProjectListItem.BlurbItem(project.value.book.blurb)
 
-        assertEquals(BookPartEditorViewModel.PartMode.BLURB, viewModel.mode.value)
+        assertEquals(PartMode.BLURB, viewModel.mode.value)
         assertTrue(viewModel.editable.get())
     }
 
@@ -164,7 +166,7 @@ class BookPartEditorViewModelTest {
 
         selection.value = ProjectListItem.Chapters
 
-        assertEquals(BookPartEditorViewModel.PartMode.NONE, viewModel.mode.value)
+        assertEquals(PartMode.NONE, viewModel.mode.value)
         assertFalse(viewModel.contentAvailable.get())
     }
 
@@ -178,7 +180,7 @@ class BookPartEditorViewModelTest {
 
         selection.value = ProjectListItem.PrologItem(null)
 
-        assertEquals(BookPartEditorViewModel.PartMode.NONE, viewModel.mode.value)
+        assertEquals(PartMode.NONE, viewModel.mode.value)
     }
 
     /**
@@ -193,7 +195,7 @@ class BookPartEditorViewModelTest {
 
         selection.value = ProjectListItem.TitlePageItem
 
-        assertEquals(BookPartEditorViewModel.PartMode.TITLE_PAGE, viewModel.mode.value)
+        assertEquals(PartMode.TITLE_PAGE, viewModel.mode.value)
     }
 
     /**

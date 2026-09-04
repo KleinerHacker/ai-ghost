@@ -16,28 +16,25 @@ import org.pcsoft.app.aighost.layouting.PageGeometry
 import org.pcsoft.app.aighost.model.project.design.PageFormat
 
 /**
- * The one place where a stored page format becomes the page geometry [org.pcsoft.app.aighost.layouting.LayoutEngine]
- * paginates onto.
+ * The one place where a stored page format becomes the page geometry the layout core paginates onto.
  *
  * The two types look alike but belong to different worlds, the same way [PageFormat] and
  * [PageGeometry] mirror [org.pcsoft.app.aighost.model.common.StyleData] and
- * [org.pcsoft.app.aighost.layouting.TextStyle].
+ * [org.pcsoft.app.aighost.layouting.TextStyle]. The translation is written as an extension of the
+ * stored type, the same way the style translation is.
  */
-object PageGeometryTranslation {
 
-    /**
-     * Translates a stored page format into the page geometry of the layout core.
-     *
-     * @param pageFormat The stored page format of the design.
-     */
-    fun toPageGeometry(pageFormat: PageFormat): PageGeometry =
-        PageGeometry(
-            width = pageFormat.width,
-            height = pageFormat.height,
-            innerMargin = pageFormat.innerMargin,
-            outerMargin = pageFormat.outerMargin,
-            topMargin = pageFormat.topMargin,
-            bottomMargin = pageFormat.bottomMargin,
-            mirroredMargins = pageFormat.mirroredMargins
-        )
-}
+/**
+ * Translates a stored page format into the page geometry of the layout core, a plain field-by-field
+ * copy that only exists to keep the two worlds apart.
+ */
+fun PageFormat.toPageGeometry(): PageGeometry =
+    PageGeometry(
+        width = width,
+        height = height,
+        innerMargin = innerMargin,
+        outerMargin = outerMargin,
+        topMargin = topMargin,
+        bottomMargin = bottomMargin,
+        mirroredMargins = mirroredMargins
+    )

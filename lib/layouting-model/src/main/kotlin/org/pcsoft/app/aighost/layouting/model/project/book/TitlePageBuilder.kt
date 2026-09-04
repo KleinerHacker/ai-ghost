@@ -14,7 +14,7 @@ package org.pcsoft.app.aighost.layouting.model.project.book
 
 import org.pcsoft.app.aighost.layouting.TextBlock
 import org.pcsoft.app.aighost.layouting.model.common.BlockSpacing
-import org.pcsoft.app.aighost.layouting.model.common.StyleTranslation
+import org.pcsoft.app.aighost.layouting.model.common.toTextStyle
 import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.design.Design
 import org.pcsoft.app.aighost.model.project.meta.Meta
@@ -45,8 +45,7 @@ object TitlePageBuilder {
         if (book.title.isNotBlank()) {
             blocks += TextBlock(
                 text = book.title,
-                style = StyleTranslation.toTextStyle(
-                    style = titlePage.titleStyle,
+                style = titlePage.titleStyle.toTextStyle(
                     spaceAfter = if (appendix.isEmpty()) BlockSpacing.AFTER_TITLE_APPENDIX else BlockSpacing.AFTER_TITLE
                 )
             )
@@ -55,8 +54,7 @@ object TitlePageBuilder {
         appendix.forEachIndexed { index, line ->
             blocks += TextBlock(
                 text = line,
-                style = StyleTranslation.toTextStyle(
-                    style = titlePage.titleAppendixStyle,
+                style = titlePage.titleAppendixStyle.toTextStyle(
                     spaceAfter = if (index == appendix.lastIndex) BlockSpacing.AFTER_TITLE_APPENDIX else 0.0
                 )
             )
@@ -65,8 +63,7 @@ object TitlePageBuilder {
         if (titlePage.showAuthor && meta.author.isNotBlank()) {
             blocks += TextBlock(
                 text = meta.author,
-                style = StyleTranslation.toTextStyle(
-                    style = titlePage.authorStyle,
+                style = titlePage.authorStyle.toTextStyle(
                     spaceBefore = BlockSpacing.BEFORE_AUTHOR
                 )
             )

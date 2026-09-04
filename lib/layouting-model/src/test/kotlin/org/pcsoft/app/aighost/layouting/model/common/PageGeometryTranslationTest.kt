@@ -19,7 +19,7 @@ import org.pcsoft.app.aighost.model.project.design.PageFormat
 
 /**
  * Developer tests for the translation of a stored page format into a layout page geometry,
- * [PageGeometryTranslation].
+ * [PageFormat.toPageGeometry].
  */
 class PageGeometryTranslationTest {
 
@@ -39,7 +39,7 @@ class PageGeometryTranslationTest {
             mirroredMargins = true
         )
 
-        val translated = PageGeometryTranslation.toPageGeometry(stored)
+        val translated = stored.toPageGeometry()
 
         assertEquals(
             PageGeometry(

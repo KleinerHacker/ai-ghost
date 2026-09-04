@@ -23,46 +23,44 @@ import org.pcsoft.app.aighost.model.common.StyleData
  * The two types look alike but belong to different worlds: [StyleData] is what the user edits and
  * what is written to disk, [TextStyle] is what a line is set with. The line spacing is part of the
  * stored style and is carried over; the gaps around a block are not stored anywhere, so they are
- * handed in separately.
+ * handed in separately. The translation is written as an extension of the stored type, the same way
+ * the font translations are.
  */
-object StyleTranslation {
 
-    /**
-     * Translates a stored style into a layout style.
-     *
-     * @param style Stored style of the element, line spacing included.
-     * @param spaceBefore Empty space above the block in points.
-     * @param spaceAfter Empty space below the block in points.
-     */
-    fun toTextStyle(
-        style: StyleData,
-        spaceBefore: Double = 0.0,
-        spaceAfter: Double = 0.0
-    ): TextStyle =
-        TextStyle(
-            family = style.font.name,
-            size = style.font.size.toDouble(),
-            bold = style.font.bold,
-            italic = style.font.italic,
-            alignment = toTextAlignment(style.alignment),
-            lineSpacing = style.textLineSpacing,
-            spaceBefore = spaceBefore,
-            spaceAfter = spaceAfter
-        )
+/**
+ * Translates a stored style into a layout style.
+ *
+ * @receiver Stored style of the element, line spacing included.
+ * @param spaceBefore Empty space above the block in points.
+ * @param spaceAfter Empty space below the block in points.
+ */
+fun StyleData.toTextStyle(
+    spaceBefore: Double = 0.0,
+    spaceAfter: Double = 0.0
+): TextStyle =
+    TextStyle(
+        family = font.name,
+        size = font.size.toDouble(),
+        bold = font.bold,
+        italic = font.italic,
+        alignment = alignment.toTextAlignment(),
+        lineSpacing = textLineSpacing,
+        spaceBefore = spaceBefore,
+        spaceAfter = spaceAfter
+    )
 
-    /**
-     * Translates the stored alignment into the alignment of the layout core.
-     *
-     * @param alignment Alignment as it is stored in the design.
-     */
-    fun toTextAlignment(alignment: Alignment): TextAlignment =
-        when (alignment) {
-            Alignment.LEFT -> TextAlignment.LEFT
-            Alignment.CENTER -> TextAlignment.CENTER
-            Alignment.RIGHT -> TextAlignment.RIGHT
-            Alignment.BLOCK -> TextAlignment.JUSTIFY
-        }
-}
+/**
+ * Translates the stored alignment into the alignment of the layout core.
+ *
+ * @receiver Alignment as it is stored in the design.
+ */
+fun Alignment.toTextAlignment(): TextAlignment =
+    when (this) {
+        Alignment.LEFT -> TextAlignment.LEFT
+        Alignment.CENTER -> TextAlignment.CENTER
+        Alignment.RIGHT -> TextAlignment.RIGHT
+        Alignment.BLOCK -> TextAlignment.JUSTIFY
+    }
 
 /**
  * The gaps a built block asks for above and below itself.

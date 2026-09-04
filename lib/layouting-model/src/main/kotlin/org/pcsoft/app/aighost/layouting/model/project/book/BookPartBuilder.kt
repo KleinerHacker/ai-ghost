@@ -14,7 +14,7 @@ package org.pcsoft.app.aighost.layouting.model.project.book
 
 import org.pcsoft.app.aighost.layouting.TextBlock
 import org.pcsoft.app.aighost.layouting.model.common.BlockSpacing
-import org.pcsoft.app.aighost.layouting.model.common.StyleTranslation
+import org.pcsoft.app.aighost.layouting.model.common.toTextStyle
 import org.pcsoft.app.aighost.model.project.book.BookPart
 import org.pcsoft.app.aighost.model.project.design.BookPartPageDesign
 
@@ -45,8 +45,7 @@ object BookPartBuilder {
         if (part.title.isNotBlank()) {
             blocks += TextBlock(
                 text = part.title,
-                style = StyleTranslation.toTextStyle(
-                    style = pageDesign.titleStyle,
+                style = pageDesign.titleStyle.toTextStyle(
                     spaceBefore = BlockSpacing.BEFORE_PART_TITLE,
                     spaceAfter = if (appendix.isEmpty()) BlockSpacing.AFTER_PART_TITLE else 0.0
                 )
@@ -56,16 +55,14 @@ object BookPartBuilder {
         appendix.forEachIndexed { index, line ->
             blocks += TextBlock(
                 text = line,
-                style = StyleTranslation.toTextStyle(
-                    style = pageDesign.titleAppendixStyle,
+                style = pageDesign.titleAppendixStyle.toTextStyle(
                     spaceBefore = if (index == 0 && part.title.isBlank()) BlockSpacing.BEFORE_PART_TITLE else 0.0,
                     spaceAfter = if (index == appendix.lastIndex) BlockSpacing.AFTER_PART_TITLE else 0.0
                 )
             )
         }
 
-        val textStyle = StyleTranslation.toTextStyle(
-            style = pageDesign.textStyle,
+        val textStyle = pageDesign.textStyle.toTextStyle(
             spaceAfter = BlockSpacing.AFTER_PARAGRAPH
         )
         part.paragraph.forEach { paragraph ->

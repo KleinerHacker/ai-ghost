@@ -23,7 +23,7 @@ import org.pcsoft.app.aighost.model.common.FontData
 import org.pcsoft.app.aighost.model.common.StyleData
 
 /**
- * Developer tests for the translation of a stored style into a layout style, [StyleTranslation].
+ * Developer tests for the translation of a stored style into a layout style, [StyleData.toTextStyle].
  */
 class StyleTranslationTest {
 
@@ -39,7 +39,7 @@ class StyleTranslationTest {
             alignment = Alignment.CENTER
         )
 
-        val translated = StyleTranslation.toTextStyle(stored)
+        val translated = stored.toTextStyle()
 
         assertEquals(
             TextStyle(
@@ -60,8 +60,7 @@ class StyleTranslationTest {
      */
     @Test
     fun theLineSpacingComesFromTheStyleAndTheGapsFromTheArguments() {
-        val translated = StyleTranslation.toTextStyle(
-            style = StyleData(textLineSpacing = 1.35),
+        val translated = StyleData(textLineSpacing = 1.35).toTextStyle(
             spaceBefore = 8.0,
             spaceAfter = 4.0
         )
@@ -77,7 +76,7 @@ class StyleTranslationTest {
      */
     @Test
     fun theGapsDefaultToNothing() {
-        val translated = StyleTranslation.toTextStyle(StyleData())
+        val translated = StyleData().toTextStyle()
 
         assertEquals(0.0, translated.spaceBefore)
         assertEquals(0.0, translated.spaceAfter)
@@ -90,7 +89,7 @@ class StyleTranslationTest {
     @ParameterizedTest
     @CsvSource("LEFT,LEFT", "CENTER,CENTER", "RIGHT,RIGHT", "BLOCK,JUSTIFY")
     fun everyStoredAlignmentHasItsCounterpart(stored: Alignment, expected: TextAlignment) {
-        assertEquals(expected, StyleTranslation.toTextAlignment(stored))
-        assertEquals(expected, StyleTranslation.toTextStyle(StyleData(alignment = stored)).alignment)
+        assertEquals(expected, stored.toTextAlignment())
+        assertEquals(expected, StyleData(alignment = stored).toTextStyle().alignment)
     }
 }

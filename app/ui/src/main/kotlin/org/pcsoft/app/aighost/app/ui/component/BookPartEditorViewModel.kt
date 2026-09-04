@@ -23,24 +23,19 @@ import javafx.beans.property.StringProperty
 import javafx.beans.value.ChangeListener
 import javafx.beans.value.ObservableValue
 import org.pcsoft.app.aighost.app.Messages
+import org.pcsoft.app.aighost.app.controller.BookPartEditorController
 import org.pcsoft.app.aighost.app.controller.IoController
+import org.pcsoft.app.aighost.app.controller.PartMode
+import org.pcsoft.app.aighost.app.controller.PartTarget
 import org.pcsoft.app.aighost.app.undo.UndoStack
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
-import org.pcsoft.app.aighost.fx.model.project.book.BookPartProperty
-import org.pcsoft.app.aighost.fx.model.project.book.ChapterProperty
+import org.pcsoft.app.aighost.layouting.DocumentLayout
 import org.pcsoft.app.aighost.layouting.GreedyLineBreaker
 import org.pcsoft.app.aighost.layouting.IncrementalLineBreaker
-import org.pcsoft.app.aighost.layouting.LayoutEngine
-import org.pcsoft.app.aighost.layouting.NonePageBreakPolicy
-import org.pcsoft.app.aighost.layouting.TextBlock
 import org.pcsoft.app.aighost.layouting.fx.font.JavaFxTextMetrics
 import org.pcsoft.app.aighost.layouting.fx.paper.PaperFlowListener
 import org.pcsoft.app.aighost.layouting.fx.paper.PaperFlowView
-import org.pcsoft.app.aighost.layouting.model.common.PageGeometryTranslation
-import org.pcsoft.app.aighost.layouting.model.project.book.BlurbBuilder
-import org.pcsoft.app.aighost.layouting.model.project.book.BookPartBuilder
-import org.pcsoft.app.aighost.layouting.model.project.book.TitlePageBuilder
-import org.pcsoft.app.aighost.layouting.model.project.meta.CopyrightPageBuilder
+import org.pcsoft.app.aighost.layouting.model.common.toPageGeometry
 
 /**
  * View model of [BookPartEditor].
@@ -50,16 +45,16 @@ import org.pcsoft.app.aighost.layouting.model.project.meta.CopyrightPageBuilder
  * itself and never wrapped in a property of their own. The [PaperFlowView] the view holds is handed
  * in once through [attach].
  *
- * Prolog, chapter and epilog are edited through one flow over one [BookPartProperty]; the title page
- * and the copyright page are shown read only, the blurb has no heading. Every keystroke reported by
- * [PaperFlowView] is written into the property model of the part and folded into a single undo entry
- * per block for the length of a typing pause; the layout on the sheet is recomputed from the model
- * after every change and after every design change, so the caret survives a restyling.
+ * The domain logic - routing a tree node onto a part, assembling the sheet from the model and the
+ * design, mapping a block back onto a manuscript field - lives in [BookPartEditorController]. This
+ * view model keeps only what has a lifetime: the flow view it drives, the [IncrementalLineBreaker]
+ * with its per-keystroke cache, one [StringProperty] per editable block for the undo history, the
+ * caret and the current [BookPartEditorController.PartResolution].
  *
- * Only the block that actually changed is broken again on a keystroke: the line breaking runs through
- * an [IncrementalLineBreaker] that holds the broken lines of every unchanged block, so ordinary prose
- * measures a handful of words per keystroke instead of the whole part. The cache is dropped when the
- * design restyles every block.
+ * Every keystroke reported by [PaperFlowView] is written into the model and folded into a single undo
+ * entry per block for the length of a typing pause; the layout on the sheet is recomputed after every
+ * change and after every design change, so the caret survives a restyling. Only the block that
+ * changed is measured again, the rest is read from the incremental breaker.
  *
  * The component follows only models handed to it and registers nothing in a global registry, so the
  * `showingBinding` pattern of `fx-component-lifecycle` does not apply here, the same as for
@@ -95,9 +90,9 @@ class BookPartEditorViewModel : ViewModel {
     private var undoStack: UndoStack? = null
     private var lastSelection: ProjectListItem? = null
 
-    // The part currently edited, built through the book's own property or through ChapterProperty.of.
-    private var boundPart: BookPartProperty<*>? = null
-    private var partId: String = ""
+    // The part currently edited, resolved from the picked tree node by the controller.
+    private var resolution: BookPartEditorController.PartResolution =
+        BookPartEditorController.PartResolution(PartMode.NONE, null, "")
 
     // What each block of the current layout writes back to, in block order.
     private var targets: List<PartTarget> = emptyList()
@@ -223,7 +218,6 @@ class BookPartEditorViewModel : ViewModel {
             paperFlowView.removePaperFlowListener(flowListener)
             paperFlowView.columnWidthProperty().removeListener(columnWidthListener)
         }
-        boundPart = null
         targetProperties.clear()
         targets = emptyList()
         lineBreaker.clear()
@@ -234,36 +228,9 @@ class BookPartEditorViewModel : ViewModel {
         undoStack?.endMerging()
         focusedBlock = null
         targetProperties.clear()
-        boundPart = null
-        partId = ""
 
-        val p = project
-        val book = p?.bookProperty?.value
-        mode.value = when {
-            p == null || book == null -> PartMode.NONE
-            item is ProjectListItem.TitlePageItem -> PartMode.TITLE_PAGE
-            item is ProjectListItem.CopyrightPageItem -> PartMode.COPYRIGHT_PAGE
-            item is ProjectListItem.PrologItem -> {
-                boundPart = p.bookProperty.prologProperty
-                partId = "prolog"
-                PartMode.BOOK_PART
-            }
-
-            item is ProjectListItem.EpilogItem -> {
-                boundPart = p.bookProperty.epilogProperty
-                partId = "epilog"
-                PartMode.BOOK_PART
-            }
-
-            item is ProjectListItem.ChapterItem -> {
-                boundPart = ChapterProperty.of(item.chapter)
-                partId = "chapter:" + item.chapter.name
-                PartMode.BOOK_PART
-            }
-
-            item is ProjectListItem.BlurbItem -> PartMode.BLURB
-            else -> PartMode.NONE
-        }
+        resolution = BookPartEditorController.resolve(project, item)
+        mode.value = resolution.mode
 
         recompute()
     }
@@ -278,6 +245,7 @@ class BookPartEditorViewModel : ViewModel {
         }
 
         val target = targets.getOrNull(blockIndex) ?: return
+        val projectProperty = project ?: return
         val property = propertyFor(target)
         val old = property.value ?: ""
         if (text == old) return
@@ -288,228 +256,64 @@ class BookPartEditorViewModel : ViewModel {
         } finally {
             writingTarget = false
         }
-        writeModel(target, text)
-        undoStack?.record(Messages["component.bookPartEditor.undo.edit"], property, old, text, mergeKey = partId to target)
+        BookPartEditorController.writeModel(projectProperty, resolution, target, text)
+        undoStack?.record(
+            Messages["component.bookPartEditor.undo.edit"],
+            property,
+            old,
+            text,
+            mergeKey = resolution.partId to target
+        )
         recompute()
     }
 
     private fun propertyFor(target: PartTarget): StringProperty =
         targetProperties.getOrPut(target) {
-            SimpleStringProperty(readModel(target)).apply {
+            val initial = project?.let { BookPartEditorController.readModel(it, resolution, target) } ?: ""
+            SimpleStringProperty(initial).apply {
                 addListener { _, _, newValue ->
                     if (writingTarget) return@addListener
                     // Reached only through an undo or redo, which plays the value back the same way.
-                    writeModel(target, newValue ?: "")
+                    project?.let { BookPartEditorController.writeModel(it, resolution, target, newValue ?: "") }
                     recompute()
                 }
             }
         }
 
-    private fun readModel(target: PartTarget): String = when (target) {
-        is PartTarget.Title -> boundPart?.titleProperty?.get().orEmpty()
-        is PartTarget.AppendixLine -> boundPart?.titleAppendixProperty?.getOrNull(target.modelIndex).orEmpty()
-        is PartTarget.Paragraph -> when (mode.value) {
-            PartMode.BLURB -> blurbParagraphs()?.getOrNull(target.index).orEmpty()
-            else -> boundPart?.paragraphProperty?.getOrNull(target.index).orEmpty()
-        }
-    }
-
-    private fun writeModel(target: PartTarget, value: String) {
-        when (target) {
-            is PartTarget.Title -> boundPart?.titleProperty?.set(value)
-
-            is PartTarget.AppendixLine -> {
-                val list = boundPart?.titleAppendixProperty ?: return
-                if (target.modelIndex in list.indices) {
-                    list[target.modelIndex] = value
-                }
-            }
-
-            is PartTarget.Paragraph -> {
-                val list = if (mode.value == PartMode.BLURB) blurbParagraphs() else boundPart?.paragraphProperty
-                list ?: return
-                if (target.index in list.indices) {
-                    list[target.index] = value
-                } else if (target.index == list.size) {
-                    list.add(value)
-                }
-            }
-        }
-    }
-
-    private fun blurbParagraphs() = project?.bookProperty?.blurbProperty?.paragraphProperty
-
     private fun recompute() {
         if (!::paperFlowView.isInitialized) return
 
-        val p = project?.value
-        val design = p?.design
-        if (p == null || design == null || mode.value == PartMode.NONE) {
+        val project = this.project?.value
+        val design = project?.design
+        if (project == null || design == null || mode.value == PartMode.NONE) {
             targets = emptyList()
-            applyingLayout = true
-            try {
-                paperFlowView.documentLayout = null
-            } finally {
-                applyingLayout = false
-            }
+            pushLayout(null)
             return
         }
 
-        val geometry = PageGeometryTranslation.toPageGeometry(design.pageFormat)
+        val geometry = design.pageFormat.toPageGeometry()
         paperFlowView.pageGeometry = geometry
 
-        val (blocks, blockTargets) = buildBlocks(p, design)
-        targets = blockTargets
+        val plan = BookPartEditorController.buildBlocks(project, design, resolution)
+        targets = plan.targets
 
-        if (blocks.isEmpty()) {
-            applyingLayout = true
-            try {
-                paperFlowView.documentLayout = null
-            } finally {
-                applyingLayout = false
-            }
+        if (plan.blocks.isEmpty()) {
+            pushLayout(null)
             return
         }
 
-        // The flow view derives the exact column width from the insets of its own text controls,
-        // which only exist once a layout was handed in. The first layout therefore uses the plain
-        // content width of the page; the column-width listener recomputes with the exact value as
-        // soon as the controls report it.
-        val reported = paperFlowView.columnWidth
-        val columnWidth = if (reported > 0.0) {
-            reported
-        } else {
-            (design.pageFormat.width - design.pageFormat.innerMargin - design.pageFormat.outerMargin)
-                .coerceAtLeast(1.0)
-        }
+        val columnWidth = BookPartEditorController.columnWidth(design, paperFlowView.columnWidth)
+        pushLayout(BookPartEditorController.layout(plan.blocks, geometry, columnWidth, lineBreaker))
+    }
 
-        // Only the block that changed since the last keystroke is measured again; the rest is read
-        // from the incremental breaker. Distributing the lines onto pages afterwards is arithmetic
-        // over the result and carries no measurement, so it always runs in full.
-        val text = lineBreaker.breakText(blocks, columnWidth)
-        val layout = LayoutEngine.layout(
-            text = text,
-            geometry = geometry,
-            startPageNumber = null,
-            policy = NonePageBreakPolicy
-        )
-
+    // Hands a layout to the flow view without the text-change events of the rebuild being taken for
+    // edits.
+    private fun pushLayout(layout: DocumentLayout?) {
         applyingLayout = true
         try {
             paperFlowView.documentLayout = layout
         } finally {
             applyingLayout = false
         }
-    }
-
-    private fun buildBlocks(
-        project: org.pcsoft.app.aighost.model.project.Project,
-        design: org.pcsoft.app.aighost.model.project.design.Design
-    ): Pair<List<TextBlock>, List<PartTarget>> {
-        val book = project.book
-        val meta = project.meta
-
-        return when (mode.value) {
-            PartMode.TITLE_PAGE ->
-                ensureWritableBlock(TitlePageBuilder.build(book, meta, design), design, emptyList())
-
-            PartMode.COPYRIGHT_PAGE ->
-                ensureWritableBlock(
-                    CopyrightPageBuilder.build(book.copyright, meta, design),
-                    design,
-                    emptyList()
-                )
-
-            PartMode.BLURB -> {
-                val blocks = BlurbBuilder.build(book.blurb, design)
-                val targets = book.blurb.paragraph.indices.map { PartTarget.Paragraph(it) }
-                ensureWritableBlock(blocks, design, targets)
-            }
-
-            PartMode.BOOK_PART -> {
-                val part = boundPart?.value ?: return emptyList<TextBlock>() to emptyList()
-                val pageDesign = when (partId.substringBefore(':')) {
-                    "prolog" -> design.prologPage
-                    "epilog" -> design.epilogPage
-                    else -> design.chapterPage
-                }
-                val blocks = BookPartBuilder.build(part, pageDesign)
-                val targets = ArrayList<PartTarget>()
-                if (part.title.isNotBlank()) {
-                    targets += PartTarget.Title
-                }
-                part.titleAppendix.forEachIndexed { index, line ->
-                    if (line.isNotBlank()) {
-                        targets += PartTarget.AppendixLine(index)
-                    }
-                }
-                part.paragraph.indices.forEach { targets += PartTarget.Paragraph(it) }
-                ensureWritableBlock(blocks, design, targets)
-            }
-
-            PartMode.NONE -> emptyList<TextBlock>() to emptyList()
-        }
-    }
-
-    // A writable part needs at least one text control so the flow view can report a column width and
-    // the user has somewhere to type; an empty prolog gets one empty paragraph block for that.
-    private fun ensureWritableBlock(
-        blocks: List<TextBlock>,
-        design: org.pcsoft.app.aighost.model.project.design.Design,
-        targets: List<PartTarget>
-    ): Pair<List<TextBlock>, List<PartTarget>> {
-        if (blocks.isNotEmpty()) return blocks to targets
-        if (mode.value != PartMode.BOOK_PART && mode.value != PartMode.BLURB) return blocks to targets
-
-        val style = org.pcsoft.app.aighost.layouting.model.common.StyleTranslation.toTextStyle(
-            when (mode.value) {
-                PartMode.BLURB -> design.blurbPage.textStyle
-                else -> when (partId.substringBefore(':')) {
-                    "prolog" -> design.prologPage.textStyle
-                    "epilog" -> design.epilogPage.textStyle
-                    else -> design.chapterPage.textStyle
-                }
-            }
-        )
-        return listOf(TextBlock(text = "", style = style)) to listOf(PartTarget.Paragraph(0))
-    }
-
-    /** Which kind of part the sheet shows. */
-    enum class PartMode {
-        /** Nothing writable is picked, so the sheet shows its empty state. */
-        NONE,
-
-        /** The title page is shown read only. */
-        TITLE_PAGE,
-
-        /** The copyright page is shown read only. */
-        COPYRIGHT_PAGE,
-
-        /** A prolog, a chapter or an epilog is edited through one flow. */
-        BOOK_PART,
-
-        /** The blurb is edited, a flow without a heading. */
-        BLURB
-    }
-
-    /** What a single block of the current layout writes its text back to. */
-    internal sealed interface PartTarget {
-
-        /** The heading of the part. */
-        data object Title : PartTarget
-
-        /**
-         * A further heading line of the part.
-         *
-         * @property modelIndex Index into the part's `titleAppendix` list, blank lines included.
-         */
-        data class AppendixLine(val modelIndex: Int) : PartTarget
-
-        /**
-         * A paragraph of the part.
-         *
-         * @property index Index into the part's `paragraph` list.
-         */
-        data class Paragraph(val index: Int) : PartTarget
     }
 }

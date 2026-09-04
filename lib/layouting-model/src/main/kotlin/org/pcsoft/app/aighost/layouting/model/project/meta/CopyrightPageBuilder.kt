@@ -14,7 +14,7 @@ package org.pcsoft.app.aighost.layouting.model.project.meta
 
 import org.pcsoft.app.aighost.layouting.TextBlock
 import org.pcsoft.app.aighost.layouting.model.common.BlockSpacing
-import org.pcsoft.app.aighost.layouting.model.common.StyleTranslation
+import org.pcsoft.app.aighost.layouting.model.common.toTextStyle
 import org.pcsoft.app.aighost.model.project.book.Copyright
 import org.pcsoft.app.aighost.model.project.design.Design
 import org.pcsoft.app.aighost.model.project.meta.Meta
@@ -48,8 +48,7 @@ object CopyrightPageBuilder {
         val blocks = ArrayList<TextBlock>()
 
         if (copyright.copyright.isNotBlank()) {
-            val noticeStyle = StyleTranslation.toTextStyle(
-                style = copyrightPage.copyrightStyle,
+            val noticeStyle = copyrightPage.copyrightStyle.toTextStyle(
                 spaceAfter = BlockSpacing.AFTER_PARAGRAPH
             )
             copyright.copyright.lines().forEach { line ->
@@ -57,8 +56,7 @@ object CopyrightPageBuilder {
             }
         }
 
-        val appendixStyle = StyleTranslation.toTextStyle(
-            style = copyrightPage.copyrightAppendixStyle,
+        val appendixStyle = copyrightPage.copyrightAppendixStyle.toTextStyle(
             spaceAfter = BlockSpacing.AFTER_PARAGRAPH
         )
         copyright.copyrightAppendix.filter { it.isNotBlank() }.forEach { line ->
@@ -68,8 +66,7 @@ object CopyrightPageBuilder {
         if (copyrightPage.showAuthor && meta.author.isNotBlank()) {
             blocks += TextBlock(
                 text = meta.author,
-                style = StyleTranslation.toTextStyle(
-                    style = copyrightPage.authorStyle,
+                style = copyrightPage.authorStyle.toTextStyle(
                     spaceBefore = BlockSpacing.BEFORE_AUTHOR
                 )
             )
