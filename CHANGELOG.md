@@ -10,6 +10,9 @@
   Inspector re-lays the sheet at once without moving the caret, and every text change is undone and
   redone from the tool bar, with consecutive typing in one block falling together into a single step
 
+* Writing surface stays responsive in a book-length part: a keystroke only re-lays the paragraph it
+  changed instead of measuring the whole part again, while the page breaks still follow
+
 * Project tree gains a "Title Page" and a "Copyright Page" node ahead of the prolog, so the front
   matter can be opened on the writing surface like every other part
 

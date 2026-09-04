@@ -1,769 +1,850 @@
-# Feature Plan: Paper Writing Surface
+# Feature-Plan: Paper Writing Surface
 
-> Orientation only. Every task, constraint and test belongs to the implementation plans under
-> `.claude/plans/implementation`; `FP-001-Overview.md` lists them, and section 7 names the file of
-> each one.
+> Nur zur Orientierung. Jede Aufgabe, Einschränkung und jeder Test gehört zu den
+> Implementierungsplänen unter `.claude/plans/implementation`; `FP-001-Overview.md` listet sie, und
+> Abschnitt 7 benennt die Datei jedes einzelnen.
 
-## 1. Objective
+## 1. Ziel
 
-Writing a book part feels like writing on the printed page: title, headings and paragraphs are edited
-on a sheet that already carries the typography, margins and page structure of the finished book.
+Das Schreiben eines Buchteils fühlt sich an wie das Schreiben auf der gedruckten Seite: Titel,
+Überschriften und Absätze werden auf einem Blatt bearbeitet, das bereits die Typografie, die Ränder
+und die Seitenstruktur des fertigen Buches trägt.
 
-Two forces bound the metaphor: the appearance is owned by the project design, not by the writer, and
-text is partly written by the AI, which works on a part, a heading or a paragraph rather than on a
-caret position. The feature answers both by making the sheet the only writing surface, moving
-everything that is not printed text into a context panel, and attaching the AI to the structural units
-the model already knows.
+Zwei Kräfte begrenzen die Metapher: Das Erscheinungsbild gehört dem Projektdesign, nicht der
+schreibenden Person, und Text wird teilweise von der KI geschrieben, die an einem Teil, einer
+Überschrift oder einem Absatz arbeitet statt an einer Cursorposition. Das Feature antwortet auf
+beides, indem es das Blatt zur einzigen Schreibfläche macht, alles, was kein gedruckter Text ist, in
+ein Kontextfenster verlagert und die KI an die strukturellen Einheiten hängt, die das Modell bereits
+kennt.
 
-What is shown while writing is what the preview shows: one layout engine decides every line break and
-every page break, and both surfaces consume that one result. Engine and renderer are general purpose
-libraries; `app/ui` is one consumer of them.
+Was beim Schreiben gezeigt wird, ist das, was die Vorschau zeigt: Eine Layout-Engine entscheidet
+jeden Zeilenumbruch und jeden Seitenumbruch, und beide Oberflächen verbrauchen dieses eine Ergebnis.
+Engine und Renderer sind Allzweckbibliotheken; `app/ui` ist ein Verbraucher von ihnen.
 
-Export is not part of this feature. It is named only as a constraint: the layout result stays toolkit
-independent so a later export - a plugin on Apache PDFBox - consumes the same page structure.
+Der Export ist nicht Teil dieses Features. Er wird nur als Einschränkung benannt: Das Layout-Ergebnis
+bleibt toolkit-unabhängig, damit ein späterer Export – ein Plugin auf Apache PDFBox – dieselbe
+Seitenstruktur verbraucht.
 
-## 2. Current State
+## 2. Aktueller Stand
 
-* `lib/ai-ghost-model`, `lib/ai-ghost-fx-model` - manuscript POJOs and their mirrored FX properties.
-* `lib/ai-ghost-layouting` - the layout core, implemented (IP-03): styles, line breaking, placed
-  lines, the `TextMetrics` interface and a deterministic implementation. No toolkit, no app.
-* `lib/ai-ghost-layouting-model` - the bridge from `Book`, `Design` and `Meta` to the core,
-  implemented (IP-03).
-* `lib/ai-ghost-ai` - only `TokenUtils`; no generation pipeline.
-* `app/ui` - the only JavaFX module, MVVM FX, jlink image. Carries the font work of IP-01
+* `lib/ai-ghost-model`, `lib/ai-ghost-fx-model` – Manuskript-POJOs und ihre gespiegelten
+  FX-Eigenschaften.
+* `lib/ai-ghost-layouting` – der Layout-Kern, umgesetzt (IP-03): Stile, Zeilenumbruch, platzierte
+  Zeilen, die `TextMetrics`-Schnittstelle und eine deterministische Implementierung. Kein Toolkit,
+  keine App.
+* `lib/ai-ghost-layouting-model` – die Brücke von `Book`, `Design` und `Meta` zum Kern, umgesetzt
+  (IP-03).
+* `lib/ai-ghost-ai` – nur `TokenUtils`; keine Generierungspipeline.
+* `app/ui` – das einzige JavaFX-Modul, MVVM FX, jlink-Image. Trägt die Schriftarbeit von IP-01
   (`FontCatalog`, `FontResolver`, `FontResolution`, `JavaFxTextMetrics`).
-* `.claude/rules/architecture.md` allows JavaFX in `app/ui` only.
+* `.claude/rules/architecture.md` erlaubt JavaFX nur in `app/ui`.
 
-Missing: any editor for prolog, chapter, epilog and blurb; rendering, pagination and preview; a
-JavaFX renderer and a module allowed to hold one; a design editor; undo/redo; the font fingerprint.
+Fehlt: jeder Editor für Prolog, Kapitel, Epilog und Klappentext; Rendering, Paginierung und Vorschau;
+ein JavaFX-Renderer und ein Modul, das einen halten darf; ein Design-Editor; Undo/Redo; der
+Schrift-Fingerabdruck.
 
-## 3. Target State
+## 3. Zielzustand
 
-Three zones right of the project tree: the **paper** in the centre, a collapsible **inspector** at the
-right carrying everything that is not printed text, and a **mode switch** between `Schreiben` and
-`Vorschau` over the same content.
+Drei Zonen rechts des Projektbaums: das **Papier** in der Mitte, ein einklappbarer **Inspector**
+rechts, der alles trägt, was kein gedruckter Text ist, und ein **Modus-Schalter** zwischen
+`Schreiben` und `Vorschau` über demselben Inhalt.
 
-* **Fidelity chain.** One engine turns design plus text into placed lines in points; both surfaces
-  paint those coordinates and decide nothing themselves. Measuring and drawing use the same JavaFX
-  text stack, so no second font implementation can answer differently. The correspondence holds per
-  machine; a project records the metrics it was written with, and a mismatch is reported.
-* **Fonts.** No font file is read, parsed or shipped. Families come from `javafx.scene.text.Font`,
-  measuring runs through a hidden `Text` node.
-* **A reusable renderer.** `lib/layouting-fx` (`ai-ghost-layouting-fx`) is a JavaFX component library
-  holding the measuring, the exact page view and the writable flow. It depends on
-  `ai-ghost-layouting` and JavaFX and on nothing else, owns no document and applies no change.
-  `app/ui` keeps everything that names the application: the `FontData` translation, the fingerprint,
-  the binding of book and design, undo, inspector and AI.
-* **Front matter.** Title page with title, further title lines and author, followed directly by the
-  copyright page.
-* **Optional parts.** Prolog, epilog and blurb always begin on a page of their own, always keep their
-  text, stay writable when switched off, are greyed out and left out of the page numbering. The
-  checkbox in the tree decides membership in the book, not existence.
-* **The blurb** is cover text: always the last sheet, set off by a hard edge, without a page number.
-* **AI** sits where its unit of work is: a floating bar at the focused block, a part level action in
-  the inspector. A generated part is provisional and is accepted or discarded; a rewritten paragraph
-  is replaced at once and taken back through undo.
-* **Design** changes take effect on the paper immediately.
+* **Treuekette.** Eine Engine verwandelt Design plus Text in platzierte Zeilen in Punkten; beide
+  Oberflächen malen diese Koordinaten und entscheiden nichts selbst. Messen und Zeichnen nutzen
+  denselben JavaFX-Textstapel, sodass keine zweite Schriftimplementierung anders antworten kann. Die
+  Übereinstimmung gilt pro Maschine; ein Projekt zeichnet die Metriken auf, mit denen es geschrieben
+  wurde, und eine Abweichung wird gemeldet.
+* **Schriften.** Keine Schriftdatei wird gelesen, geparst oder ausgeliefert. Familien kommen aus
+  `javafx.scene.text.Font`, das Messen läuft über einen verborgenen `Text`-Knoten.
+* **Ein wiederverwendbarer Renderer.** `lib/layouting-fx` (`ai-ghost-layouting-fx`) ist eine
+  JavaFX-Komponentenbibliothek, die das Messen, die exakte Seitenansicht und den beschreibbaren Fluss
+  hält. Sie hängt von `ai-ghost-layouting` und JavaFX ab und von nichts sonst, besitzt kein Dokument
+  und wendet keine Änderung an. `app/ui` behält alles, was die Anwendung benennt: die
+  `FontData`-Übersetzung, den Fingerabdruck, die Bindung von Buch und Design, Undo, Inspector und KI.
+* **Vorwerk.** Titelseite mit Titel, weiteren Titelzeilen und Autor, gefolgt direkt von der
+  Copyright-Seite.
+* **Optionale Teile.** Prolog, Epilog und Klappentext beginnen immer auf einer eigenen Seite, behalten
+  immer ihren Text, bleiben beschreibbar, wenn ausgeschaltet, sind ausgegraut und aus der
+  Seitennummerierung genommen. Das Kontrollkästchen im Baum entscheidet über die Zugehörigkeit zum
+  Buch, nicht über die Existenz.
+* **Der Klappentext** ist Umschlagtext: immer das letzte Blatt, durch eine harte Kante abgesetzt, ohne
+  Seitenzahl.
+* **KI** sitzt dort, wo ihre Arbeitseinheit ist: eine schwebende Leiste am fokussierten Block, eine
+  Aktion auf Teil-Ebene im Inspector. Ein generierter Teil ist vorläufig und wird angenommen oder
+  verworfen; ein umgeschriebener Absatz wird sofort ersetzt und über Undo zurückgenommen.
+* **Design**-Änderungen wirken sofort auf dem Papier.
 
-## 4. Requirements
+## 4. Anforderungen
 
-### Functional Requirements
+### Funktionale Anforderungen
 
-* Title page, copyright page, prolog, every chapter, epilog and blurb are written on the paper.
-* Prolog, epilog and blurb are switched into and out of the book by a checkbox in the tree, without
-  losing text and without a confirmation.
-* Text is drawn in the design of the book, per element class: title, chapter title, chapter title
-  appendix, body text.
-* Fonts are chosen from the families installed on the machine; a missing or differently measuring
-  font is reported with the substitute in use.
-* Page breaks are shown where the printed book breaks: as a sheet gap between paragraphs, as a marker
-  line with the page number inside a paragraph.
-* Paragraphs are the editing unit: create, split, join, delete, reorder.
-* No inline character formatting anywhere; pasted rich text is reduced to plain text.
-* Every text change, structural change and applied AI result is undoable and redoable.
-* Prompts, part data and design styles live in the inspector, page format and margins in the project
-  settings dialog - never on the paper.
-* Preview renders the whole book and scrolls to the part selected in the tree; a paragraph falls on
-  the same page in both surfaces.
-* The renderer draws a document layout without knowing what a book is; sheet, gap, marker and
-  background are styled through the library's stylesheet and overridden by the application.
-* A demo renders a document with the library without any ai-ghost module on its path.
+* Titelseite, Copyright-Seite, Prolog, jedes Kapitel, Epilog und Klappentext werden auf dem Papier
+  geschrieben.
+* Prolog, Epilog und Klappentext werden über ein Kontrollkästchen im Baum in das Buch ein- und
+  ausgeschaltet, ohne Text zu verlieren und ohne Bestätigung.
+* Text wird im Design des Buches gezeichnet, je Elementklasse: Titel, Kapiteltitel,
+  Kapiteltitel-Anhang, Fließtext.
+* Schriften werden aus den auf der Maschine installierten Familien gewählt; eine fehlende oder anders
+  messende Schrift wird mit dem verwendeten Ersatz gemeldet.
+* Seitenumbrüche werden dort gezeigt, wo das gedruckte Buch umbricht: als Blattlücke zwischen Absätzen,
+  als Markierungslinie mit der Seitenzahl innerhalb eines Absatzes.
+* Absätze sind die Bearbeitungseinheit: erstellen, teilen, verbinden, löschen, umsortieren.
+* Nirgends Inline-Zeichenformatierung; eingefügter Rich-Text wird auf reinen Text reduziert.
+* Jede Textänderung, jede Strukturänderung und jedes angewandte KI-Ergebnis ist undo- und redo-fähig.
+* Prompts, Teildaten und Designstile leben im Inspector, Seitenformat und Ränder im
+  Projekteinstellungsdialog – nie auf dem Papier.
+* Die Vorschau rendert das ganze Buch und scrollt zu dem im Baum gewählten Teil; ein Absatz fällt in
+  beiden Oberflächen auf dieselbe Seite.
+* Der Renderer zeichnet ein Dokumentlayout, ohne zu wissen, was ein Buch ist; Blatt, Lücke, Marke und
+  Hintergrund werden über das Stylesheet der Bibliothek gestylt und von der Anwendung überschrieben.
+* Eine Demo rendert ein Dokument mit der Bibliothek ohne irgendein ai-ghost-Modul auf ihrem Pfad.
 
-### Technical Requirements
+### Technische Anforderungen
 
-* Kotlin and Gradle. JavaFX exclusively in `app/ui` and in `lib/layouting-fx`; the build fails when
-  the library gains any other dependency or a type of the application in a signature.
-* Pagination and typography stay in a toolkit free module and measure through an interface; the
-  layout result carries no toolkit type.
-* No font file is read, parsed or shipped; `Font.loadFont` is not used. The Ghost Writer face stays a
-  display face of the user interface.
-* Measuring is an FX thread operation and says so in the API.
-* All geometry in points as `Double`; millimetres exist in the UI only.
-* Model changes follow `fx-model`; UI work follows `ui-styling`, `fx-component-lifecycle`, `icons`
-  and `font`; tests follow `testing`; documentation follows `project-docs`; workflows follow
+* Kotlin und Gradle. JavaFX ausschließlich in `app/ui` und in `lib/layouting-fx`; der Build scheitert,
+  wenn die Bibliothek irgendeine andere Abhängigkeit oder einen Typ der Anwendung in einer Signatur
+  bekommt.
+* Paginierung und Typografie bleiben in einem toolkit-freien Modul und messen über eine Schnittstelle;
+  das Layout-Ergebnis trägt keinen Toolkit-Typ.
+* Keine Schriftdatei wird gelesen, geparst oder ausgeliefert; `Font.loadFont` wird nicht verwendet.
+  Die Ghost-Writer-Schrift bleibt eine Anzeigeschrift der Oberfläche.
+* Das Messen ist eine FX-Thread-Operation und sagt das in der API.
+* Alle Geometrie in Punkten als `Double`; Millimeter existieren nur in der UI.
+* Modelländerungen folgen `fx-model`; UI-Arbeit folgt `ui-styling`, `fx-component-lifecycle`, `icons`
+  und `font`; Tests folgen `testing`; Dokumentation folgt `project-docs`; Workflows folgen
   `ci-pipeline`.
-* Text of a part stays `List<String>`; view state belongs to `Preferences`, never to the project
-  document.
-* No new third party dependency without asking the user. JavaFX in a library module is the one such
-  decision this feature needs.
+* Der Text eines Teils bleibt `List<String>`; View-Zustand gehört zu `Preferences`, nie zum
+  Projektdokument.
+* Keine neue Drittanbieter-Abhängigkeit ohne Rückfrage beim Nutzer. JavaFX in einem Bibliotheksmodul
+  ist die eine solche Entscheidung, die dieses Feature braucht.
 
-## 5. Architecture
+## 5. Architektur
 
 ```text
-lib/ai-ghost-layouting          (no toolkit, no app)
+lib/ai-ghost-layouting          (kein Toolkit, keine App)
         ▲                            ▲
         │                            │
-lib/ai-ghost-layouting-model   lib/ai-ghost-layouting-fx   (JavaFX component library)
+lib/ai-ghost-layouting-model   lib/ai-ghost-layouting-fx   (JavaFX-Komponentenbibliothek)
         ▲                            ▲
-        └─────────── app/ui ─────────┘        (ai-ghost specific glue)
+        └─────────── app/ui ─────────┘        (ai-ghost-spezifischer Kleber)
 ```
 
-* **`lib/layouting`** - typesetting engine: text blocks plus a style of its own in, a `DocumentLayout`
-  of pages and placed lines out. Owns `TextMetrics`. Knows no toolkit and no manuscript model.
-* **`lib/layouting-model`** - the only module depending on both sides: builders from `Book`, `Design`
-  and `Meta` into the engine's blocks and styles.
-* **`lib/layouting-fx`** - measuring (font catalogue, resolution, JavaFX `TextMetrics`) and drawing
-  (`PaperPageView`, `PaperFlowView`) in one module, packages `...layouting.fx.font`, `.control`,
-  `.skin` plus its own stylesheet.
-* **`lib/ai-ghost-ai`** - the action port (`rewrite`, `expand`, `shorten`, `generatePart`) only. No
-  implementation, stub or real, ships in this feature; a provider is wired later through the plugin
-  system of its own feature. Every call site carries an open TODO until then.
-* **`app/ui`** - `BookPartEditor`, `Inspector`, `AiActionBar`, the reworked `Editor` and its routing,
-  undo, the `FontData` translation and the metrics fingerprint.
+* **`lib/layouting`** – Satz-Engine: Textblöcke plus ein eigener Stil hinein, ein `DocumentLayout` aus
+  Seiten und platzierten Zeilen heraus. Besitzt `TextMetrics`. Kennt kein Toolkit und kein
+  Manuskriptmodell.
+* **`lib/layouting-model`** – das einzige Modul, das von beiden Seiten abhängt: Builder von `Book`,
+  `Design` und `Meta` in die Blöcke und Stile der Engine.
+* **`lib/layouting-fx`** – Messen (Schriftkatalog, Auflösung, JavaFX-`TextMetrics`) und Zeichnen
+  (`PaperPageView`, `PaperFlowView`) in einem Modul, Pakete `...layouting.fx.font`, `.control`,
+  `.skin` plus eigenes Stylesheet.
+* **`lib/ai-ghost-ai`** – nur der Aktions-Port (`rewrite`, `expand`, `shorten`, `generatePart`). Keine
+  Implementierung, weder Stub noch echt, wird in diesem Feature ausgeliefert; ein Provider wird später
+  über das Plugin-System eines eigenen Features verdrahtet. Jede Aufrufstelle trägt bis dahin ein
+  offenes TODO.
+* **`app/ui`** – `BookPartEditor`, `Inspector`, `AiActionBar`, der überarbeitete `Editor` und sein
+  Routing, Undo, die `FontData`-Übersetzung und der Metrik-Fingerabdruck.
 
-**Model extension.** `Design` gains `PageFormat` and line spacing per element class; `FontData` gains
-the metrics fingerprint; `Book` carries prolog, epilog and blurb always, each with its `included`
-switch; `Preferences` gains the editor view state. Each is mirrored per `fx-model`.
+**Modellerweiterung.** `Design` bekommt `PageFormat` und Zeilenabstand je Elementklasse; `FontData`
+bekommt den Metrik-Fingerabdruck; `Book` trägt Prolog, Epilog und Klappentext immer, jeweils mit
+seinem `included`-Schalter; `Preferences` bekommt den Editor-View-Zustand. Jedes wird gemäß `fx-model`
+gespiegelt.
 
 ```text
 ProjectProperty
-  ├─ designProperty ─┬─> Inspector (style sections)
-  │                  └─> LayoutEngine ─┬─> PaperFlowView   (break positions)
-  │                                    └─> PaperPageView   (exact painting)
-  ├─ bookProperty ──> BookPartEditor <──(change events)──> PaperFlowView
-  └─ (selection) ProjectList.selectedItem ──> EditorViewModel ──> shown part
+  ├─ designProperty ─┬─> Inspector (Stilabschnitte)
+  │                  └─> LayoutEngine ─┬─> PaperFlowView   (Umbruchpositionen)
+  │                                    └─> PaperPageView   (exaktes Malen)
+  ├─ bookProperty ──> BookPartEditor <──(Änderungsereignisse)──> PaperFlowView
+  └─ (Auswahl) ProjectList.selectedItem ──> EditorViewModel ──> gezeigter Teil
                                                    ▲
-                                    TextMetrics ───┘ (layouting-fx, JavaFX Text, on the FX thread)
+                                    TextMetrics ───┘ (layouting-fx, JavaFX Text, auf dem FX-Thread)
 ```
 
-## 6. Implementation Plan Overview
+## 6. Übersicht der Implementierungspläne
 
-IP-22 belongs to the font foundation and is listed with IP-01; IP-25 to IP-28 carry the renderer
-library and were added after IP-01 to IP-03 were completed. IP-20 was removed with the export. The
-numbering is kept stable rather than renumbered.
+IP-22 gehört zur Schriftgrundlage und steht bei IP-01; IP-25 bis IP-28 tragen die Renderer-Bibliothek
+und wurden hinzugefügt, nachdem IP-01 bis IP-03 abgeschlossen waren. IP-20 wurde mit dem Export
+entfernt. Die Nummerierung wird stabil gehalten statt neu nummeriert.
 
-| ID    | Implementation Plan                       | Objective                                                             | Dependencies         |
-|-------|-------------------------------------------|-------------------------------------------------------------------------|----------------------|
-| IP-01 | Font Discovery And Text Measuring ✅       | Installed families, resolution, fallback, measuring through JavaFX     | -                    |
-| IP-22 | Font Identity And Substitution Reporting ✅| Record the metrics used, detect and report a substitution             | IP-01                |
-| IP-02 | Design Page Format Model ✅                | Page format, margins and spacing in `Design`, mirrored                | -                    |
-| IP-24 | Optional Parts In The Model ✅             | Prolog, epilog and blurb always present and switchable                | -                    |
-| IP-03 | Layout Core ✅                             | Resolved styles, line breaking, alignment, placed lines               | IP-01, IP-02, IP-24  |
-| IP-04 | Pagination And Page Break Policy ✅        | Page filling, breaks, odd/even margins, policy hook                   | IP-03                |
-| IP-25 | Renderer Library Module ✅                 | New JavaFX library module, JPMS, TestFX, CI, architecture rule        | -                    |
-| IP-26 | Font And Measuring Migration ✅            | Catalogue, resolution and metrics move into the library               | IP-01, IP-25         |
-| IP-05 | Incremental Layout And Caching            | Per paragraph invalidation so typing stays responsive                 | IP-04                |
-| IP-06 | Layout Regression Harness ✅               | Golden page structures and the surface comparison                     | IP-04, IP-07, IP-08  |
-| IP-07 | Paper Page View ✅                         | Exact read-only renderer of a document layout, in the library         | IP-04, IP-26         |
-| IP-08 | Paper Flow View ✅                         | Writing sheet with page geometry and break marks, in the library      | IP-04, IP-26         |
-| IP-27 | Library Styling And Theming API           | Own stylesheet, style classes, override by the ai-ghost palette       | IP-07, IP-08         |
-| IP-28 | Standalone Reuse And Documentation        | Demo without ai-ghost, published artifact, docs, dependency check     | IP-27                |
-| IP-09 | Undo And Redo Infrastructure ✅            | One undo stack over model changes of the editor                       | -                    |
-| IP-10 | Book Part Writing Surface ✅               | Caret, typing and binding of headings and paragraphs                  | IP-08, IP-09         |
-| IP-11 | Paragraph Structure Operations            | Split, join, delete and reorder paragraphs                            | IP-10                |
-| IP-12 | Inspector Shell And Content Sections ✅    | Context panel with book and part sections, absorbs `BookEditor`       | -                    |
-| IP-13 | Design Style Sections ✅                   | Editing the styles in the inspector with live effect                  | IP-02, IP-12, IP-26  |
-| IP-14 | Project Settings Dialog ✅                 | Page format, margins and empty pages in a dialog                      | IP-02                |
-| IP-15 | Editor Arrangement And Tree Routing       | Three zones, routing of every tree node, view state persisted         | IP-11, IP-12         |
-| IP-16 | Writing And Preview Modes                 | Mode switch, whole book preview, scrolling, virtualisation            | IP-05, IP-07, IP-15  |
-| IP-17 | AI Action Port ✅                          | Action interface in `lib/ai`, no implementation, TODO for the provider | -                    |
-| IP-18 | AI Actions On Paragraph And Heading       | Floating action bar wired to the port, TODO where it would fire       | IP-10, IP-17         |
-| IP-19 | AI Part Generation With Provisional State | Provisional display wired to the port, TODO where it would fire       | IP-12, IP-17         |
-| IP-21 | In-Paragraph Sheet Split                  | Real sheet gap inside a paragraph while writing (optional)            | IP-11                |
-| IP-23 | Optional Book Parts In The Tree           | Checkbox switching prolog, epilog and blurb into and out of the book  | IP-15, IP-24         |
+| ID    | Implementierungsplan                      | Ziel                                                                   | Abhängigkeiten       |
+|-------|-------------------------------------------|-----------------------------------------------------------------------|----------------------|
+| IP-01 | Font Discovery And Text Measuring ✅       | Installierte Familien, Auflösung, Fallback, Messen über JavaFX        | -                    |
+| IP-22 | Font Identity And Substitution Reporting ✅| Verwendete Metriken aufzeichnen, Ersetzung erkennen und melden        | IP-01                |
+| IP-02 | Design Page Format Model ✅                | Seitenformat, Ränder und Abstände in `Design`, gespiegelt            | -                    |
+| IP-24 | Optional Parts In The Model ✅             | Prolog, Epilog und Klappentext immer vorhanden und schaltbar         | -                    |
+| IP-03 | Layout Core ✅                             | Aufgelöste Stile, Zeilenumbruch, Ausrichtung, platzierte Zeilen      | IP-01, IP-02, IP-24  |
+| IP-04 | Pagination And Page Break Policy ✅        | Seitenfüllung, Umbrüche, gerade/ungerade Ränder, Policy-Hook         | IP-03                |
+| IP-25 | Renderer Library Module ✅                 | Neues JavaFX-Bibliotheksmodul, JPMS, TestFX, CI, Architekturregel    | -                    |
+| IP-26 | Font And Measuring Migration ✅            | Katalog, Auflösung und Metriken ziehen in die Bibliothek um          | IP-01, IP-25         |
+| IP-05 | Incremental Layout And Caching ✅          | Absatzweise Invalidierung, damit Tippen reaktionsschnell bleibt      | IP-04                |
+| IP-06 | Layout Regression Harness ✅               | Golden-Seitenstrukturen und der Oberflächenvergleich                 | IP-04, IP-07, IP-08  |
+| IP-07 | Paper Page View ✅                         | Exakter schreibgeschützter Renderer eines Dokumentlayouts, in der Bibliothek | IP-04, IP-26 |
+| IP-08 | Paper Flow View ✅                         | Schreibblatt mit Seitengeometrie und Umbruchmarken, in der Bibliothek | IP-04, IP-26        |
+| IP-27 | Library Styling And Theming API           | Eigenes Stylesheet, Stilklassen, Überschreibung durch die ai-ghost-Palette | IP-07, IP-08   |
+| IP-28 | Standalone Reuse And Documentation        | Demo ohne ai-ghost, veröffentlichtes Artefakt, Doku, Abhängigkeitsprüfung | IP-27          |
+| IP-09 | Undo And Redo Infrastructure ✅            | Ein Undo-Stack über die Modelländerungen des Editors                 | -                    |
+| IP-10 | Book Part Writing Surface ✅               | Cursor, Tippen und Bindung von Überschriften und Absätzen            | IP-08, IP-09         |
+| IP-11 | Paragraph Structure Operations            | Absätze teilen, verbinden, löschen und umsortieren                   | IP-10                |
+| IP-12 | Inspector Shell And Content Sections ✅    | Kontextfenster mit Buch- und Teilabschnitten, absorbiert `BookEditor`| -                    |
+| IP-13 | Design Style Sections ✅                   | Bearbeiten der Stile im Inspector mit Live-Wirkung                   | IP-02, IP-12, IP-26  |
+| IP-14 | Project Settings Dialog ✅                 | Seitenformat, Ränder und Leerseiten in einem Dialog                  | IP-02                |
+| IP-15 | Editor Arrangement And Tree Routing       | Drei Zonen, Routing jedes Baumknotens, View-Zustand persistiert      | IP-11, IP-12         |
+| IP-16 | Writing And Preview Modes                 | Modus-Schalter, Vorschau des ganzen Buches, Scrollen, Virtualisierung| IP-05, IP-07, IP-15  |
+| IP-17 | AI Action Port ✅                          | Aktionsschnittstelle in `lib/ai`, keine Implementierung, TODO für den Provider | -          |
+| IP-18 | AI Actions On Paragraph And Heading       | Schwebende Aktionsleiste an den Port verdrahtet, TODO wo sie feuern würde | IP-10, IP-17    |
+| IP-19 | AI Part Generation With Provisional State | Vorläufige Anzeige an den Port verdrahtet, TODO wo sie feuern würde  | IP-12, IP-17         |
+| IP-21 | In-Paragraph Sheet Split                  | Echte Blattlücke innerhalb eines Absatzes beim Schreiben (optional)  | IP-11                |
+| IP-23 | Optional Book Parts In The Tree           | Kontrollkästchen schaltet Prolog, Epilog und Klappentext ins Buch    | IP-15, IP-24         |
 
-## 7. Implementation Plans
+## 7. Implementierungspläne
 
-Each open plan is written out under `.claude/plans/implementation` with its tasks, its constraints
-and its tests. Named here are only the boundary of the plan and the reasoning behind it that the
-detailed plan itself does not carry.
+Jeder offene Plan ist unter `.claude/plans/implementation` ausgeschrieben, mit seinen Aufgaben, seinen
+Einschränkungen und seinen Tests. Hier benannt sind nur die Grenze des Plans und die Begründung
+dahinter, die der detaillierte Plan selbst nicht trägt.
 
 ### IP-01: Font Discovery And Text Measuring ✅
 
-Completed, in `app/ui`. The helper `Text` node is created once and reused, and widths are not rounded
-up: rounding is right for a control's preferred width but makes line breaking coarse and size
-dependent. Words are measured, not paragraphs, which keeps the cache small and reusable. IP-26 moves
-the reusable half into the library, which is why nothing here is rewritten.
+Abgeschlossen, in `app/ui`. Der Hilfs-`Text`-Knoten wird einmal erstellt und wiederverwendet, und
+Breiten werden nicht aufgerundet: Aufrunden ist für die bevorzugte Breite eines Steuerelements
+richtig, macht den Zeilenumbruch aber grob und größenabhängig. Es werden Wörter gemessen, keine
+Absätze, was den Cache klein und wiederverwendbar hält. IP-26 verschiebt die wiederverwendbare Hälfte
+in die Bibliothek, weshalb hier nichts neu geschrieben wird.
 
 ### IP-22: Font Identity And Substitution Reporting ✅
 
 Plan: `FP-001-IP-22-SchriftIdentitaetUndErsatzmeldung.md`
 
-Completed, split along the module boundary. The fingerprint comes from measurements, not from the
-file: it captures exactly what influences the layout and stays quiet about the rest. Reference set
-and size are fixed for all time, or every older project reports a false mismatch; the set grew to
-Latin-1, Latin Extended-A and Cyrillic, because a substituted family usually differs in exactly
-those letters while plain ASCII still matches. The measuring is pure JavaFX and knows no type of
-this application, so it sits in `lib/layouting-fx`, which exports its first package with it, while
-`app/ui` keeps what records it: the translation onto `FontMetricsData`, the comparison and the
-report. A fingerprint is written when a project is saved and only where none stands yet - the design
-editor of IP-13 does not exist yet, and overwriting on every save would make the comparison
-pointless.
+Abgeschlossen, entlang der Modulgrenze geteilt. Der Fingerabdruck kommt aus Messungen, nicht aus der
+Datei: Er erfasst genau das, was das Layout beeinflusst, und schweigt über den Rest. Referenzmenge und
+Größe sind für alle Zeiten fest, sonst meldet jedes ältere Projekt eine falsche Abweichung; die Menge
+wuchs auf Latin-1, Latin Extended-A und Kyrillisch, da sich eine ersetzte Familie meist genau in
+diesen Buchstaben unterscheidet, während reines ASCII noch übereinstimmt. Das Messen ist reines JavaFX
+und kennt keinen Typ dieser Anwendung, daher sitzt es in `lib/layouting-fx`, das sein erstes Paket mit
+ihm exportiert, während `app/ui` behält, was es aufzeichnet: die Übersetzung auf `FontMetricsData`,
+den Vergleich und den Bericht. Ein Fingerabdruck wird beim Speichern eines Projekts geschrieben und
+nur dort, wo noch keiner steht – der Design-Editor aus IP-13 existiert noch nicht, und ein
+Überschreiben bei jedem Speichern würde den Vergleich sinnlos machen.
 
 ### IP-02: Design Page Format Model ✅
 
-Completed. Margins are inner/outer rather than left/right, because a printed book needs the gutter
-and retrofitting it would touch model, FX model, storage and engine at once. Line spacing as a factor
-survives a font size change.
+Abgeschlossen. Ränder sind innen/außen statt links/rechts, da ein gedrucktes Buch den Bundsteg braucht
+und ein nachträgliches Einfügen Modell, FX-Modell, Speicherung und Engine auf einmal berühren würde.
+Zeilenabstand als Faktor übersteht eine Änderung der Schriftgröße.
 
 ### IP-24: Optional Parts In The Model ✅
 
-Completed. The switch `included` sits on `Prolog`, `Epilog` and `Blurb`, not on `Book` and not in a
-shared interface: no caller reaches it polymorphically, and a chapter can never use it. Because
-nothing is deleted, IP-23 needs no confirmation and no restoring undo entry.
+Abgeschlossen. Der Schalter `included` sitzt auf `Prolog`, `Epilog` und `Blurb`, nicht auf `Book` und
+nicht in einer gemeinsamen Schnittstelle: Kein Aufrufer erreicht ihn polymorph, und ein Kapitel kann
+ihn nie verwenden. Da nichts gelöscht wird, braucht IP-23 keine Bestätigung und keinen
+wiederherstellenden Undo-Eintrag.
 
 ### IP-03: Layout Core ✅
 
-Completed. The engine owns the measuring interface and knows neither a toolkit nor this application's
-model; a block is text plus style, so title page, heading and paragraph need no type of their own.
-The mapping from placed line back to source character range is what lets IP-10 place a caret and
-IP-18 address a paragraph. Hyphenation is out of scope, so the breaking step stays behind an
-interface.
+Abgeschlossen. Die Engine besitzt die Mess-Schnittstelle und kennt weder ein Toolkit noch das Modell
+dieser Anwendung; ein Block ist Text plus Stil, daher brauchen Titelseite, Überschrift und Absatz
+keinen eigenen Typ. Die Abbildung von platzierter Zeile zurück auf den Quellzeichenbereich ist das,
+was IP-10 einen Cursor platzieren und IP-18 einen Absatz adressieren lässt. Silbentrennung ist
+außerhalb des Umfangs, daher bleibt der Umbruchschritt hinter einer Schnittstelle.
 
 ### IP-04: Pagination And Page Break Policy ✅
 
-Plan removed, was `FP-001-IP-04-SeitenumbruchUndPaginierung.md`.
+Plan entfernt, war `FP-001-IP-04-SeitenumbruchUndPaginierung.md`.
 
-The policy interface exists although nothing implements it, because widows and orphans change where a
-page ends and would otherwise reshape the engine later. A page carries two numbers that must not be
-confused - its position in the layout, which an inactive page occupies too, and its page number in
-the book. That distinction is what makes switching a part on a pure renumbering. An optional part
-always starts a new page, so switching can never reflow a neighbouring part. A page also carries
-whether it is inactive, numbered and set apart; the library learns "apart" from the result, never
-that apart means blurb.
+Die Policy-Schnittstelle existiert, obwohl nichts sie implementiert, da Witwen und Waisen ändern, wo
+eine Seite endet, und die Engine sonst später umgestaltet werden müsste. Eine Seite trägt zwei Zahlen,
+die nicht verwechselt werden dürfen – ihre Position im Layout, die auch eine inaktive Seite einnimmt,
+und ihre Seitenzahl im Buch. Diese Unterscheidung macht das Einschalten eines Teils zu einer reinen
+Neunummerierung. Ein optionaler Teil beginnt immer eine neue Seite, sodass das Einschalten nie einen
+benachbarten Teil neu umfließen kann. Eine Seite trägt auch, ob sie inaktiv, nummeriert und abgesetzt
+ist; die Bibliothek erfährt „abgesetzt“ aus dem Ergebnis, nie, dass abgesetzt Klappentext bedeutet.
 
-Built as planned, widened by one request: odd/even margins only swap when the new "Spiegelnde
-Ränder" switch (`PageFormat.mirroredMargins`) is on, so a plain manuscript is not thrown off by an
-unrequested layout change; the title page and the copyright page were made explicitly unnumbered.
-`PageGeometry` in `lib/layouting` mirrors `PageFormat` the way `TextStyle` mirrors a stored style, kept
-by `PageGeometryTranslation` in `lib/layouting-model` - `lib/layouting` itself gained no dependency.
-`LayoutEngine.layout` paginates one part, `LayoutEngine.layoutBook` a whole book across parts; a part
-starting on a page of its own falls out of the loop structure rather than needing a flag. Margin side
-follows a page's physical position (position 0 is recto), independent of whether that page is
-numbered, so a switched off part's pages keep the book's physical layout stable.
+Wie geplant gebaut, um eine ausdrückliche Nutzeranfrage erweitert: Der gerade/ungerade Rändertausch
+gilt nur, wenn eine neue Projekteinstellung, „Spiegelnde Ränder“ (`PageFormat.mirroredMargins`,
+Vorgabe `false`), eingeschaltet ist – ohne sie behält jede Seite denselben inneren/äußeren Rand. Das
+Feld wurde zu `PageFormat` in `lib/model` hinzugefügt und gemäß dem `fx-model`-Skill in
+`PageFormatProperty` in `lib/fx-model` gespiegelt, mit vollständigen Property-Tests; es wurde kein
+UI-Kontrollkästchen verdrahtet, da dies zum Projekteinstellungsdialog gehört, nicht zu diesem Plan.
+Titelseite und Copyright-Seite wurden auf ausdrücklichen Wunsch als ungezählt festgelegt.
+
+`lib/layouting` erhielt `PageGeometry` (ein modellunabhängiges Abbild von `PageFormat`, so wie
+`TextStyle` einen gespeicherten Stil abbildet), gehalten von `PageGeometryTranslation` in
+`lib/layouting-model` – `lib/layouting` selbst erhielt keine Abhängigkeit. `LayoutEngine.layout`
+paginiert einen Teil, `LayoutEngine.layoutBook` ein ganzes Buch über Teile hinweg; ein Teil, der auf
+einer eigenen Seite beginnt, fällt aus der Schleifenstruktur heraus, statt ein Flag zu brauchen. Die
+Randseite folgt der physischen Position einer Seite (Position 0 ist recto), unabhängig davon, ob diese
+Seite nummeriert ist, sodass die Seiten eines ausgeschalteten Teils das physische Layout des Buches
+stabil halten.
 
 ### IP-25: Renderer Library Module
 
 Plan: `FP-001-IP-25-RendererBibliotheksmodul.md`
 
-JavaFX in a library module needs the user's confirmation before the dependency is added. The
-architecture rule is not deleted but sharpened - JavaFX belongs to `app/ui` and to a module that is
-itself a JavaFX component library - otherwise every following plan violates the rules. The jlink
-image must keep working, and the TestFX setup of `app/ui` is a model without precedent outside it.
+JavaFX in einem Bibliotheksmodul braucht die Bestätigung des Nutzers, bevor die Abhängigkeit
+hinzugefügt wird. Die Architekturregel wird nicht gelöscht, sondern geschärft – JavaFX gehört zu
+`app/ui` und zu einem Modul, das selbst eine JavaFX-Komponentenbibliothek ist – sonst verletzt jeder
+folgende Plan die Regeln. Das jlink-Image muss weiter funktionieren, und das TestFX-Setup von `app/ui`
+ist ein Vorbild ohne Präzedenzfall außerhalb davon.
 
 ### IP-26: Font And Measuring Migration ✅
 
 Plan: `FP-001-IP-26-SchriftUndMessungUmzug.md`
 
-The split runs along `FontData`: what names the application stays behind, the rest moves. Behaviour
-does not change - the tests that pass before the move must pass after it, which is what makes the
-move safe while later plans build on the classes. The FX thread constraint travels with the class,
-because a consumer outside this repository has no plan to read.
+Der Schnitt verläuft entlang `FontData`: Was die Anwendung benennt, bleibt zurück, der Rest zieht um.
+Das Verhalten ändert sich nicht – die Tests, die vor dem Umzug bestehen, müssen danach bestehen, was
+den Umzug sicher macht, während spätere Pläne auf den Klassen aufbauen. Die FX-Thread-Einschränkung
+reist mit der Klasse, da ein Verbraucher außerhalb dieses Repositorys keinen Plan zum Nachlesen hat.
 
-Built as planned, with one shape decided on the user's request. `FontCatalog`, `FontResolver`,
-`FontResolution` and `JavaFxTextMetrics` moved into `lib/layouting-fx` package
-`org.pcsoft.app.aighost.layouting.fx.font`, alongside the fingerprint of IP-22; their three tests
-moved with them and run on the module's own headless TestFX setup. The library type that replaces
-`FontData` in every moved signature is `FontDescription` - family, `size: Int`, `bold`, `italic` -
-kept a whole-point size so resolution and the measurement cache stay bit-for-bit as before. The
-translation on the application side is a single extension `FontData.toFontDescription()` in
-`app/ui` (`FontTranslation.kt`), modelled on `FontFingerprintTranslation.kt`, not a translator
-object. `FontIdentity` is the only production caller and now resolves through it. Neither
-`module-info` needed a structural change: the target package was already exported, `javafx.graphics`
-already required, and `app/ui` already read `ai-ghost-layouting-fx` since IP-25 - only the comments
-were sharpened. `SplashStageTest` was deleted on the user's request: it failed on the unmodified
-HEAD in this headless environment (splash opacity `1.0` instead of `0.0`), outside the scope of this
-plan. The full `build` and a forced `jlink` of `app/ui` are green.
+Wie geplant gebaut, mit einer auf Wunsch des Nutzers entschiedenen Form. `FontCatalog`,
+`FontResolver`, `FontResolution` und `JavaFxTextMetrics` zogen in `lib/layouting-fx` Paket
+`org.pcsoft.app.aighost.layouting.fx.font` um, neben den Fingerabdruck aus IP-22; ihre drei Tests
+zogen mit ihnen um und laufen auf dem eigenen kopflosen TestFX-Setup des Moduls. Der Bibliothekstyp,
+der `FontData` in jeder verschobenen Signatur ersetzt, ist `FontDescription` – Familie, `size: Int`,
+`bold`, `italic` – mit ganzzahliger Punktgröße, sodass Auflösung und Messungs-Cache bit-für-bit wie
+zuvor bleiben. Die Übersetzung auf der Anwendungsseite ist eine einzelne Erweiterung
+`FontData.toFontDescription()` in `app/ui` (`FontTranslation.kt`), nach dem Vorbild von
+`FontFingerprintTranslation.kt`, kein Übersetzer-Objekt. `FontIdentity` ist der einzige
+Produktionsaufrufer und löst jetzt darüber auf. Kein `module-info` brauchte eine strukturelle
+Änderung: Das Zielpaket war bereits exportiert, `javafx.graphics` bereits `required` und `app/ui` las
+`ai-ghost-layouting-fx` bereits seit IP-25 – nur die Kommentare wurden geschärft. `SplashStageTest`
+wurde auf Wunsch des Nutzers gelöscht: Er scheiterte auf dem unveränderten HEAD in dieser kopflosen
+Umgebung (Splash-Deckkraft `1.0` statt `0.0`), außerhalb des Umfangs dieses Plans. Der volle `build`
+und ein erzwungenes `jlink` von `app/ui` sind grün.
 
-### IP-05: Incremental Layout And Caching
+### IP-05: Incremental Layout And Caching ✅
 
-Plan: `FP-001-IP-05-InkrementellesLayout.md`
+Plan entfernt, war `FP-001-IP-05-InkrementellesLayout.md`.
 
-This is the plan that decides whether the feature feels fast, and it comes before the surfaces. Two
-things make the FX thread constraint bearable: only words are measured, so ordinary prose needs far
-fewer measurements than it has characters, and once the words are cached, arranging lines and pages
-is arithmetic that may run anywhere.
+Dies ist der Plan, der entscheidet, ob sich das Feature schnell anfühlt, und er kommt vor den
+Oberflächen. Zwei Dinge machen die FX-Thread-Einschränkung erträglich: Es werden nur Wörter gemessen,
+sodass gewöhnliche Prosa weit weniger Messungen braucht als sie Zeichen hat, und sind die Wörter erst
+zwischengespeichert, ist das Anordnen von Zeilen und Seiten Arithmetik, die überall laufen darf.
+
+Wie geplant gebaut. Der Zwischenspeicher landete als `IncrementalLineBreaker` in `lib/layouting`,
+einem `LineBreaker`, der einem `GreedyLineBreaker` vorgeschaltet ist und je Block – gekennzeichnet
+durch Text, `TextStyle` und Spaltenbreite – das Ergebnis eines Einzelblock-Umbruchs hält; unveränderte
+Blöcke werden wiederverwendet, nur der geänderte wird neu gemessen, und das Zusammenstapeln zu einem
+`LaidOutText` ist messungsfreie Arithmetik, dessen Ergebnis einem vollständigen Umbruch gleicht (bei
+`FixedTextMetrics` bitgenau). Eine geänderte Spaltenbreite verwirft den Cache selbsttätig, eine
+Designänderung über `clear()` durch den Aufrufer; `prewarm` bietet das Vorabmessen an. Die
+Seitengrenzen werden über das unveränderte `LayoutEngine.layout` voll neu berechnet, da dies keine
+Messung trägt. `BookPartEditorViewModel` hält den Umbrecher jetzt über die Lebensdauer des Editors
+statt ihn je Tastendruck neu zu erzeugen. Messung (Kunstbuch, 201 Blöcke, 34 Seiten, echte
+`JavaFxTextMetrics`): kaltes Gesamtlayout 164,5 ms, Neulayout je Tastendruck 1,68 ms. Der Benchmark
+ist ein Entwicklertest in `lib/layouting-fx` (kein `RT`, da er gegen keine feste Referenz vergleicht).
+IP-16 ist damit entsperrt und wartet noch auf IP-15.
 
 ### IP-06: Layout Regression Harness ✅
 
-Plan removed, was `FP-001-IP-06-LayoutRegressionsPruefstand.md`.
+Plan entfernt, war `FP-001-IP-06-LayoutRegressionsPruefstand.md`.
 
-Golden files are snapshots of numbers, not images: a numeric diff says which line moved. They are
-produced against the deterministic metrics, never against a font installed on the build machine,
-otherwise the result differs per developer and per runner. The surface comparison belongs to the
-library, because both surfaces do.
+Golden Files sind Momentaufnahmen von Zahlen, nicht von Bildern: Ein numerisches Diff sagt, welche
+Zeile sich bewegt hat. Sie werden gegen die deterministischen Metriken erzeugt, nie gegen eine auf der
+Build-Maschine installierte Schrift, sonst unterscheidet sich das Ergebnis je Entwickler und je
+Runner. Der Oberflächenvergleich gehört zur Bibliothek, da beide Oberflächen es tun.
 
-Built as planned, with one category added to the `testing` skill on the user's request: the golden
-file test and the surface comparison are neither plain developer tests nor `IT` (forbidden in
-`lib`), so a third category, **regression test** (suffix `RT`, exclusive to `lib`, mirroring `IT`'s
-exclusivity to `app`), was added there first. `lib/layouting` gained `LayoutGoldenFileRT` (seven
-example projects - short part, long part, justified block, two designs, mirrored odd/even margins,
-prolog switched off and on) plus `GoldenFileSupport`, which serialises a `DocumentLayout`'s pages as
-plain numbers (`position`, `number`, `active`, `lines`, `leftMargin`, `rightMargin`) and compares
-them against a checked in `.golden` file, naming the first differing line on a mismatch; a file is
-regenerated by rerunning the test with `-DlayoutGoldenFiles.update=true`, reviewed with `git diff`
-before committing. `lib/layouting-fx` gained `PaperFlowPageComparisonRT`, which feeds one
-`DocumentLayout` into both `PaperFlowView` and `PaperPageView` on the same stage and asserts two
-counts against the layout itself: `PaperPageView`'s page count, and `PaperFlowView`'s mix of
-`.paper-flow-view-gap` regions (one per block boundary, independent of where a page breaks) against
-`.paper-flow-view-break-mark` marks (one per page break landing inside a single block). Both modules
-gained a `regressionTest` Gradle task (`*RT` classes, excluded from the plain `test` task) that
-`check` - and with it `build` - depends on; CI's `test` job now runs `test regressionTest` explicitly,
-since `regressionTest` sits apart from `test`. Two defects surfaced and were fixed before the golden
-files were committed: the `-D` system property enabling golden file regeneration was not forwarded
-into the task's forked test JVM, and the first version of the surface comparison assumed a gap only
-ever marks a page boundary, when `PaperFlowViewSkin` in fact draws one between every two blocks
-regardless. The stale README row for `lib/ai-ghost-layouting-fx` ("Planned") was corrected to
-"Implemented" in the same pass, since IP-07/IP-08 had already shipped it.
+Wie geplant gebaut, mit einer Kategorie, die auf Wunsch des Nutzers zum `testing`-Skill hinzugefügt
+wurde: Der Golden-File-Test und der Oberflächenvergleich sind weder einfache Entwicklertests noch
+`IT` (in `lib` verboten), daher wurde dort zuerst eine dritte Kategorie, der **Regressionstest**
+(Suffix `RT`, ausschließlich in `lib`, spiegelbildlich zur Beschränkung von `IT` auf `app`),
+hinzugefügt. `lib/layouting` erhielt `LayoutGoldenFileRT` (sieben Beispielprojekte – kurzer Teil,
+langer Teil, Blocksatz-Block, zwei Designs, gespiegelte Ränder für gerade/ungerade Seiten, Prolog
+aus- und eingeschaltet) plus `GoldenFileSupport`, das die Seiten eines `DocumentLayout` als reine
+Zahlen serialisiert (`position`, `number`, `active`, `lines`, `leftMargin`, `rightMargin`) und gegen
+eine eingecheckte `.golden`-Datei vergleicht, wobei bei einer Abweichung die erste abweichende Zeile
+benannt wird; eine Datei wird durch erneutes Ausführen des Tests mit
+`-DlayoutGoldenFiles.update=true` neu erzeugt und vor dem Commit per `git diff` geprüft.
+`lib/layouting-fx` erhielt `PaperFlowPageComparisonRT`, das ein `DocumentLayout` auf derselben Bühne
+sowohl in `PaperFlowView` als auch in `PaperPageView` einspeist und zwei Zählungen gegen das Layout
+selbst prüft: die Seitenzahl von `PaperPageView` sowie das Verhältnis der `.paper-flow-view-gap`-
+Bereiche von `PaperFlowView` (einer je Blockgrenze, unabhängig davon, wo eine Seite umbricht) zu den
+`.paper-flow-view-break-mark`-Marken (eine je Seitenumbruch innerhalb eines einzelnen Blocks). Beide
+Module erhielten eine Gradle-Aufgabe `regressionTest` (`*RT`-Klassen, aus der einfachen `test`-Aufgabe
+ausgeschlossen), von der `check` – und damit `build` – abhängt; die `test`-Aufgabe der CI führt jetzt
+`test regressionTest` ausdrücklich aus, da `regressionTest` getrennt von `test` steht. Zwei Fehler
+traten zutage und wurden vor dem Commit der Golden Files behoben: Die `-D`-Systemeigenschaft zur
+Neuerzeugung der Golden Files wurde nicht in die geforkte Test-JVM der Aufgabe weitergereicht, und die
+erste Fassung des Oberflächenvergleichs nahm an, ein Abstand markiere immer nur eine Seitengrenze,
+während `PaperFlowViewSkin` tatsächlich zwischen je zwei Blöcken einen zeichnet. Die veraltete
+README-Zeile für `lib/ai-ghost-layouting-fx` („Planned“) wurde im selben Durchgang auf „Implemented“
+korrigiert, da IP-07/IP-08 sie bereits ausgeliefert hatten.
 
 ### IP-07: Paper Page View ✅
 
-Plan removed, was `FP-001-IP-07-SeitenAnsicht.md`.
+Plan entfernt, war `FP-001-IP-07-SeitenAnsicht.md`.
 
-The component decides nothing about typography; it paints coordinates, which is what makes it agree
-with the writing surface by construction. Virtualisation lands here rather than in IP-16: a library
-that cannot show a long document is not reusable.
+Die Komponente entscheidet nichts über Typografie; sie malt Koordinaten, was sie per Konstruktion mit
+der Schreibfläche übereinstimmen lässt. Die Virtualisierung landet hier statt in IP-16: Eine
+Bibliothek, die kein langes Dokument zeigen kann, ist nicht wiederverwendbar.
 
-Built as planned: `PaperPageView` (a plain `Control` with a `SkinBase`-derived skin, Canvas-based
-drawing, no FXML) in `lib/layouting-fx`, package `...layouting.fx.paper`, with a `PagePainter`
-interface and its `DefaultPagePainter`. Widened by two decisions taken with the user, both without
-touching the completed IP-04: since `Page`/`DocumentLayout` carry no page width or height, the
-component takes its own `pageGeometryProperty` beside `documentLayoutProperty`; and the hard edge of
-an inactive page is read by comparing a page's `active` flag against its neighbour's in
-`DocumentLayout.pages`, rather than adding a field to `Page`. Virtualisation is a `ScrollPane` over a
-full-height `Pane`, one `Canvas` per page only while it intersects the viewport plus a buffer.
+Wie geplant gebaut: `PaperPageView` (ein schlichtes `Control` mit einem von `SkinBase` abgeleiteten
+Skin, Canvas-basiertes Zeichnen, kein FXML) in `lib/layouting-fx`, Paket `...layouting.fx.paper`, mit
+einer `PagePainter`-Schnittstelle und ihrem `DefaultPagePainter`. Um zwei mit dem Nutzer getroffene
+Entscheidungen erweitert, beide ohne das abgeschlossene IP-04 zu berühren: Da `Page`/`DocumentLayout`
+keine Seitenbreite oder -höhe tragen, nimmt die Komponente eine eigene `pageGeometryProperty` neben
+`documentLayoutProperty`; und die harte Kante einer inaktiven Seite wird gelesen, indem das
+`active`-Flag einer Seite mit dem ihres Nachbarn in `DocumentLayout.pages` verglichen wird, statt ein
+Feld zu `Page` hinzuzufügen. Die Virtualisierung ist eine `ScrollPane` über einem `Pane` voller Höhe,
+ein `Canvas` pro Seite nur, solange sie den Viewport plus einen Puffer schneidet.
 
 ### IP-08: Paper Flow View ✅
 
-Plan removed, was `FP-001-IP-08-SchreibblattAnsicht.md`.
+Plan entfernt, war `FP-001-IP-08-SchreibblattAnsicht.md`.
 
-The native control wraps with the same text stack the engine measured with, so the breaks agree once
-the control's insets are taken out of the column width. Debouncing belongs on the break recomputation,
-not on the text. The component owns the caret, the consumer owns the text - that is what keeps the
-component reusable and undo working. Applying a change, the binding to `BookPartProperty` and the
-ai-ghost behaviour belong to IP-10; splitting a control at a break is IP-21.
+Das native Steuerelement bricht mit demselben Textstapel um, mit dem die Engine gemessen hat, sodass
+die Umbrüche übereinstimmen, sobald die Insets des Steuerelements aus der Spaltenbreite herausgenommen
+sind. Das Verzögern gehört auf die Umbruch-Neuberechnung, nicht auf den Text. Die Komponente besitzt
+den Cursor, der Verbraucher besitzt den Text – das hält die Komponente wiederverwendbar und Undo
+funktionsfähig. Das Anwenden einer Änderung, die Bindung an `BookPartProperty` und das
+ai-ghost-Verhalten gehören zu IP-10; das Teilen eines Steuerelements an einem Umbruch ist IP-21.
 
-Built as planned: `PaperFlowView` (a plain `Control` with a `SkinBase`-derived `PaperFlowViewSkin`) in
-`lib/layouting-fx`, package `...layouting.fx.paper`, beside `PaperPageView`. One native `TextArea` per
-block is built by grouping the `DocumentLayout`'s laid out lines by `LaidOutLine.blockIndex` and
-rejoining their text; a page break landing between two blocks renders as a real gap region the size of
-`PaperPageViewSkin`'s own page gap, a break landing inside one block renders as a dashed
-`paper-flow-view-break-mark` line carrying the target page number, positioned by the character
-fraction the break falls at - `TextArea` keeps its own text layout private, so the mark cannot reach
-the exact pixel of the broken line without the toolkit reflection this codebase never uses. The
-reported `columnWidthProperty` subtracts the text control's own insets from the page geometry's
-content width. Every change is reported only, never applied: a `PaperFlowListener` interface
-(`onTextChanged`, `onCaretMoved`, `onFocusChanged`, `onSplitRequested`, `onMergeRequested`,
-`onRemoveRequested`, all default no-op) is what the control talks to a caller through, modelled after
-the request/callback shape of IP-17's `AiAction` port rather than kept as several separate listener
-lists. Enter is intercepted into a split request instead of inserting a newline, since a block is a
-paragraph, not a multi-line field; Backspace at a block's start and Delete at its end become merge
-requests instead of being applied. Pasted content always goes in through `insertText` with the
-clipboard's plain string, never its rich content. Column width recomputation and the break marks are
-debounced 100 ms behind a `PauseTransition` on a resize, so a rebuild from a genuinely new
-`DocumentLayout` stays instant; rebuilding also memorises which block carried focus and its caret
-position and restores both once the new text controls exist, so handing in a freshly recomputed layout
-never interrupts typing. The `.paper` package of `lib/layouting-fx` - carrying both `PaperPageView`
-and `PaperFlowView` - is now exported from `module-info.java`, closing a gap left open since IP-07 (it
-had never been exported, since nothing outside the module read it yet). `:lib:ai-ghost-layouting-fx:build`
-is green, 8 new developer tests. The CHANGELOG and MkDocs stayed untouched, since neither view is wired
-into an `app/ui` screen yet - IP-10 does that. IP-06 and IP-27 are now unblocked; IP-10 is unblocked
-together with the already completed IP-09.
+Wie geplant gebaut: `PaperFlowView` (ein schlichtes `Control` mit einem von `SkinBase` abgeleiteten
+`PaperFlowViewSkin`) in `lib/layouting-fx`, Paket `...layouting.fx.paper`, neben `PaperPageView`. Je
+Block wird eine native `TextArea` gebaut, indem die platzierten Zeilen eines `DocumentLayout` nach
+`LaidOutLine.blockIndex` gruppiert und ihr Text wieder zusammengefügt wird; ein Seitenumbruch zwischen
+zwei Blöcken wird als echter Abstandsbereich in Größe des Seitenabstands von `PaperPageViewSkin`
+gerendert, ein Umbruch innerhalb eines Blocks als gestrichelte `paper-flow-view-break-mark`-Linie mit
+der Zielseitenzahl, positioniert über den Zeichenanteil, an dem der Umbruch liegt – `TextArea` hält
+ihr eigenes Textlayout privat, sodass die Marke den exakten Pixel der umbrochenen Zeile nicht
+erreichen kann, ohne die Toolkit-Reflexion, die dieser Code nie verwendet. Die gemeldete
+`columnWidthProperty` zieht die eigenen Insets des Textsteuerelements von der Inhaltsbreite der
+Seitengeometrie ab. Jede Änderung wird nur gemeldet, nie angewandt: Eine
+`PaperFlowListener`-Schnittstelle (`onTextChanged`, `onCaretMoved`, `onFocusChanged`,
+`onSplitRequested`, `onMergeRequested`, `onRemoveRequested`, alle standardmäßig leer) ist das, worüber
+das Steuerelement mit einem Aufrufer spricht, geformt nach der Request/Callback-Form des `AiAction`-
+Ports aus IP-17 statt als mehrere getrennte Listener-Listen. Enter wird in eine Split-Anfrage
+abgefangen statt einen Zeilenumbruch einzufügen, da ein Block ein Absatz ist, kein mehrzeiliges Feld;
+Backspace am Blockanfang und Delete am Blockende werden zu Merge-Anfragen statt angewandt zu werden.
+Eingefügter Inhalt geht immer über `insertText` mit der reinen Zeichenkette der Zwischenablage hinein,
+nie mit ihrem Rich-Inhalt. Die Spaltenbreiten-Neuberechnung und die Umbruchmarken werden 100 ms
+verzögert hinter einer `PauseTransition` bei einer Größenänderung, sodass ein Neuaufbau aus einem
+wirklich neuen `DocumentLayout` sofort bleibt; der Neuaufbau merkt sich auch, welcher Block den Fokus
+trug und wo sein Cursor stand, und stellt beides wieder her, sobald die neuen Textsteuerelemente
+existieren, sodass die Übergabe eines frisch berechneten Layouts das Tippen nie unterbricht. Das
+`.paper`-Paket von `lib/layouting-fx` – das sowohl `PaperPageView` als auch `PaperFlowView` trägt –
+wird jetzt aus `module-info.java` exportiert und schließt eine seit IP-07 offene Lücke (es war nie
+exportiert worden, da noch nichts außerhalb des Moduls es las). `:lib:ai-ghost-layouting-fx:build` ist
+grün, 8 neue Entwicklertests. CHANGELOG und MkDocs blieben unberührt, da keine der beiden Views in
+einen `app/ui`-Bildschirm verdrahtet ist – das tut IP-10. IP-06 und IP-27 sind jetzt entsperrt; IP-10
+ist zusammen mit dem bereits abgeschlossenen IP-09 entsperrt.
 
 ### IP-27: Library Styling And Theming API
 
 Plan: `FP-001-IP-27-BibliotheksStyling.md`
 
-Only the chrome is styleable; the text is styled by the layout result. A stylesheet that could change
-a font size would quietly reopen the fidelity chain, so the boundary has to be explicit in the API
-documentation.
+Nur das Chrome ist stylebar; der Text wird vom Layout-Ergebnis gestylt. Ein Stylesheet, das eine
+Schriftgröße ändern könnte, würde die Treuekette still wieder öffnen, daher muss die Grenze in der
+API-Dokumentation ausdrücklich sein.
 
 ### IP-28: Standalone Reuse And Documentation
 
 Plan: `FP-001-IP-28-EigenstaendigeNutzung.md`
 
-A library stays reusable only as long as something fails when it stops being so, which is why the
-dependency check is automated. The demo is a sample in its own source set, not a product.
+Eine Bibliothek bleibt nur so lange wiederverwendbar, wie etwas scheitert, wenn sie es nicht mehr ist,
+weshalb die Abhängigkeitsprüfung automatisiert ist. Die Demo ist ein Beispiel in einem eigenen
+Quellset, kein Produkt.
 
 ### IP-09: Undo And Redo Infrastructure ✅
 
-Plan removed, was `FP-001-IP-09-UndoRedoInfrastruktur.md`.
+Plan entfernt, war `FP-001-IP-09-UndoRedoInfrastruktur.md`.
 
-It has to exist before the first surface records into it, otherwise editing and AI each grow their
-own mechanism. It stays in `app/ui`, because the library applies no change.
+Sie muss existieren, bevor die erste Oberfläche in sie hineinschreibt, sonst wächst Bearbeitung und KI
+jeweils ein eigener Mechanismus. Sie bleibt in `app/ui`, da die Bibliothek keine Änderung anwendet.
 
-Built as `UndoEntry`/`PropertyUndoEntry`/`UndoStack` under `app/ui/.../undo`, owned by
-`MainWindowViewModel` and cleared on `newProject()`/`openProject()`. Beyond the original scope, the
-user asked for a named tooltip per entry and a history dropdown on the Undo/Redo tool bar buttons
-(`SplitMenuButton`, styled like a browser back button) that jumps several steps at once via
-`undoUntil`/`redoUntil`; `UndoStack.visibleEntryCount` bounds how many entries the dropdown exposes,
-as a plain property rather than a persisted preference. The `icon-creator` agent had no image-writing
-tool available in this environment, so `undo@32.png`/`redo@32.png` were drawn with a small Pillow
-script instead, matching the existing icon palette - confirmed with the user.
+Gebaut als `UndoEntry`/`PropertyUndoEntry`/`UndoStack` unter `app/ui/.../undo`, im Besitz von
+`MainWindowViewModel` und geleert bei `newProject()`/`openProject()`. Über den ursprünglichen Umfang
+hinaus bat der Nutzer um einen benannten Tooltip je Eintrag und ein Verlaufs-Dropdown an den
+Undo/Redo-Werkzeugleisten-Schaltflächen (`SplitMenuButton`, gestylt wie eine Zurück-Schaltfläche eines
+Browsers), das über `undoUntil`/`redoUntil` mehrere Schritte auf einmal überspringt;
+`UndoStack.visibleEntryCount` begrenzt, wie viele Einträge das Dropdown offenlegt, als schlichte
+Eigenschaft statt als persistierte Präferenz. Der `icon-creator`-Agent hatte in dieser Umgebung kein
+Werkzeug zum Schreiben von Bildern verfügbar, daher wurden `undo@32.png`/`redo@32.png` stattdessen mit
+einem kleinen Pillow-Skript gezeichnet, passend zur bestehenden Icon-Palette – mit dem Nutzer
+bestätigt.
 
 ### IP-10: Book Part Writing Surface ✅
 
-Plan removed, was `FP-001-IP-10-Schreibflaeche.md`.
+Plan entfernt, war `FP-001-IP-10-Schreibflaeche.md`.
 
-Prolog, chapter and epilog are one editor over one `BookPartProperty`, not three; the blurb is the
-exception that has to be built. The caret is a paragraph index plus a character offset, never a
-coordinate, so editing survives a design change. A switched off part stays writable - greying says it
-is not in the book, not that it is locked. Everything ai-ghost specific is answered by an API of the
-library, never by a dependency back into the application.
+Prolog, Kapitel und Epilog sind ein Editor über einer `BookPartProperty`, nicht drei; der Klappentext
+ist die Ausnahme, die gebaut werden muss. Der Cursor ist ein Absatzindex plus ein Zeichen-Offset, nie
+eine Koordinate, sodass das Bearbeiten eine Designänderung übersteht. Ein ausgeschalteter Teil bleibt
+beschreibbar – das Ausgrauen sagt, dass er nicht im Buch ist, nicht, dass er gesperrt ist. Alles
+ai-ghost-Spezifische wird durch eine API der Bibliothek beantwortet, nie durch eine Abhängigkeit
+zurück in die Anwendung.
 
-Built wider than the plan header on the user's request. The project tree gained two real nodes,
-`TitlePageItem` and `CopyrightPageItem`, ahead of the prolog (full node routing still belongs to
-IP-15); the title page and the copyright page are shown on the sheet read only, their text staying
-with the inspector and the project settings. The typing pause that closes undo coalescing became a
-new preferences group `Editor` (`paragraphMergePauseMillis`, default 600), mirrored per `fx-model`
-and read once when the undo stack is handed `MainWindowView -> Editor -> BookPartEditor`; no
-settings-dialog control for it yet. `BookPartEditor` (`app/ui`) embeds `PaperFlowView` and, on every
-reported edit and every design change, rebuilds the model through the `lib/layouting-model` builders,
-`GreedyLineBreaker(JavaFxTextMetrics)` and `LayoutEngine.layout`, then hands the fresh layout back;
-the first layout falls back to the plain page content width until `PaperFlowView` reports its own,
-and an empty writable part is seeded with one empty paragraph block. `app/ui` now depends on
-`lib/ai-ghost-layouting-model`. Split at a break stays with IP-21, structural paragraph operations
-with IP-11.
+Breiter gebaut als der Plan-Titel, auf Wunsch des Nutzers. Der Projektbaum erhielt zwei echte Knoten,
+`TitlePageItem` und `CopyrightPageItem`, vor dem Prolog (das vollständige Knoten-Routing gehört
+weiterhin zu IP-15); Titelseite und Copyright-Seite werden auf dem Blatt schreibgeschützt gezeigt, ihr
+Text bleibt beim Inspector und den Projekteinstellungen. Die Tipp-Pause, die das Zusammenfassen von
+Undo-Schritten beendet, wurde zu einer neuen Präferenzgruppe `Editor`
+(`paragraphMergePauseMillis`, Vorgabe 600), gemäß `fx-model` gespiegelt und einmal gelesen, wenn der
+Undo-Stack `MainWindowView -> Editor -> BookPartEditor` übergeben wird; noch kein Steuerelement im
+Einstellungsdialog. `BookPartEditor` (`app/ui`) bettet `PaperFlowView` ein und baut bei jeder
+gemeldeten Bearbeitung und jeder Designänderung das Modell über die `lib/layouting-model`-Builder,
+`GreedyLineBreaker(JavaFxTextMetrics)` und `LayoutEngine.layout` neu auf, dann gibt es das frische
+Layout zurück; das erste Layout fällt auf die schlichte Inhaltsbreite der Seite zurück, bis
+`PaperFlowView` seine eigene meldet, und ein leerer beschreibbarer Teil wird mit einem leeren
+Absatzblock bestückt. `app/ui` hängt jetzt von `lib/ai-ghost-layouting-model` ab. Das Teilen an einem
+Umbruch bleibt bei IP-21, strukturelle Absatzoperationen bei IP-11.
 
 ### IP-11: Paragraph Structure Operations
 
 Plan: `FP-001-IP-11-AbsatzOperationen.md`
 
-Block list, layout and caret target change together and are one transaction. Splitting mid-paragraph
-is the case that exposes an off-by-one in the character range mapping of IP-03. The library requests
-the operation, the application performs it.
+Blockliste, Layout und Cursorziel ändern sich zusammen und sind eine Transaktion. Das Teilen
+innerhalb eines Absatzes ist der Fall, der einen Off-by-one in der Zeichenbereich-Abbildung von IP-03
+offenlegt. Die Bibliothek fordert die Operation an, die Anwendung führt sie aus.
 
 ### IP-12: Inspector Shell And Content Sections ✅
 
-Plan: `FP-001-IP-12-InspectorGrundgeruest.md` (removed on completion)
+Plan: `FP-001-IP-12-InspectorGrundgeruest.md` (bei Abschluss entfernt)
 
-Sections stay fixed and identically named, because the inspector mixes part scoped and project scoped
-data and a panel that silently changes shape makes it unclear what is being edited.
+Abschnitte bleiben fest und identisch benannt, da der Inspector teilbezogene und projektbezogene Daten
+mischt und ein Panel, das still seine Form ändert, unklar macht, was bearbeitet wird.
 
-Built as planned: a new `Inspector` MVVM-FX trio (`Inspector`, `InspectorView`, `InspectorViewModel`,
-`InspectorView.fxml`) with two fixed `TitledPane` sections, "Book" and "Chapter", each with its own
-runtime-only `expandedProperty` in the view model. The `BookEditor` trio, its FXML, CSS and tests were
-removed entirely via `git rm` rather than merely trimmed - once title, title lines, author, copyright
-and the book-level prompts moved into the inspector's "Book" section, nothing user-facing was left in
-`BookEditor`. `Editor`/`EditorView`/`EditorViewModel` now wire `Inspector` into the split pane instead.
-One addition beyond the original scope: `lib/fx-model` gained a public factory
-`ChapterProperty.of(chapter: Chapter): ChapterProperty` (in the same package as `ChapterProperty`,
-using its existing internal no-arg constructor plus `set(chapter)`), because building a bindable
-`ChapterProperty` from a plain `Chapter` selected in the project tree had no prior counterpart; its
-KDoc was corrected accordingly and a developer test (`ChapterPropertyOfTest`) was added.
+Wie geplant gebaut: ein neues `Inspector`-MVVM-FX-Trio (`Inspector`, `InspectorView`,
+`InspectorViewModel`, `InspectorView.fxml`) mit zwei festen `TitledPane`-Abschnitten, „Book“ und
+„Chapter“, jeder mit seiner eigenen laufzeit-only `expandedProperty` im View-Modell. Das
+`BookEditor`-Trio, sein FXML, CSS und seine Tests wurden vollständig per `git rm` entfernt statt nur
+gekürzt – nachdem Titel, Titelzeilen, Autor, Copyright und die buch-ebenen Prompts in den
+Inspector-Abschnitt „Book“ gewandert waren, blieb in `BookEditor` nichts Nutzersichtbares übrig.
+`Editor`/`EditorView`/`EditorViewModel` verdrahten `Inspector` jetzt in die Split-Pane statt.
+Eine Ergänzung über den ursprünglichen Umfang hinaus: `lib/fx-model` erhielt eine öffentliche Factory
+`ChapterProperty.of(chapter: Chapter): ChapterProperty` (im selben Paket wie `ChapterProperty`, unter
+Verwendung seines vorhandenen internen argumentlosen Konstruktors plus `set(chapter)`), da das Bauen
+einer bindbaren `ChapterProperty` aus einem im Projektbaum gewählten schlichten `Chapter` kein
+Gegenstück hatte; ihr KDoc wurde entsprechend korrigiert und ein Entwicklertest
+(`ChapterPropertyOfTest`) hinzugefügt.
 
 ### IP-13: Design Style Sections ✅
 
-Plan: `FP-001-IP-13-DesignStilAbschnitte.md` (removed on completion)
+Plan: `FP-001-IP-13-DesignStilAbschnitte.md` (bei Abschluss entfernt)
 
-The section writes the same `DesignProperty` the layout reads, which is what makes the live update
-work without extra plumbing. Only installed families are offered, because an unresolvable family
-cannot be measured.
+Der Abschnitt schreibt dieselbe `DesignProperty`, die das Layout liest, was das Live-Update ohne
+zusätzliche Verkabelung funktionieren lässt. Nur installierte Familien werden angeboten, da eine
+nicht auflösbare Familie nicht gemessen werden kann.
 
-Built narrower than the plan described, because the family catalogue restriction, the per-family
-sample text and the uninstalled-family marking already existed in `StyleDataEditor` (built for IP-14's
-`BookPartPageDesignSettings`) rather than being new work here - `StyleDataEditorViewModel.familyName`
-already checks `FontCatalog.contains(...)` and the family combo box already renders each entry in its
-own face. What this plan actually added was a third, always-live `TitledPane` section "Design" in the
-`Inspector`, next to "Book" and "Chapter", holding four reused `StyleDataEditor` instances (title,
-chapter title, chapter title appendix, body text) bound straight to
-`project.designProperty.titlePageProperty.titleStyleProperty` and the three matching properties of
-`chapterPageProperty` - unlike the other two sections, this one does not follow the project tree
-selection, only whether a project is bound at all (`InspectorViewModel.designAvailable`). The four
-editors are held by `InspectorView` and forwarded into `InspectorViewModel` the same way
-`BookPartPageDesignSettingsView` forwards its three. `StyleDataEditor` gained one small addition,
-`release()`, delegating to its already-internal `StyleDataEditorViewModel.release()`, so the section
-can drop its bindings cleanly when the project is closed instead of leaving them dangling on an
-orphaned design.
+Enger gebaut als der Plan beschrieb, da die Beschränkung des Familienkatalogs, der
+familienspezifische Beispieltext und die Kennzeichnung nicht installierter Familien bereits in
+`StyleDataEditor` existierten (gebaut für `BookPartPageDesignSettings` aus IP-14), statt hier neue
+Arbeit zu sein – `StyleDataEditorViewModel.familyName` prüft bereits `FontCatalog.contains(...)`, und
+die Familien-Combobox rendert jeden Eintrag bereits in seiner eigenen Schrift. Was dieser Plan
+tatsächlich hinzufügte, war ein dritter, stets aktiver `TitledPane`-Abschnitt „Design“ im
+`Inspector`, neben „Book“ und „Chapter“, mit vier wiederverwendeten `StyleDataEditor`-Instanzen
+(Titel, Kapiteltitel, Kapiteltitel-Anhang, Fließtext), direkt gebunden an
+`project.designProperty.titlePageProperty.titleStyleProperty` und die drei entsprechenden
+Eigenschaften von `chapterPageProperty` – anders als die beiden anderen Abschnitte folgt dieser nicht
+der Auswahl im Projektbaum, sondern nur der Frage, ob überhaupt ein Projekt gebunden ist
+(`InspectorViewModel.designAvailable`). Die vier Editoren werden von `InspectorView` gehalten und an
+`InspectorViewModel` weitergereicht, genauso wie `BookPartPageDesignSettingsView` seine drei
+weiterreicht. `StyleDataEditor` erhielt eine kleine Ergänzung, `release()`, das an das ohnehin interne
+`StyleDataEditorViewModel.release()` delegiert, sodass der Abschnitt seine Bindungen sauber löst, wenn
+das Projekt geschlossen wird, statt sie an einem verwaisten Design hängen zu lassen.
 
 ### IP-14: Project Settings Dialog ✅
 
-Plan: `FP-001-IP-14-ProjekteinstellungenDialog.md` (removed on completion)
+Plan: `FP-001-IP-14-ProjekteinstellungenDialog.md` (bei Abschluss entfernt)
 
-Millimetres are shown, points are stored. A margin sum exceeding the page must be refused, or the
-engine receives a negative column width.
+Millimeter werden gezeigt, Punkte gespeichert. Eine Randsumme, die die Seite überschreitet, muss
+abgelehnt werden, sonst erhält die Engine eine negative Spaltenbreite.
 
-Built wider than first planned, on the user's request: the dialog is a master-detail shell with a
-`ProjectSettingsTree` (root hidden) on the left and the section editor on the right. Only the
-`General` section is real - `GeneralSettings` with page-size presets, the four margins and the two
-empty-page flags, bound to a working-copy `DesignProperty`. The `Design` node and its four children
-(`Epilog`, `Chapter`, `Prolog`, `Blurb`) are `PlaceholderSettings` panels; their real style editors
-stay with IP-13. No new model was added - the design POJOs for prolog/epilog/blurb and a separate
-title appendix are still open and were deferred to a later step.
+Breiter gebaut als zunächst geplant, auf Wunsch des Nutzers: Der Dialog ist eine Master-Detail-Hülle
+mit einem `ProjectSettingsTree` (Wurzel verborgen) links und dem Abschnitts-Editor rechts. Nur der
+`General`-Abschnitt ist echt – `GeneralSettings` mit Seitengrößen-Vorgaben, den vier Rändern und den
+beiden Leerseiten-Flags, gebunden an eine Arbeitskopie-`DesignProperty`. Der `Design`-Knoten und
+seine vier Kinder (`Epilog`, `Chapter`, `Prolog`, `Blurb`) sind `PlaceholderSettings`-Panels; ihre
+echten Stil-Editoren bleiben bei IP-13. Es wurde kein neues Modell hinzugefügt – die Design-POJOs für
+Prolog/Epilog/Klappentext und einen getrennten Titelanhang sind weiterhin offen und wurden auf einen
+späteren Schritt aufgeschoben.
 
-The dialog keeps a working copy (a detached `ProjectProperty` whose design is a deep copy of the
-target); OK and APPLY write the page geometry and the two flags back into the real `DesignProperty`,
-CANCEL / ESCAPE discard. Buttons are the standard `OK`, `CANCEL`, `APPLY`
-(`DialogButtons.OK_CANCEL_APPLY`); APPLY is consumed so it stores without closing, and OK and APPLY
-are disabled while the input cannot be stored. The menu item and the tool bar button in
-`MainWindowView` are now wired; the action is always available because a project always carries a
-design. Styling landed in a new `styles/component/project-settings.css` (registered in
-`AiGhostTheme`) rather than in `dialog.css`, because the combo box, the check box and the plain
-separator are first used here. User docs: `docs/docs/project-settings.md`.
+Der Dialog hält eine Arbeitskopie (eine losgelöste `ProjectProperty`, deren Design eine tiefe Kopie
+des Ziels ist); OK und APPLY schreiben die Seitengeometrie und die beiden Flags in die echte
+`DesignProperty` zurück, CANCEL / ESCAPE verwerfen. Die Schaltflächen sind die Standard-`OK`,
+`CANCEL`, `APPLY` (`DialogButtons.OK_CANCEL_APPLY`); APPLY ist konsumiert, sodass es speichert ohne
+zu schließen, und OK und APPLY sind deaktiviert, solange die Eingabe nicht gespeichert werden kann.
+Der Menüeintrag und die Werkzeugleisten-Schaltfläche in `MainWindowView` sind jetzt verdrahtet; die
+Aktion ist immer verfügbar, da ein Projekt immer ein Design trägt. Das Styling landete in einem neuen
+`styles/component/project-settings.css` (in `AiGhostTheme` registriert) statt in `dialog.css`, da die
+Combobox, das Kontrollkästchen und der schlichte Trenner hier zuerst verwendet werden.
+Nutzerdokumentation: `docs/docs/project-settings.md`.
 
-Adjusted afterwards on the user's request: the page-format editor moved from the `General` node to
-the `Design` node, so `Design.implemented` is now the real editor and `General` is an empty
-placeholder; the dialog opens on `Design`. The `Design` branch gained two more placeholder children,
-`Title page` and `Copyright page`, ahead of `Epilog`. `ProjectSettingsSection` was reshaped from an
-`enum` into a `sealed interface` with `data object` cases, mirroring `ProjectListItem`, and
-`ProjectSettingsTreeView` now builds its tree from explicit `TreeItem` fields with a named
-`ProjectSettingsTreeCell`, the same way `ProjectListView` does - so a section that later stands for a
-single book part can become a `data class` without changing how the tree is built.
+Nachträglich auf Wunsch des Nutzers angepasst: Der Seitenformat-Editor wanderte vom `General`-Knoten
+auf den `Design`-Knoten, sodass `Design.implemented` jetzt der echte Editor und `General` ein leerer
+Platzhalter ist; der Dialog öffnet auf `Design`. Der `Design`-Zweig erhielt zwei weitere
+Platzhalter-Kinder, `Title page` und `Copyright page`, vor `Epilog`. `ProjectSettingsSection` wurde
+von einem `enum` in ein `sealed interface` mit `data object`-Fällen umgeformt, analog zu
+`ProjectListItem`, und `ProjectSettingsTreeView` baut seinen Baum jetzt aus expliziten
+`TreeItem`-Feldern mit einer benannten `ProjectSettingsTreeCell`, genauso wie `ProjectListView` – so
+kann ein Abschnitt, der später für einen einzelnen Buchteil steht, eine `data class` werden, ohne zu
+ändern, wie der Baum gebaut wird.
 
 ### IP-15: Editor Arrangement And Tree Routing
 
 Plan: `FP-001-IP-15-EditorAufteilungUndBaumRouting.md`
 
-`ProjectList` keeps its API; the routing is an exhaustive `when` in `EditorViewModel`, so a node that
-gains a meaning later is a compiler error. View state goes to `Preferences`, never into the project
-document.
+`ProjectList` behält seine API; das Routing ist ein erschöpfendes `when` in `EditorViewModel`, sodass
+ein Knoten, der später eine Bedeutung bekommt, ein Compilerfehler ist. View-Zustand geht zu
+`Preferences`, nie in das Projektdokument.
 
 ### IP-16: Writing And Preview Modes
 
 Plan: `FP-001-IP-16-SchreibUndVorschauModus.md`
 
-This is where the FX thread constraint becomes visible to the user: the whole book has to be measured
-before its page count is known. A progress indication for the first layout has to be planned for
-rather than hoped away. The reading position is a paragraph reference, not a scroll offset, because
-the modes have different geometry.
+Hier wird die FX-Thread-Einschränkung für den Nutzer sichtbar: Das ganze Buch muss gemessen werden,
+bevor seine Seitenzahl bekannt ist. Eine Fortschrittsanzeige für das erste Layout muss eingeplant
+werden, statt sie wegzuhoffen. Die Leseposition ist eine Absatzreferenz, kein Scroll-Offset, da die
+Modi unterschiedliche Geometrie haben.
 
 ### IP-17: AI Action Port ✅
 
-Plan removed, was `FP-001-IP-17-AiAktionsPort.md`.
+Plan entfernt, war `FP-001-IP-17-AiAktionsPort.md`.
 
-Streaming is in the interface from the start, because retrofitting it changes every caller. A defined
-split rule keeps a generated chapter from landing in one paragraph. No stub and no real provider ship
-here - a concrete AI provider is out of scope for this feature entirely and arrives only through the
-plugin system of its own, later feature. Every place that would call into an implementation carries an
-open `TODO`.
+Streaming ist von Anfang an in der Schnittstelle, da ein nachträgliches Einfügen jeden Aufrufer
+ändert. Eine definierte Teilungsregel hält ein generiertes Kapitel davon ab, in einem Absatz zu
+landen. Kein Stub und kein echter Provider wird hier ausgeliefert – ein konkreter KI-Provider ist
+gänzlich außerhalb des Umfangs dieses Features und kommt erst über das Plugin-System eines eigenen,
+späteren Features. Jede Stelle, die in eine Implementierung rufen würde, trägt ein offenes `TODO`.
 
-Built as planned, narrowed to exactly that constraint: `lib/ai` gained package
-`org.pcsoft.app.aighost.ai.action` with the sealed `AiActionRequest` (`Rewrite`, `Expand`, `Shorten`,
-`GenerateChapter`), the port `AiAction` (streaming callback, cancel handle, no implementation, a `TODO`
-naming the future provider feature), `AiActionCallback`, `AiActionHandle`, the sealed `AiActionError`
-(`LimitExceeded`, `Cancelled`, `Failed`), the standalone `AiActionLimits.check` (reads
-`Preferences.Ai`, returns Arrow `Either`, reports the `TokenUtils` estimate alongside the character
-limit) and `ParagraphSplitter`. `lib/ai` depends on `lib/model` and Arrow from here on. Tests cover only
-the two pure functions, `AiActionLimits` and `ParagraphSplitter`, since no `AiAction` implementation
-exists to test against.
+Wie geplant gebaut, auf genau diese Einschränkung eingegrenzt: `lib/ai` erhielt das Paket
+`org.pcsoft.app.aighost.ai.action` mit dem versiegelten `AiActionRequest` (`Rewrite`, `Expand`,
+`Shorten`, `GenerateChapter`), dem Port `AiAction` (Streaming-Callback, Cancel-Handle, keine
+Implementierung, ein `TODO`, das das künftige Provider-Feature benennt), `AiActionCallback`,
+`AiActionHandle`, dem versiegelten `AiActionError` (`LimitExceeded`, `Cancelled`, `Failed`), dem
+eigenständigen `AiActionLimits.check` (liest `Preferences.Ai`, gibt Arrow `Either` zurück, meldet die
+`TokenUtils`-Schätzung neben der Zeichenbegrenzung) und `ParagraphSplitter`. `lib/ai` hängt von nun
+an von `lib/model` und Arrow ab. Tests decken nur die beiden reinen Funktionen ab, `AiActionLimits`
+und `ParagraphSplitter`, da keine `AiAction`-Implementierung existiert, gegen die getestet werden
+könnte.
 
 ### IP-18: AI Actions On Paragraph And Heading
 
 Plan: `FP-001-IP-18-AiAktionenAmAbsatz.md`
 
-A paragraph result replaces directly because undo already exists; a comparison step would cost more
-than it protects. The action bar is an overlay of the application above the library's node and finds
-its block through the focus events of IP-08 - the library gains no notion of an AI. The bar and its
-wiring to `lib/ai` are built end to end; only the call into an actual provider is missing, marked with
-an open `TODO` pointing at the future plugin-based provider feature.
+Ein Absatzergebnis ersetzt direkt, da Undo bereits existiert; ein Vergleichsschritt würde mehr kosten
+als er schützt. Die Aktionsleiste ist ein Overlay der Anwendung über dem Knoten der Bibliothek und
+findet ihren Block über die Fokusereignisse von IP-08 – die Bibliothek bekommt keinen Begriff von
+einer KI. Die Leiste und ihre Verkabelung zu `lib/ai` werden durchgängig gebaut; nur der Aufruf in
+einen tatsächlichen Provider fehlt, markiert mit einem offenen `TODO`, das auf das künftige
+plugin-basierte Provider-Feature verweist.
 
 ### IP-19: AI Part Generation With Provisional State
 
 Plan: `FP-001-IP-19-AiTeilGenerierung.md`
 
-Generating a part overwrites a lot, so the size of the destruction, not the origin of the text,
-decides how explicit the confirmation is. Streamed text arrives off the FX thread and is measured and
-shown on it, so chunks are handed over in batches rather than per token. As with IP-18, the provisional
-display and its accept/discard flow are built completely; only the call into an actual provider is
-missing, marked with an open `TODO`.
+Das Generieren eines Teils überschreibt viel, daher entscheidet die Größe der Zerstörung, nicht die
+Herkunft des Textes, wie ausdrücklich die Bestätigung ist. Gestreamter Text kommt außerhalb des
+FX-Threads an und wird darauf gemessen und gezeigt, daher werden Chunks in Stapeln übergeben statt pro
+Token. Wie bei IP-18 werden die vorläufige Anzeige und ihr Annehmen/Verwerfen-Ablauf vollständig
+gebaut; nur der Aufruf in einen tatsächlichen Provider fehlt, markiert mit einem offenen `TODO`.
 
 ### IP-21: In-Paragraph Sheet Split
 
 Plan: `FP-001-IP-21-SeitentrennungImAbsatz.md`
 
-The split point moves with every keystroke, so controls are merged and split while the caret sits
-inside them - that is the hard part. Deliberately last: the feature is usable without it, and the
-effort is justified only once the marker line has been lived with. It is a rendering concern and
-lands in the library.
+Der Teilungspunkt bewegt sich mit jedem Tastendruck, daher werden Steuerelemente verbunden und
+geteilt, während der Cursor in ihnen sitzt – das ist der schwierige Teil. Bewusst zuletzt: Das
+Feature ist ohne es nutzbar, und der Aufwand ist erst gerechtfertigt, wenn man mit der Markierungslinie
+gelebt hat. Es ist eine Rendering-Angelegenheit und landet in der Bibliothek.
 
 ### IP-23: Optional Book Parts In The Tree
 
 Plan: `FP-001-IP-23-OptionaleTeileImBaum.md`
 
-The one plan that changes the project tree, and deliberately narrowly: structure and `selectedItem`
-API stay, a checkbox is added on exactly three nodes. `CheckBoxTreeItem` applies its tick to the
-subtree by default, which has to be constrained. Because IP-24 keeps the text, clearing a tick
-destroys nothing - it is still one undo entry.
+Der eine Plan, der den Projektbaum ändert, und bewusst eng: Struktur und `selectedItem`-API bleiben,
+ein Kontrollkästchen wird auf genau drei Knoten hinzugefügt. `CheckBoxTreeItem` wendet seinen Haken
+standardmäßig auf den Teilbaum an, was eingeschränkt werden muss. Da IP-24 den Text behält, zerstört
+das Löschen eines Hakens nichts – es ist weiterhin ein Undo-Eintrag.
 
-## 8. Dependency Graph
+## 8. Abhängigkeitsgraph
 
 ```text
 IP-01✅┬─> IP-22✅
        └─┐
 IP-25✅┬─┴─> IP-26✅─┬─> IP-07✅┬─> IP-27 ──> IP-28
                     ├─> IP-08✅┘
-                    └─> IP-13✅  (with IP-02, IP-12✅)
-IP-02✅┬───> IP-03✅ ──> IP-04✅┬─> IP-05 ──────────────┐
+                    └─> IP-13✅  (mit IP-02, IP-12✅)
+IP-02✅┬───> IP-03✅ ──> IP-04✅┬─> IP-05✅ ─────────────┐
 IP-24✅┤  │                   │                       │
        └─> IP-14✅              ├─> IP-07✅┬────────────┤
                                 │          ├─> IP-06✅   │
                                 └─> IP-08✅┘            │
                                       │                 │
-                                      └─> IP-10✅ ───────┼──> IP-18   (with IP-17✅)
-                                      (with IP-09✅)     │
+                                      └─> IP-10✅ ───────┼──> IP-18   (mit IP-17✅)
+                                      (mit IP-09✅)      │
                                                 └─> IP-11 ─┬─> IP-15 ─┬─> IP-16
-                                                           │          └─> IP-23   (with IP-24)
+                                                           │          └─> IP-23   (mit IP-24)
                                                            └─> IP-21
 IP-09✅ ──> IP-10✅, IP-18, IP-19
 IP-12✅┬─> IP-13✅
        ├─> IP-15
-       └─> IP-19   (with IP-17✅)
+       └─> IP-19   (mit IP-17✅)
 IP-17✅┬─> IP-18
        └─> IP-19
-IP-05, IP-07, IP-15 ──> IP-16
+IP-05✅, IP-07✅, IP-15 ──> IP-16
 IP-07✅, IP-08✅ ──> IP-06✅, IP-27
 ```
 
-The graph is drawn as two trees that grow from different roots and meet only at one seam.
+Der Graph ist als zwei Bäume gezeichnet, die aus verschiedenen Wurzeln wachsen und sich nur an einer
+Naht treffen.
 
-**Upper tree - the renderer library `lib/layouting-fx`.** Roots: IP-01 and IP-25. It builds the
-reusable JavaFX renderer that carries no type of this application: font discovery and text measuring
-(IP-01), the font identity and substitution report (IP-22), the library module with its JPMS, TestFX
-and CI setup (IP-25), the move of catalogue, resolution and measuring into it (IP-26), the two views
-- exact page and writing flow (IP-07, IP-08) -, the styling and theming API (IP-27) and the
-standalone-reuse proof with its documentation (IP-28). The tree owns everything a consumer outside
-this repository would also get.
+**Oberer Baum – die Renderer-Bibliothek `lib/layouting-fx`.** Wurzeln: IP-01 und IP-25. Er baut den
+wiederverwendbaren JavaFX-Renderer, der keinen Typ dieser Anwendung trägt: Schrifterkennung und
+Textmessung (IP-01), den Bericht zu Schriftidentität und Ersetzung (IP-22), das Bibliotheksmodul mit
+seinem JPMS-, TestFX- und CI-Setup (IP-25), den Umzug von Katalog, Auflösung und Messung in es
+(IP-26), die beiden Views – exakte Seite und Schreibfluss (IP-07, IP-08) –, die Styling- und
+Theming-API (IP-27) und den Beleg der eigenständigen Wiederverwendung mit ihrer Dokumentation (IP-28).
+Der Baum besitzt alles, was ein Verbraucher außerhalb dieses Repositorys ebenfalls bekäme.
 
-**Lower tree - the writing surface in `app/ui`.** Roots: IP-02 and IP-24, plus the independent
-strands IP-09 ✅, IP-12 ✅ and IP-17 ✅. It builds the editor feature on top of the library: the design page
-format model (IP-02) and the always-present optional parts (IP-24), the toolkit-free layout core
-(IP-03), pagination and the page-break policy (IP-04), incremental layout and caching (IP-05), the
-project settings dialog (IP-14), the layout regression harness (IP-06 ✅), the editing surface and
-paragraph operations (IP-10, IP-11), editor arrangement with write and preview modes (IP-15, IP-16),
-undo and redo (IP-09 ✅), the inspector shell and its content sections (IP-12 ✅), the AI action port and
-the actions built on it (IP-17, IP-18, IP-19), the optional parts in the project tree (IP-23) and
-the in-paragraph sheet split (IP-21).
+**Unterer Baum – die Schreibfläche in `app/ui`.** Wurzeln: IP-02 und IP-24, plus die unabhängigen
+Stränge IP-09 ✅, IP-12 ✅ und IP-17 ✅. Er baut das Editor-Feature auf der Bibliothek: das
+Design-Seitenformatmodell (IP-02) und die stets vorhandenen optionalen Teile (IP-24), den
+toolkit-freien Layout-Kern (IP-03), Paginierung und die Seitenumbruch-Policy (IP-04), inkrementelles
+Layout und Caching (IP-05 ✅), den Projekteinstellungsdialog (IP-14), den Layout-Regressionsprüfstand
+(IP-06 ✅), die Bearbeitungsfläche und Absatzoperationen (IP-10, IP-11), die Editor-Aufteilung mit
+Schreib- und Vorschaumodus (IP-15, IP-16), Undo und Redo (IP-09 ✅), die Inspector-Hülle und ihre
+Inhaltsabschnitte (IP-12 ✅), den KI-Aktions-Port und die darauf gebauten Aktionen (IP-17, IP-18,
+IP-19), die optionalen Teile im Projektbaum (IP-23) und das Blatt-Teilen innerhalb eines Absatzes
+(IP-21).
 
-**The seam.** The lower tree consumes IP-07 and IP-08 of the upper one - the app draws its pages
-with the library views. IP-13 (design style sections) is the second link: it needs IP-26 of the
-upper tree together with IP-02 and IP-12 ✅ of the lower one. Nothing else crosses between the two.
+**Die Naht.** Der untere Baum verbraucht IP-07 und IP-08 des oberen – die App zeichnet ihre Seiten mit
+den Bibliotheks-Views. IP-13 (Design-Stilabschnitte) ist die zweite Verbindung: Sie braucht IP-26 des
+oberen Baums zusammen mit IP-02 und IP-12 ✅ des unteren. Sonst kreuzt nichts zwischen den beiden.
 
-Completed: **IP-01** ✅, **IP-22** ✅, **IP-02** ✅, **IP-24** ✅, **IP-03** ✅, **IP-25** ✅, **IP-26** ✅,
-**IP-09** ✅, **IP-12** ✅, **IP-17** ✅, **IP-04** ✅, **IP-07** ✅, **IP-08** ✅, **IP-13** ✅, **IP-10** ✅,
-**IP-06** ✅.
-Independent starting points: **IP-09** ✅, **IP-12** ✅, **IP-17** ✅.
+Abgeschlossen: **IP-01** ✅, **IP-22** ✅, **IP-02** ✅, **IP-24** ✅, **IP-03** ✅, **IP-25** ✅,
+**IP-26** ✅, **IP-09** ✅, **IP-12** ✅, **IP-17** ✅, **IP-04** ✅, **IP-07** ✅, **IP-08** ✅,
+**IP-13** ✅, **IP-10** ✅, **IP-06** ✅, **IP-05** ✅.
+Unabhängige Ausgangspunkte: **IP-09** ✅, **IP-12** ✅, **IP-17** ✅.
 
-## 9. Risks and Open Questions
+## 9. Risiken und offene Fragen
 
-* **JavaFX in a library module** was confirmed and is settled. `.claude/rules/architecture.md` now
-  names the JavaFX component library under `lib` as an allowed place for the toolkit. No decision
-  blocks a plan any more.
-* **Naming of the renderer library.** `ai-ghost-layouting-fx` keeps the convention of the sibling
-  modules but carries the application name into a library meant for reuse. Open.
-* **Publication of the renderer library** as a real artifact or only inside this repository. Open;
-  IP-28 assumes the way the other library modules are handled.
-* **TestFX in a library module** has no precedent here; part of IP-25 for that reason.
-* **Scope of `PaperFlowView`.** A full text editing component and the part most likely to want
-  ai-ghost specific behaviour later. Every such need is answered by an API, never by a dependency
-  back into the application.
-* **Measuring belongs to the FX thread.** The central technical risk. IP-05 answers it and has to
-  measure it; IP-16 has to show the cost rather than hide it.
-* **The default font of a new project** is open: `FontData` defaults to `Arial`, which is not
-  installed everywhere; a default resolving through the fallback chain is needed.
-* **The insets of the native text control** shift its wrapping against the engine's. IP-08 takes them
-  out of the column width; IP-06 catches a remaining drift.
-* **A block's full text is reconstructed, not stored.** `DocumentLayout` only carries wrapped lines,
-  so `PaperFlowView` rejoins a block's lines with a single space between them; a hard line break
-  inside a block, should one ever exist, would not survive the round trip. No such case exists yet.
-* **The correspondence is per machine.** IP-22 makes a substitution visible; it cannot make it go
-  away.
-* **Kerning across word boundaries is lost.** Words are measured one by one, so a justified line is
-  marginally too wide. Engine and renderer are wrong in the same way, so the fidelity chain holds. To
-  be checked in IP-26.
-* **Widows, orphans, hyphenation** are excluded; the hook exists, no implementation ships.
-* **Resolving a provisional AI part** on part change or project close (IP-19) is undecided.
-* **No AI provider ships with this feature**, not even a stub. `lib/ai` (IP-17) is an interface only;
-  IP-18 and IP-19 wire the UI up to it and stop at an open `TODO` where a provider would be called. The
-  provider - built-in and user supplied alike - arrives only with the later plugin system feature,
-  through the same mechanism. This is a hard constraint, not an implementation detail: no plan of this
-  feature may add a stub, a mock provider or any other interaction with an actual or simulated AI.
-* **Three new Gradle modules** require a check against the `ci-pipeline` skill.
+* **JavaFX in einem Bibliotheksmodul** wurde bestätigt und ist geklärt. `.claude/rules/architecture.md`
+  benennt jetzt die JavaFX-Komponentenbibliothek unter `lib` als erlaubten Ort für das Toolkit. Keine
+  Entscheidung blockiert mehr einen Plan.
+* **Benennung der Renderer-Bibliothek.** `ai-ghost-layouting-fx` behält die Konvention der
+  Schwestermodule, trägt aber den Anwendungsnamen in eine zur Wiederverwendung gedachte Bibliothek.
+  Offen.
+* **Veröffentlichung der Renderer-Bibliothek** als echtes Artefakt oder nur innerhalb dieses
+  Repositorys. Offen; IP-28 nimmt die Behandlung der anderen Bibliotheksmodule an.
+* **TestFX in einem Bibliotheksmodul** hat hier keinen Präzedenzfall; Teil von IP-25 aus diesem Grund.
+* **Umfang von `PaperFlowView`.** Eine vollständige Textbearbeitungskomponente und der Teil, der später
+  am ehesten ai-ghost-spezifisches Verhalten will. Jeder solche Bedarf wird durch eine API
+  beantwortet, nie durch eine Abhängigkeit zurück in die Anwendung.
+* **Das Messen gehört dem FX-Thread.** Das zentrale technische Risiko. IP-05 beantwortet es und muss
+  es messen; IP-16 muss die Kosten zeigen statt sie zu verbergen.
+* **Die Standardschrift eines neuen Projekts** ist offen: `FontData` fällt auf `Arial` zurück, das
+  nicht überall installiert ist; eine Vorgabe, die über die Fallback-Kette auflöst, wird benötigt.
+* **Die Insets des nativen Textsteuerelements** verschieben seinen Umbruch gegen den der Engine. IP-08
+  nimmt sie aus der Spaltenbreite; IP-06 fängt eine verbleibende Abweichung.
+* **Der volle Text eines Blocks wird rekonstruiert, nicht gespeichert.** `DocumentLayout` trägt nur
+  umbrochene Zeilen, daher fügt `PaperFlowView` die Zeilen eines Blocks mit einem einzelnen Leerzeichen
+  dazwischen wieder zusammen; ein harter Zeilenumbruch innerhalb eines Blocks, sollte je einer
+  existieren, würde den Umlauf nicht überstehen. Ein solcher Fall existiert noch nicht.
+* **Die Übereinstimmung gilt pro Maschine.** IP-22 macht eine Ersetzung sichtbar; es kann sie nicht
+  beseitigen.
+* **Kerning über Wortgrenzen hinweg geht verloren.** Wörter werden einzeln gemessen, daher ist eine
+  Blocksatzzeile geringfügig zu breit. Engine und Renderer irren auf dieselbe Weise, sodass die
+  Treuekette hält. In IP-26 zu prüfen.
+* **Witwen, Waisen, Silbentrennung** sind ausgeschlossen; der Hook existiert, keine Implementierung
+  wird ausgeliefert.
+* **Das Auflösen eines vorläufigen KI-Teils** bei Teilwechsel oder Projektschluss (IP-19) ist
+  unentschieden.
+* **Kein KI-Provider wird mit diesem Feature ausgeliefert**, nicht einmal ein Stub. `lib/ai` (IP-17)
+  ist nur eine Schnittstelle; IP-18 und IP-19 verdrahten die UI an sie und enden an einem offenen
+  `TODO`, wo ein Provider gerufen würde. Der Provider – eingebaut und nutzergeliefert gleichermaßen –
+  kommt erst mit dem späteren Plugin-System-Feature, über denselben Mechanismus. Dies ist eine harte
+  Einschränkung, kein Umsetzungsdetail: Kein Plan dieses Features darf einen Stub, einen Mock-Provider
+  oder irgendeine andere Interaktion mit einer tatsächlichen oder simulierten KI hinzufügen.
+* **Drei neue Gradle-Module** erfordern eine Prüfung gegen den `ci-pipeline`-Skill.
 
-### Rejected third party libraries
+### Abgelehnte Drittanbieter-Bibliotheken
 
-Recorded with the reason, because the question returns otherwise.
+Mit dem Grund festgehalten, da die Frage sonst wiederkehrt.
 
-* **Apache PDFBox** carries no layout engine at all - line breaking, flow, alignment and pagination
-  are the caller's arithmetic. It contributes font parsing, embedding and PDF writing, which the
-  export feature needs and this one does not. It stays the decided choice there.
-* **Apache FOP** has a real engine, but its input is XSL-FO XML - unusable for incremental layout -
-  its placed result has no stable public API, it measures with its own font handling, and it is a
-  heavy non-modular dependency against a jlink image.
-* **`java.awt.font.TextLayout` / `LineBreakMeasurer`** measure through Java2D while Prism paints.
-  Break opportunities already come from `java.text.BreakIterator`, hit testing from `Text.hitTest`,
-  and `requires java.desktop` would pull one of the largest JDK modules into the image.
-* **SWT `TextLayout`** matches in capability but needs a `Display` with its own event loop, so the
-  application would have to become an SWT application. Native artifact per platform, and EPL-2.0 is
-  not on the allowlist.
+* **Apache PDFBox** trägt überhaupt keine Layout-Engine – Zeilenumbruch, Fluss, Ausrichtung und
+  Paginierung sind die Arithmetik des Aufrufers. Es steuert Schrift-Parsing, -Einbettung und
+  PDF-Schreiben bei, was das Export-Feature braucht und dieses nicht. Es bleibt dort die getroffene
+  Wahl.
+* **Apache FOP** hat eine echte Engine, aber ihre Eingabe ist XSL-FO-XML – unbrauchbar für
+  inkrementelles Layout –, ihr platziertes Ergebnis hat keine stabile öffentliche API, es misst mit
+  eigener Schriftbehandlung, und es ist eine schwere, nicht-modulare Abhängigkeit gegen ein
+  jlink-Image.
+* **`java.awt.font.TextLayout` / `LineBreakMeasurer`** messen über Java2D, während Prism malt.
+  Umbruchgelegenheiten kommen bereits aus `java.text.BreakIterator`, Trefferprüfung aus
+  `Text.hitTest`, und `requires java.desktop` würde eines der größten JDK-Module in das Image ziehen.
+* **SWT `TextLayout`** stimmt in der Fähigkeit überein, braucht aber ein `Display` mit eigener
+  Ereignisschleife, sodass die Anwendung eine SWT-Anwendung werden müsste. Natives Artefakt pro
+  Plattform, und EPL-2.0 steht nicht auf der Allowlist.
 
-The common cause is not incidental: a layout engine is a measurement plus a breaking algorithm, so
-every candidate with real layout brings its own measurement. Taking the layout while keeping the
-JavaFX measurement is not a combination that exists, and the fidelity chain rules all four out.
+Die gemeinsame Ursache ist nicht zufällig: Eine Layout-Engine ist eine Messung plus ein
+Umbruchalgorithmus, daher bringt jeder Kandidat mit echtem Layout seine eigene Messung mit. Das Layout
+zu nehmen und dabei die JavaFX-Messung zu behalten, ist keine Kombination, die existiert, und die
+Treuekette schließt alle vier aus.
 
-### Decisions taken
+### Getroffene Entscheidungen
 
-* **Page format** A5 by default, presets A4, 12,5 x 19 cm, 13,5 x 21,5 cm, 6 x 9 inch; margins 20 mm
-  inner, 15 mm outer, 15 mm top, 20 mm bottom.
-* **Front matter** is the title page followed directly by the copyright page.
-* **The blurb** is always the last sheet, set off by a hard edge, without a page number.
-* **Optional parts** always begin on a page of their own, keep their text, are greyed out and stay
-  writable.
-* **The metrics fingerprint** is taken over printable ASCII plus umlauts and sharp s at 12 pt, with
-  ascent, descent and leading. Set and size are fixed from that point on.
-* **The renderer is a library**, not a component of `app/ui`.
+* **Seitenformat** A5 als Vorgabe, Vorgaben A4, 12,5 x 19 cm, 13,5 x 21,5 cm, 6 x 9 Zoll; Ränder 20 mm
+  innen, 15 mm außen, 15 mm oben, 20 mm unten.
+* **Das Vorwerk** ist die Titelseite, gefolgt direkt von der Copyright-Seite.
+* **Der Klappentext** ist immer das letzte Blatt, durch eine harte Kante abgesetzt, ohne Seitenzahl.
+* **Optionale Teile** beginnen immer auf einer eigenen Seite, behalten ihren Text, sind ausgegraut
+  und bleiben beschreibbar.
+* **Der Metrik-Fingerabdruck** wird über druckbares ASCII plus Umlaute und scharfes s bei 12 pt
+  genommen, mit Ascent, Descent und Leading. Menge und Größe sind ab diesem Punkt fest.
+* **Der Renderer ist eine Bibliothek**, keine Komponente von `app/ui`.
 
-### Deliberately out of scope
+### Bewusst außerhalb des Umfangs
 
-* **Export in any form.** An own feature, implemented as a plugin on Apache PDFBox. What this feature
-  owes it is a toolkit independent `DocumentLayout` and a third `TextMetrics` implementation that
-  slots in without touching the engine. Anything a font file has to be read for belongs there.
-* **Plugin infrastructure.** `ai-ghost-plugin-api` carries only `ProjectPart` and `ProjectPartInfo`;
-  there is no plugin interface, no loader and no service registration. A plugin based export needs
-  that built first - a feature of its own and a prerequisite of the export, not of this one.
-* **Any AI provider, stub or real.** `lib/ai` carries the action interface only (IP-17). No
-  implementation is written, tested or wired in this feature - not even a deterministic stub for
-  testing. A future feature introduces a plugin system for providers, ships the built-in providers
-  through that same mechanism, and is the only place a provider is allowed to appear. Every call site
-  the UI needs (IP-18, IP-19) is built up to the point of calling `lib/ai` and carries an open `TODO`
-  there instead.
+* **Export in jeglicher Form.** Ein eigenes Feature, als Plugin auf Apache PDFBox umgesetzt. Was
+  dieses Feature ihm schuldet, ist ein toolkit-unabhängiges `DocumentLayout` und eine dritte
+  `TextMetrics`-Implementierung, die sich einfügt, ohne die Engine zu berühren. Alles, wofür eine
+  Schriftdatei gelesen werden muss, gehört dorthin.
+* **Plugin-Infrastruktur.** `ai-ghost-plugin-api` trägt nur `ProjectPart` und `ProjectPartInfo`; es
+  gibt keine Plugin-Schnittstelle, keinen Loader und keine Service-Registrierung. Ein plugin-basierter
+  Export braucht das zuerst gebaut – ein eigenes Feature und eine Voraussetzung des Exports, nicht
+  dieses.
+* **Jeder KI-Provider, Stub oder echt.** `lib/ai` trägt nur die Aktionsschnittstelle (IP-17). Keine
+  Implementierung wird in diesem Feature geschrieben, getestet oder verdrahtet – nicht einmal ein
+  deterministischer Stub zum Testen. Ein künftiges Feature führt ein Plugin-System für Provider ein,
+  liefert die eingebauten Provider über denselben Mechanismus aus und ist der einzige Ort, an dem ein
+  Provider auftauchen darf. Jede Aufrufstelle, die die UI braucht (IP-18, IP-19), wird bis zum Punkt
+  des Aufrufs von `lib/ai` gebaut und trägt dort stattdessen ein offenes `TODO`.
 
-## 10. Feature Completion Criteria
+## 10. Abschlusskriterien des Features
 
-* Title page, prolog, every chapter, epilog and blurb can be written completely in the application;
-  the "Not implemented yet." placeholder is gone, and the copyright page follows the title page.
-* Prolog, epilog and blurb are switched from the tree; a switched off part keeps its text, is greyed
-  out, is left out of the numbering and stays writable. The blurb is the last sheet without a number.
-* A document written before this feature opens with exactly the parts it used to have.
-* Text is written in the typography, margins and page structure of the book, with page breaks marked
-  where the printed book breaks.
-* A paragraph falls on the same page in the writing surface and in the preview, and the build fails
-  when the two drift apart.
-* Fonts come from the installed families; no manuscript font is shipped and no font file is opened. A
-  missing or differently measuring font is reported with its substitute.
-* A changed design value changes the open text without reopening the project.
-* Writing in a book sized document stays responsive, and the first layout of a long book does not
-  appear as a frozen window.
-* Prompts, part data and design are reachable beside the sheet and never interrupt the text.
-* Every text change, structural change and applied AI result can be undone and redone.
-* An AI action bar is reachable for a paragraph, a heading and a whole part, and its full flow -
-  replace with undo, accept or discard for a generated part - works up to the point of calling
-  `lib/ai`; the actual call is an open `TODO`, since no provider ships with this feature.
-* The layout result carries no toolkit type, so a later export plugin consumes it unchanged.
-* `lib/layouting-fx` builds, tests and is covered as a JavaFX library module; its dependency set is
-  `ai-ghost-layouting` plus JavaFX and the build fails when it grows. Both surfaces and the measuring
-  live there, exist nowhere twice, and a demo runs without any ai-ghost module on its path.
-* The library ships its own stylesheet and takes on the ai-ghost palette through overridden classes.
-* JavaFX appears in no module but `app/ui` and `lib/layouting-fx`, and the architecture rule says so.
-* The project tree keeps its structure and its selection API; the checkbox on three nodes is the only
-  addition to it.
-* Build and tests are green, documentation and changelog are updated per the `project-docs` skill.
+* Titelseite, Prolog, jedes Kapitel, Epilog und Klappentext können in der Anwendung vollständig
+  geschrieben werden; der Platzhalter „Not implemented yet.“ ist weg, und die Copyright-Seite folgt
+  der Titelseite.
+* Prolog, Epilog und Klappentext werden aus dem Baum geschaltet; ein ausgeschalteter Teil behält
+  seinen Text, ist ausgegraut, aus der Nummerierung genommen und bleibt beschreibbar. Der Klappentext
+  ist das letzte Blatt ohne Zahl.
+* Ein vor diesem Feature geschriebenes Dokument öffnet mit genau den Teilen, die es früher hatte.
+* Text wird in der Typografie, den Rändern und der Seitenstruktur des Buches geschrieben, mit
+  Seitenumbrüchen dort markiert, wo das gedruckte Buch umbricht.
+* Ein Absatz fällt in der Schreibfläche und in der Vorschau auf dieselbe Seite, und der Build
+  scheitert, wenn die beiden auseinanderdriften.
+* Schriften kommen aus den installierten Familien; keine Manuskriptschrift wird ausgeliefert und keine
+  Schriftdatei geöffnet. Eine fehlende oder anders messende Schrift wird mit ihrem Ersatz gemeldet.
+* Ein geänderter Designwert ändert den offenen Text, ohne das Projekt neu zu öffnen.
+* Das Schreiben in einem buchgroßen Dokument bleibt reaktionsschnell, und das erste Layout eines
+  langen Buches erscheint nicht als eingefrorenes Fenster.
+* Prompts, Teildaten und Design sind neben dem Blatt erreichbar und unterbrechen den Text nie.
+* Jede Textänderung, jede Strukturänderung und jedes angewandte KI-Ergebnis kann rückgängig gemacht
+  und wiederhergestellt werden.
+* Eine KI-Aktionsleiste ist für einen Absatz, eine Überschrift und einen ganzen Teil erreichbar, und
+  ihr voller Ablauf – Ersetzen mit Undo, Annehmen oder Verwerfen für einen generierten Teil –
+  funktioniert bis zum Punkt des Aufrufs von `lib/ai`; der tatsächliche Aufruf ist ein offenes `TODO`,
+  da kein Provider mit diesem Feature ausgeliefert wird.
+* Das Layout-Ergebnis trägt keinen Toolkit-Typ, sodass ein späteres Export-Plugin es unverändert
+  verbraucht.
+* `lib/layouting-fx` baut, testet und ist als JavaFX-Bibliotheksmodul abgedeckt; seine
+  Abhängigkeitsmenge ist `ai-ghost-layouting` plus JavaFX, und der Build scheitert, wenn sie wächst.
+  Beide Oberflächen und das Messen leben dort, existieren nirgends doppelt, und eine Demo läuft ohne
+  irgendein ai-ghost-Modul auf ihrem Pfad.
+* Die Bibliothek liefert ihr eigenes Stylesheet aus und nimmt die ai-ghost-Palette über überschriebene
+  Klassen an.
+* JavaFX taucht in keinem Modul außer `app/ui` und `lib/layouting-fx` auf, und die Architekturregel
+  sagt das.
+* Der Projektbaum behält seine Struktur und seine Auswahl-API; das Kontrollkästchen auf drei Knoten
+  ist die einzige Ergänzung daran.
+* Build und Tests sind grün, Dokumentation und Changelog sind gemäß dem `project-docs`-Skill
+  aktualisiert.

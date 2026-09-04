@@ -29,6 +29,7 @@ import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
 import org.pcsoft.app.aighost.fx.model.project.book.BookPartProperty
 import org.pcsoft.app.aighost.fx.model.project.book.ChapterProperty
 import org.pcsoft.app.aighost.layouting.GreedyLineBreaker
+import org.pcsoft.app.aighost.layouting.IncrementalLineBreaker
 import org.pcsoft.app.aighost.layouting.LayoutEngine
 import org.pcsoft.app.aighost.layouting.NonePageBreakPolicy
 import org.pcsoft.app.aighost.layouting.TextBlock
@@ -54,6 +55,11 @@ import org.pcsoft.app.aighost.layouting.model.project.meta.CopyrightPageBuilder
  * [PaperFlowView] is written into the property model of the part and folded into a single undo entry
  * per block for the length of a typing pause; the layout on the sheet is recomputed from the model
  * after every change and after every design change, so the caret survives a restyling.
+ *
+ * Only the block that actually changed is broken again on a keystroke: the line breaking runs through
+ * an [IncrementalLineBreaker] that holds the broken lines of every unchanged block, so ordinary prose
+ * measures a handful of words per keystroke instead of the whole part. The cache is dropped when the
+ * design restyles every block.
  *
  * The component follows only models handed to it and registers nothing in a global registry, so the
  * `showingBinding` pattern of `fx-component-lifecycle` does not apply here, the same as for
@@ -100,6 +106,11 @@ class BookPartEditorViewModel : ViewModel {
     // undo can play it back through the same path a keystroke takes.
     private val targetProperties: MutableMap<PartTarget, StringProperty> = HashMap()
 
+    // One line breaker for the whole lifetime of the editor: a block that did not change keeps its
+    // broken lines instead of being measured again on the next keystroke. Cleared on a design change,
+    // where the key - text, style, column width - would not show that every block was restyled.
+    private val lineBreaker = IncrementalLineBreaker(GreedyLineBreaker(JavaFxTextMetrics))
+
     // True while a freshly computed layout is handed to the flow view, so the text-change events the
     // rebuild fires for every block are not mistaken for edits.
     private var applyingLayout = false
@@ -115,7 +126,10 @@ class BookPartEditorViewModel : ViewModel {
     private var caretTarget: PartTarget? = null
     private var caretOffset: Int = 0
 
-    private val designListener = InvalidationListener { recompute() }
+    private val designListener = InvalidationListener {
+        lineBreaker.clear()
+        recompute()
+    }
     private var boundDesign: Observable? = null
 
     private val columnWidthListener = ChangeListener<Number> { _, _, width ->
@@ -169,6 +183,7 @@ class BookPartEditorViewModel : ViewModel {
         boundDesign?.removeListener(designListener)
         this.project = project
         boundDesign = project?.designProperty?.also { it.addListener(designListener) }
+        lineBreaker.clear()
 
         onSelectionChanged(lastSelection)
     }
@@ -211,6 +226,7 @@ class BookPartEditorViewModel : ViewModel {
         boundPart = null
         targetProperties.clear()
         targets = emptyList()
+        lineBreaker.clear()
     }
 
     private fun onSelectionChanged(item: ProjectListItem?) {
@@ -367,7 +383,10 @@ class BookPartEditorViewModel : ViewModel {
                 .coerceAtLeast(1.0)
         }
 
-        val text = GreedyLineBreaker(JavaFxTextMetrics).breakText(blocks, columnWidth)
+        // Only the block that changed since the last keystroke is measured again; the rest is read
+        // from the incremental breaker. Distributing the lines onto pages afterwards is arithmetic
+        // over the result and carries no measurement, so it always runs in full.
+        val text = lineBreaker.breakText(blocks, columnWidth)
         val layout = LayoutEngine.layout(
             text = text,
             geometry = geometry,
