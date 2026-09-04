@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+* Writing surface paragraphs can now be reshaped from the keyboard: Enter splits a paragraph at the
+  caret, Backspace at its very start merges it with the one before, Delete at its very end merges it
+  with the one after, and Ctrl+Shift+Up/Down (or the paragraph's right-click menu) moves it one place
+  up or down; plain Up/Down at the first or the last line of a paragraph now moves the caret into the
+  neighbouring one instead of stopping. Every one of these is its own undo step. Fixes a defect where
+  typing several characters in a row could insert each new one in front of the one typed just before it
+
 * Editor centre is now a writing surface instead of a placeholder: picking the prolog, a chapter, the
   epilog or the blurb in the project tree opens its text on a sheet that already carries the book's
   typography, margins and page structure, with the heading, its further lines and every paragraph as

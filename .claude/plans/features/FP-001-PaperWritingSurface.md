@@ -190,7 +190,7 @@ entfernt. Die Nummerierung wird stabil gehalten statt neu nummeriert.
 | IP-28 | Standalone Reuse And Documentation        | Demo ohne ai-ghost, veröffentlichtes Artefakt, Doku, Abhängigkeitsprüfung | IP-27          |
 | IP-09 | Undo And Redo Infrastructure ✅            | Ein Undo-Stack über die Modelländerungen des Editors                 | -                    |
 | IP-10 | Book Part Writing Surface ✅               | Cursor, Tippen und Bindung von Überschriften und Absätzen            | IP-08, IP-09         |
-| IP-11 | Paragraph Structure Operations            | Absätze teilen, verbinden, löschen und umsortieren                   | IP-10                |
+| IP-11 | Paragraph Structure Operations ✅          | Absätze teilen, verbinden, löschen und umsortieren                   | IP-10                |
 | IP-12 | Inspector Shell And Content Sections ✅    | Kontextfenster mit Buch- und Teilabschnitten, absorbiert `BookEditor`| -                    |
 | IP-13 | Design Style Sections ✅                   | Bearbeiten der Stile im Inspector mit Live-Wirkung                   | IP-02, IP-12, IP-26  |
 | IP-14 | Project Settings Dialog ✅                 | Seitenformat, Ränder und Leerseiten in einem Dialog                  | IP-02                |
@@ -493,13 +493,24 @@ Layout zurück; das erste Layout fällt auf die schlichte Inhaltsbreite der Seit
 Absatzblock bestückt. `app/ui` hängt jetzt von `lib/ai-ghost-layouting-model` ab. Das Teilen an einem
 Umbruch bleibt bei IP-21, strukturelle Absatzoperationen bei IP-11.
 
-### IP-11: Paragraph Structure Operations
+### IP-11: Paragraph Structure Operations ✅
 
-Plan: `FP-001-IP-11-AbsatzOperationen.md`
+Plan entfernt, war `FP-001-IP-11-AbsatzOperationen.md`.
 
 Blockliste, Layout und Cursorziel ändern sich zusammen und sind eine Transaktion. Das Teilen
 innerhalb eines Absatzes ist der Fall, der einen Off-by-one in der Zeichenbereich-Abbildung von IP-03
 offenlegt. Die Bibliothek fordert die Operation an, die Anwendung führt sie aus.
+
+Wie geplant gebaut: `PaperFlowListener.onMoveRequested`, `PaperFlowView.requestCaret` als einmalig
+konsumierbares Caret-Ziel mit Vorrang vor dem Caret-Memo, die reinen Listenfunktionen
+`splitParagraph`/`mergeParagraph`/`removeParagraph`/`moveParagraph` in `BookPartEditorController`,
+und `ParagraphListUndoEntry` als neuer struktureller Undo-Eintrag, gepusht statt aufgezeichnet. Um
+zwei vom Nutzer angeforderte Ergänzungen erweitert: einen vorbestehenden, beim Testen entdeckten
+Fehler, bei dem schnelles Tippen den Caret auf seine Position vor dem gerade eingefügten Zeichen
+zurücksetzte (behoben über eine über den Rebuild hinweg gemerkte Textabbildung je Block), und eine
+zeilen-bewusste Pfeiltasten-Navigation zwischen Blöcken (Pfeil hoch/runter an der ersten bzw. letzten
+umbrochenen Zeile, gegen die echten Zeilengrenzen des Layout-Ergebnisses geprüft, nicht gegen eine
+`TextArea`-interne Zeilenzahl). Details in der Statusdatei des Features.
 
 ### IP-12: Inspector Shell And Content Sections ✅
 

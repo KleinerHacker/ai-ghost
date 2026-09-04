@@ -22,7 +22,7 @@ Status: IN_PROGRESS
 | IP-28 | Standalone Reuse And Documentation        | NOT_STARTED |
 | IP-09 | Undo And Redo Infrastructure              | COMPLETED   |
 | IP-10 | Book Part Writing Surface                 | COMPLETED   |
-| IP-11 | Paragraph Structure Operations            | NOT_STARTED |
+| IP-11 | Paragraph Structure Operations            | COMPLETED   |
 | IP-12 | Inspector Shell And Content Sections      | COMPLETED   |
 | IP-13 | Design Style Sections                     | COMPLETED   |
 | IP-14 | Project Settings Dialog                   | COMPLETED   |
@@ -36,13 +36,53 @@ Status: IN_PROGRESS
 
 ## Gesamtfortschritt
 
-70 %
+77 %
 
 ## Anmerkungen
 
 IP-01, IP-22, IP-02, IP-24, IP-03, IP-25, IP-14, IP-26, IP-17, IP-04, IP-07, IP-08, IP-13, IP-10,
-IP-06, IP-05 und IP-19 sind umgesetzt; IP-11, IP-18 und IP-27 sind entsperrt, und IP-16 ist durch
-IP-05 entsperrt (wartet noch auf IP-15).
+IP-06, IP-05, IP-19 und IP-11 sind umgesetzt; IP-18 und IP-27 sind entsperrt, IP-15 ist durch IP-11
+und das bereits abgeschlossene IP-12 entsperrt, IP-21 ist durch IP-11 entsperrt (bleibt aber
+optional), und IP-16 ist durch IP-05 entsperrt (wartet noch auf IP-15).
+
+IP-11 wurde wie geplant gebaut und um zwei vom Nutzer angeforderte Ergänzungen erweitert.
+`PaperFlowListener` (`lib/layouting-fx`) erhielt `onMoveRequested(blockIndex, up)`; `PaperFlowView`
+erhielt `requestCaret(blockIndex, charOffset)`, ein einmalig konsumierbares Caret-Ziel, das beim
+nächsten Rebuild Vorrang vor dem bisherigen Caret-Memo hat – gebraucht, weil Teilen, Verbinden,
+Verschieben und Entfernen den Caret auf einen anderen Block als den vor der Änderung setzen müssen.
+`PaperFlowViewSkin` löst Strg+Umschalt+Pfeil hoch/runter (und zwei neue Kontextmenüpunkte) in
+`onMoveRequested` auf. `BookPartEditorController` erhielt die reinen Listenfunktionen
+`splitParagraph`, `mergeParagraph`, `removeParagraph`, `moveParagraph` sowie `paragraphListProperty`
+(löst die Absatzliste des Blurb- bzw. Buchteil-Falls auf, jetzt auch von `writeModel` genutzt).
+`BookPartEditorViewModel` verkabelt die vier neuen `PaperFlowListener`-Callbacks über eine
+gemeinsame `applyParagraphOperation`, die Transaktion (Liste + Layout + Caret) und Undo-Eintrag in
+einem Schritt behandelt; neuer Undo-Typ `ParagraphListUndoEntry` (`app/ui/.../undo`) kapselt
+Vorher-/Nachher-Liste und Caret-Ziel, gepusht über `UndoStack.push(...)`, nie über `record(...)`.
+Ein leerer Teil bleibt über den bestehenden `ensureWritableBlock`/`writeModel`-Anfüge-Pfad aus IP-10
+abgedeckt; eine eigene „Absatz anlegen“-Funktion war nicht nötig.
+
+Auf ausdrücklichen Wunsch des Nutzers, außerhalb des ursprünglichen Plans, aber im selben
+Änderungssatz: (1) ein vorbestehender Fehler wurde behoben, bei dem `PaperFlowViewSkin.rebuildStructure`
+bei jedem Tastendruck den Caret auf seine Position *vor* dem gerade eingefügten oder gelöschten
+Zeichen zurücksetzte, da `TextArea.caretPositionProperty` erst aktualisiert wird, nachdem
+`textProperty` seine eigenen Listener benachrichtigt hat, in denen der komplette Neuaufbau bereits
+läuft – schnelles Tippen fügte dadurch jedes neue Zeichen vor dem vorherigen ein. Behoben durch
+`lastRenderedText`, eine über den Rebuild hinweg gemerkte Abbildung Blockindex → Text des *vorigen*
+Rebuilds, gegen die der neue Text verglichen und die Längendifferenz auf den gememorten Caret
+angewendet wird. (2) Pfeil hoch/runter springt jetzt an der ersten bzw. letzten umbrochenen Zeile
+eines Absatzes (nicht nur an dessen absolutem Anfang/Ende) in den Nachbarblock, ausgewertet gegen
+die echten Zeilengrenzen des Layout-Ergebnisses (`BlockSegment.firstLineEnd`/`lastLineStart`), nicht
+gegen eine `TextArea`-interne Zeilenzahl, die dieser Code nie ausliest.
+
+Neue Entwicklertests: `PaperFlowViewTest` (Verschieben, Zeilen-bewusste Navigation inkl.
+mehrzeiliger Blöcke, `requestCaret`-Vorrang und -Einmalkonsum, Randfälle), `BookPartEditorControllerTest`
+(alle vier Listenfunktionen inkl. Randfälle, `paragraphListProperty`),
+`BookPartEditorTest` (Teilen, Verbinden, Verschieben, je ein Undo-Schritt, Randfall
+„Verbinden am ersten Absatz“, sowie ein Test, der mehrere Tastenanschläge in Folge tippt und die
+Caret-Korrektur nachweist). CHANGELOG, `docs/docs/editor.md` und die README-Statustabelle wurden
+aktualisiert, da die Absatz-Operationen und die Navigation für den Endnutzer sichtbar sind. Der
+volle `build` ist grün. Die Plandatei wurde bei Abschluss per `git rm` entfernt; diese Anmerkung ist
+der einzige Nachweis.
 
 IP-18 und IP-19 wurden zurückgeschnitten: Ihre KI-Schaltflächen sind per FXML `onAction` an eine
 parameterlose `*View`-Methode gebunden, deren einziger Rumpf `TODO("AI action: …")` ist – keine
