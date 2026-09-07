@@ -43,7 +43,7 @@ dependencies {
     implementation("io.arrow-kt:arrow-core:2.1.2")
     implementation("org.apache.commons:commons-lang3:3.20.0")
 
-    implementation("org.controlsfx:controlsfx:11.2.4")
+    implementation("org.controlsfx:controlsfx:11.2.5")
     implementation("de.saxsys:mvvmfx:1.8.0")
 
     // The application logs against the SLF4J API only; Log4j 2 is the implementation behind it and
