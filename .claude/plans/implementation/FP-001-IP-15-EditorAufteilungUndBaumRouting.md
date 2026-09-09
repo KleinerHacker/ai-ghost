@@ -8,7 +8,7 @@
 
 ## Abhängigkeiten
 
-* Voraussetzung: IP-11, IP-12
+* Voraussetzung: IP-31, IP-12
 * Start erst, wenn jede Voraussetzung im Feature-Status `COMPLETED` ist.
 * Blockiert: IP-16, IP-23
 * Reihenfolge und Graph stehen in Abschnitt 8 des Feature Plans.

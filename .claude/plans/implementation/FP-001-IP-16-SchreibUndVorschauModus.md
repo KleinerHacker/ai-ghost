@@ -8,7 +8,7 @@
 
 ## Abhängigkeiten
 
-* Voraussetzung: IP-05, IP-07, IP-15
+* Voraussetzung: IP-30, IP-31, IP-15
 * Start erst, wenn jede Voraussetzung im Feature-Status `COMPLETED` ist.
 * Blockiert: keinen weiteren Plan
 * Reihenfolge und Graph stehen in Abschnitt 8 des Feature Plans.
@@ -21,6 +21,11 @@
 * `icons`
 * `project-docs`
 
+## Harte Einschränkung
+
+* Vorschau und Schreibfläche verwenden dasselbe `Document` und dieselbe Messung.
+* Kein Oberflächenvergleich nötig: Ein Absatz fällt strukturell in beiden Modi auf dieselbe Seite.
+
 ## Aufgaben
 
 ### 1. Umschalter
@@ -31,14 +36,16 @@
 
 ### 2. Vorschau
 
-* Ganzes Buch über `PaperPageView` darstellen.
+* Ganzes Buch als ein `Document` über die Builder aus IP-30 bauen.
+* Zweite `PaperSheetView` im Modus `READONLY` darüber.
 * Caret und KI-Schaltflächen in der Vorschau ausblenden.
+* Seitenvirtualisierung von `PaperSheetView` nutzen, nicht nachbauen.
 
 ### 3. Erstes Layout
 
-* Erstes Layout eines langen Buches mit Fortschrittsanzeige begleiten.
-* Messen auf dem FX-Thread, Anordnen außerhalb.
-* Virtualisierung der Bibliothek nutzen, nicht erneut bauen.
+* `simplay-engine.measure` des ganzen Buches mit Fortschrittsanzeige begleiten.
+* Messen auf dem FX-Thread; Kosten messen und in der Statusdatei festhalten.
+* Fenster darf beim ersten Layout eines langen Buches nicht einfrieren.
 
 ### 4. Position
 
@@ -47,14 +54,19 @@
 
 ### 5. Statusleiste
 
-* Seitenzahl und Gesamtseitenzahl anzeigen.
+* Seitenzahl und Gesamtseitenzahl anzeigen (aus dem `MeasuredDocument`).
 
-### 6. Tests
+### 6. Dünne Treueprüfung
+
+* Test: ein gewählter Absatz liegt in Schreibmodus und Vorschau auf derselben Seitenposition.
+* Kein Golden-File, kein `*RT`; ein einfacher headless Entwicklertest genügt.
+
+### 7. Tests
 
 * Moduswechsel, Position und Seitenzahl headless prüfen.
 * Antwortverhalten beim ersten Layout eines langen Buches prüfen.
 
-### 7. Abschluss
+### 8. Abschluss
 
 * Build über Agent ausführen.
 * Dokumentation nach `project-docs` prüfen.
@@ -63,3 +75,4 @@
 
 * Das ganze Buch ist in seinem Design zu sehen und scrollt flüssig.
 * Der Moduswechsel hält die Leseposition.
+* Ein Absatz liegt in beiden Modi auf derselben Seite.

@@ -36,9 +36,10 @@
 
 ### 3. Wirkung auf das Blatt
 
-* Ausgrauen, Seitennummerierung und Seitenzahl unmittelbar nachziehen.
+* Ausgrauen des ausgeschalteten Teils unmittelbar nachziehen.
 * Kein erneutes Öffnen des Projekts nötig.
 * Keine Rückfrage stellen, es geht kein Text verloren.
+* TODO: Seitennummerierung/-zahl nachziehen, sobald die simPlay-Seitenpolitik steht (Feature-Plan, Abschnitt 9).
 
 ### 4. Undo
 
@@ -51,7 +52,7 @@
 
 ### 6. Tests
 
-* Umschalten, Gleichlauf, Ausgrauen und Umnummerierung headless prüfen.
+* Umschalten, Gleichlauf und Ausgrauen headless prüfen.
 * Erhalt des Textes über eine Umschaltung prüfen.
 
 ### 7. Abschluss

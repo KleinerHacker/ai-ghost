@@ -8,7 +8,7 @@
 
 ## Abhängigkeiten
 
-* Voraussetzung: IP-10
+* Voraussetzung: IP-31
 * Start erst, wenn jede Voraussetzung im Feature-Status `COMPLETED` ist.
 * Blockiert: keinen weiteren Plan
 * Reihenfolge und Graph stehen in Abschnitt 8 des Feature Plans.
@@ -24,45 +24,52 @@
 
 ## Harte Einschränkung
 
-* KEINE Verdrahtung an den `lib/ai`-Aktions-Port, KEIN Stub, KEIN Mock, KEINE reale oder simulierte KI-Anbindung
-* Der Aktions-Port aus IP-17 bleibt bestehen, wird von diesem Plan aber nicht benutzt
-* Jede KI-Schaltfläche ist per FXML `onAction` an eine parameterlose Methode des `*View`-Controllers gebunden
-* Der einzige Rumpf dieser Methode ist `TODO("AI action: <name>")`
-* Keine Busy-Anzeige, kein Abbruch, kein Ersetzungspfad, kein Undo-Eintrag, kein Fehlerweg
-* Die gesamte KI-Aktionsinfrastruktur kommt erst mit dem künftigen Plugin-System-Feature
+* KEINE Verdrahtung an den `lib/ai`-Aktions-Port, KEIN Stub, KEIN Mock, KEINE reale oder simulierte KI-Anbindung.
+* Der Aktions-Port aus IP-17 bleibt bestehen, wird von diesem Plan aber nicht benutzt.
+* Jede KI-Schaltfläche ist per FXML `onAction` an eine parameterlose `*View`-Methode gebunden.
+* Der einzige Rumpf dieser Methode ist `TODO("AI action: <name>")`.
+* Keine Busy-Anzeige, kein Abbruch, kein Ersetzungspfad, kein Undo-Eintrag, kein Fehlerweg.
 
 ## Aufgaben
 
-### 1. Aktionsleiste
+### 1. Schwebende Leiste
 
-* `AiActionBar` schwebend am fokussierten Absatz oder an der Überschrift zeigen.
-* Sichtbar nur, wenn die Maus über dem Absatz/der Überschrift steht.
-* Halbtransparent, solange die Maus nicht direkt über der Leiste steht.
-* Volle Deckkraft erst beim Hover direkt über der Leiste.
-* Deckkraftwechsel als sanfte Animation (Fade), kein hartes Umschalten.
-* Schaltflächen Umschreiben, Ausbauen und Kürzen anbieten.
-* Icons nach `icons` anlegen.
+* `AiActionBar` als Inhalt eines simPlay-`FloatingOverlay`.
+* Trigger `PARAGRAPH_HOVER`; im `EDITABLE`-Modus zusätzlich `CARET`.
+* simPlay übernimmt Anzeigen, Positionieren und Verbergen sowie das Verankern beim Scrollen/Zoomen.
+* `anchor`, `offsetX`, `offsetY` für die Platzierung an der Blockoberkante.
+
+### 2. Erscheinung
+
+* Schaltflächen Umschreiben, Ausbauen und Kürzen mit Icons nach `icons`.
+* Halbtransparent, solange die Maus nicht direkt über der Leiste steht; volle Deckkraft beim Hover.
+* Deckkraftwechsel als sanfte Animation (Fade).
 * Beschriftungen und Tooltips aus dem Nachrichtenbündel.
 
-### 2. Leere Methoden
+### 3. Leere Methoden
 
-* Je Schaltfläche eine parameterlose Methode im `*View`-Controller anlegen.
-* Methoden per FXML `onAction` verdrahten.
+* Je Schaltfläche eine parameterlose Methode im `*View`-Controller.
 * Rumpf jeweils nur `TODO("AI action: rewrite")`, `TODO("AI action: expand")`, `TODO("AI action: shorten")`.
 * Keine weitere Logik, kein Aufruf, keine Rückgabe.
 
-### 3. Tests
+### 4. Lebenszyklus
 
-* Aktionsleiste, Sichtbarkeit bei Hover und Fade-Zustand headless prüfen.
-* Prüfen, dass jede Methode `NotImplementedError` wirft.
+* `onShown`/`onHidden` des Overlays nur für das Anlegen/Freigeben der Leiste.
+* Kein globaler Listener außerhalb des Overlays; sonst greift `showingBinding()`.
 
-### 4. Abschluss
+### 5. Tests
+
+* Headless: Overlay erscheint bei `PARAGRAPH_HOVER`, verschwindet ohne Trigger.
+* Fade-Zustand bei Hover über der Leiste.
+* Jede `*View`-Methode wirft `NotImplementedError`.
+
+### 6. Abschluss
 
 * Build über Agent ausführen.
 * Dokumentation nach `project-docs` prüfen.
 
 ## Ergebnis
 
-* Die schwebende KI-Leiste steht sichtbar am fokussierten Block mit Umschreiben, Ausbauen und Kürzen.
+* Die schwebende KI-Leiste steht über simPlay-`FloatingOverlay` am fokussierten Block.
 * Jede Schaltfläche endet an einer leeren `*View`-Methode mit `TODO("AI action: …")`.
 * KEINE KI-Infrastruktur, kein Port, kein Provider ist Teil dieses Plans.
