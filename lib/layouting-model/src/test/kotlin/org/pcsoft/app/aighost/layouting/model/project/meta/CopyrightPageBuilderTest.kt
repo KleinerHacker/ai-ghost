@@ -15,8 +15,6 @@ package org.pcsoft.app.aighost.layouting.model.project.meta
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.pcsoft.app.aighost.layouting.TextAlignment
-import org.pcsoft.app.aighost.layouting.model.common.BlockSpacing
 import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.FontData
 import org.pcsoft.app.aighost.model.common.StyleData
@@ -24,6 +22,8 @@ import org.pcsoft.app.aighost.model.project.book.Copyright
 import org.pcsoft.app.aighost.model.project.design.CopyrightPageDesign
 import org.pcsoft.app.aighost.model.project.design.Design
 import org.pcsoft.app.aighost.model.project.meta.Meta
+import org.pcsoft.framework.simplay.engine.model.FontStyle
+import org.pcsoft.framework.simplay.engine.model.TextAlignment
 
 /**
  * Developer tests for the blocks of the copyright page, [CopyrightPageBuilder].
@@ -64,12 +64,11 @@ class CopyrightPageBuilderTest {
         )
 
         val block = blocks.single()
-        assertEquals("Copyright 2026 Jane Doe", block.text)
-        assertEquals("Baskerville", block.style.family)
-        assertEquals(9.0, block.style.size)
+        assertEquals("Copyright 2026 Jane Doe", block.toString())
+        assertEquals("Baskerville", block.style.font.family)
+        assertEquals(9.0, block.style.font.size)
         assertEquals(TextAlignment.RIGHT, block.style.alignment)
-        assertEquals(1.15, block.style.lineSpacing)
-        assertEquals(BlockSpacing.AFTER_PARAGRAPH, block.style.spaceAfter)
+        assertEquals(1.15, block.style.lineSpacing.factor)
     }
 
     /**
@@ -84,7 +83,7 @@ class CopyrightPageBuilderTest {
 
         assertEquals(
             listOf("Copyright 2026 Jane Doe", "All rights reserved", "", "First edition"),
-            blocks.map { it.text }
+            blocks.map { it.toString() }
         )
         assertTrue(blocks.all { it.style == blocks.first().style })
     }
@@ -104,15 +103,15 @@ class CopyrightPageBuilderTest {
 
         assertEquals(
             listOf("Copyright 2026 Jane Doe", "All rights reserved", "First edition"),
-            blocks.map { it.text }
+            blocks.map { it.toString() }
         )
-        assertEquals(8.0, blocks[1].style.size)
-        assertEquals(1.1, blocks[1].style.lineSpacing)
+        assertEquals(8.0, blocks[1].style.font.size)
+        assertEquals(1.1, blocks[1].style.lineSpacing.factor)
     }
 
     /**
      * Use case: the design asks for the author name on the copyright page, so it closes the page in
-     * the author style and stands away from the lines above it.
+     * the author style.
      */
     @Test
     fun theAuthorClosesThePageWhenTheDesignAsksForIt() {
@@ -124,10 +123,9 @@ class CopyrightPageBuilderTest {
             withAuthor
         )
 
-        assertEquals(listOf("Copyright 2026 Jane Doe", "Jane Doe"), blocks.map { it.text })
-        assertEquals(10.0, blocks[1].style.size)
-        assertTrue(blocks[1].style.italic)
-        assertEquals(BlockSpacing.BEFORE_AUTHOR, blocks[1].style.spaceBefore)
+        assertEquals(listOf("Copyright 2026 Jane Doe", "Jane Doe"), blocks.map { it.toString() })
+        assertEquals(10.0, blocks[1].style.font.size)
+        assertEquals(FontStyle.ITALIC, blocks[1].style.font.style)
     }
 
     /**
@@ -144,7 +142,7 @@ class CopyrightPageBuilderTest {
             withAuthor
         )
 
-        assertEquals(listOf("Copyright 2026 Jane Doe"), blocks.map { it.text })
+        assertEquals(listOf("Copyright 2026 Jane Doe"), blocks.map { it.toString() })
     }
 
     /**

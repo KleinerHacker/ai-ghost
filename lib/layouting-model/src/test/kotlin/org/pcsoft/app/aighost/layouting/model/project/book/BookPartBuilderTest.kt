@@ -15,8 +15,6 @@ package org.pcsoft.app.aighost.layouting.model.project.book
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.pcsoft.app.aighost.layouting.TextAlignment
-import org.pcsoft.app.aighost.layouting.model.common.BlockSpacing
 import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.FontData
 import org.pcsoft.app.aighost.model.common.StyleData
@@ -24,6 +22,9 @@ import org.pcsoft.app.aighost.model.project.book.Chapter
 import org.pcsoft.app.aighost.model.project.book.Epilog
 import org.pcsoft.app.aighost.model.project.book.Prolog
 import org.pcsoft.app.aighost.model.project.design.ChapterPageDesign
+import org.pcsoft.framework.simplay.engine.model.FontStyle
+import org.pcsoft.framework.simplay.engine.model.FontWeight
+import org.pcsoft.framework.simplay.engine.model.TextAlignment
 
 /**
  * Developer tests for the blocks of a written part, [BookPartBuilder].
@@ -70,7 +71,7 @@ class BookPartBuilderTest {
                 "The harbour was quiet.",
                 "Nobody was waiting."
             ),
-            blocks.map { it.text }
+            blocks.map { it.toString() }
         )
     }
 
@@ -82,58 +83,45 @@ class BookPartBuilderTest {
     fun theHeadingAndTheBodyComeFromDifferentStyles() {
         val blocks = BookPartBuilder.build(chapter(), pageDesign)
 
-        assertEquals("Garamond", blocks[0].style.family)
-        assertEquals(20.0, blocks[0].style.size)
-        assertTrue(blocks[0].style.bold)
+        assertEquals("Garamond", blocks[0].style.font.family)
+        assertEquals(20.0, blocks[0].style.font.size)
+        assertEquals(FontWeight.BOLD, blocks[0].style.font.weight)
         assertEquals(TextAlignment.CENTER, blocks[0].style.alignment)
-        assertEquals(1.3, blocks[0].style.lineSpacing)
+        assertEquals(1.3, blocks[0].style.lineSpacing.factor)
 
-        assertEquals("Garamond", blocks[1].style.family)
-        assertEquals(14.0, blocks[1].style.size)
-        assertTrue(blocks[1].style.italic)
+        assertEquals("Garamond", blocks[1].style.font.family)
+        assertEquals(14.0, blocks[1].style.font.size)
+        assertEquals(FontStyle.ITALIC, blocks[1].style.font.style)
 
-        assertTrue(blocks.drop(2).all { it.style.family == "Baskerville" })
-        assertTrue(blocks.drop(2).all { it.style.size == 11.0 })
+        assertTrue(blocks.drop(2).all { it.style.font.family == "Baskerville" })
+        assertTrue(blocks.drop(2).all { it.style.font.size == 11.0 })
         assertTrue(blocks.drop(2).all { it.style.alignment == TextAlignment.JUSTIFY })
-        assertTrue(blocks.drop(2).all { it.style.lineSpacing == 1.6 })
+        assertTrue(blocks.drop(2).all { it.style.lineSpacing.factor == 1.6 })
     }
 
     /**
-     * Use case: the heading stands away from what is above and below it, and every paragraph keeps a
-     * gap to the next one.
+     * Use case: a part without a further heading line is built as well - it is then just its heading
+     * and its paragraphs.
      */
     @Test
-    fun theHeadingAndTheParagraphsCarryTheirGaps() {
-        val blocks = BookPartBuilder.build(chapter(), pageDesign)
-
-        assertEquals(BlockSpacing.BEFORE_PART_TITLE, blocks[0].style.spaceBefore)
-        assertEquals(0.0, blocks[0].style.spaceAfter)
-        assertEquals(BlockSpacing.AFTER_PART_TITLE, blocks[1].style.spaceAfter)
-        assertTrue(blocks.drop(2).all { it.style.spaceAfter == BlockSpacing.AFTER_PARAGRAPH })
-    }
-
-    /**
-     * Use case: a part without a further heading line is built as well; the gap below the heading then
-     * stands on the heading itself.
-     */
-    @Test
-    fun withoutAFurtherHeadingLineTheHeadingCarriesTheGapBelow() {
+    fun withoutAFurtherHeadingLineThePartIsHeadingAndParagraphs() {
         val blocks = BookPartBuilder.build(chapter().copy(titleAppendix = emptyList()), pageDesign)
 
-        assertEquals(BlockSpacing.BEFORE_PART_TITLE, blocks[0].style.spaceBefore)
-        assertEquals(BlockSpacing.AFTER_PART_TITLE, blocks[0].style.spaceAfter)
+        assertEquals(
+            listOf("The Arrival", "The harbour was quiet.", "Nobody was waiting."),
+            blocks.map { it.toString() }
+        )
     }
 
     /**
-     * Use case: a part whose heading was not written yet still keeps its distance from what stands
-     * above it, so the further heading line takes that gap over.
+     * Use case: a part whose heading was not written yet is built without it, so its further heading
+     * line comes first.
      */
     @Test
-    fun withoutAHeadingTheFurtherLineTakesTheGapAbove() {
+    fun withoutAHeadingTheFurtherLineComesFirst() {
         val blocks = BookPartBuilder.build(chapter().copy(title = ""), pageDesign)
 
-        assertEquals("In which the ship comes in", blocks[0].text)
-        assertEquals(BlockSpacing.BEFORE_PART_TITLE, blocks[0].style.spaceBefore)
+        assertEquals("In which the ship comes in", blocks[0].toString())
     }
 
     /**
@@ -146,7 +134,10 @@ class BookPartBuilderTest {
 
         val blocks = BookPartBuilder.build(part, pageDesign)
 
-        assertEquals(listOf("In which the ship comes in", "First.", "", "Second."), blocks.map { it.text })
+        assertEquals(
+            listOf("In which the ship comes in", "First.", "", "Second."),
+            blocks.map { it.toString() }
+        )
     }
 
     /**
@@ -161,8 +152,8 @@ class BookPartBuilderTest {
         val fromProlog = BookPartBuilder.build(prolog, pageDesign)
         val fromEpilog = BookPartBuilder.build(epilog, pageDesign)
 
-        assertEquals(listOf("Before", "It began earlier."), fromProlog.map { it.text })
-        assertEquals(listOf("After", "It ended later."), fromEpilog.map { it.text })
+        assertEquals(listOf("Before", "It began earlier."), fromProlog.map { it.toString() })
+        assertEquals(listOf("After", "It ended later."), fromEpilog.map { it.toString() })
         assertEquals(fromProlog.map { it.style }, fromEpilog.map { it.style })
     }
 

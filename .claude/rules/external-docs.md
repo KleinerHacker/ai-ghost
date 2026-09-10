@@ -10,4 +10,4 @@ name: external-docs
 
 ## simpLay
 
-* Documentation for simpLay: `https://kleinerhacker.github.io/simPlay/latest/`
+* Documentation for simpLay: `https://kleinerhacker.github.io/simpLay/latest/`

@@ -12,45 +12,53 @@
 
 package org.pcsoft.app.aighost.layouting.model.common
 
-import org.pcsoft.app.aighost.layouting.TextAlignment
-import org.pcsoft.app.aighost.layouting.TextStyle
 import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.StyleData
+import org.pcsoft.framework.simplay.engine.model.Font
+import org.pcsoft.framework.simplay.engine.model.FontStyle
+import org.pcsoft.framework.simplay.engine.model.FontWeight
+import org.pcsoft.framework.simplay.engine.model.LineSpacing
+import org.pcsoft.framework.simplay.engine.model.TextAlignment
+import org.pcsoft.framework.simplay.engine.model.TextStyle
 
 /**
- * The one place where a stored style becomes a style the layout core understands.
+ * The one place where a stored style becomes a style the simPlay layout engine understands.
  *
  * The two types look alike but belong to different worlds: [StyleData] is what the user edits and
- * what is written to disk, [TextStyle] is what a line is set with. The line spacing is part of the
- * stored style and is carried over; the gaps around a block are not stored anywhere, so they are
- * handed in separately. The translation is written as an extension of the stored type, the same way
- * the font translations are.
+ * what is written to disk, [TextStyle] is what a block is set with. The stored bold and slant flags
+ * become the [FontWeight] and [FontStyle] enums of simPlay; the line spacing factor becomes a
+ * [LineSpacing].
+ *
+ * simPlay's [TextStyle] carries no gaps around a block - the ai-ghost spacing between a heading and
+ * the paragraph below it, and between two paragraphs, has no counterpart in the raw model. That
+ * spacing is part of the page policy simPlay does not own yet.
+ * TODO(simPlay page policy): re-introduce the inter-block gaps once simPlay expresses them. The
+ *  fixed point values used before were: after book title 12, after last title line 24, before the
+ *  author 36, before a part heading 24, after a part heading 12, after a paragraph 6 (all in points).
  */
 
 /**
- * Translates a stored style into a layout style.
+ * Translates a stored style into a simPlay layout style.
  *
  * @receiver Stored style of the element, line spacing included.
- * @param spaceBefore Empty space above the block in points.
- * @param spaceAfter Empty space below the block in points.
  */
-fun StyleData.toTextStyle(
-    spaceBefore: Double = 0.0,
-    spaceAfter: Double = 0.0
-): TextStyle =
+fun StyleData.toTextStyle(): TextStyle =
     TextStyle(
-        family = font.name,
-        size = font.size.toDouble(),
-        bold = font.bold,
-        italic = font.italic,
+        font = Font(
+            family = font.name,
+            size = font.size.toDouble(),
+            weight = if (font.bold) FontWeight.BOLD else FontWeight.NORMAL,
+            style = if (font.italic) FontStyle.ITALIC else FontStyle.NORMAL,
+            // IP-34: app/ui stamps Font.fingerprint from its own font probe; the raw model builder
+            // never sets it, so a substitution is only flagged where the toolkit is available.
+            fingerprint = null,
+        ),
+        lineSpacing = LineSpacing(factor = textLineSpacing),
         alignment = alignment.toTextAlignment(),
-        lineSpacing = textLineSpacing,
-        spaceBefore = spaceBefore,
-        spaceAfter = spaceAfter
     )
 
 /**
- * Translates the stored alignment into the alignment of the layout core.
+ * Translates the stored alignment into the alignment of the simPlay layout model.
  *
  * @receiver Alignment as it is stored in the design.
  */
@@ -61,34 +69,3 @@ fun Alignment.toTextAlignment(): TextAlignment =
         Alignment.RIGHT -> TextAlignment.RIGHT
         Alignment.BLOCK -> TextAlignment.JUSTIFY
     }
-
-/**
- * The gaps a built block asks for above and below itself.
- *
- * None of these numbers is stored in the document: the design says how a text looks, not how far a
- * heading stands from the paragraph below it. Until that becomes a setting of its own the values are
- * fixed here, in one place, so every builder spaces its blocks the same way.
- *
- * The values are factors on nothing and are plain points, because a gap between a heading and a
- * paragraph must not grow with the size of the heading alone.
- */
-object BlockSpacing {
-
-    /** Space below the main title of the title page. */
-    const val AFTER_TITLE: Double = 12.0
-
-    /** Space below the last additional title line. */
-    const val AFTER_TITLE_APPENDIX: Double = 24.0
-
-    /** Space above the author name on the title page. */
-    const val BEFORE_AUTHOR: Double = 36.0
-
-    /** Space above the heading of a written part. */
-    const val BEFORE_PART_TITLE: Double = 24.0
-
-    /** Space below the heading of a written part. */
-    const val AFTER_PART_TITLE: Double = 12.0
-
-    /** Space below a paragraph of body text. */
-    const val AFTER_PARAGRAPH: Double = 6.0
-}

@@ -9,7 +9,7 @@
 
 * Das Text-Layouting und das FX-Rendering werden nach simPlay ausgelagert
   (`org.pcsoft.framework:simplay-engine`, `simplay-fx`, GitHub Packages).
-* `lib/ai-ghost-layouting` und `lib/ai-ghost-layouting-fx` werden per `git rm` entfernt (IP-29).
+* `lib/ai-ghost-layouting` und `lib/ai-ghost-layouting-fx` wurden per `git rm` entfernt (IP-29 ✅).
 * `lib/ai-ghost-layouting-model` bleibt und wird auf das simPlay-Rohmodell umgestellt (IP-30).
 * Abgeschlossen und unberührt: IP-01 (Messteil abgelöst), IP-02, IP-24, IP-09, IP-12, IP-13, IP-14,
   IP-17, IP-19 – ihre Dateien und Statusdateien sind bereits entfernt.
@@ -22,7 +22,7 @@
 
 | ID | Plan | Datei | Voraussetzung |
 |----|------|-------|---------------|
-| IP-29 | simPlay-Integration | `FP-001-IP-29-SimPlayIntegration.md` | - |
+| IP-29 ✅ | simPlay-Integration | (Datei entfernt) | - |
 | IP-30 | Buch zu simPlay-Dokument-Builder | `FP-001-IP-30-BuchZuSimPlayDokument.md` | IP-29, IP-02, IP-24 |
 | IP-34 | Schriftermittlung und Metrik-Fingerabdruck auf simPlay | `FP-001-IP-34-SchriftUndFingerabdruckAufSimPlay.md` | IP-29 |
 | IP-31 | Schreibfläche auf PaperSheetView | `FP-001-IP-31-SchreibflaecheAufPaperSheetView.md` | IP-30, IP-09, IP-34 |
@@ -33,6 +33,16 @@
 | IP-18 | KI-Schaltflächen an Absatz und Überschrift | `FP-001-IP-18-AiAktionenAmAbsatz.md` | IP-31 |
 | IP-23 | Optionale Teile im Projektbaum | `FP-001-IP-23-OptionaleTeileImBaum.md` | IP-15, IP-24 |
 
-## Ohne Voraussetzung startbar
+## Abgeschlossene Pläne
 
-* IP-29 - simPlay-Integration (Repository, Abhängigkeit, Lizenz-Allowlist, CI-Token, Modul-Entfernung)
+* IP-29 – simPlay-Integration. simPlay-Repository und exakte Version (`0.2.1`) im Wurzel-Build,
+  `mavenLocal()` als tokenloser Weg; Eigenbaumodule `lib/ai-ghost-layouting` und
+  `lib/ai-ghost-layouting-fx` entfernt; CI-Job `regression-test` und beide `regressionTest`-Tasks
+  entfernt; `GITHUB_TOKEN` in alle Gradle-Jobs; Architekturregel auf `app/ui` verengt. Die
+  Dependency-Verdrahtung und die simPlay-Lizenzprüfung wandern nach IP-30/IP-31/IP-34; MkDocs hatte
+  keine Modulseiten für die entfernten Bibliotheken. Plandatei entfernt.
+
+## Startbereit (Voraussetzungen erfüllt)
+
+* IP-30 – Buch zu simPlay-Dokument-Builder (Voraussetzungen IP-29 ✅, IP-02 ✅, IP-24 ✅)
+* IP-34 – Schriftermittlung und Metrik-Fingerabdruck auf simPlay (Voraussetzung IP-29 ✅)

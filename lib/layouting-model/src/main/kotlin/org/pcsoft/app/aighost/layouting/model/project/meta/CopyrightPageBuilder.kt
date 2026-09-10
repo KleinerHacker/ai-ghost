@@ -12,12 +12,11 @@
 
 package org.pcsoft.app.aighost.layouting.model.project.meta
 
-import org.pcsoft.app.aighost.layouting.TextBlock
-import org.pcsoft.app.aighost.layouting.model.common.BlockSpacing
 import org.pcsoft.app.aighost.layouting.model.common.toTextStyle
 import org.pcsoft.app.aighost.model.project.book.Copyright
 import org.pcsoft.app.aighost.model.project.design.Design
 import org.pcsoft.app.aighost.model.project.meta.Meta
+import org.pcsoft.framework.simplay.engine.model.TextBlock
 
 /**
  * Builds the blocks of the copyright page.
@@ -48,28 +47,19 @@ object CopyrightPageBuilder {
         val blocks = ArrayList<TextBlock>()
 
         if (copyright.copyright.isNotBlank()) {
-            val noticeStyle = copyrightPage.copyrightStyle.toTextStyle(
-                spaceAfter = BlockSpacing.AFTER_PARAGRAPH
-            )
+            val noticeStyle = copyrightPage.copyrightStyle.toTextStyle()
             copyright.copyright.lines().forEach { line ->
-                blocks += TextBlock(text = line, style = noticeStyle)
+                blocks += TextBlock.of(line, noticeStyle)
             }
         }
 
-        val appendixStyle = copyrightPage.copyrightAppendixStyle.toTextStyle(
-            spaceAfter = BlockSpacing.AFTER_PARAGRAPH
-        )
+        val appendixStyle = copyrightPage.copyrightAppendixStyle.toTextStyle()
         copyright.copyrightAppendix.filter { it.isNotBlank() }.forEach { line ->
-            blocks += TextBlock(text = line, style = appendixStyle)
+            blocks += TextBlock.of(line, appendixStyle)
         }
 
         if (copyrightPage.showAuthor && meta.author.isNotBlank()) {
-            blocks += TextBlock(
-                text = meta.author,
-                style = copyrightPage.authorStyle.toTextStyle(
-                    spaceBefore = BlockSpacing.BEFORE_AUTHOR
-                )
-            )
+            blocks += TextBlock.of(meta.author, copyrightPage.authorStyle.toTextStyle())
         }
 
         return blocks

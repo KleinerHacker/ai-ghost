@@ -12,12 +12,11 @@
 
 package org.pcsoft.app.aighost.layouting.model.project.book
 
-import org.pcsoft.app.aighost.layouting.TextBlock
-import org.pcsoft.app.aighost.layouting.model.common.BlockSpacing
 import org.pcsoft.app.aighost.layouting.model.common.toTextStyle
 import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.design.Design
 import org.pcsoft.app.aighost.model.project.meta.Meta
+import org.pcsoft.framework.simplay.engine.model.TextBlock
 
 /**
  * Builds the blocks of the title page.
@@ -40,33 +39,17 @@ object TitlePageBuilder {
         val blocks = ArrayList<TextBlock>()
         val titlePage = design.titlePage
 
-        val appendix = book.titleAppendix.filter { it.isNotBlank() }
-
         if (book.title.isNotBlank()) {
-            blocks += TextBlock(
-                text = book.title,
-                style = titlePage.titleStyle.toTextStyle(
-                    spaceAfter = if (appendix.isEmpty()) BlockSpacing.AFTER_TITLE_APPENDIX else BlockSpacing.AFTER_TITLE
-                )
-            )
+            blocks += TextBlock.of(book.title, titlePage.titleStyle.toTextStyle())
         }
 
-        appendix.forEachIndexed { index, line ->
-            blocks += TextBlock(
-                text = line,
-                style = titlePage.titleAppendixStyle.toTextStyle(
-                    spaceAfter = if (index == appendix.lastIndex) BlockSpacing.AFTER_TITLE_APPENDIX else 0.0
-                )
-            )
+        val appendixStyle = titlePage.titleAppendixStyle.toTextStyle()
+        book.titleAppendix.filter { it.isNotBlank() }.forEach { line ->
+            blocks += TextBlock.of(line, appendixStyle)
         }
 
         if (titlePage.showAuthor && meta.author.isNotBlank()) {
-            blocks += TextBlock(
-                text = meta.author,
-                style = titlePage.authorStyle.toTextStyle(
-                    spaceBefore = BlockSpacing.BEFORE_AUTHOR
-                )
-            )
+            blocks += TextBlock.of(meta.author, titlePage.authorStyle.toTextStyle())
         }
 
         return blocks

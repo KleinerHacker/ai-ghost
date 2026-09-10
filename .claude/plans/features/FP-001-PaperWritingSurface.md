@@ -241,7 +241,7 @@ IP-07, IP-08, IP-10, IP-11, IP-22, IP-25 und IP-26 sind abgelöst (siehe „Abge
 | IP-14 | Project Settings Dialog ✅                      | Seitenformat, Ränder und Leerseiten in einem Dialog                         | IP-02                 |
 | IP-17 | AI Action Port ✅                               | Aktionsschnittstelle in `lib/ai`, keine Implementierung                     | -                     |
 | IP-19 | AI Part Generation (nur Schaltfläche) ✅        | KI-Schaltfläche im Inspector, ruft leere `*View`-Methode mit `TODO(...)`     | IP-12                 |
-| IP-29 | simPlay Integration                            | Repository, Abhängigkeit, Lizenz-Allowlist, CI-Token; Eigenbaumodule löschen | -                     |
+| IP-29 | simPlay Integration ✅                          | Repository, Abhängigkeit, Lizenz-Allowlist, CI-Token; Eigenbaumodule löschen | -                     |
 | IP-30 | Book To simPlay Document Builder               | `lib/ai-ghost-layouting-model` auf das simPlay-Rohmodell umstellen           | IP-29, IP-02, IP-24   |
 | IP-34 | Font Discovery And Metric Fingerprint On simPlay | `FxFontProbe` verdrahten; Ersatzfamilie und Familienliste in `app/ui`        | IP-29                 |
 | IP-31 | Writing Surface On PaperSheetView              | `BookPartEditor` bettet `PaperSheetView` (`EDITABLE`) ein; Dokument-Sync     | IP-30, IP-09, IP-34   |
@@ -337,15 +337,35 @@ Abgeschlossen. Schaltfläche „Kapitel generieren“ im Inspector-Abschnitt „
 `onAction="#generatePart"` an `InspectorView.generatePart()` mit Rumpf `TODO("AI action:
 generate-part")`.
 
-### IP-29: simPlay Integration
+### IP-29: simPlay Integration ✅
 
-Plan: `FP-001-IP-29-SimPlayIntegration.md`
+Plan: `FP-001-IP-29-SimPlayIntegration.md` (abgeschlossen, Datei entfernt)
 
 Die eine Stelle, an der die neue Drittanbieter-Abhängigkeit eingeführt wird. Das GitHub-Packages-
 Repository braucht ein Token lokal und in der CI; ohne diesen Plan scheitert jeder folgende. Die
 Eigenbaumodule werden hier per `git rm` entfernt, damit kein toter Code stehen bleibt, und die
 Architekturregel wird im selben Zug zurückgenommen. Die Lizenz-Allowlist wächst um simPlay und seine
 transitiven Abhängigkeiten; fehlende Einträge werden dem Nutzer vorgelegt.
+
+Abweichungen bei der Umsetzung:
+
+* Nur das simPlay-Repository und die exakt gepinnte Version (`0.2.1`, per `extra`) wurden eingeführt.
+  Die `api`/`implementation`-Verdrahtung von `simplay-engine`/`simplay-fx` – und damit die
+  Lizenzprüfung ihrer transitiven Abhängigkeiten – wandert nach IP-30 (`layouting-model`), IP-31 und
+  IP-34 (`app/ui`), da ohne aufgelöste Abhängigkeit kein Lizenzbericht möglich ist. `licensee` läuft
+  auf dem jetzigen Graphen grün.
+* Gradle-`project(...)`-Verweise sind Konfigurationsfehler, nicht erst Kompilierfehler. Die Zeilen
+  auf `:lib:ai-ghost-layouting[-fx]` in `app/ui/build.gradle.kts` und
+  `lib/layouting-model/build.gradle.kts` mussten daher sofort entfernt werden; nur die Code-Verweise
+  (Kotlin-Importe, `requires` in `module-info.java`) bleiben für IP-30/IP-31/IP-34 gebrochen.
+* Der CI-Job `regression-test` wurde aus `ci.yml` und `release.yml` (auch aus `release.needs`)
+  entfernt – beide `regressionTest`-Gradle-Tasks lagen in den gelöschten Modulen. Der
+  GitHub-Packages-Zugang kam als `GITHUB_TOKEN`-Env in jeden Gradle-Job (`GITHUB_ACTOR` ist auf dem
+  Runner ohnehin gesetzt), kein eigenes Secret.
+* MkDocs trug keine Modulseiten für die entfernten Bibliotheken; nichts zu löschen. `CHANGELOG.md`
+  blieb unberührt (keine endnutzersichtbare Änderung).
+* Endstand des Builds: Konfiguration grün, alle nicht betroffenen Module grün;
+  `ai-ghost-layouting-model` bricht an `requires org.pcsoft.app.aighost.layouting`, `app/ui` dahinter.
 
 ### IP-30: Book To simPlay Document Builder
 
@@ -443,7 +463,7 @@ Neunummerierung folgt, sobald die simPlay-Seitenpolitik steht (bis dahin TODO).
 ## 8. Abhängigkeitsgraph
 
 ```text
-IP-29 ──┬─> IP-30 (mit IP-02✅, IP-24✅) ──┬─> IP-31 (mit IP-09✅, IP-34) ──┬─> IP-32
+IP-29✅ ─┬─> IP-30 (mit IP-02✅, IP-24✅) ──┬─> IP-31 (mit IP-09✅, IP-34) ──┬─> IP-32
         │                                  │                                ├─> IP-33
         └─> IP-34 ──────────────────────────┘                                ├─> IP-18
                                                                             └─> IP-15 (mit IP-12✅) ──┬─> IP-16 (mit IP-30)
@@ -461,7 +481,7 @@ Baum (IP-23) folgen.
 
 Abgeschlossen und unberührt: **IP-01** ✅ (teilweise abgelöst), **IP-02** ✅, **IP-24** ✅,
 **IP-09** ✅, **IP-12** ✅, **IP-13** ✅, **IP-14** ✅, **IP-17** ✅, **IP-19** ✅.
-Unabhängiger Ausgangspunkt der Abweichung: **IP-29**.
+Unabhängiger Ausgangspunkt der Abweichung: **IP-29** ✅.
 
 ## 9. Risiken und offene Fragen
 

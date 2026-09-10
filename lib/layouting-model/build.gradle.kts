@@ -16,12 +16,34 @@ plugins {
     `java-library`
 }
 
+// Pinned once in the root build; the coordinate itself is documented there.
+val simplayVersion: String by rootProject.extra
+
 dependencies {
-    // Both sides appear in the signatures of the builders - the document model goes in, the blocks of
-    // the layout core come out - so both are part of the API. No JavaFX is involved: nothing here is
-    // observed, everything is read once and translated.
+    // The document model goes into the builders and comes back out in every builder signature, so it
+    // stays part of the API. No JavaFX is involved: nothing here is observed, everything is read once
+    // and translated.
     api(project(":lib:ai-ghost-model"))
-    api(project(":lib:ai-ghost-layouting"))
+
+    // The layout raw model - Document, Page, TextBlock, TextStyle, geometry - the builders produce.
+    // Both sides show up in the builder signatures, so it is part of the API. simPlay's Kotlin
+    // Multiplatform engine is consumed through its JVM coordinate `engine-jvm` directly: the
+    // multiplatform aggregator `engine` publishes no jar of its own, so javac's module-path
+    // inference cannot form a module for it and `requires simplay.engine.jvm` fails to resolve.
+    api("org.pcsoft.framework:engine-jvm:$simplayVersion")
+}
+
+// simPlay 0.2.1 publishes its POMs without a <licenses> block, so `licensee` cannot match it against
+// the shared allow-list. simPlay is Apache-2.0 (every source file header). Interim exception until
+// simPlay publishes its licences (planned for the next release); then this block is removed and the
+// version bumped.
+licensee {
+    allowDependency("org.pcsoft.framework", "engine", simplayVersion) {
+        because("simPlay, Apache-2.0; POM carries no <licenses> block yet")
+    }
+    allowDependency("org.pcsoft.framework", "engine-jvm", simplayVersion) {
+        because("simPlay, Apache-2.0; POM carries no <licenses> block yet")
+    }
 }
 
 // The module descriptor is the only Java source, while the classes it exports are written in Kotlin.

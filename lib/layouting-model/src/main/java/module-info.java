@@ -13,15 +13,25 @@
 module org.pcsoft.app.aighost.layouting.model {
     requires kotlin.stdlib;
 
-    // The document model goes into the builders, the blocks of the layout core come out of them, so
-    // consumers see both types in every signature.
+    // The document model goes into the builders, the pages of the simPlay raw model come out of them,
+    // so consumers see both types in every signature.
     requires transitive org.pcsoft.app.aighost.model;
-    requires transitive org.pcsoft.app.aighost.layouting;
 
-    // The translation of a stored style into a layout style.
+    // simPlay's raw layout model (Document, Page, TextBlock, TextStyle, geometry). The name below is
+    // the `Automatic-Module-Name` simPlay's engine jar sets in its manifest - it must stay in sync
+    // with simPlay's build. No `requires` for kotlinx.serialization is needed: the raw model's
+    // PlatformSerializable is `java.io.Serializable` on the JVM, and kotlinx-serialization-json is a
+    // runtime-scoped transitive dependency only.
+    requires transitive org.pcsoft.framework.simplay.engine;
+
+    // The translation of a stored style into a layout style, and of a stored page format into a page
+    // layout.
     exports org.pcsoft.app.aighost.layouting.model.common;
 
-    // The builders, mirroring the packages of the model parts they read.
+    // The block builders, mirroring the packages of the model parts they read.
     exports org.pcsoft.app.aighost.layouting.model.project.book;
     exports org.pcsoft.app.aighost.layouting.model.project.meta;
+
+    // The document builder that turns a whole book into one simPlay Document.
+    exports org.pcsoft.app.aighost.layouting.model.project;
 }

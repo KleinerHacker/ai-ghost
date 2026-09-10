@@ -13,23 +13,30 @@
 package org.pcsoft.app.aighost.layouting.model.common
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
-import org.pcsoft.app.aighost.layouting.TextAlignment
-import org.pcsoft.app.aighost.layouting.TextStyle
 import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.FontData
 import org.pcsoft.app.aighost.model.common.StyleData
+import org.pcsoft.framework.simplay.engine.model.Font
+import org.pcsoft.framework.simplay.engine.model.FontStyle
+import org.pcsoft.framework.simplay.engine.model.FontWeight
+import org.pcsoft.framework.simplay.engine.model.LineSpacing
+import org.pcsoft.framework.simplay.engine.model.TextAlignment
+import org.pcsoft.framework.simplay.engine.model.TextStyle
 
 /**
- * Developer tests for the translation of a stored style into a layout style, [StyleData.toTextStyle].
+ * Developer tests for the translation of a stored style into a simPlay layout style,
+ * [StyleData.toTextStyle].
  */
 class StyleTranslationTest {
 
     /**
-     * Use case: a stored style is handed to the layout core, and every part of the font - family,
-     * size, weight and slant - together with the alignment and the line spacing arrives unchanged.
+     * Use case: a stored style is handed to the layout engine, and every part of the font - family,
+     * size, weight and slant - together with the alignment and the line spacing arrives unchanged in
+     * the simPlay style.
      */
     @Test
     fun everyPartOfTheStoredStyleIsCarriedOver() {
@@ -43,48 +50,65 @@ class StyleTranslationTest {
 
         assertEquals(
             TextStyle(
-                family = "Garamond",
-                size = 14.0,
-                bold = true,
-                italic = true,
-                alignment = TextAlignment.CENTER,
-                lineSpacing = 1.5
+                font = Font(
+                    family = "Garamond",
+                    size = 14.0,
+                    weight = FontWeight.BOLD,
+                    style = FontStyle.ITALIC
+                ),
+                lineSpacing = LineSpacing(factor = 1.5),
+                alignment = TextAlignment.CENTER
             ),
             translated
         )
     }
 
     /**
-     * Use case: the line spacing belongs to the stored style, the gaps around the block do not, so
-     * the spacing is read from the style and the gaps are taken from the arguments.
+     * Use case: the stored line spacing is a plain factor, and it becomes the multiplicative factor
+     * of the simPlay [LineSpacing] with no extra leading added.
      */
     @Test
-    fun theLineSpacingComesFromTheStyleAndTheGapsFromTheArguments() {
-        val translated = StyleData(textLineSpacing = 1.35).toTextStyle(
-            spaceBefore = 8.0,
-            spaceAfter = 4.0
-        )
+    fun theLineSpacingFactorIsCarriedOver() {
+        val translated = StyleData(textLineSpacing = 1.35).toTextStyle()
 
-        assertEquals(1.35, translated.lineSpacing)
-        assertEquals(8.0, translated.spaceBefore)
-        assertEquals(4.0, translated.spaceAfter)
+        assertEquals(LineSpacing(factor = 1.35), translated.lineSpacing)
     }
 
     /**
-     * Use case: a block left without gaps asks for none, so a caller that says nothing gets zero
-     * instead of a hidden default.
+     * Use case: the raw model carries no font fingerprint - that is stamped by the UI where the
+     * toolkit is available (IP-34) - so the translation always leaves it unset.
      */
     @Test
-    fun theGapsDefaultToNothing() {
-        val translated = StyleData().toTextStyle()
-
-        assertEquals(0.0, translated.spaceBefore)
-        assertEquals(0.0, translated.spaceAfter)
+    fun theRawModelStyleCarriesNoFontFingerprint() {
+        assertNull(StyleData().toTextStyle().font.fingerprint)
     }
 
     /**
-     * Use case: every alignment the user can store has its counterpart in the layout core, and the
-     * block alignment of the document is the justification of the core.
+     * Use case: the stored bold and slant flags are booleans; each maps to the matching constant of
+     * the simPlay weight and style enums.
+     */
+    @ParameterizedTest
+    @CsvSource(
+        "false,false,NORMAL,NORMAL",
+        "true,false,BOLD,NORMAL",
+        "false,true,NORMAL,ITALIC",
+        "true,true,BOLD,ITALIC"
+    )
+    fun theBoldAndSlantFlagsMapToTheEnums(
+        bold: Boolean,
+        italic: Boolean,
+        expectedWeight: FontWeight,
+        expectedStyle: FontStyle
+    ) {
+        val font = StyleData(font = FontData(bold = bold, italic = italic)).toTextStyle().font
+
+        assertEquals(expectedWeight, font.weight)
+        assertEquals(expectedStyle, font.style)
+    }
+
+    /**
+     * Use case: every alignment the user can store has its counterpart in the layout engine, and the
+     * block alignment of the document is the justification of the engine.
      */
     @ParameterizedTest
     @CsvSource("LEFT,LEFT", "CENTER,CENTER", "RIGHT,RIGHT", "BLOCK,JUSTIFY")

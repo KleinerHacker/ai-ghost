@@ -12,11 +12,10 @@
 
 package org.pcsoft.app.aighost.layouting.model.project.book
 
-import org.pcsoft.app.aighost.layouting.TextBlock
-import org.pcsoft.app.aighost.layouting.model.common.BlockSpacing
 import org.pcsoft.app.aighost.layouting.model.common.toTextStyle
 import org.pcsoft.app.aighost.model.project.book.BookPart
 import org.pcsoft.app.aighost.model.project.design.BookPartPageDesign
+import org.pcsoft.framework.simplay.engine.model.TextBlock
 
 /**
  * Builds the blocks of a written part - a prolog, a chapter or an epilog.
@@ -40,33 +39,18 @@ object BookPartBuilder {
     fun build(part: BookPart, pageDesign: BookPartPageDesign): List<TextBlock> {
         val blocks = ArrayList<TextBlock>()
 
-        val appendix = part.titleAppendix.filter { it.isNotBlank() }
-
         if (part.title.isNotBlank()) {
-            blocks += TextBlock(
-                text = part.title,
-                style = pageDesign.titleStyle.toTextStyle(
-                    spaceBefore = BlockSpacing.BEFORE_PART_TITLE,
-                    spaceAfter = if (appendix.isEmpty()) BlockSpacing.AFTER_PART_TITLE else 0.0
-                )
-            )
+            blocks += TextBlock.of(part.title, pageDesign.titleStyle.toTextStyle())
         }
 
-        appendix.forEachIndexed { index, line ->
-            blocks += TextBlock(
-                text = line,
-                style = pageDesign.titleAppendixStyle.toTextStyle(
-                    spaceBefore = if (index == 0 && part.title.isBlank()) BlockSpacing.BEFORE_PART_TITLE else 0.0,
-                    spaceAfter = if (index == appendix.lastIndex) BlockSpacing.AFTER_PART_TITLE else 0.0
-                )
-            )
+        val appendixStyle = pageDesign.titleAppendixStyle.toTextStyle()
+        part.titleAppendix.filter { it.isNotBlank() }.forEach { line ->
+            blocks += TextBlock.of(line, appendixStyle)
         }
 
-        val textStyle = pageDesign.textStyle.toTextStyle(
-            spaceAfter = BlockSpacing.AFTER_PARAGRAPH
-        )
+        val textStyle = pageDesign.textStyle.toTextStyle()
         part.paragraph.forEach { paragraph ->
-            blocks += TextBlock(text = paragraph, style = textStyle)
+            blocks += TextBlock.of(paragraph, textStyle)
         }
 
         return blocks

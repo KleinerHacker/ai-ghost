@@ -12,11 +12,10 @@
 
 package org.pcsoft.app.aighost.layouting.model.project.book
 
-import org.pcsoft.app.aighost.layouting.TextBlock
-import org.pcsoft.app.aighost.layouting.model.common.BlockSpacing
 import org.pcsoft.app.aighost.layouting.model.common.toTextStyle
 import org.pcsoft.app.aighost.model.project.book.Blurb
 import org.pcsoft.app.aighost.model.project.design.Design
+import org.pcsoft.framework.simplay.engine.model.TextBlock
 
 /**
  * Builds the blocks of the blurb.
@@ -34,10 +33,8 @@ object BlurbBuilder {
      * @return The blocks in the order they are set.
      */
     fun build(blurb: Blurb, design: Design): List<TextBlock> {
-        val style = design.blurbPage.textStyle.toTextStyle(
-            spaceAfter = BlockSpacing.AFTER_PARAGRAPH
-        )
+        val style = design.blurbPage.textStyle.toTextStyle()
 
-        return blurb.paragraph.map { paragraph -> TextBlock(text = paragraph, style = style) }
+        return blurb.paragraph.map { paragraph -> TextBlock.of(paragraph, style) }
     }
 }

@@ -31,6 +31,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: verify-changelog
 
+    # simPlay resolves from GitHub Packages, which needs a token even for a read. GITHUB_ACTOR is
+    # present on every runner; GITHUB_TOKEN has to be mapped in from the job secret.
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     steps:
       - uses: actions/checkout@v7
 
@@ -53,6 +58,10 @@ jobs:
     name: build (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     needs: verify-changelog
+
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     strategy:
       fail-fast: false
       matrix:
@@ -73,7 +82,7 @@ jobs:
 
       - name: Build and package
         run: |
-          ./gradlew build -x test -x integrationTest -x regressionTest packageDist \
+          ./gradlew build -x test -x integrationTest packageDist \
             -PreleaseVersion="${{ github.ref_name }}" --stacktrace
 
       - name: Upload distribution
@@ -89,6 +98,10 @@ jobs:
     name: developer-test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     needs: build
+
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     strategy:
       fail-fast: false
       matrix:
@@ -116,6 +129,10 @@ jobs:
     name: integration-test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     needs: build
+
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     strategy:
       fail-fast: false
       matrix:
@@ -137,38 +154,13 @@ jobs:
       - name: Run integration tests
         run: ./gradlew integrationTest --stacktrace
 
-  # The layout regression harness (IP-06, "...RT" tests) pins the page structure of the layout core
-  # and the agreement of its two JavaFX surfaces, and runs apart from the plain developer tests, on
-  # every host family as well.
-  regression-test:
-    name: regression-test (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    needs: build
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest, windows-latest, macos-latest ]
-
-    steps:
-      - uses: actions/checkout@v7
-
-      - uses: actions/setup-java@v6
-        with:
-          distribution: temurin
-          java-version: '25'
-          cache: gradle
-
-      - name: Make Gradle wrapper executable
-        if: runner.os != 'Windows'
-        run: chmod +x ./gradlew
-
-      - name: Run regression tests
-        run: ./gradlew regressionTest --stacktrace
-
   # Build the docs as a generation test (mkdocs --strict) before they get deployed.
   validate-docs:
     runs-on: ubuntu-latest
     needs: verify-changelog
+
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Checkout repository
@@ -199,6 +191,9 @@ jobs:
   deploy-docs:
     runs-on: ubuntu-latest
     needs: validate-docs
+
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Checkout repository
@@ -243,7 +238,6 @@ jobs:
       - build
       - developer-test
       - integration-test
-      - regression-test
       - licences
       - deploy-docs
 

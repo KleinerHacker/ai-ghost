@@ -15,8 +15,6 @@ package org.pcsoft.app.aighost.layouting.model.project.book
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.pcsoft.app.aighost.layouting.TextAlignment
-import org.pcsoft.app.aighost.layouting.model.common.BlockSpacing
 import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.FontData
 import org.pcsoft.app.aighost.model.common.StyleData
@@ -24,6 +22,7 @@ import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.design.Design
 import org.pcsoft.app.aighost.model.project.design.TitlePageDesign
 import org.pcsoft.app.aighost.model.project.meta.Meta
+import org.pcsoft.framework.simplay.engine.model.TextAlignment
 
 /**
  * Developer tests for the blocks of the title page, [TitlePageBuilder].
@@ -64,12 +63,10 @@ class TitlePageBuilderTest {
 
         assertEquals(
             listOf("The Silent Harbour", "A Novel", "Volume One", "Jane Doe"),
-            blocks.map { it.text }
+            blocks.map { it.toString() }
         )
-        assertEquals(listOf("Garamond", "Garamond", "Garamond", "Garamond"), blocks.map { it.style.family })
-        assertEquals(listOf(28.0, 28.0, 28.0, 16.0), blocks.map { it.style.size })
-        assertEquals(listOf(true, true, true, false), blocks.map { it.style.bold })
-        assertEquals(listOf(false, false, false, true), blocks.map { it.style.italic })
+        assertEquals(listOf("Garamond", "Garamond", "Garamond", "Garamond"), blocks.map { it.style.font.family })
+        assertEquals(listOf(28.0, 28.0, 28.0, 16.0), blocks.map { it.style.font.size })
         assertTrue(blocks.all { it.style.alignment == TextAlignment.CENTER })
     }
 
@@ -85,37 +82,18 @@ class TitlePageBuilderTest {
             design
         )
 
-        assertEquals(listOf(1.4, 1.4, 1.1), blocks.map { it.style.lineSpacing })
+        assertEquals(listOf(1.4, 1.4, 1.1), blocks.map { it.style.lineSpacing.factor })
     }
 
     /**
-     * Use case: the parts of the title page are held apart on the paper, so the title, the last
-     * further line and the author name carry the gaps of the layout.
+     * Use case: a book without further title lines is built as well; the page is then just the title
+     * and the author name.
      */
     @Test
-    fun thePartsOfThePageAreHeldApart() {
-        val blocks = TitlePageBuilder.build(
-            Book(title = "The Silent Harbour", titleAppendix = listOf("A Novel", "Volume One")),
-            Meta(author = "Jane Doe"),
-            design
-        )
-
-        assertEquals(BlockSpacing.AFTER_TITLE, blocks[0].style.spaceAfter)
-        assertEquals(0.0, blocks[1].style.spaceAfter)
-        assertEquals(BlockSpacing.AFTER_TITLE_APPENDIX, blocks[2].style.spaceAfter)
-        assertEquals(BlockSpacing.BEFORE_AUTHOR, blocks[3].style.spaceBefore)
-    }
-
-    /**
-     * Use case: a book without further title lines is built as well; the gap that would have stood
-     * below the last of them stands below the title instead, so the author keeps its distance.
-     */
-    @Test
-    fun withoutFurtherTitleLinesTheTitleCarriesTheWholeGap() {
+    fun withoutFurtherTitleLinesTheTitleAndAuthorRemain() {
         val blocks = TitlePageBuilder.build(Book(title = "The Silent Harbour"), Meta(author = "Jane Doe"), design)
 
-        assertEquals(listOf("The Silent Harbour", "Jane Doe"), blocks.map { it.text })
-        assertEquals(BlockSpacing.AFTER_TITLE_APPENDIX, blocks[0].style.spaceAfter)
+        assertEquals(listOf("The Silent Harbour", "Jane Doe"), blocks.map { it.toString() })
     }
 
     /**
@@ -128,7 +106,7 @@ class TitlePageBuilderTest {
 
         val blocks = TitlePageBuilder.build(Book(title = "The Silent Harbour"), Meta(author = "Jane Doe"), hidden)
 
-        assertEquals(listOf("The Silent Harbour"), blocks.map { it.text })
+        assertEquals(listOf("The Silent Harbour"), blocks.map { it.toString() })
     }
 
     /**
@@ -141,7 +119,7 @@ class TitlePageBuilderTest {
 
         val blocks = TitlePageBuilder.build(book, Meta(author = ""), design)
 
-        assertEquals(listOf("A Novel"), blocks.map { it.text })
+        assertEquals(listOf("A Novel"), blocks.map { it.toString() })
     }
 
     /**

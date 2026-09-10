@@ -39,11 +39,10 @@ dependencies {
     implementation(project(":lib:ai-ghost-model"))
     implementation(project(":lib:ai-ghost-fx-model"))
     implementation(project(":lib:ai-ghost-ai"))
-    // The text measuring of the UI is the production implementation of the layout core's interface.
-    implementation(project(":lib:ai-ghost-layouting"))
-    // The identity of a font family is measured with the toolkit, which the component library owns.
-    implementation(project(":lib:ai-ghost-layouting-fx"))
-    // The block builders that turn a book part, the title page and the copyright page into layout input.
+    // The block builders that turn a book part, the title page and the copyright page into layout
+    // input. simPlay (simplay-engine / simplay-fx) replaces the removed in-house layout and renderer
+    // modules; it is wired in by IP-30 / IP-31 / IP-34. Until then app/ui does not compile - the font
+    // stack and the writing surface still import the removed `org.pcsoft.app.aighost.layouting[.fx]`.
     implementation(project(":lib:ai-ghost-layouting-model"))
 
     implementation("io.arrow-kt:arrow-core:2.1.2")

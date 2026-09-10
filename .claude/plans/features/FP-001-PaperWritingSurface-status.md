@@ -15,7 +15,7 @@ Status: IN_PROGRESS
 | IP-14 | Project Settings Dialog                        | COMPLETED   |
 | IP-17 | AI Action Port                                 | COMPLETED   |
 | IP-19 | AI Part Generation (button only)               | COMPLETED   |
-| IP-29 | simPlay Integration                            | NOT_STARTED |
+| IP-29 | simPlay Integration                            | COMPLETED   |
 | IP-30 | Book To simPlay Document Builder               | NOT_STARTED |
 | IP-34 | Font Discovery And Metric Fingerprint On simPlay | NOT_STARTED |
 | IP-31 | Writing Surface On PaperSheetView              | NOT_STARTED |
@@ -47,7 +47,7 @@ Fortschritt. Begründung im Feature-Plan, Abschnitt 6, „Abgelöste Pläne“.
 
 ## Gesamtfortschritt
 
-47 %
+53 %
 
 ## Anmerkungen
 
@@ -70,8 +70,16 @@ IP-12, IP-13, IP-14, IP-17, IP-19.
 Offene Pläne, auf simPlay umgeschrieben: IP-15, IP-16, IP-18, IP-23. Neu: IP-29, IP-30, IP-31,
 IP-32, IP-33, IP-34.
 
-Nächster Schritt: IP-29 (simPlay-Integration) – ohne Repository, Token und Modul-Entfernung ist kein
-weiterer Plan startbar.
+IP-29 abgeschlossen: simPlay-Repository und exakte Version (`0.2.1`) im Wurzel-Build, `mavenLocal()`
+als tokenloser Weg; `lib/ai-ghost-layouting` und `lib/ai-ghost-layouting-fx` per `git rm` entfernt;
+CI-Job `regression-test` (samt beider `regressionTest`-Gradle-Tasks) entfernt, `GITHUB_TOKEN` in alle
+Gradle-Jobs gezogen; Architekturregel auf `app/ui` als einzigen JavaFX-Ort verengt. Die `api`/
+`implementation`-Verdrahtung von `simplay-engine`/`simplay-fx` und die simPlay-Lizenzprüfung folgen
+mit IP-30/IP-31/IP-34. Build: Konfiguration grün, `ai-ghost-layouting-model` und `app/ui` brechen
+erwartungsgemäß am entfernten Modul; alle übrigen Module grün.
+
+Nächster Schritt: IP-30 (Buch zu simPlay-Dokument-Builder) und IP-34 (Schrift-Stack auf `FxFontProbe`)
+– beide hängen nur an IP-29 und heilen die erwarteten Kompilierbrüche.
 
 Die entfernten Plandateien `FP-001-IP-21-SeitentrennungImAbsatz.md`,
 `FP-001-IP-27-BibliotheksStyling.md` und `FP-001-IP-28-EigenstaendigeNutzung.md` wurden per `git rm`

@@ -15,14 +15,13 @@ package org.pcsoft.app.aighost.layouting.model.project.book
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.pcsoft.app.aighost.layouting.TextAlignment
-import org.pcsoft.app.aighost.layouting.model.common.BlockSpacing
 import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.FontData
 import org.pcsoft.app.aighost.model.common.StyleData
 import org.pcsoft.app.aighost.model.project.book.Blurb
 import org.pcsoft.app.aighost.model.project.design.BlurbPageDesign
 import org.pcsoft.app.aighost.model.project.design.Design
+import org.pcsoft.framework.simplay.engine.model.TextAlignment
 
 /**
  * Developer tests for the blocks of the blurb, [BlurbBuilder].
@@ -51,7 +50,7 @@ class BlurbBuilderTest {
 
         assertEquals(
             listOf("A harbour town keeps its secrets.", "Until one summer."),
-            blocks.map { it.text }
+            blocks.map { it.toString() }
         )
     }
 
@@ -64,11 +63,10 @@ class BlurbBuilderTest {
         val blocks = BlurbBuilder.build(Blurb(paragraph = listOf("Until one summer.")), design)
 
         val style = blocks.single().style
-        assertEquals("Baskerville", style.family)
-        assertEquals(11.0, style.size)
+        assertEquals("Baskerville", style.font.family)
+        assertEquals(11.0, style.font.size)
         assertEquals(TextAlignment.JUSTIFY, style.alignment)
-        assertEquals(1.6, style.lineSpacing)
-        assertEquals(BlockSpacing.AFTER_PARAGRAPH, style.spaceAfter)
+        assertEquals(1.6, style.lineSpacing.factor)
     }
 
     /**
@@ -79,7 +77,7 @@ class BlurbBuilderTest {
     fun anEmptyParagraphIsKept() {
         val blurb = Blurb(paragraph = listOf("First.", "", "Second."))
 
-        assertEquals(listOf("First.", "", "Second."), BlurbBuilder.build(blurb, design).map { it.text })
+        assertEquals(listOf("First.", "", "Second."), BlurbBuilder.build(blurb, design).map { it.toString() })
     }
 
     /**

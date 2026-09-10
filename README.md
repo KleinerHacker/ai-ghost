@@ -50,9 +50,8 @@ opened once the user accepts it. Both documents are written with Jackson.
 | JavaFX desktop shell (`app/ai-ghost-ui`)          | Implemented |
 | JSON data model (`lib/ai-ghost-model`)            | Implemented |
 | AI support library (`lib/ai-ghost-ai`)            | Implemented |
-| Layout core: line breaking, alignment, pagination and incremental per-paragraph caching (`lib/ai-ghost-layouting`) | Implemented |
-| Layout blocks from book, design and meta data (`lib/ai-ghost-layouting-model`) | Implemented |
-| JavaFX renderer of the layout core (`lib/ai-ghost-layouting-fx`) | Implemented |
+| Text layouting and JavaFX rendering delegated to simPlay (`simplay-engine`, `simplay-fx`, GitHub Packages) | Planned |
+| Layout blocks from book, design and meta data, on the simPlay raw model (`lib/ai-ghost-layouting-model`) | Planned |
 | Font identity of a project and report of a substitution | Implemented |
 | Prompt input with character limit and token estimate | Implemented |
 | ZIP distribution with start scripts and `libs`    | Implemented |
@@ -95,6 +94,14 @@ git clone https://github.com/KleinerHacker/ai-ghost.git
 cd ai-ghost
 ./gradlew build
 ```
+
+The layout engine [simPlay](https://github.com/KleinerHacker/simPlay) is resolved from GitHub
+Packages, which requires authentication even for a read. Provide a GitHub token with the
+`read:packages` scope through `gpr.user` / `gpr.key` in `~/.gradle/gradle.properties`, or through the
+`GITHUB_ACTOR` / `GITHUB_TOKEN` environment variables. Without a token or network access the build
+cannot resolve simPlay. As a tokenless alternative for local development, run
+`./gradlew publishToMavenLocal` in a simPlay checkout - the local Maven repository is on the build's
+repository list.
 
 ## Run
 
