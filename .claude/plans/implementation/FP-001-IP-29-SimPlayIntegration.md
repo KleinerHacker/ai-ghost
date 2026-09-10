@@ -33,7 +33,7 @@
 
 ### 2. Abhängigkeit
 
-* Exakte simPlay-Version an einer Stelle pinnen (Konstante bzw. Version-Catalog).
+* Exakte simPlay-Version an einer Stelle pinnen (Konstante bzw. Version-Catalog); mindestens 0.2.1 wegen `FxFontProbe`/`FontFingerprint` (IP-34).
 * `org.pcsoft.framework:simplay-engine` als `api` in `lib/ai-ghost-layouting-model` vorsehen (Verdrahtung in IP-30).
 * `org.pcsoft.framework:simplay-fx` als `implementation` in `app/ui` vorsehen (Verdrahtung in IP-31).
 * JPMS-Modulnamen von `simplay-engine`/`simplay-fx` ermitteln und notieren.
@@ -41,7 +41,7 @@
 ### 3. Eigenbaumodule entfernen
 
 * `lib/ai-ghost-layouting` per `git rm -r` entfernen.
-* `lib/ai-ghost-layouting-fx` per `git rm -r` entfernen (Schrift-Stack zieht in IP-34 nach `app/ui`).
+* `lib/ai-ghost-layouting-fx` per `git rm -r` entfernen (Schrift-Stack bleibt größtenteils in `simplay-fx`; Rest zieht in IP-34 nach `app/ui`).
 * `settings.gradle.kts` um beide `include`/`project(...)`-Blöcke bereinigen.
 * Verweise in `app/ui` und `lib/ai-ghost-layouting-model` vorübergehend brechen lassen; IP-30/IP-31/IP-34 heilen sie.
 

@@ -47,8 +47,9 @@ Apache PDFBox oder das simPlay-Modul `j-pdf` – dieselbe Struktur verbraucht.
 * `lib/ai-ghost-layouting-fx` – Eigenbau-JavaFX-Renderer: `FontCatalog`, `FontResolver`,
   `FontResolution`, `JavaFxTextMetrics`, `FontFingerprint(s)`, `PaperPageView`, `PaperFlowView`,
   `PaperFlowListener`, Regressionsprüfstand (frühere IP-07/IP-08/IP-25/IP-26; IP-06 zur Hälfte).
-  **Wird mit dieser Abweichung per `git rm` entfernt.** Die Schriftermittlung und der Fingerabdruck
-  ziehen nach `app/ui` (IP-34).
+  **Wird mit dieser Abweichung per `git rm` entfernt.** simPlay 0.2.1 liefert Verfügbarkeitsprüfung
+  und Metrik-Fingerabdruck selbst (`simplay-fx`-`FxFontProbe`); nur die Ersatzfamilie-Meldung und die
+  Familienliste für die Auswahl ziehen nach `app/ui` (IP-34).
 * `lib/ai-ghost-ai` – der KI-Aktions-Port aus IP-17 (`AiAction`, `AiActionRequest`, Callbacks,
   `AiActionLimits`, `ParagraphSplitter`), ohne Implementierung. Unverändert.
 * `app/ui` – das einzige JavaFX-Modul, MVVM FX, jlink-Image. Trägt heute `FontIdentity`,
@@ -82,13 +83,14 @@ ein einklappbarer **Inspector** rechts, der alles trägt, was kein gedruckter Te
   dieses Ergebnis in `PaperSheetView`. Schreibfläche und Vorschau sind dieselbe Komponente in den
   Modi `EDITABLE` und `READONLY` über demselben `Document`, sodass ein Absatz in beiden auf dieselbe
   Seite fällt – strukturell, nicht durch einen Vergleich.
-* **Messung.** simPlay misst über einen `FontMeasureCalculator`; für JavaFX stellt `simplay-fx` ihn
-  bereit (falls nicht exponiert: ein kleiner lokaler Rechner auf `javafx.scene.text` in `app/ui`,
-  IP-34). Keine Schriftdatei wird gelesen, geparst oder ausgeliefert. Familien kommen aus
+* **Messung.** simPlay misst über einen `FontMeasureCalculator`; `simplay-fx` stellt ihn intern
+  bereit und rendert `PaperSheetView` selbst damit – `app/ui` instanziiert keinen eigenen. Keine
+  Schriftdatei wird gelesen, geparst oder ausgeliefert. Familien kommen aus
   `javafx.scene.text.Font`.
-* **Übereinstimmung pro Maschine.** Die Messung läuft lokal über JavaFX; ein Projekt zeichnet die
-  Metriken auf, mit denen es geschrieben wurde, und eine Abweichung (aktualisierte oder ersetzte
-  Familie) wird mit dem verwendeten Ersatz gemeldet (IP-34, Fingerabdruck auf simPlay-Messung).
+* **Übereinstimmung pro Maschine.** Die Messung läuft lokal über JavaFX; `simplay-fx`s `FxFontProbe`
+  stempelt beim Speichern einen Fingerabdruck und meldet beim Öffnen eine Abweichung
+  (`MeasuredDocument.fingerprintDeviations`); den Namen der verwendeten Ersatzfamilie ergänzt
+  `app/ui` (IP-34).
 * **Der Übersetzer bleibt ai-ghost.** `lib/ai-ghost-layouting-model` baut aus `Book`, `Design` und
   `Meta` ein simPlay-`Document`: ein `FlowPage` je Buchteil in Reihenfolge, Titelseite und
   Copyright-Seite als eigene Seiten, der Klappentext als letztes Blatt. `PageLayout` (Größe, Ränder)
@@ -200,10 +202,10 @@ lib/ai-ghost-layouting-model ──────┘                    │
 * **`app/ui`** – `BookPartEditor` bettet `PaperSheetView` (`EDITABLE`) ein und hält den Draht
   zwischen dem `Document` und den `List<String>`-Absätzen des Modells; `Inspector`; der
   Schreib-/Vorschau-Umschalter mit einer zweiten `PaperSheetView` (`READONLY`) über dem ganzen Buch;
-  die schwebende KI-Leiste über `FloatingOverlay`; Undo/Redo auf dem `Document`-Tausch;
-  `FontCatalog`/`FontResolver`/`FontResolution` (aus `lib/ai-ghost-layouting-fx` hierher gezogen);
-  der Metrik-Fingerabdruck (`FontIdentity`, `FontIdentityCheck`) auf der simPlay-Messung; die
-  Überschreibung der `paper-sheet-view`-`-fx-`-Eigenschaften mit der ai-ghost-Palette.
+  die schwebende KI-Leiste über `FloatingOverlay`; Undo/Redo auf dem `Document`-Tausch; `FontIdentity`/
+  `FontIdentityCheck` als dünne Hülle um `simplay-fx`s `FxFontProbe` (Verfügbarkeit, Fingerabdruck,
+  Ersatzfamilie-Name, Familienliste über `javafx.scene.text.Font.getFamilies()`); die Überschreibung
+  der `paper-sheet-view`-`-fx-`-Eigenschaften mit der ai-ghost-Palette.
 
 **Modellstand.** Keine Modellerweiterung mehr nötig: `PageFormat`, die Zeilenabstände, die
 `included`-Schalter, die `Editor`-Präferenzgruppe bestehen (IP-02/IP-24/IP-10). Der Editor-View-Zustand
@@ -218,7 +220,7 @@ ProjectProperty
   ├─ bookProperty ──> BookPartEditor <──(Dokument-Tausch bei Bearbeitung)──> PaperSheetView
   └─ (Auswahl) ProjectList.selectedItem ──> EditorViewModel ──> gezeigter Teil
                                                    ▲
-                          FontMeasureCalculator ───┘ (simplay-fx oder lokal, auf dem FX-Thread)
+                          FxFontProbe (Fingerabdruck) ───┘ (simplay-fx-intern, auf dem FX-Thread)
 ```
 
 ## 6. Übersicht der Implementierungspläne
@@ -241,7 +243,7 @@ IP-07, IP-08, IP-10, IP-11, IP-22, IP-25 und IP-26 sind abgelöst (siehe „Abge
 | IP-19 | AI Part Generation (nur Schaltfläche) ✅        | KI-Schaltfläche im Inspector, ruft leere `*View`-Methode mit `TODO(...)`     | IP-12                 |
 | IP-29 | simPlay Integration                            | Repository, Abhängigkeit, Lizenz-Allowlist, CI-Token; Eigenbaumodule löschen | -                     |
 | IP-30 | Book To simPlay Document Builder               | `lib/ai-ghost-layouting-model` auf das simPlay-Rohmodell umstellen           | IP-29, IP-02, IP-24   |
-| IP-34 | Font Discovery And Metric Fingerprint On simPlay | Katalog/Auflösung nach `app/ui`; Fingerabdruck auf simPlay-Messung          | IP-29                 |
+| IP-34 | Font Discovery And Metric Fingerprint On simPlay | `FxFontProbe` verdrahten; Ersatzfamilie und Familienliste in `app/ui`        | IP-29                 |
 | IP-31 | Writing Surface On PaperSheetView              | `BookPartEditor` bettet `PaperSheetView` (`EDITABLE`) ein; Dokument-Sync     | IP-30, IP-09, IP-34   |
 | IP-32 | Paragraph Structure Operations On Document     | Absätze teilen, verbinden, löschen, umsortieren auf dem `Document`          | IP-31                 |
 | IP-33 | Undo On Immutable Document Swap                | Undo-Einträge auf den `Document`-Tausch umstellen                          | IP-31                 |
@@ -272,9 +274,9 @@ Mit dem Grund festgehalten, da die Dateien entfernt sind und die Frage sonst wie
   `PaperFlowListener` weicht `CaretModel`/`TextSelectionModel` plus eigenen Tastenhandlern.
 * **IP-10 Book Part Writing Surface** – neu als IP-31 auf `PaperSheetView`.
 * **IP-11 Paragraph Structure Operations** – neu als IP-32 auf dem simPlay-`Document`.
-* **IP-22 Font Identity And Substitution Reporting** – neu als IP-34: der Fingerabdruck wird aus der
-  simPlay-Messung gebildet (derselbe `FontMeasureCalculator`), nicht aus eigenem JavaFX-Messcode. Das
-  `FontData`-Feld und der Vergleich in `FontIdentity` bleiben.
+* **IP-22 Font Identity And Substitution Reporting** – neu als IP-34: Verfügbarkeit und
+  Fingerabdruck kommen aus `simplay-fx`s `FxFontProbe` (ab simPlay 0.2.1), nicht aus eigenem
+  JavaFX-Messcode. Das `FontData`-Feld und der Vergleich in `FontIdentity` bleiben.
 * **IP-25 Renderer Library Module** – hinfällig: kein neues Bibliotheksmodul. Die JavaFX-Erlaubnis
   für ein `lib`-Modul in `.claude/rules/architecture.md` wird von IP-29 zurückgenommen.
 * **IP-26 Font And Measuring Migration** – hinfällig: `lib/ai-ghost-layouting-fx` wird entfernt statt
@@ -359,12 +361,15 @@ markiert – der Nutzer bringt sie nach simPlay ein, und der Übersetzer überni
 
 Plan: `FP-001-IP-34-SchriftUndFingerabdruckAufSimPlay.md`
 
-Der Fingerabdruck erfasst genau das, was das Layout beeinflusst, und wird aus derselben Messung
-gebildet, die simPlay verwendet – nicht aus einem zweiten Messpfad, der anders antworten könnte.
-Referenzzeichensatz (ASCII, Latin-1, Latin Extended-A, Kyrillisch) und Größe (12 pt) bleiben für alle
-Zeiten fest, sonst meldet jedes ältere Projekt eine falsche Abweichung. Familienermittlung und
-Fallback sind JavaFX-Wissen und ziehen nach `app/ui`, bis simPlay sie exponiert; dann können sie
-dorthin wandern (TODO, Abschnitt 9).
+Seit simPlay 0.2.1 liefert `simplay-fx`s `FxFontProbe` Verfügbarkeitsprüfung (`checkAvailability`)
+und Metrik-Fingerabdruck (`fingerprint`/`verify`/`stamp`) selbst, aus demselben internen
+`FontMeasureCalculator`, den `PaperSheetView` im Renderpfad verwendet – kein zweiter Messpfad mehr
+nötig. Referenzzeichensatz und Normgröße sind jetzt `FontFingerprint.REFERENCE_GLYPHS`
+(Lateinschrift, gängige Diakritika, Satzzeichen – **kein Kyrillisch**) und `NORMALIZED_SIZE` (100.0)
+aus simPlay selbst, nicht mehr eigens von ai-ghost festgelegt; ob Ghost Writer Kyrillisch führt und
+diese Lücke etwas bedeutet, ist offen (Abschnitt 9). `app/ui` ergänzt nur, was `FxFontProbe` nicht
+liefert: den Namen der aufgelösten Ersatzfamilie und die Familienliste für die Auswahl über
+`javafx.scene.text.Font.getFamilies()`.
 
 ### IP-31: Writing Surface On PaperSheetView
 
@@ -471,13 +476,15 @@ Unabhängiger Ausgangspunkt der Abweichung: **IP-29**.
   Politik nachträglich in simPlay ein.** Bis dahin trägt IP-30 nur eine Zwischenlösung (feste Ränder,
   keine Nummerierung oder eine triviale fortlaufende), und IP-23 kann das Ausgrauen zeigen, aber
   nicht neu nummerieren. Betroffene Abschnitte des Zielzustands stehen unter diesem Vorbehalt.
-* **Stellt `simplay-fx` einen JavaFX-`FontMeasureCalculator` bereit?** Nicht aus der Doku belegt.
-  IP-34 prüft das an der Artefakt-/Quelllage; falls nein, trägt `app/ui` einen kleinen lokalen
-  Rechner auf einem verborgenen `javafx.scene.text.Text`-Knoten – derselbe, mit dem der frühere
-  `JavaFxTextMetrics` gemessen hat.
-* **Exponiert `simplay-fx` eine Familienermittlung?** Die Doku nennt keine. Bis dahin bleiben
-  `FontCatalog`/`FontResolver` ai-ghost-Code in `app/ui`; wandert die Fähigkeit später nach
-  `simplay-fx`, kann ai-ghost sie übernehmen (TODO).
+* **`simplay-fx` liefert seit 0.2.1 Verfügbarkeit und Fingerabdruck selbst** (`FxFontProbe`):
+  `checkAvailability`, `fingerprint`, `verify`, `stamp`, intern auf demselben `FontMeasureCalculator`
+  wie der Renderpfad. Geklärt; kein Eigenbau mehr in IP-34.
+* **`FxFontProbe.checkAvailability` nennt keine Ersatzfamilie**, nur das Enum
+  `AVAILABLE`/`SUBSTITUTED`/`MISSING`. `app/ui` ermittelt den tatsächlich aufgelösten Familiennamen
+  selbst dazu (IP-34).
+* **simPlays Referenzzeichensatz für den Fingerabdruck führt kein Kyrillisch.** Offen, ob Ghost
+  Writer kyrillische Glyphen trägt und ob die Lücke für ai-ghost relevant ist; IP-34 übernimmt den
+  simPlay-Satz vorerst unverändert.
 * **JPMS und jlink.** `simplay-engine` ist ein Kotlin-Multiplatform-Artefakt (JVM-Variante),
   `simplay-fx` exportiert JavaFX transitiv. Die Modulnamen für `module-info.java` von
   `lib/ai-ghost-layouting-model` und `app/ui` und die `jlink`-Einbindung (`addExtraDependencies`) sind
@@ -534,8 +541,9 @@ Unabhängiger Ausgangspunkt der Abweichung: **IP-29**.
   immer das letzte Blatt, durch eine harte Kante abgesetzt, ohne Seitenzahl.
 * **Optionale Teile** beginnen immer auf einer eigenen Seite (ein `FlowPage` je Teil), behalten ihren
   Text, sind ausgegraut und bleiben beschreibbar.
-* **Der Metrik-Fingerabdruck** wird über ASCII, Latin-1, Latin Extended-A und Kyrillisch bei 12 pt aus
-  der simPlay-Messung genommen, mit Ascent, Descent und Leading. Menge und Größe sind fest.
+* **Der Metrik-Fingerabdruck** wird über `simplay-fx`s `FxFontProbe` aus `simplay-engine`s
+  `FontFingerprint` genommen (Lateinschrift plus Diakritika/Satzzeichen bei Normgröße 100.0, mit
+  Ascent, Descent und Advances je Glyph). Referenzsatz und Größe sind von simPlay fest vorgegeben.
 * **ai-ghost-Seitenpolitik** (Nummerierung, gespiegelte Ränder, inaktive/leere Seiten,
   Klappentext-Kante) wird vom Nutzer nachträglich in simPlay eingebracht; ai-ghost trägt bis dahin
   nur eine Zwischenlösung und markiert die Lücke als TODO.

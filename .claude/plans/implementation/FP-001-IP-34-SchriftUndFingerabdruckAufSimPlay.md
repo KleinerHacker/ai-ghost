@@ -6,6 +6,7 @@
 * Plan-ID im Feature Plan: IP-34
 * Status-Datei des Features: `.claude/plans/features/FP-001-PaperWritingSurface-status.md`
 * Löst IP-22 ab.
+* Neu gefasst nach simPlay 0.2.1 (`FxFontProbe`/`FontFingerprint` in `engine`/`ui/fx`).
 
 ## Abhängigkeiten
 
@@ -24,36 +25,38 @@
 ## Harte Einschränkung
 
 * Keine Schriftdatei wird gelesen, geparst oder ausgeliefert; `Font.loadFont` wird nicht verwendet.
-* Der Fingerabdruck wird aus derselben Messung gebildet, die simPlay im Renderpfad verwendet.
-* Referenzzeichensatz und Größe sind für alle Zeiten fest.
+* Fingerabdruck und Messung laufen ausschließlich über `simplay-fx`s `FxFontProbe`; kein eigener `FontMeasureCalculator` in `app/ui`.
+* Referenzzeichensatz und Normgröße sind `FontFingerprint.REFERENCE_GLYPHS`/`NORMALIZED_SIZE` aus simPlay, nicht mehr eigens definiert.
+* `FxFontProbe`s Referenzsatz trägt kein Kyrillisch; Bedarf bei Ghost Writer wird geprüft (Feature Plan, Abschnitt 9).
 
 ## Aufgaben
 
-### 1. Messrechner klären
+### 1. Verfügbarkeit und Fingerabdruck verdrahten
 
-* Prüfen, ob `simplay-fx` einen JavaFX-`FontMeasureCalculator` exponiert.
-* Falls ja: diesen im ganzen Renderpfad und für den Fingerabdruck verwenden.
-* Falls nein: kleiner lokaler `FontMeasureCalculator` in `app/ui` auf einem verborgenen `javafx.scene.text.Text`-Knoten.
-* Knoten einmal erstellen und wiederverwenden; Breiten nicht aufrunden.
+* `FxFontProbe` (`org.pcsoft.framework.simplay.fx`) in `app/ui` instanziieren, einmal wiederverwendet.
+* `checkAvailability(font)` für `FontAvailability` `AVAILABLE`/`SUBSTITUTED`/`MISSING` nutzen.
+* `stamp(document)` beim Speichern aufrufen; nur wo noch kein Fingerabdruck steht (`overwrite = false`).
+* `verify(font, expected)` bzw. `MeasuredDocument.fingerprintDeviations` beim Öffnen für den Vergleich nutzen.
+* Kein eigener `FontMeasureCalculator`, kein eigenes Referenzdokument, keine eigene Serialisierung mehr bauen.
 
-### 2. Schrift-Stack umziehen
+### 2. Restlücke schließen: Ersatzfamilie benennen
 
-* `FontCatalog`, `FontResolver`, `FontResolution` aus dem entfernten `lib/ai-ghost-layouting-fx` nach `app/ui` holen.
-* Paket `org.pcsoft.app.aighost.ui.font` (oder bestehende Paketkonvention von `app/ui`).
-* `TODO`: bei späterer Exposition durch `simplay-fx` dorthin auslagern.
+* `checkAvailability` liefert nur das Enum, keinen Namen der Ersatzfamilie.
+* Kleinen Wrapper in `app/ui` bauen, der bei `SUBSTITUTED`/`MISSING` die tatsächlich aufgelöste `javafx.scene.text.Font`-Familie zusätzlich ermittelt.
+* Ermittelten Namen zusammen mit dem `FontAvailability`-Ergebnis melden.
+* Kein eigener `FontResolver`/`FontResolution`-Stack; nur diese eine Ergänzung zu `FxFontProbe`.
 
-### 3. Fingerabdruck bilden
+### 3. Familienliste für die Schriftauswahl
 
-* Referenzdokument aus dem festen Zeichensatz (ASCII, Latin-1, Latin Extended-A, Kyrillisch) bei 12 pt bauen.
-* Über den `FontMeasureCalculator` messen: Ascent, Descent, Leading und Wortbreiten.
-* Ergebnis deterministisch serialisieren (bestehendes `FontData`-Fingerabdruck-Feld).
+* `javafx.scene.text.Font.getFamilies()` direkt in der Design-Sektion des Inspectors nutzen.
+* Kein `FontCatalog` mehr aus `lib/ai-ghost-layouting-fx` übernehmen.
 
-### 4. Vergleich und Meldung
+### 4. FontIdentity/FontIdentityCheck neu fassen
 
-* `FontIdentity` und `FontIdentityCheck` auf den neuen Messweg umstellen.
-* Fingerabdruck beim Speichern schreiben und nur dort, wo noch keiner steht.
-* Beim Öffnen vergleichen; bei Abweichung ersetzte Familie und verwendeten Ersatz melden.
-* `FontTranslation`/`FontFingerprintTranslation` an simPlay-`Font`/`FontDescription` anpassen.
+* `FontIdentity`/`FontIdentityCheck` in `app/ui` als dünne Hülle um `FxFontProbe` plus Aufgabe 2 bauen.
+* `FontData`-Fingerabdruck-Feld speichert `FontFingerprint.encode()`; beim Laden mit `FontFingerprint.decode(text)` zurückwandeln.
+* `FontTranslation` setzt das dekodierte `FontFingerprint` auf `Font.fingerprint` beim Bau des simPlay-`Document`.
+* `FontFingerprintTranslation` entfällt als eigener Typ; simPlays `Font.fingerprint` trägt es direkt.
 
 ### 5. module-info
 
@@ -61,8 +64,9 @@
 
 ### 6. Tests
 
-* Entwicklertest: gleicher Font ergibt gleichen Fingerabdruck; anders messender Font ergibt Abweichung.
-* Referenzmenge und Größe sind fest verdrahtet und im Test gepinnt.
+* Entwicklertest: `FxFontProbe.checkAvailability`/`fingerprint`/`verify` mit bekannter und mit fehlender Familie.
+* Entwicklertest: `FontData`-Fingerabdruck-Feld übersteht Encode/Decode-Zyklus.
+* Entwicklertest: Ersatzfamilie-Wrapper aus Aufgabe 2 meldet den korrekten Familiennamen.
 * Headless über TestFX; kein Fenster.
 
 ### 7. Abschluss
@@ -72,6 +76,6 @@
 
 ## Ergebnis
 
-* Schriftermittlung und Fallback leben in `app/ui`.
-* Der Metrik-Fingerabdruck stammt aus der simPlay-Messung, nicht aus einem zweiten Messpfad.
+* Schriftverfügbarkeit und Metrik-Fingerabdruck laufen vollständig über `simplay-fx`s `FxFontProbe`.
+* `app/ui` ergänzt nur, was `FxFontProbe` nicht liefert: den Namen der Ersatzfamilie und die Familienliste für die Auswahl.
 * Eine ersetzte oder anders messende Familie wird mit ihrem Ersatz gemeldet.
