@@ -60,9 +60,9 @@ Große Planabweichung: Das gesamte Text-Layouting und FX-Rendering wird nach sim
 * ai-ghost-Seitenpolitik (Nummerierung, gespiegelte Ränder, inaktive/leere Seiten,
   Klappentext-Kante) fügt der Nutzer nachträglich in simPlay ein; bis dahin trägt IP-30 nur eine
   Zwischenlösung, und die Lücke ist als TODO markiert.
-* Schrift-Fingerabdruck (früher IP-22) bleibt, wird aber aus der simPlay-Messung
-  (`FontMeasureCalculator`) gebildet, nicht aus eigenem JavaFX-Messcode. Schriftermittlung und
-  Fallback ziehen nach `app/ui` (IP-34), bis simPlay sie exponiert.
+* Schrift-Fingerabdruck (früher IP-22) bleibt, kommt seit simPlay 0.2.1 aber direkt aus
+  `simplay-fx`s `FxFontProbe`, nicht aus eigenem JavaFX-Messcode. Nur die Ersatzfamilie-Meldung und
+  die Familienliste für die Auswahl ziehen nach `app/ui` (IP-34).
 
 Abgeschlossen und von der Abweichung unberührt: IP-01 (Messteil abgelöst), IP-02, IP-24, IP-09,
 IP-12, IP-13, IP-14, IP-17, IP-19.
