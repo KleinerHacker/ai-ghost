@@ -51,7 +51,7 @@ opened once the user accepts it. Both documents are written with Jackson.
 | JSON data model (`lib/ai-ghost-model`)            | Implemented |
 | AI support library (`lib/ai-ghost-ai`)            | Implemented |
 | Text layouting and JavaFX rendering delegated to simPlay (`simplay-engine`, `simplay-fx`, GitHub Packages) | Planned |
-| Layout blocks from book, design and meta data, on the simPlay raw model (`lib/ai-ghost-layouting-model`) | Planned |
+| Layout blocks from book, design and meta data, on the simPlay raw model (`lib/ai-ghost-layouting-model`) | Implemented |
 | Font identity of a project and report of a substitution | Implemented |
 | Prompt input with character limit and token estimate | Implemented |
 | ZIP distribution with start scripts and `libs`    | Implemented |

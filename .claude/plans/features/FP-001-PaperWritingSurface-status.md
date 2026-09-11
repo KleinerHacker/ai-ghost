@@ -16,7 +16,7 @@ Status: IN_PROGRESS
 | IP-17 | AI Action Port                                 | COMPLETED   |
 | IP-19 | AI Part Generation (button only)               | COMPLETED   |
 | IP-29 | simPlay Integration                            | COMPLETED   |
-| IP-30 | Book To simPlay Document Builder               | NOT_STARTED |
+| IP-30 | Book To simPlay Document Builder               | COMPLETED   |
 | IP-34 | Font Discovery And Metric Fingerprint On simPlay | NOT_STARTED |
 | IP-31 | Writing Surface On PaperSheetView              | NOT_STARTED |
 | IP-32 | Paragraph Structure Operations On Document     | NOT_STARTED |
@@ -47,7 +47,7 @@ Fortschritt. Begründung im Feature-Plan, Abschnitt 6, „Abgelöste Pläne“.
 
 ## Gesamtfortschritt
 
-53 %
+58 %
 
 ## Anmerkungen
 
@@ -78,8 +78,20 @@ Gradle-Jobs gezogen; Architekturregel auf `app/ui` als einzigen JavaFX-Ort veren
 mit IP-30/IP-31/IP-34. Build: Konfiguration grün, `ai-ghost-layouting-model` und `app/ui` brechen
 erwartungsgemäß am entfernten Modul; alle übrigen Module grün.
 
-Nächster Schritt: IP-30 (Buch zu simPlay-Dokument-Builder) und IP-34 (Schrift-Stack auf `FxFontProbe`)
-– beide hängen nur an IP-29 und heilen die erwarteten Kompilierbrüche.
+IP-30 abgeschlossen: `lib/ai-ghost-layouting-model` übersetzt `Book`/`Design`/`Meta` in ein simPlay-
+`Document` (`BookDocumentBuilder`, vier Block-Builder, `StyleTranslation`, `PageLayoutTranslation`).
+Auf simPlay 0.2.2 gehoben (Artefakt-Umbenennung `simplay-engine-jvm`); `licensee` läuft ohne
+Ausnahme grün. Die fehlende ai-ghost-Seitenpolitik (Nummerierung, gespiegelte Ränder, inaktive/leere
+Seiten, Klappentext-Kante) ist durchgehend als `TODO(simPlay page policy)` markiert, kein Eigenbau.
+`requires transitive org.pcsoft.framework.simplay.engine` im `module-info.java` bleibt auf ein
+automatisches Modul gerichtet – `simplay-engine-jvm` liefert (Stand 0.2.2) noch keinen eigenen
+Moduldeskriptor; der abgeleitete Name stimmt, ist aber nicht vertraglich stabil. Build:
+`lib/ai-ghost-layouting-model` komplett grün (Tests, `koverVerify`, `licensee`); `app/ui` bricht
+weiter erwartungsgemäß an den entfernten `layouting`/`layouting.fx`-Importen.
+
+Nächster Schritt: IP-34 (Schrift-Stack auf `FxFontProbe`) und IP-31 (Schreibfläche auf
+`PaperSheetView`) – beide hängen nur an IP-29 bzw. IP-30/IP-29 und heilen die verbleibenden
+Kompilierbrüche in `app/ui`.
 
 Die entfernten Plandateien `FP-001-IP-21-SeitentrennungImAbsatz.md`,
 `FP-001-IP-27-BibliotheksStyling.md` und `FP-001-IP-28-EigenstaendigeNutzung.md` wurden per `git rm`

@@ -242,7 +242,7 @@ IP-07, IP-08, IP-10, IP-11, IP-22, IP-25 und IP-26 sind abgelöst (siehe „Abge
 | IP-17 | AI Action Port ✅                               | Aktionsschnittstelle in `lib/ai`, keine Implementierung                     | -                     |
 | IP-19 | AI Part Generation (nur Schaltfläche) ✅        | KI-Schaltfläche im Inspector, ruft leere `*View`-Methode mit `TODO(...)`     | IP-12                 |
 | IP-29 | simPlay Integration ✅                          | Repository, Abhängigkeit, Lizenz-Allowlist, CI-Token; Eigenbaumodule löschen | -                     |
-| IP-30 | Book To simPlay Document Builder               | `lib/ai-ghost-layouting-model` auf das simPlay-Rohmodell umstellen           | IP-29, IP-02, IP-24   |
+| IP-30 | Book To simPlay Document Builder ✅              | `lib/ai-ghost-layouting-model` auf das simPlay-Rohmodell umstellen           | IP-29, IP-02, IP-24   |
 | IP-34 | Font Discovery And Metric Fingerprint On simPlay | `FxFontProbe` verdrahten; Ersatzfamilie und Familienliste in `app/ui`        | IP-29                 |
 | IP-31 | Writing Surface On PaperSheetView              | `BookPartEditor` bettet `PaperSheetView` (`EDITABLE`) ein; Dokument-Sync     | IP-30, IP-09, IP-34   |
 | IP-32 | Paragraph Structure Operations On Document     | Absätze teilen, verbinden, löschen, umsortieren auf dem `Document`          | IP-31                 |
@@ -367,15 +367,24 @@ Abweichungen bei der Umsetzung:
 * Endstand des Builds: Konfiguration grün, alle nicht betroffenen Module grün;
   `ai-ghost-layouting-model` bricht an `requires org.pcsoft.app.aighost.layouting`, `app/ui` dahinter.
 
-### IP-30: Book To simPlay Document Builder
-
-Plan: `FP-001-IP-30-BuchZuSimPlayDokument.md`
+### IP-30: Book To simPlay Document Builder ✅ (abgeschlossen, Datei entfernt)
 
 Das einzige ai-ghost-Modul, das beide Seiten kennt: `Book`/`Design`/`Meta` hinein, ein simPlay-
 `Document` heraus. Ein `FlowPage` je Buchteil hält den Teilbeginn auf einer eigenen Seite, ohne dass
 der Übersetzer paginieren muss. Die Seitenpolitik, die simPlay heute nicht trägt (Nummerierung,
 gespiegelte Ränder, inaktive/leere Seiten, Klappentext-Kante), bleibt bewusst dünn und als TODO
 markiert – der Nutzer bringt sie nach simPlay ein, und der Übersetzer übernimmt sie dann von dort.
+
+Abweichungen bei der Umsetzung:
+
+* Auf simPlay 0.2.2 gehoben; die Maven-Artefakt-ID trägt jetzt das Präfix `simplay-`
+  (`simplay-engine-jvm` statt `engine-jvm`) - `lib/layouting-model/build.gradle.kts` folgt.
+* `simplay-engine-jvm` 0.2.2 liefert weiterhin keinen echten Moduldeskriptor; `requires transitive
+  org.pcsoft.framework.simplay.engine` im `module-info.java` bleibt auf das abgeleitete Automatik-
+  Modul gerichtet (per `jar --describe-module` bestätigt). Der Name stimmt, ist aber nicht vertraglich
+  stabil - offen für eine spätere simPlay-Version mit echtem `module-info`.
+* Die Interims-`licensee`-Ausnahme für `engine`/`engine-jvm` entfällt mit 0.2.2s vollständigem
+  `<licenses>`-Block; `licensee` läuft in `lib/ai-ghost-layouting-model` ohne Sonderregel grün.
 
 ### IP-34: Font Discovery And Metric Fingerprint On simPlay
 
@@ -463,9 +472,9 @@ Neunummerierung folgt, sobald die simPlay-Seitenpolitik steht (bis dahin TODO).
 ## 8. Abhängigkeitsgraph
 
 ```text
-IP-29✅ ─┬─> IP-30 (mit IP-02✅, IP-24✅) ──┬─> IP-31 (mit IP-09✅, IP-34) ──┬─> IP-32
-        │                                  │                                ├─> IP-33
-        └─> IP-34 ──────────────────────────┘                                ├─> IP-18
+IP-29✅ ─┬─> IP-30✅ (mit IP-02✅, IP-24✅) ──┬─> IP-31 (mit IP-09✅, IP-34) ──┬─> IP-32
+        │                                    │                                ├─> IP-33
+        └─> IP-34 ────────────────────────────┘                                ├─> IP-18
                                                                             └─> IP-15 (mit IP-12✅) ──┬─> IP-16 (mit IP-30)
                                                                                                       └─> IP-23 (mit IP-24✅)
 IP-02✅ ──> IP-13✅, IP-14✅
