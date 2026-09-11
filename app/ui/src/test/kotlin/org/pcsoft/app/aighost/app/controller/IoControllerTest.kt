@@ -18,11 +18,11 @@ import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.app.Messages
 import org.pcsoft.app.aighost.app.font.FontIdentity
 import org.pcsoft.app.aighost.app.font.FontIdentityCheck
-import org.pcsoft.app.aighost.model.common.FontMetricsData
 import org.pcsoft.app.aighost.model.PreferencesStorage
 import org.pcsoft.app.aighost.model.ProjectStorage
 import org.pcsoft.app.aighost.model.pref.ThemeMode
 import org.pcsoft.app.aighost.model.project.Project
+import org.pcsoft.framework.simplay.engine.model.FontFingerprint
 import java.io.File
 import java.io.IOException
 
@@ -252,8 +252,8 @@ class IoControllerTest {
                 FontIdentityCheck.ELEMENT_TITLE,
                 FontIdentity.Deviates(
                     "Garamond",
-                    FontMetricsData("0123456789abcdef", 11.0, 3.0, 0.0),
-                    FontMetricsData("fedcba9876543210", 11.5, 3.0, 0.0)
+                    FontFingerprint(100.0, 11.0, 3.0, listOf(1.0)),
+                    FontFingerprint(100.0, 11.5, 3.0, listOf(1.2))
                 )
             )
         )

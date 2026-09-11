@@ -12,15 +12,13 @@
 
 package org.pcsoft.app.aighost.app.font
 
+import javafx.scene.text.Font
 import javafx.stage.Stage
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertInstanceOf
 import org.junit.jupiter.api.Test
-import org.pcsoft.app.aighost.layouting.fx.font.FontCatalog
-import org.pcsoft.app.aighost.layouting.fx.font.FontFingerprints
-import org.pcsoft.app.aighost.layouting.fx.font.FontResolver
 import org.pcsoft.app.aighost.model.common.FontData
-import org.pcsoft.app.aighost.model.common.FontMetricsData
+import org.pcsoft.framework.simplay.fx.FxFontProbe
 import org.testfx.framework.junit5.ApplicationTest
 import org.testfx.util.WaitForAsyncUtils
 
@@ -30,16 +28,18 @@ import org.testfx.util.WaitForAsyncUtils
  */
 class FontIdentityTest : ApplicationTest() {
 
+    private val probe = FxFontProbe()
+
     override fun start(stage: Stage) = Unit
 
     /** Runs [block] on the JavaFX application thread and hands back its result. */
     private fun <T> fx(block: () -> T): T =
         WaitForAsyncUtils.asyncFx<T> { block() }.get()
 
-    private fun installedFamily(): String = fx { FontCatalog.families }.first()
+    private fun installedFamily(): String = fx { Font.getFamilies() }.first()
 
-    private fun fingerprintOf(family: String): FontMetricsData =
-        fx { FontFingerprints.of(family) }!!.toMetricsData()
+    private fun fingerprintOf(family: String): String =
+        fx { probe.fingerprint(FontData(name = family).toEngineFont()) }.encode()
 
     /**
      * Use case: a project written before the fingerprint existed is opened. Nothing was ever
@@ -59,7 +59,7 @@ class FontIdentityTest : ApplicationTest() {
     @Test
     fun aFontMeasuringAsItDidMatches() {
         val family = installedFamily()
-        val data = FontData(name = family, metrics = fingerprintOf(family))
+        val data = FontData(name = family, fingerprint = fingerprintOf(family))
 
         val identity = fx { FontIdentity.of(data) }
 
@@ -74,19 +74,16 @@ class FontIdentityTest : ApplicationTest() {
     @Test
     fun aFontMeasuringDifferentlyDeviates() {
         val family = installedFamily()
-        val stored = fingerprintOf(family).copy(widths = "0000000000000000")
-        val data = FontData(name = family, metrics = stored)
+        val measured = fx { probe.fingerprint(FontData(name = family).toEngineFont()) }
+        val stored = measured.copy(ascent = measured.ascent + 10.0)
+        val data = FontData(name = family, fingerprint = stored.encode())
 
         val identity = fx { FontIdentity.of(data) }
 
         val deviates = assertInstanceOf(FontIdentity.Deviates::class.java, identity)
         assertEquals(family, deviates.family, "the deviation names the family of the project")
         assertEquals(stored, deviates.stored, "the deviation carries what the project stored")
-        assertEquals(
-            fingerprintOf(family),
-            deviates.measured,
-            "the deviation carries what this machine measures"
-        )
+        assertEquals(measured, deviates.measured, "the deviation carries what this machine measures")
     }
 
     /**
@@ -95,10 +92,8 @@ class FontIdentityTest : ApplicationTest() {
      */
     @Test
     fun aFontThatIsNotInstalledIsSubstituted() {
-        val data = FontData(
-            name = "No Such Family At All",
-            metrics = FontMetricsData("0123456789abcdef", 11.0, 3.0, 0.0)
-        )
+        val bogus = fx { probe.fingerprint(FontData(name = installedFamily()).toEngineFont()) }
+        val data = FontData(name = "No Such Family At All", fingerprint = bogus.encode())
 
         val identity = fx { FontIdentity.of(data) }
 
@@ -109,8 +104,8 @@ class FontIdentityTest : ApplicationTest() {
             "the report names the family the project asks for"
         )
         assertEquals(
-            fx { FontResolver.font(data.toFontDescription()) }.family.lowercase(),
-            substituted.substituteFamily.lowercase(),
+            fx { FontSubstitution.resolvedFamilyOf(data.toEngineFont()) },
+            substituted.substituteFamily,
             "the report names the family that is set instead"
         )
     }

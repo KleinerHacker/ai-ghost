@@ -12,6 +12,7 @@
 
 package org.pcsoft.app.aighost.app.font
 
+import javafx.scene.text.Font
 import javafx.stage.Stage
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertInstanceOf
@@ -19,9 +20,8 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.pcsoft.app.aighost.layouting.fx.font.FontCatalog
-import org.pcsoft.app.aighost.model.common.FontMetricsData
 import org.pcsoft.app.aighost.model.project.design.Design
+import org.pcsoft.framework.simplay.engine.model.FontFingerprint
 import org.testfx.framework.junit5.ApplicationTest
 import org.testfx.util.WaitForAsyncUtils
 
@@ -37,7 +37,7 @@ class FontIdentityCheckTest : ApplicationTest() {
     private fun <T> fx(block: () -> T): T =
         WaitForAsyncUtils.asyncFx<T> { block() }.get()
 
-    private fun installedFamily(): String = fx { FontCatalog.families }.first()
+    private fun installedFamily(): String = fx { Font.getFamilies() }.first()
 
     /** A design whose six styles all name the family handed in. */
     private fun designOf(family: String): Design = Design().apply {
@@ -53,6 +53,10 @@ class FontIdentityCheckTest : ApplicationTest() {
         design.chapterPage.textStyle
     )
 
+    /** An arbitrary, well-formed fingerprint, distinct from anything a real measurement produces. */
+    private fun bogusFingerprint(): String =
+        FontFingerprint(normalizedSize = 100.0, ascent = 1.0, descent = 1.0, advances = listOf(1.0)).encode()
+
     /**
      * Use case: a project is saved for the first time since the fingerprint exists. Every font of
      * its design is measured, so the manuscript records what it was written in.
@@ -64,7 +68,7 @@ class FontIdentityCheckTest : ApplicationTest() {
         fx { FontIdentityCheck.stamp(design) }
 
         stylesOf(design).forEach { style ->
-            assertNotNull(style.font.metrics, "every font of the design must be measured")
+            assertNotNull(style.font.fingerprint, "every font of the design must be measured")
         }
     }
 
@@ -76,12 +80,12 @@ class FontIdentityCheckTest : ApplicationTest() {
     @Test
     fun stampingLeavesAnExistingFingerprintAlone() {
         val design = designOf(installedFamily())
-        val brought = FontMetricsData("0123456789abcdef", 11.0, 3.0, 0.0)
-        design.chapterPage.textStyle.font.metrics = brought
+        val brought = bogusFingerprint()
+        design.chapterPage.textStyle.font.fingerprint = brought
 
         fx { FontIdentityCheck.stamp(design) }
 
-        assertEquals(brought, design.chapterPage.textStyle.font.metrics, "a stored fingerprint stays")
+        assertEquals(brought, design.chapterPage.textStyle.font.fingerprint, "a stored fingerprint stays")
     }
 
     /**
@@ -96,7 +100,7 @@ class FontIdentityCheckTest : ApplicationTest() {
         fx { FontIdentityCheck.stamp(design) }
 
         stylesOf(design).forEach { style ->
-            assertNull(style.font.metrics, "an uninstalled family must not be measured")
+            assertNull(style.font.fingerprint, "an uninstalled family must not be measured")
         }
     }
 
@@ -137,8 +141,9 @@ class FontIdentityCheckTest : ApplicationTest() {
         val family = installedFamily()
         val design = designOf(family)
         fx { FontIdentityCheck.stamp(design) }
-        design.titlePage.titleStyle.font.metrics =
-            design.titlePage.titleStyle.font.metrics!!.copy(widths = "0000000000000000")
+        val titleFingerprint = FontFingerprint.decode(design.titlePage.titleStyle.font.fingerprint!!)
+        design.titlePage.titleStyle.font.fingerprint =
+            titleFingerprint.copy(ascent = titleFingerprint.ascent + 10.0).encode()
         design.chapterPage.textStyle.font.name = "No Such Family At All"
 
         val findings = fx { FontIdentityCheck.check(design) }

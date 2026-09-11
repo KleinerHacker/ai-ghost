@@ -15,12 +15,15 @@ module org.pcsoft.app.aighost.ui {
     requires org.pcsoft.app.aighost.fx.model;
     // The prompt area estimates the token cost of what the user wrote.
     requires org.pcsoft.app.aighost.ai;
-    // The layout core carries the text styles and the measuring interface the UI works against.
-    requires transitive org.pcsoft.app.aighost.layouting;
-    // The renderer library resolves a design font, measures text and takes the family fingerprint.
-    requires org.pcsoft.app.aighost.layouting.fx;
-    // The block builders turn a book part, the title page and the copyright page into layout input.
+    // The block builders turn a book part, the title page and the copyright page into layout input;
+    // its `requires transitive` on simPlay's engine module makes simPlay's raw model types (Font,
+    // FontFingerprint, ...) visible here as well.
     requires org.pcsoft.app.aighost.layouting.model;
+    // The JavaFX font probe: checks family availability, stamps and verifies the measurement
+    // fingerprint stored beside a design's fonts.
+    requires org.pcsoft.framework.simplay.fx;
+    // FontAvailability, the outcome enum FxFontProbe.checkAvailability answers with.
+    requires org.pcsoft.framework.simplay.common;
 
     opens org.pcsoft.app.aighost.app to javafx.fxml, de.saxsys.mvvmfx;
     opens org.pcsoft.app.aighost.app.ui.window to javafx.fxml, de.saxsys.mvvmfx;

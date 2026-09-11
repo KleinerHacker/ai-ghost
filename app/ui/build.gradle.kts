@@ -32,6 +32,9 @@ javafx {
     modules = listOf("javafx.controls", "javafx.fxml")
 }
 
+// Pinned once in the root build; the coordinate itself is documented there.
+val simplayVersion: String by rootProject.extra
+
 val testFxVersion = "4.0.18"
 val log4jVersion = "2.26.1"
 
@@ -40,10 +43,15 @@ dependencies {
     implementation(project(":lib:ai-ghost-fx-model"))
     implementation(project(":lib:ai-ghost-ai"))
     // The block builders that turn a book part, the title page and the copyright page into layout
-    // input. simPlay (simplay-engine / simplay-fx) replaces the removed in-house layout and renderer
-    // modules; it is wired in by IP-30 / IP-31 / IP-34. Until then app/ui does not compile - the font
-    // stack and the writing surface still import the removed `org.pcsoft.app.aighost.layouting[.fx]`.
+    // input.
     implementation(project(":lib:ai-ghost-layouting-model"))
+    // simPlay's JavaFX renderer: the font probe (IP-34) checks family availability and takes the
+    // measurement fingerprint.
+    implementation("org.pcsoft.framework:simplay-fx:$simplayVersion")
+    // FontAvailability, the outcome enum FxFontProbe.checkAvailability answers with. simplay-fx's own
+    // published metadata only carries this on its runtime variant, not its compile (api) variant, so
+    // it has to be named here explicitly to compile against it.
+    implementation("org.pcsoft.framework:simplay-common:$simplayVersion")
 
     implementation("io.arrow-kt:arrow-core:2.1.2")
     implementation("org.apache.commons:commons-lang3:3.20.0")

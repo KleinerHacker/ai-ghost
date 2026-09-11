@@ -56,7 +56,7 @@ class StyleDataTest {
         val json = mapper.writeValueAsString(style)
 
         assertEquals(
-            """{"font":{"name":"Serif","size":12,"bold":true,"italic":false,"metrics":null},"textLineSpacing":1.5,"alignment":"BLOCK"}""",
+            """{"font":{"name":"Serif","size":12,"bold":true,"italic":false,"fingerprint":null},"textLineSpacing":1.5,"alignment":"BLOCK"}""",
             json
         )
     }

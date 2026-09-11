@@ -12,17 +12,26 @@
 
 package org.pcsoft.app.aighost.app.font
 
-import org.pcsoft.app.aighost.layouting.fx.font.FontDescription
 import org.pcsoft.app.aighost.model.common.FontData
+import org.pcsoft.framework.simplay.engine.model.Font
+import org.pcsoft.framework.simplay.engine.model.FontFingerprint
+import org.pcsoft.framework.simplay.engine.model.FontStyle
+import org.pcsoft.framework.simplay.engine.model.FontWeight
 
 /**
- * The way from the font of a design to the face the renderer library resolves and measures with.
+ * The way from the font of a design to the face `simplay-fx`'s `FxFontProbe` resolves and measures
+ * with.
  *
- * The component library takes its input as its own [FontDescription], because a reusable renderer
- * must not know that this application stores fonts as [FontData]. Both carry the same family, size
- * and cut, so the translation is a plain copy - it exists to keep the two worlds apart, not to
- * convert anything. The measurement fingerprint on [FontData] is not part of a description and is
- * dropped here.
+ * `FxFontProbe`'s methods all take simPlay's own [Font], because a reusable renderer library must not
+ * know that this application stores fonts as [FontData]. Family, size and cut are carried over as
+ * they are; the stored fingerprint - encoded as a single line of text - is decoded back into simPlay's
+ * [FontFingerprint] here, the only place that string is parsed on the way out of the model.
  */
-fun FontData.toFontDescription(): FontDescription =
-    FontDescription(name, size, bold, italic)
+fun FontData.toEngineFont(): Font =
+    Font(
+        family = name,
+        size = size.toDouble(),
+        weight = if (bold) FontWeight.BOLD else FontWeight.NORMAL,
+        style = if (italic) FontStyle.ITALIC else FontStyle.NORMAL,
+        fingerprint = fingerprint?.let { FontFingerprint.decode(it) },
+    )

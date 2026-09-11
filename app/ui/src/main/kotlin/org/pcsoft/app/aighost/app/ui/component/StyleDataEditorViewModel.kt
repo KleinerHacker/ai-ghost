@@ -25,8 +25,8 @@ import javafx.beans.property.SimpleIntegerProperty
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.beans.property.StringProperty
+import javafx.scene.text.Font
 import org.pcsoft.app.aighost.fx.model.common.StyleDataProperty
-import org.pcsoft.app.aighost.layouting.fx.font.FontCatalog
 import org.pcsoft.app.aighost.model.common.Alignment
 
 /**
@@ -38,7 +38,7 @@ import org.pcsoft.app.aighost.model.common.Alignment
  * `DesignSettingsViewModel` there is no unit conversion in between. The model object it edits is
  * handed in through [bind], the component owns no state of its own.
  *
- * [familyNotInstalled] reports whether the current family is not among [FontCatalog.families], so the
+ * [familyNotInstalled] reports whether the current family is not among `Font.getFamilies()`, so the
  * view can show a warning next to the family field without failing the form: a design saved on
  * another machine may name a font this one does not have installed. [valid] reports whether the
  * current input can be stored - a positive size, a positive line spacing and a family that is not
@@ -66,7 +66,11 @@ class StyleDataEditorViewModel : ViewModel {
 
     /** Whether [familyName] is not among the families this machine has installed. */
     val familyNotInstalled: BooleanBinding = Bindings.createBooleanBinding(
-        { familyName.get().let { !it.isNullOrBlank() && !FontCatalog.contains(it) } },
+        {
+            familyName.get().let { name ->
+                !name.isNullOrBlank() && Font.getFamilies().none { it.equals(name, ignoreCase = true) }
+            }
+        },
         familyName
     )
 

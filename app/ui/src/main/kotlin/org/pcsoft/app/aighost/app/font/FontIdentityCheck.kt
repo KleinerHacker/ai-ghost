@@ -12,16 +12,17 @@
 
 package org.pcsoft.app.aighost.app.font
 
-import org.pcsoft.app.aighost.layouting.fx.font.FontFingerprints
 import org.pcsoft.app.aighost.model.common.StyleData
 import org.pcsoft.app.aighost.model.project.design.Design
+import org.pcsoft.framework.simplay.fx.FxFontProbe
+import org.pcsoft.framework.simplay.uicommon.FontAvailability
 
 /**
  * The fonts of a design, fingerprinted when the project is written and compared when it is read.
  *
  * The two halves belong together and are therefore in one place: [stamp] records what a font
  * measured like on the machine the manuscript was written on, and [check] tells afterwards which
- * elements are not set the way they were written.
+ * elements are not set the way they were written. Both go through `simplay-fx`'s [FxFontProbe].
  *
  * A font is stamped once and then left alone. Overwriting a fingerprint on every save would turn the
  * record into "what the last machine measured" and the comparison would never report anything.
@@ -48,6 +49,8 @@ object FontIdentityCheck {
     /** Key of the text naming the body text. */
     const val ELEMENT_TEXT: String = "text.font.element.text"
 
+    private val probe = FxFontProbe()
+
     /**
      * One element of the design that is not set in the font it was written in.
      *
@@ -66,11 +69,16 @@ object FontIdentityCheck {
      */
     fun stamp(design: Design) {
         stylesOf(design).forEach { (_, style) ->
-            if (style.font.metrics != null) {
+            if (style.font.fingerprint != null) {
                 return@forEach
             }
 
-            style.font.metrics = FontFingerprints.of(style.font.name)?.toMetricsData()
+            val font = style.font.toEngineFont()
+            if (probe.checkAvailability(font) != FontAvailability.AVAILABLE) {
+                return@forEach
+            }
+
+            style.font.fingerprint = probe.fingerprint(font).encode()
         }
     }
 

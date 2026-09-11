@@ -12,18 +12,18 @@
 
 package org.pcsoft.app.aighost.app.font
 
-import org.pcsoft.app.aighost.layouting.fx.font.FontFingerprints
-import org.pcsoft.app.aighost.layouting.fx.font.FontResolution
-import org.pcsoft.app.aighost.layouting.fx.font.FontResolver
 import org.pcsoft.app.aighost.model.common.FontData
-import org.pcsoft.app.aighost.model.common.FontMetricsData
+import org.pcsoft.framework.simplay.engine.model.FontFingerprint
+import org.pcsoft.framework.simplay.fx.FxFontProbe
+import org.pcsoft.framework.simplay.uicommon.FontAvailability
 
 /**
  * Whether the font a piece of text was written in is the font it is set in here.
  *
  * A stored font is a family name, and a family name is not an identity: two machines can both know a
  * `Garamond` and still set it differently, and a machine that knows none at all falls back to a
- * substitute. The fingerprint stored beside the name answers the question the name cannot.
+ * substitute. The fingerprint stored beside the name answers the question the name cannot; it is
+ * taken and verified through `simplay-fx`'s `FxFontProbe`.
  *
  * A font that was never fingerprinted is [Unknown] and never a deviation: a project written before
  * the fingerprint existed must not report a mismatch against every machine in the world.
@@ -60,11 +60,13 @@ sealed interface FontIdentity {
      */
     data class Deviates(
         val family: String,
-        val stored: FontMetricsData,
-        val measured: FontMetricsData
+        val stored: FontFingerprint,
+        val measured: FontFingerprint
     ) : FontIdentity
 
     companion object {
+
+        private val probe = FxFontProbe()
 
         /**
          * Compares the fingerprint stored on [data] against the one this machine takes.
@@ -74,20 +76,17 @@ sealed interface FontIdentity {
          * @param data Font of a design, as it is stored in the project.
          */
         fun of(data: FontData): FontIdentity {
-            val stored = data.metrics ?: return Unknown
+            val storedText = data.fingerprint ?: return Unknown
+            val stored = FontFingerprint.decode(storedText)
+            val font = data.toEngineFont()
 
-            return when (val resolution = FontResolver.resolve(data.toFontDescription())) {
-                is FontResolution.NotInstalled ->
-                    Substituted(resolution.requestedFamily, resolution.substituteFamily)
+            return when (probe.checkAvailability(font)) {
+                FontAvailability.SUBSTITUTED, FontAvailability.MISSING ->
+                    Substituted(data.name, FontSubstitution.resolvedFamilyOf(font))
 
-                is FontResolution.Installed -> {
-                    // The catalogue and the measuring agree on the installed families in every
-                    // normal case; when they do not, the family cannot be measured and is therefore
-                    // not the one the project was written in either.
-                    val measured = FontFingerprints.of(data.name)?.toMetricsData()
-                        ?: return Substituted(data.name, resolution.font.family)
-
-                    if (measured == stored) Matches else Deviates(data.name, stored, measured)
+                FontAvailability.AVAILABLE -> {
+                    val measured = probe.fingerprint(font)
+                    if (measured.matches(stored)) Matches else Deviates(data.name, stored, measured)
                 }
             }
         }

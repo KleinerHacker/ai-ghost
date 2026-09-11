@@ -13,60 +13,78 @@
 package org.pcsoft.app.aighost.app.font
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.model.common.FontData
-import org.pcsoft.app.aighost.model.common.FontMetricsData
+import org.pcsoft.framework.simplay.engine.model.FontFingerprint
+import org.pcsoft.framework.simplay.engine.model.FontStyle
+import org.pcsoft.framework.simplay.engine.model.FontWeight
 
 /**
- * Developer tests for [toFontDescription], the copy from a stored [FontData] to the
- * [org.pcsoft.app.aighost.layouting.fx.font.FontDescription] the renderer library resolves with.
+ * Developer tests for [toEngineFont], the copy from a stored [FontData] to the simPlay
+ * [org.pcsoft.framework.simplay.engine.model.Font] `simplay-fx`'s `FxFontProbe` resolves and measures
+ * with.
  */
 class FontTranslationTest {
 
     /**
-     * Use case: a font stored with non default values in every field reaches the renderer library
-     * with exactly those values - family, size and both switches of the cut are carried over as they
-     * are.
+     * Use case: a font stored with non default values in every field reaches simPlay with exactly
+     * those values - family and size are carried over as they are, and both switches of the cut
+     * become simPlay's weight and style enums.
      */
     @Test
     fun everyFieldIsCarriedOverAsItIs() {
         val data = FontData(name = "Garamond", size = 17, bold = true, italic = true)
 
-        val description = data.toFontDescription()
+        val font = data.toEngineFont()
 
-        assertEquals("Garamond", description.family)
-        assertEquals(17, description.size)
-        assertEquals(true, description.bold)
-        assertEquals(true, description.italic)
+        assertEquals("Garamond", font.family)
+        assertEquals(17.0, font.size)
+        assertEquals(FontWeight.BOLD, font.weight)
+        assertEquals(FontStyle.ITALIC, font.style)
     }
 
     /**
-     * Use case: a plain body font with the defaults of [FontData] translates to a description that
+     * Use case: a plain body font with the defaults of [FontData] translates to a simPlay font that
      * carries the very same defaults.
      */
     @Test
     fun defaultsTranslateToTheSameDefaults() {
-        val description = FontData().toFontDescription()
+        val font = FontData().toEngineFont()
 
-        assertEquals("Arial", description.family)
-        assertEquals(12, description.size)
-        assertEquals(false, description.bold)
-        assertEquals(false, description.italic)
+        assertEquals("Arial", font.family)
+        assertEquals(12.0, font.size)
+        assertEquals(FontWeight.NORMAL, font.weight)
+        assertEquals(FontStyle.NORMAL, font.style)
     }
 
     /**
-     * Use case: the measurement fingerprint stored beside the name is an identity, not an input of
-     * font resolution, so it is left behind and does not influence the resulting description.
+     * Use case: a font that was never fingerprinted carries no encoded fingerprint, so the simPlay
+     * font translated from it carries none either.
      */
     @Test
-    fun theMeasurementFingerprintIsNotPartOfTheDescription() {
-        val plain = FontData(name = "Georgia", size = 13)
-        val stamped = FontData(
-            name = "Georgia",
-            size = 13,
-            metrics = FontMetricsData("digest", 10.0, 3.0, 1.0)
-        )
+    fun anAbsentFingerprintTranslatesToNone() {
+        val font = FontData(name = "Georgia", size = 13).toEngineFont()
 
-        assertEquals(plain.toFontDescription(), stamped.toFontDescription())
+        assertNull(font.fingerprint)
+    }
+
+    /**
+     * Use case: a stamped font carries its fingerprint as a single line of text, so the translation
+     * decodes it back into simPlay's own fingerprint type instead of leaving it a string.
+     */
+    @Test
+    fun aStoredFingerprintIsDecoded() {
+        val fingerprint = FontFingerprint(
+            normalizedSize = 100.0,
+            ascent = 10.0,
+            descent = 3.0,
+            advances = listOf(1.0, 2.0, 3.0)
+        )
+        val data = FontData(name = "Georgia", size = 13, fingerprint = fingerprint.encode())
+
+        val font = data.toEngineFont()
+
+        assertEquals(fingerprint, font.fingerprint)
     }
 }

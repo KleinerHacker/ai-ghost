@@ -26,9 +26,9 @@ import javafx.scene.control.Spinner
 import javafx.scene.control.SpinnerValueFactory.DoubleSpinnerValueFactory
 import javafx.scene.control.SpinnerValueFactory.IntegerSpinnerValueFactory
 import javafx.scene.control.ToggleButton
+import javafx.scene.text.Font
 import javafx.util.StringConverter
 import org.pcsoft.app.aighost.app.Messages
-import org.pcsoft.app.aighost.layouting.fx.font.FontCatalog
 import org.pcsoft.app.aighost.model.common.Alignment
 import java.net.URL
 import java.util.ResourceBundle
@@ -86,7 +86,7 @@ class StyleDataEditorView : FxmlView<StyleDataEditorViewModel>, Initializable {
         val messages = resources ?: Messages.bundle
 
         cmbFamily.isEditable = true
-        cmbFamily.items.setAll(FontCatalog.families)
+        cmbFamily.items.setAll(Font.getFamilies())
         // The editable combo box already mirrors a selected item into its editor text, so binding the
         // editor alone keeps both the typed and the picked family in step with the model.
         cmbFamily.editor.textProperty().bindBidirectional(viewModel.familyName)

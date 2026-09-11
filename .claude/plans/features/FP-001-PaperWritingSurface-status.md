@@ -17,7 +17,7 @@ Status: IN_PROGRESS
 | IP-19 | AI Part Generation (button only)               | COMPLETED   |
 | IP-29 | simPlay Integration                            | COMPLETED   |
 | IP-30 | Book To simPlay Document Builder               | COMPLETED   |
-| IP-34 | Font Discovery And Metric Fingerprint On simPlay | NOT_STARTED |
+| IP-34 | Font Discovery And Metric Fingerprint On simPlay | COMPLETED   |
 | IP-31 | Writing Surface On PaperSheetView              | NOT_STARTED |
 | IP-32 | Paragraph Structure Operations On Document     | NOT_STARTED |
 | IP-33 | Undo On Immutable Document Swap                | NOT_STARTED |
@@ -47,7 +47,7 @@ Fortschritt. Begründung im Feature-Plan, Abschnitt 6, „Abgelöste Pläne“.
 
 ## Gesamtfortschritt
 
-58 %
+63 %
 
 ## Anmerkungen
 
@@ -89,9 +89,21 @@ Moduldeskriptor; der abgeleitete Name stimmt, ist aber nicht vertraglich stabil.
 `lib/ai-ghost-layouting-model` komplett grün (Tests, `koverVerify`, `licensee`); `app/ui` bricht
 weiter erwartungsgemäß an den entfernten `layouting`/`layouting.fx`-Importen.
 
-Nächster Schritt: IP-34 (Schrift-Stack auf `FxFontProbe`) und IP-31 (Schreibfläche auf
-`PaperSheetView`) – beide hängen nur an IP-29 bzw. IP-30/IP-29 und heilen die verbleibenden
-Kompilierbrüche in `app/ui`.
+IP-34 abgeschlossen: `app/ui`s Schrift-Stack läuft vollständig über `simplay-fx`s `FxFontProbe`.
+`FontData.metrics: FontMetricsData?` entfällt zugunsten von `FontData.fingerprint: String?` (roher
+`FontFingerprint.encode()`-String); `FontMetricsData`/`FontMetricsDataProperty` sind per `git rm`
+entfernt. `FontIdentity`/`FontIdentityCheck`/`FontTranslation` sind auf simPlays Typen umgestellt,
+`FontSubstitution` ergänzt die Ersatzfamilie, `StyleDataEditorView`/`ViewModel` nutzen
+`Font.getFamilies()` statt des entfernten `FontCatalog`. simPlay 0.2.2s Gradle-Metadaten führen
+`simplay-common` (`FontAvailability`) nur in der `runtimeElements`-, nicht der `apiElements`-Variante
+von `simplay-fx`; `app/ui` führt `simplay-common` deshalb als eigene, vom Nutzer bestätigte
+Abhängigkeit. Build: `lib/ai-ghost-model`, `lib/ai-ghost-fx-model`, `lib/ai-ghost-layouting-model` und
+der Schrift-Teil von `app/ui` komplett grün; `app/ui` bricht weiter erwartungsgemäß an
+`BookPartEditorView`/`BookPartEditorViewModel`/`BookPartEditorController` (`PaperFlowView`,
+`PaperFlowListener`, `JavaFxTextMetrics`, `DocumentLayout`, ... - IP-31s Aufgabe).
+
+Nächster Schritt: IP-31 (Schreibfläche auf `PaperSheetView`) – hängt an IP-30/IP-29/IP-34 und heilt
+die verbleibenden Kompilierbrüche in `app/ui`.
 
 Die entfernten Plandateien `FP-001-IP-21-SeitentrennungImAbsatz.md`,
 `FP-001-IP-27-BibliotheksStyling.md` und `FP-001-IP-28-EigenstaendigeNutzung.md` wurden per `git rm`

@@ -176,8 +176,7 @@ class StyleDataPropertyTest {
      */
     private fun state(font: FontData?): String =
         "${font?.name ?: MISSING}|${font?.size ?: 0}|${font?.bold ?: false}|${font?.italic ?: false}|" +
-            "${font?.metrics?.widths ?: MISSING}|${font?.metrics?.ascent ?: 0.0}|" +
-            "${font?.metrics?.descent ?: 0.0}|${font?.metrics?.leading ?: 0.0}"
+                (font?.fingerprint ?: MISSING)
 
     /**
      * Asserts that every binding of the object tree delivers the given state, so no view keeps the
@@ -194,7 +193,7 @@ class StyleDataPropertyTest {
         alignment: Alignment?,
         textLineSpacing: Double = 1.2
     ) {
-        val fontState = "${name ?: MISSING}|$size|$bold|$italic|$MISSING|0.0|0.0|0.0"
+        val fontState = "${name ?: MISSING}|$size|$bold|$italic|$MISSING"
 
         assertEquals("$fontState|$textLineSpacing|${alignment ?: MISSING}", rootView.get()) {
             "the binding on the style delivers an outdated state"

@@ -243,7 +243,7 @@ IP-07, IP-08, IP-10, IP-11, IP-22, IP-25 und IP-26 sind abgelöst (siehe „Abge
 | IP-19 | AI Part Generation (nur Schaltfläche) ✅        | KI-Schaltfläche im Inspector, ruft leere `*View`-Methode mit `TODO(...)`     | IP-12                 |
 | IP-29 | simPlay Integration ✅                          | Repository, Abhängigkeit, Lizenz-Allowlist, CI-Token; Eigenbaumodule löschen | -                     |
 | IP-30 | Book To simPlay Document Builder ✅              | `lib/ai-ghost-layouting-model` auf das simPlay-Rohmodell umstellen           | IP-29, IP-02, IP-24   |
-| IP-34 | Font Discovery And Metric Fingerprint On simPlay | `FxFontProbe` verdrahten; Ersatzfamilie und Familienliste in `app/ui`        | IP-29                 |
+| IP-34 | Font Discovery And Metric Fingerprint On simPlay ✅ | `FxFontProbe` verdrahten; Ersatzfamilie und Familienliste in `app/ui`        | IP-29                 |
 | IP-31 | Writing Surface On PaperSheetView              | `BookPartEditor` bettet `PaperSheetView` (`EDITABLE`) ein; Dokument-Sync     | IP-30, IP-09, IP-34   |
 | IP-32 | Paragraph Structure Operations On Document     | Absätze teilen, verbinden, löschen, umsortieren auf dem `Document`          | IP-31                 |
 | IP-33 | Undo On Immutable Document Swap                | Undo-Einträge auf den `Document`-Tausch umstellen                          | IP-31                 |
@@ -386,9 +386,9 @@ Abweichungen bei der Umsetzung:
 * Die Interims-`licensee`-Ausnahme für `engine`/`engine-jvm` entfällt mit 0.2.2s vollständigem
   `<licenses>`-Block; `licensee` läuft in `lib/ai-ghost-layouting-model` ohne Sonderregel grün.
 
-### IP-34: Font Discovery And Metric Fingerprint On simPlay
+### IP-34: Font Discovery And Metric Fingerprint On simPlay ✅
 
-Plan: `FP-001-IP-34-SchriftUndFingerabdruckAufSimPlay.md`
+Plan: `FP-001-IP-34-SchriftUndFingerabdruckAufSimPlay.md` (abgeschlossen, entfernt)
 
 Seit simPlay 0.2.1 liefert `simplay-fx`s `FxFontProbe` Verfügbarkeitsprüfung (`checkAvailability`)
 und Metrik-Fingerabdruck (`fingerprint`/`verify`/`stamp`) selbst, aus demselben internen
@@ -397,8 +397,26 @@ nötig. Referenzzeichensatz und Normgröße sind jetzt `FontFingerprint.REFERENC
 (Lateinschrift, gängige Diakritika, Satzzeichen – **kein Kyrillisch**) und `NORMALIZED_SIZE` (100.0)
 aus simPlay selbst, nicht mehr eigens von ai-ghost festgelegt; ob Ghost Writer Kyrillisch führt und
 diese Lücke etwas bedeutet, ist offen (Abschnitt 9). `app/ui` ergänzt nur, was `FxFontProbe` nicht
-liefert: den Namen der aufgelösten Ersatzfamilie und die Familienliste für die Auswahl über
-`javafx.scene.text.Font.getFamilies()`.
+liefert: den Namen der aufgelösten Ersatzfamilie (`FontSubstitution`, über
+`javafx.scene.text.Font.font(family, weight, posture, size)`) und die Familienliste für die Auswahl
+über `javafx.scene.text.Font.getFamilies()`.
+
+Abweichungen vom ursprünglichen Plantext:
+
+* `FontData.metrics: FontMetricsData?` (eigenes Vier-Felder-POJO mit eigenem FX-Modell) entfällt
+  vollständig zugunsten von `FontData.fingerprint: String?`, dem rohen
+  `FontFingerprint.encode()`-String; simPlays Fingerabdruck trägt andere Felder
+  (`normalizedSize`/`ascent`/`descent`/`advances`) als das bisherige POJO
+  (`widths`/`ascent`/`descent`/`leading`), ein eigenes Spiegel-POJO hätte keinen Mehrwert mehr
+  gehabt. `FontMetricsDataProperty` entfällt ersatzlos, `FontDataProperty` trägt nur noch ein
+  `fingerprintProperty: StringProperty`.
+* `FontIdentityCheck.stamp`/`check` arbeiten weiterhin direkt auf den `StyleData`-Objekten des
+  `Design`, nicht über `BookDocumentBuilder`/`Document` - das war schon vor IP-34 so und bleibt die
+  einfachere Route, `FxFontProbe` nimmt pro Stil ein einzelnes `Font`.
+* simPlay 0.2.2s veröffentlichte Gradle-Modul-Metadaten führen `simplay-common`
+  (`FontAvailability`) nur in der `runtimeElements`-, nicht in der `apiElements`-Variante von
+  `simplay-fx`; `app/ui` muss `org.pcsoft.framework:simplay-common` deshalb als eigene, vom Nutzer
+  bestätigte Abhängigkeit führen, um dagegen zu kompilieren.
 
 ### IP-31: Writing Surface On PaperSheetView
 
@@ -472,9 +490,9 @@ Neunummerierung folgt, sobald die simPlay-Seitenpolitik steht (bis dahin TODO).
 ## 8. Abhängigkeitsgraph
 
 ```text
-IP-29✅ ─┬─> IP-30✅ (mit IP-02✅, IP-24✅) ──┬─> IP-31 (mit IP-09✅, IP-34) ──┬─> IP-32
+IP-29✅ ─┬─> IP-30✅ (mit IP-02✅, IP-24✅) ──┬─> IP-31 (mit IP-09✅, IP-34✅) ──┬─> IP-32
         │                                    │                                ├─> IP-33
-        └─> IP-34 ────────────────────────────┘                                ├─> IP-18
+        └─> IP-34✅ ───────────────────────────┘                                ├─> IP-18
                                                                             └─> IP-15 (mit IP-12✅) ──┬─> IP-16 (mit IP-30)
                                                                                                       └─> IP-23 (mit IP-24✅)
 IP-02✅ ──> IP-13✅, IP-14✅
@@ -490,7 +508,7 @@ Baum (IP-23) folgen.
 
 Abgeschlossen und unberührt: **IP-01** ✅ (teilweise abgelöst), **IP-02** ✅, **IP-24** ✅,
 **IP-09** ✅, **IP-12** ✅, **IP-13** ✅, **IP-14** ✅, **IP-17** ✅, **IP-19** ✅.
-Unabhängiger Ausgangspunkt der Abweichung: **IP-29** ✅.
+Unabhängiger Ausgangspunkt der Abweichung: **IP-29** ✅. Schrift-Stack abgeschlossen: **IP-34** ✅.
 
 ## 9. Risiken und offene Fragen
 
