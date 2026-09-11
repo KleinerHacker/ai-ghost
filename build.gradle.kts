@@ -25,11 +25,14 @@ val junitVersion = "6.1.3"
 
 // simPlay, consumed from GitHub Packages. Pinned exactly: a minor bump would move every line break
 // and page break at once. The layout engine is the Kotlin Multiplatform module published as
-// `org.pcsoft.framework:engine` / `engine-jvm`; the JavaFX renderer is the JVM module published as
-// `org.pcsoft.framework:simplay-fx`. simPlay's jars set `Automatic-Module-Name` to
-// `org.pcsoft.framework.simplay.<module>`, which is the name a `requires` in a module descriptor
+// `org.pcsoft.framework:simplay-engine` / `simplay-engine-jvm`; the JavaFX renderer is the JVM
+// module published as `org.pcsoft.framework:simplay-fx`. simPlay's jars set `Automatic-Module-Name`
+// to `org.pcsoft.framework.simplay.<module>`, which is the name a `requires` in a module descriptor
 // uses. Wired up in IP-30 (layouting-model), IP-31 and IP-34 (app/ui).
-val simplayVersion by extra("0.2.1")
+// 0.2.2 renames the Maven artifact ids with a `simplay-` prefix (previously `engine`/`engine-jvm`)
+// and adds a proper <licenses> block to the POMs, closing the interim licensee exception in
+// lib/layouting-model/build.gradle.kts.
+val simplayVersion by extra("0.2.2")
 
 // The UI module shipping the distribution; the licence report and the API docs are taken from it.
 val uiProject = ":app:ai-ghost-ui"
