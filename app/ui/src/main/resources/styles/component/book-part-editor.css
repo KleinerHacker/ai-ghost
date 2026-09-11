@@ -12,7 +12,7 @@
 
 /*
  * The writing surface sits on the plain window surface; the sheet itself brings its own look from the
- * renderer library's stylesheet.
+ * renderer library's stylesheet, overridden below to carry the application's palette.
  */
 .book-part-editor {
     -fx-background-color: -ghost-surface;
@@ -24,4 +24,21 @@
  */
 .book-part-editor-empty {
     -fx-text-fill: -ghost-ink-soft;
+}
+
+/*
+ * simplay-fx's PaperSheetView ships its own default look; every colour it exposes is replaced here
+ * with the application's palette so the sheet does not stand out as a foreign control.
+ */
+.paper-sheet-view {
+    -fx-sheet-background: -ghost-surface-raised;
+    -fx-sheet-border-color: -ghost-tint-line;
+    -fx-shadow-color: -ghost-shadow;
+    -fx-selection-color: -ghost-tint-hover;
+    -fx-caret-color: -ghost-ink;
+}
+
+/* A read-only sheet - the title page and the copyright page - selects in a more muted tone. */
+.paper-sheet-view:readonly {
+    -fx-selection-color: -ghost-tint-pressed;
 }

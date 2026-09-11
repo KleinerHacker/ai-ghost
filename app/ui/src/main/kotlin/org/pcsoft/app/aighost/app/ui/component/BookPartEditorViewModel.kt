@@ -27,45 +27,46 @@ import org.pcsoft.app.aighost.app.controller.BookPartEditorController
 import org.pcsoft.app.aighost.app.controller.IoController
 import org.pcsoft.app.aighost.app.controller.PartMode
 import org.pcsoft.app.aighost.app.controller.PartTarget
-import org.pcsoft.app.aighost.app.undo.ParagraphListUndoEntry
 import org.pcsoft.app.aighost.app.undo.UndoStack
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
-import org.pcsoft.app.aighost.layouting.DocumentLayout
-import org.pcsoft.app.aighost.layouting.GreedyLineBreaker
-import org.pcsoft.app.aighost.layouting.IncrementalLineBreaker
-import org.pcsoft.app.aighost.layouting.fx.font.JavaFxTextMetrics
-import org.pcsoft.app.aighost.layouting.fx.paper.PaperFlowListener
-import org.pcsoft.app.aighost.layouting.fx.paper.PaperFlowView
-import org.pcsoft.app.aighost.layouting.model.common.toPageGeometry
+import org.pcsoft.app.aighost.layouting.model.common.toPageLayout
+import org.pcsoft.framework.simplay.engine.model.Document
+import org.pcsoft.framework.simplay.engine.model.FlowPage
+import org.pcsoft.framework.simplay.engine.model.Page
+import org.pcsoft.framework.simplay.engine.model.SinglePage
+import org.pcsoft.framework.simplay.fx.PaperSheetMode
+import org.pcsoft.framework.simplay.fx.PaperSheetView
 
 /**
  * View model of [BookPartEditor].
  *
  * The project is handed over through [bindProject], the picked tree node through [bindSelection] and
  * the undo history of the open project through [bindUndoStack]; all three are taken as the model
- * itself and never wrapped in a property of their own. The [PaperFlowView] the view holds is handed
+ * itself and never wrapped in a property of their own. The [PaperSheetView] the view holds is handed
  * in once through [attach].
  *
- * The domain logic - routing a tree node onto a part, assembling the sheet from the model and the
- * design, mapping a block back onto a manuscript field, and the pure paragraph-list transforms behind
- * split, merge, move and removal - lives in [BookPartEditorController]. This view model keeps only
- * what has a lifetime: the flow view it drives, the [IncrementalLineBreaker] with its per-keystroke
- * cache, one [StringProperty] per editable block for the undo history, the caret and the current
- * [BookPartEditorController.PartResolution].
+ * The domain logic - routing a tree node onto a part, assembling the blocks from the model and the
+ * design, and mapping a block back onto a manuscript field - lives in [BookPartEditorController]. This
+ * view model keeps only what has a lifetime: the sheet it drives, one [StringProperty] per editable
+ * block for the undo history, and the current [BookPartEditorController.PartResolution]. Laying the
+ * blocks out onto pages, breaking lines and pagination are [PaperSheetView]'s own concern.
  *
- * Every keystroke reported by [PaperFlowView] is written into the model and folded into a single undo
- * entry per block for the length of a typing pause; the layout on the sheet is recomputed after every
- * change and after every design change, so the caret survives a restyling. Only the block that
- * changed is measured again, the rest is read from the incremental breaker.
+ * Every edit [PaperSheetView] makes replaces its whole `document`; this view model reads the changed
+ * blocks back against [targets] and writes the ones that differ into the model, folded into a single
+ * undo entry per block for the length of a typing pause. A design change rebuilds the `document` from
+ * the model so every block picks up its new style; the caret's linear position is read before and
+ * restored after, since restyling never changes the text itself.
  *
- * A split, a merge, a move or a removal reported by [PaperFlowView] is a structural change of a whole
- * paragraph list instead of a single block's text: it is never folded with a keystroke, always ends a
- * running merge first, always pushes exactly one [ParagraphListUndoEntry], and always moves the caret
- * to the block and offset the operation implies before the sheet is recomputed.
+ * Splitting, merging, removing and reordering a paragraph is not attempted here: `PaperSheetView`'s
+ * own editing turns a line break into a space and never creates a new block, so that stays IP-32's
+ * job, wired as key handlers of its own. A delete reaching across a paragraph boundary can still merge
+ * two of `PaperSheetView`'s blocks on its own; this view model detects that (the block count no longer
+ * matches [targets]) and rejects it by rebuilding from the untouched model, rather than guessing which
+ * paragraph the merged text belongs to.
  *
  * The component follows only models handed to it and registers nothing in a global registry, so the
  * `showingBinding` pattern of `fx-component-lifecycle` does not apply here, the same as for
- * [PaperFlowView] itself.
+ * [PaperSheetView] itself.
  */
 class BookPartEditorViewModel : ViewModel {
 
@@ -82,16 +83,8 @@ class BookPartEditorViewModel : ViewModel {
         mode
     )
 
-    /** Paragraph the caret last sat in, or `null` while it sits in a heading or nowhere. */
-    internal val caretParagraphIndex: Int?
-        get() = (caretTarget as? PartTarget.Paragraph)?.index
-
-    /** Character offset of the caret inside the block it last sat in. */
-    internal val caretCharOffset: Int
-        get() = caretOffset
-
-    // The flow view the view holds, handed in once after the FXML is loaded.
-    private lateinit var paperFlowView: PaperFlowView
+    // The sheet the view holds, handed in once after the FXML is loaded.
+    private lateinit var paperSheetView: PaperSheetView
 
     private var project: ProjectProperty? = null
     private var undoStack: UndoStack? = null
@@ -101,129 +94,39 @@ class BookPartEditorViewModel : ViewModel {
     private var resolution: BookPartEditorController.PartResolution =
         BookPartEditorController.PartResolution(PartMode.NONE, null, "")
 
-    // What each block of the current layout writes back to, in block order.
+    // What each block of the current document writes back to, in block order.
     private var targets: List<PartTarget> = emptyList()
 
     // One string property per block target, so a text change can be recorded as an undo step and an
     // undo can play it back through the same path a keystroke takes.
     private val targetProperties: MutableMap<PartTarget, StringProperty> = HashMap()
 
-    // One line breaker for the whole lifetime of the editor: a block that did not change keeps its
-    // broken lines instead of being measured again on the next keystroke. Cleared on a design change,
-    // where the key - text, style, column width - would not show that every block was restyled.
-    private val lineBreaker = IncrementalLineBreaker(GreedyLineBreaker(JavaFxTextMetrics))
-
-    // True while a freshly computed layout is handed to the flow view, so the text-change events the
-    // rebuild fires for every block are not mistaken for edits.
-    private var applyingLayout = false
+    // True while a freshly built document is handed to the sheet, so the document-change event that
+    // assignment itself fires is not mistaken for an edit.
+    private var applyingDocument = false
 
     // True while a target property is written from a reported edit, so its own listener does not
     // write the model twice.
     private var writingTarget = false
 
-    private var focusedBlock: Int? = null
-
-    // The caret is kept as a block target plus a character offset, never as a coordinate, so it
-    // survives a restyling that moves every line.
-    private var caretTarget: PartTarget? = null
-    private var caretOffset: Int = 0
-
-    private val designListener = InvalidationListener {
-        lineBreaker.clear()
-        recompute()
-    }
+    private val designListener = InvalidationListener { recompute() }
     private var boundDesign: Observable? = null
-
-    private val columnWidthListener = ChangeListener<Number> { _, _, width ->
-        if (width.toDouble() > 0.0) recompute()
-    }
 
     private val selectionListener =
         ChangeListener<ProjectListItem?> { _, _, newValue -> onSelectionChanged(newValue) }
     private var boundSelection: ObservableValue<ProjectListItem?>? = null
 
-    private val flowListener = object : PaperFlowListener {
-        override fun onTextChanged(blockIndex: Int, text: String) = handleTextChanged(blockIndex, text)
-
-        override fun onCaretMoved(blockIndex: Int, caretPosition: Int) {
-            caretTarget = targets.getOrNull(blockIndex)
-            caretOffset = caretPosition
-        }
-
-        override fun onFocusChanged(blockIndex: Int, focused: Boolean) {
-            if (focused) {
-                val previous = focusedBlock
-                if (previous != null && previous != blockIndex) {
-                    undoStack?.endMerging()
-                }
-                focusedBlock = blockIndex
-            } else if (focusedBlock == blockIndex) {
-                // The whole sheet lost focus - a merge in progress ends here as well.
-                undoStack?.endMerging()
-                focusedBlock = null
-            }
-        }
-
-        override fun onSplitRequested(blockIndex: Int, charIndex: Int) {
-            applyParagraphOperation(
-                label = Messages["component.bookPartEditor.undo.split"],
-                blockIndex = blockIndex,
-                transform = { paragraphs, index ->
-                    BookPartEditorController.splitParagraph(paragraphs, index, charIndex)
-                },
-                caretAfterOf = { _, _, index, leadingCount -> (leadingCount + index + 1) to 0 },
-            )
-        }
-
-        override fun onMergeRequested(blockIndex: Int, withPrevious: Boolean) {
-            applyParagraphOperation(
-                label = Messages["component.bookPartEditor.undo.merge"],
-                blockIndex = blockIndex,
-                transform = { paragraphs, index ->
-                    BookPartEditorController.mergeParagraph(paragraphs, index, withPrevious)
-                },
-                caretAfterOf = { before, _, index, leadingCount ->
-                    if (withPrevious) {
-                        (leadingCount + index - 1) to before[index - 1].length
-                    } else {
-                        (leadingCount + index) to before[index].length
-                    }
-                },
-            )
-        }
-
-        override fun onRemoveRequested(blockIndex: Int) {
-            applyParagraphOperation(
-                label = Messages["component.bookPartEditor.undo.remove"],
-                blockIndex = blockIndex,
-                transform = { paragraphs, index -> BookPartEditorController.removeParagraph(paragraphs, index) },
-                caretAfterOf = { _, after, index, leadingCount ->
-                    if (index > 0) (leadingCount + index - 1) to after[index - 1].length else leadingCount to 0
-                },
-            )
-        }
-
-        override fun onMoveRequested(blockIndex: Int, up: Boolean) {
-            applyParagraphOperation(
-                label = Messages["component.bookPartEditor.undo.move"],
-                blockIndex = blockIndex,
-                transform = { paragraphs, index -> BookPartEditorController.moveParagraph(paragraphs, index, up) },
-                caretAfterOf = { _, _, index, leadingCount ->
-                    (leadingCount + (if (up) index - 1 else index + 1)) to caretOffset
-                },
-            )
-        }
-    }
+    private val documentListener =
+        ChangeListener<Document?> { _, _, newValue -> handleDocumentChanged(newValue) }
 
     /**
-     * Hands the flow view of the component over, once, and starts listening to it.
+     * Hands the sheet of the component over, once, and starts listening to it.
      *
-     * @param paperFlowView the flow view held by [BookPartEditorView]
+     * @param paperSheetView the sheet held by [BookPartEditorView]
      */
-    internal fun attach(paperFlowView: PaperFlowView) {
-        this.paperFlowView = paperFlowView
-        paperFlowView.addPaperFlowListener(flowListener)
-        paperFlowView.columnWidthProperty().addListener(columnWidthListener)
+    internal fun attach(paperSheetView: PaperSheetView) {
+        this.paperSheetView = paperSheetView
+        paperSheetView.documentProperty.addListener(documentListener)
     }
 
     /**
@@ -235,7 +138,6 @@ class BookPartEditorViewModel : ViewModel {
         boundDesign?.removeListener(designListener)
         this.project = project
         boundDesign = project?.designProperty?.also { it.addListener(designListener) }
-        lineBreaker.clear()
 
         onSelectionChanged(lastSelection)
     }
@@ -271,19 +173,16 @@ class BookPartEditorViewModel : ViewModel {
         boundDesign = null
         boundSelection?.removeListener(selectionListener)
         boundSelection = null
-        if (::paperFlowView.isInitialized) {
-            paperFlowView.removePaperFlowListener(flowListener)
-            paperFlowView.columnWidthProperty().removeListener(columnWidthListener)
+        if (::paperSheetView.isInitialized) {
+            paperSheetView.documentProperty.removeListener(documentListener)
         }
         targetProperties.clear()
         targets = emptyList()
-        lineBreaker.clear()
     }
 
     private fun onSelectionChanged(item: ProjectListItem?) {
         lastSelection = item
         undoStack?.endMerging()
-        focusedBlock = null
         targetProperties.clear()
 
         resolution = BookPartEditorController.resolve(project, item)
@@ -292,94 +191,41 @@ class BookPartEditorViewModel : ViewModel {
         recompute()
     }
 
-    private fun handleTextChanged(blockIndex: Int, text: String) {
-        if (applyingLayout) return
+    // Reads back what PaperSheetView's own editing changed and writes the differing blocks into the
+    // model; a block count that no longer matches targets means a delete merged two blocks across
+    // their boundary, a structural change this plan does not attempt - it is rejected by recompute().
+    private fun handleDocumentChanged(document: Document?) {
+        if (applyingDocument) return
+        if (mode.value != PartMode.BOOK_PART && mode.value != PartMode.BLURB) return
+        val projectProperty = project ?: return
 
-        if (mode.value != PartMode.BOOK_PART && mode.value != PartMode.BLURB) {
-            // A read-only part must not change; rebuild it from the untouched model.
+        val blocks = document?.pages?.firstOrNull()?.blocks.orEmpty()
+        if (blocks.size != targets.size) {
             recompute()
             return
         }
 
-        val target = targets.getOrNull(blockIndex) ?: return
-        val projectProperty = project ?: return
-        val property = propertyFor(target)
-        val old = property.value ?: ""
-        if (text == old) return
-
         writingTarget = true
         try {
-            property.value = text
+            targets.forEachIndexed { index, target ->
+                val text = blocks[index].toString()
+                val property = propertyFor(target)
+                val old = property.value ?: ""
+                if (text == old) return@forEachIndexed
+
+                property.value = text
+                BookPartEditorController.writeModel(projectProperty, resolution, target, text)
+                undoStack?.record(
+                    Messages["component.bookPartEditor.undo.edit"],
+                    property,
+                    old,
+                    text,
+                    mergeKey = resolution.partId to target
+                )
+            }
         } finally {
             writingTarget = false
         }
-        BookPartEditorController.writeModel(projectProperty, resolution, target, text)
-        undoStack?.record(
-            Messages["component.bookPartEditor.undo.edit"],
-            property,
-            old,
-            text,
-            mergeKey = resolution.partId to target
-        )
-        recompute()
-    }
-
-    /**
-     * Applies a structural change to the paragraph list of the resolved part - a split, a merge, a
-     * move or a removal - as a single transaction: the list, the layout and the caret target all move
-     * together, and exactly one undo entry is pushed for it.
-     *
-     * @param label undo label of the operation
-     * @param blockIndex block the operation was requested from; ignored unless it names a paragraph -
-     * a heading block never takes part in a structural change
-     * @param transform pure paragraph-list transform from [BookPartEditorController]; `null` signals
-     * that [blockIndex]'s paragraph has no such neighbour or position, so nothing happens
-     * @param caretAfterOf computes the caret's block index and character offset once [transform]
-     * succeeded, given the list before and after the change and the paragraph index the operation
-     * started from
-     */
-    private fun applyParagraphOperation(
-        label: String,
-        blockIndex: Int,
-        transform: (paragraphs: List<String>, index: Int) -> List<String>?,
-        caretAfterOf: (before: List<String>, after: List<String>, index: Int, leadingCount: Int) -> Pair<Int, Int>,
-    ) {
-        if (mode.value != PartMode.BOOK_PART && mode.value != PartMode.BLURB) return
-        val target = targets.getOrNull(blockIndex) as? PartTarget.Paragraph ?: return
-        val projectProperty = project ?: return
-        val list = BookPartEditorController.paragraphListProperty(projectProperty, resolution) ?: return
-
-        val before = list.toList()
-        val after = transform(before, target.index) ?: return
-
-        undoStack?.endMerging()
-        targetProperties.clear()
-
-        val leadingCount = targets.indexOfFirst { it is PartTarget.Paragraph }.let { if (it < 0) 0 else it }
-        val caretBefore = (leadingCount + target.index) to caretOffset
-        val caretAfter = caretAfterOf(before, after, target.index, leadingCount)
-
-        list.setAll(after)
-        restoreCaret(caretAfter.first, caretAfter.second)
-
-        undoStack?.push(
-            ParagraphListUndoEntry(
-                label = label,
-                paragraphs = list,
-                before = before,
-                after = after,
-                caretBefore = caretBefore,
-                caretAfter = caretAfter,
-                restoreCaret = ::restoreCaret,
-            )
-        )
-    }
-
-    // Places the caret at blockIndex/charOffset once the layout about to be pushed by recompute() is
-    // applied, and recomputes it - the one place that turns a caret target into both.
-    private fun restoreCaret(blockIndex: Int, charOffset: Int) {
-        paperFlowView.requestCaret(blockIndex, charOffset)
-        recompute()
     }
 
     private fun propertyFor(target: PartTarget): StringProperty =
@@ -396,39 +242,51 @@ class BookPartEditorViewModel : ViewModel {
         }
 
     private fun recompute() {
-        if (!::paperFlowView.isInitialized) return
+        if (!::paperSheetView.isInitialized) return
 
         val project = this.project?.value
         val design = project?.design
         if (project == null || design == null || mode.value == PartMode.NONE) {
             targets = emptyList()
-            pushLayout(null)
+            pushDocument(null)
             return
         }
-
-        val geometry = design.pageFormat.toPageGeometry()
-        paperFlowView.pageGeometry = geometry
 
         val plan = BookPartEditorController.buildBlocks(project, design, resolution)
         targets = plan.targets
 
         if (plan.blocks.isEmpty()) {
-            pushLayout(null)
+            pushDocument(null)
             return
         }
 
-        val columnWidth = BookPartEditorController.columnWidth(design, paperFlowView.columnWidth)
-        pushLayout(BookPartEditorController.layout(plan.blocks, geometry, columnWidth, lineBreaker))
+        paperSheetView.mode = if (resolution.mode == PartMode.BOOK_PART || resolution.mode == PartMode.BLURB) {
+            PaperSheetMode.EDITABLE
+        } else {
+            PaperSheetMode.READONLY
+        }
+
+        val layout = design.pageFormat.toPageLayout()
+        val page: Page = when (resolution.mode) {
+            PartMode.TITLE_PAGE, PartMode.COPYRIGHT_PAGE -> SinglePage(layout, plan.blocks)
+            else -> FlowPage(layout, plan.blocks)
+        }
+        pushDocument(Document(listOf(page)))
     }
 
-    // Hands a layout to the flow view without the text-change events of the rebuild being taken for
-    // edits.
-    private fun pushLayout(layout: DocumentLayout?) {
-        applyingLayout = true
+    // Hands a freshly built document to the sheet without the document-change event of the assignment
+    // itself being taken for an edit, and restores the caret's linear position afterwards - a rebuild
+    // never changes the text, only the style, so the same linear offset still names the same character.
+    private fun pushDocument(document: Document?) {
+        val caretBefore = paperSheetView.caretModel.position
+        applyingDocument = true
         try {
-            paperFlowView.documentLayout = layout
+            paperSheetView.document = document
         } finally {
-            applyingLayout = false
+            applyingDocument = false
+        }
+        if (document != null && paperSheetView.mode == PaperSheetMode.EDITABLE) {
+            paperSheetView.caretModel.moveTo(caretBefore)
         }
     }
 }

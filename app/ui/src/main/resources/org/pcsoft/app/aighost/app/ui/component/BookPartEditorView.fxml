@@ -15,13 +15,13 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.StackPane?>
-<?import org.pcsoft.app.aighost.layouting.fx.paper.PaperFlowView?>
+<?import org.pcsoft.framework.simplay.fx.PaperSheetView?>
 <fx:root type="BorderPane" styleClass="book-part-editor" xmlns="http://javafx.com/javafx"
          xmlns:fx="http://javafx.com/fxml"
          fx:controller="org.pcsoft.app.aighost.app.ui.component.BookPartEditorView">
     <center>
         <StackPane>
-            <PaperFlowView fx:id="paper"/>
+            <PaperSheetView fx:id="sheet"/>
             <Label fx:id="lblEmpty" styleClass="book-part-editor-empty" text="%component.bookPartEditor.empty"/>
         </StackPane>
     </center>

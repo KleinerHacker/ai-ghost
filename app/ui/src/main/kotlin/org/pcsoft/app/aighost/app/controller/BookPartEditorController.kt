@@ -17,12 +17,6 @@ import org.pcsoft.app.aighost.app.ui.component.ProjectListItem
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
 import org.pcsoft.app.aighost.fx.model.project.book.BookPartProperty
 import org.pcsoft.app.aighost.fx.model.project.book.ChapterProperty
-import org.pcsoft.app.aighost.layouting.DocumentLayout
-import org.pcsoft.app.aighost.layouting.LayoutEngine
-import org.pcsoft.app.aighost.layouting.LineBreaker
-import org.pcsoft.app.aighost.layouting.NonePageBreakPolicy
-import org.pcsoft.app.aighost.layouting.PageGeometry
-import org.pcsoft.app.aighost.layouting.TextBlock
 import org.pcsoft.app.aighost.layouting.model.common.toTextStyle
 import org.pcsoft.app.aighost.layouting.model.project.book.BlurbBuilder
 import org.pcsoft.app.aighost.layouting.model.project.book.BookPartBuilder
@@ -30,21 +24,24 @@ import org.pcsoft.app.aighost.layouting.model.project.book.TitlePageBuilder
 import org.pcsoft.app.aighost.layouting.model.project.meta.CopyrightPageBuilder
 import org.pcsoft.app.aighost.model.project.Project
 import org.pcsoft.app.aighost.model.project.design.Design
+import org.pcsoft.framework.simplay.engine.model.TextBlock
 
 /**
  * The domain logic of the book part writing surface, kept out of its view model.
  *
- * The view model owns everything that has a lifetime - the flow view it drives, the incremental line
- * breaker with its cache, one string property per editable block, the caret, the undo history. This
- * controller owns none of that: every function here takes what it needs as an argument and returns a
- * plain result, the same way [IoController] reads and writes documents without holding an open one.
- * That is what makes the routing of a tree node, the assembly of the sheet and the mapping of a block
- * back onto a manuscript field testable on their own, without a JavaFX thread.
+ * The view model owns everything that has a lifetime - the sheet it drives, one string property per
+ * editable block, the caret, the undo history. This controller owns none of that: every function here
+ * takes what it needs as an argument and returns a plain result, the same way [IoController] reads and
+ * writes documents without holding an open one. That is what makes the routing of a tree node, the
+ * assembly of the sheet's blocks and the mapping of a block back onto a manuscript field testable on
+ * their own, without a JavaFX toolkit.
  *
  * The functions fall into three groups: [resolve] turns the picked project tree node into a
- * [PartResolution]; [columnWidth], [buildBlocks] and [layout] turn a resolution plus the design into
- * a laid out [DocumentLayout]; [readModel] and [writeModel] move a single block's text between the
- * sheet and the model.
+ * [PartResolution]; [buildBlocks] turns a resolution plus the design into the blocks `PaperSheetView`
+ * lays out and paginates on its own; [readModel] and [writeModel] move a single block's text between
+ * the sheet and the model. [splitParagraph], [mergeParagraph], [removeParagraph] and [moveParagraph]
+ * are pure paragraph-list transforms kept here for IP-32, which wires them to key handlers of its own;
+ * this plan does not call them.
  */
 object BookPartEditorController {
 
@@ -80,28 +77,10 @@ object BookPartEditorController {
     }
 
     /**
-     * Picks the column width a part is broken against.
-     *
-     * The flow view reports its own exact width only once it holds text controls; until then this
-     * falls back to the plain content width of the page.
-     *
-     * @param design the design carrying the page format
-     * @param reported the width reported by the flow view, `0.0` or less while it has none
-     * @return the width to break against, never less than one point
-     */
-    fun columnWidth(design: Design, reported: Double): Double =
-        if (reported > 0.0) {
-            reported
-        } else {
-            (design.pageFormat.width - design.pageFormat.innerMargin - design.pageFormat.outerMargin)
-                .coerceAtLeast(1.0)
-        }
-
-    /**
      * Builds the text blocks of the resolved part and the target each of them writes back to.
      *
-     * A writable part that has no content yet is given a single empty paragraph block, so the flow
-     * view has a control to report a column width from and the user has somewhere to type.
+     * A writable part that has no content yet is given a single empty paragraph block, so the sheet
+     * has somewhere to place a caret and the user has somewhere to type.
      *
      * @param project the open project
      * @param design the design of the project
@@ -154,33 +133,6 @@ object BookPartEditorController {
 
             PartMode.NONE -> BlockPlan(emptyList(), emptyList())
         }
-    }
-
-    /**
-     * Breaks [blocks] against [columnWidth] with [breaker] and paginates the result onto [geometry].
-     *
-     * The pages carry no number: the editor shows one part on its own, the running number of the book
-     * is a concern of the preview.
-     *
-     * @param blocks the blocks to lay out, never empty
-     * @param geometry the page geometry the pages are placed onto
-     * @param columnWidth the width to break against, from [columnWidth]
-     * @param breaker the line breaker held by the view model, so its cache survives across keystrokes
-     * @return the paginated layout
-     */
-    fun layout(
-        blocks: List<TextBlock>,
-        geometry: PageGeometry,
-        columnWidth: Double,
-        breaker: LineBreaker
-    ): DocumentLayout {
-        val text = breaker.breakText(blocks, columnWidth)
-        return LayoutEngine.layout(
-            text = text,
-            geometry = geometry,
-            startPageNumber = null,
-            policy = NonePageBreakPolicy
-        )
     }
 
     /**
@@ -257,6 +209,8 @@ object BookPartEditorController {
     /**
      * Splits the paragraph at [index] into two, at [charOffset].
      *
+     * Not called by this plan; kept for IP-32, which wires it to a key handler of its own.
+     *
      * @param paragraphs the paragraph list to split in
      * @param index the paragraph to split
      * @param charOffset the character offset the split falls at; `0` and the paragraph's own length
@@ -274,6 +228,8 @@ object BookPartEditorController {
 
     /**
      * Merges the paragraph at [index] with a neighbour.
+     *
+     * Not called by this plan; kept for IP-32, which wires it to a key handler of its own.
      *
      * @param paragraphs the paragraph list to merge in
      * @param index the paragraph the merge was requested from
@@ -295,6 +251,8 @@ object BookPartEditorController {
     /**
      * Removes the paragraph at [index], keeping at least one paragraph.
      *
+     * Not called by this plan; kept for IP-32, which wires it to a key handler of its own.
+     *
      * @param paragraphs the paragraph list to remove from
      * @param index the paragraph to remove
      * @return the paragraph list without that paragraph, or `null` when it is the only one left
@@ -308,6 +266,8 @@ object BookPartEditorController {
 
     /**
      * Moves the paragraph at [index] one position towards the start or the end of the part.
+     *
+     * Not called by this plan; kept for IP-32, which wires it to a key handler of its own.
      *
      * @param paragraphs the paragraph list to move in
      * @param index the paragraph to move
@@ -324,7 +284,7 @@ object BookPartEditorController {
         return result
     }
 
-    // A writable part needs at least one text control; an empty prolog gets one empty paragraph block.
+    // A writable part needs at least one block; an empty prolog gets one empty paragraph block.
     private fun ensureWritableBlock(
         blocks: List<TextBlock>,
         design: Design,
@@ -345,7 +305,7 @@ object BookPartEditorController {
             }
         }
         return BlockPlan(
-            listOf(TextBlock(text = "", style = styleData.toTextStyle())),
+            listOf(TextBlock.of("", styleData.toTextStyle())),
             listOf(PartTarget.Paragraph(0))
         )
     }
@@ -367,7 +327,7 @@ object BookPartEditorController {
     /**
      * The blocks of a part and the target each of them writes back to, in block order.
      *
-     * @property blocks the text blocks to lay out
+     * @property blocks the text blocks `PaperSheetView` lays out and paginates on its own
      * @property targets one entry per block, naming the model field it edits
      */
     data class BlockPlan(

@@ -34,9 +34,9 @@ import org.pcsoft.app.aighost.model.project.book.Prolog
  * Developer tests for [BookPartEditorViewModel] - the routing of a picked tree node onto the mode of
  * the sheet and the configuration taken from the preferences.
  *
- * These tests never hand a [org.pcsoft.app.aighost.layouting.fx.paper.PaperFlowView] to the view
- * model, so no layout is computed; the parts that need the real control are covered by
- * [BookPartEditorTest], and the pure routing and assembly logic by
+ * These tests never hand a [org.pcsoft.framework.simplay.fx.PaperSheetView] to the view model, so no
+ * document is built; the parts that need the real control are covered by [BookPartEditorTest], and
+ * the pure routing and assembly logic by
  * [org.pcsoft.app.aighost.app.controller.BookPartEditorControllerTest].
  */
 class BookPartEditorViewModelTest {

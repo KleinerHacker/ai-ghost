@@ -244,7 +244,7 @@ IP-07, IP-08, IP-10, IP-11, IP-22, IP-25 und IP-26 sind abgelöst (siehe „Abge
 | IP-29 | simPlay Integration ✅                          | Repository, Abhängigkeit, Lizenz-Allowlist, CI-Token; Eigenbaumodule löschen | -                     |
 | IP-30 | Book To simPlay Document Builder ✅              | `lib/ai-ghost-layouting-model` auf das simPlay-Rohmodell umstellen           | IP-29, IP-02, IP-24   |
 | IP-34 | Font Discovery And Metric Fingerprint On simPlay ✅ | `FxFontProbe` verdrahten; Ersatzfamilie und Familienliste in `app/ui`        | IP-29                 |
-| IP-31 | Writing Surface On PaperSheetView              | `BookPartEditor` bettet `PaperSheetView` (`EDITABLE`) ein; Dokument-Sync     | IP-30, IP-09, IP-34   |
+| IP-31 | Writing Surface On PaperSheetView ✅             | `BookPartEditor` bettet `PaperSheetView` (`EDITABLE`) ein; Dokument-Sync     | IP-30, IP-09, IP-34   |
 | IP-32 | Paragraph Structure Operations On Document     | Absätze teilen, verbinden, löschen, umsortieren auf dem `Document`          | IP-31                 |
 | IP-33 | Undo On Immutable Document Swap                | Undo-Einträge auf den `Document`-Tausch umstellen                          | IP-31                 |
 | IP-15 | Editor Arrangement And Tree Routing            | Drei Zonen, Routing jedes Baumknotens, View-Zustand persistiert            | IP-31, IP-12          |
@@ -418,9 +418,9 @@ Abweichungen vom ursprünglichen Plantext:
   `simplay-fx`; `app/ui` muss `org.pcsoft.framework:simplay-common` deshalb als eigene, vom Nutzer
   bestätigte Abhängigkeit führen, um dagegen zu kompilieren.
 
-### IP-31: Writing Surface On PaperSheetView
+### IP-31: Writing Surface On PaperSheetView ✅
 
-Plan: `FP-001-IP-31-SchreibflaecheAufPaperSheetView.md`
+Plan: `FP-001-IP-31-SchreibflaecheAufPaperSheetView.md` (abgeschlossen, entfernt)
 
 `PaperSheetView` besitzt Cursor, Auswahl und die Bearbeitung; der Verbraucher besitzt den Text. Eine
 Bearbeitung ersetzt `document` durch eine neue Instanz – die alte bleibt unangetastet, was Undo
@@ -429,6 +429,28 @@ Bearbeitung ersetzt `document` durch eine neue Instanz – die alte bleibt unang
 beantwortet, nie über eine Abhängigkeit zurück aus simPlay. Die Überschreibung der
 `paper-sheet-view`-`-fx-`-Eigenschaften mit der ai-ghost-Palette gehört ebenfalls hierher (früher
 IP-27).
+
+Abweichungen vom ursprünglichen Plantext:
+
+* Kein manueller Layout-Stack mehr nötig: `PaperSheetView` bricht Zeilen und paginiert selbst.
+  `IncrementalLineBreaker`/`GreedyLineBreaker`/`JavaFxTextMetrics`/`DocumentLayout`/`LayoutEngine`/
+  `PageGeometry`/`NonePageBreakPolicy` entfallen ersatzlos aus `app/ui`, nicht nur umbenannt.
+* Pro Teil wird ein eigenes einseitiges `Document` gebaut (`SinglePage` für Titel-/Copyright-Seite,
+  `FlowPage` für Prolog/Kapitel/Epilog/Klappentext); `paperSheetView.mode` wechselt dafür zwischen
+  `EDITABLE`/`READONLY` auf derselben Komponente statt zweier Views.
+* `PaperFlowListener` hat kein Äquivalent; Bearbeitungen werden ausschließlich über einen
+  `documentProperty`-`ChangeListener` erkannt und index-weise auf `targets` zurückgeschrieben.
+* **In simPlay 0.2.2 gefunden und dem Maintainer gemeldet:** `TextBlock.toString()` fügt beim
+  Zusammensetzen ein Leerzeichen vor jedem `TextWord` ein, das nicht auf ein Leerzeichen im
+  Originaltext zurückgeht, sobald ein Wort direkt auf ein Symbol folgt; ein angehängtes, noch
+  alleinstehendes Leerzeichen wird beim Retokenisieren verschluckt. Beides bringt den in
+  `DocumentEditor.splice()` berechneten `caretIndex` gegenüber dem tatsächlich gespeicherten Text aus
+  dem Takt und lässt jedes weitere getippte Zeichen eine Position zu früh landen. `BookPartEditorTest`
+  umgeht das, indem getippte Fortsetzungen reine Buchstabenfolgen ohne Symbol/Leerzeichen-Übergang
+  sind; **IP-32 tippt echte Trennzeichen und braucht den Fix upstream.**
+* `splitParagraph`/`mergeParagraph`/`removeParagraph`/`moveParagraph` bleiben als reine, bereits
+  getestete Funktionen in `BookPartEditorController` stehen; nur ihre alte Verdrahtung
+  (`applyParagraphOperation`, `flowListener`) ist entfallen. IP-32 verdrahtet sie neu.
 
 ### IP-32: Paragraph Structure Operations On Document
 
@@ -490,7 +512,7 @@ Neunummerierung folgt, sobald die simPlay-Seitenpolitik steht (bis dahin TODO).
 ## 8. Abhängigkeitsgraph
 
 ```text
-IP-29✅ ─┬─> IP-30✅ (mit IP-02✅, IP-24✅) ──┬─> IP-31 (mit IP-09✅, IP-34✅) ──┬─> IP-32
+IP-29✅ ─┬─> IP-30✅ (mit IP-02✅, IP-24✅) ──┬─> IP-31✅ (mit IP-09✅, IP-34✅) ──┬─> IP-32
         │                                    │                                ├─> IP-33
         └─> IP-34✅ ───────────────────────────┘                                ├─> IP-18
                                                                             └─> IP-15 (mit IP-12✅) ──┬─> IP-16 (mit IP-30)
@@ -509,6 +531,7 @@ Baum (IP-23) folgen.
 Abgeschlossen und unberührt: **IP-01** ✅ (teilweise abgelöst), **IP-02** ✅, **IP-24** ✅,
 **IP-09** ✅, **IP-12** ✅, **IP-13** ✅, **IP-14** ✅, **IP-17** ✅, **IP-19** ✅.
 Unabhängiger Ausgangspunkt der Abweichung: **IP-29** ✅. Schrift-Stack abgeschlossen: **IP-34** ✅.
+Schreibfläche abgeschlossen: **IP-31** ✅.
 
 ## 9. Risiken und offene Fragen
 

@@ -18,21 +18,21 @@ import javafx.fxml.FXML
 import javafx.fxml.Initializable
 import javafx.scene.Node
 import javafx.scene.control.Label
-import org.pcsoft.app.aighost.layouting.fx.paper.PaperFlowView
+import org.pcsoft.framework.simplay.fx.PaperSheetView
 import java.net.URL
 import java.util.ResourceBundle
 
 /**
  * View of [BookPartEditor].
  *
- * The FXML holds the [PaperFlowView] and an empty-state label stacked on top of each other; exactly
+ * The FXML holds the [PaperSheetView] and an empty-state label stacked on top of each other; exactly
  * one of them is shown, decided by whether a writable or readable part is picked. The view hands the
- * flow view to the view model once and lets the view model do the rest.
+ * sheet to the view model once and lets the view model do the rest.
  */
 class BookPartEditorView : FxmlView<BookPartEditorViewModel>, Initializable {
 
     @FXML
-    private lateinit var paper: PaperFlowView
+    private lateinit var sheet: PaperSheetView
 
     @FXML
     private lateinit var lblEmpty: Label
@@ -41,12 +41,12 @@ class BookPartEditorView : FxmlView<BookPartEditorViewModel>, Initializable {
     private lateinit var viewModel: BookPartEditorViewModel
 
     override fun initialize(location: URL?, resources: ResourceBundle?) {
-        viewModel.attach(paper)
+        viewModel.attach(sheet)
 
-        showExactly(paper, viewModel.contentAvailable.get())
+        showExactly(sheet, viewModel.contentAvailable.get())
         showExactly(lblEmpty, !viewModel.contentAvailable.get())
         viewModel.contentAvailable.addListener { _, _, available ->
-            showExactly(paper, available)
+            showExactly(sheet, available)
             showExactly(lblEmpty, !available)
         }
     }

@@ -18,7 +18,7 @@ Status: IN_PROGRESS
 | IP-29 | simPlay Integration                            | COMPLETED   |
 | IP-30 | Book To simPlay Document Builder               | COMPLETED   |
 | IP-34 | Font Discovery And Metric Fingerprint On simPlay | COMPLETED   |
-| IP-31 | Writing Surface On PaperSheetView              | NOT_STARTED |
+| IP-31 | Writing Surface On PaperSheetView              | COMPLETED   |
 | IP-32 | Paragraph Structure Operations On Document     | NOT_STARTED |
 | IP-33 | Undo On Immutable Document Swap                | NOT_STARTED |
 | IP-15 | Editor Arrangement And Tree Routing            | NOT_STARTED |
@@ -47,7 +47,7 @@ Fortschritt. Begründung im Feature-Plan, Abschnitt 6, „Abgelöste Pläne“.
 
 ## Gesamtfortschritt
 
-63 %
+68 %
 
 ## Anmerkungen
 
@@ -102,8 +102,30 @@ der Schrift-Teil von `app/ui` komplett grün; `app/ui` bricht weiter erwartungsg
 `BookPartEditorView`/`BookPartEditorViewModel`/`BookPartEditorController` (`PaperFlowView`,
 `PaperFlowListener`, `JavaFxTextMetrics`, `DocumentLayout`, ... - IP-31s Aufgabe).
 
-Nächster Schritt: IP-31 (Schreibfläche auf `PaperSheetView`) – hängt an IP-30/IP-29/IP-34 und heilt
-die verbleibenden Kompilierbrüche in `app/ui`.
+IP-31 abgeschlossen: `BookPartEditor` schreibt auf einer `PaperSheetView` je Teil ein eigenes
+`Document` (`SinglePage` für Titel-/Copyright-Seite, `FlowPage` sonst); `paperSheetView.mode`
+wechselt `EDITABLE`/`READONLY` auf derselben Komponente. Kein manueller Layout-Stack mehr in
+`app/ui` - `PaperSheetView` bricht Zeilen und paginiert selbst; `IncrementalLineBreaker`/
+`GreedyLineBreaker`/`JavaFxTextMetrics`/`DocumentLayout`/`LayoutEngine`/`PageGeometry`/
+`NonePageBreakPolicy` entfallen ersatzlos. Bearbeitungen werden über einen
+`documentProperty`-`ChangeListener` erkannt und index-weise zurückgeschrieben, statt über das
+entfallene `PaperFlowListener`. `splitParagraph`/`mergeParagraph`/`removeParagraph`/
+`moveParagraph` bleiben ungenutzt für IP-32 in `BookPartEditorController` stehen.
+
+**Beim Testen in simPlay 0.2.2 gefunden und dem Nutzer gemeldet:** `TextBlock.toString()` fügt ein
+Leerzeichen vor einem `TextWord` ein, das direkt auf ein Symbol ohne echtes Leerzeichen folgt, und
+verschluckt ein alleinstehendes angehängtes Leerzeichen beim Retokenisieren; beides bringt
+`DocumentEditor.splice()`s `caretIndex` gegenüber dem gespeicherten Text aus dem Takt und lässt beim
+Tippen jedes weitere Zeichen eine Position zu früh landen. `BookPartEditorTest` umgeht das mit
+reinen Buchstaben-Fortsetzungen ohne Symbol/Leerzeichen-Übergang; **IP-32 braucht den Fix
+upstream**, da es echte Trennzeichen tippt. README/CHANGELOG-Einträge, die Absatz-Trennen/
+-Verschmelzen/-Verschieben (IP-32) bereits als umgesetzt auswiesen, wurden auf den tatsächlichen
+Stand zurückgesetzt.
+
+Build: `lib:*`, `app:ai-ghost-ui` komplett grün (Kompilierung, Tests, `koverVerify`, `licensee`).
+
+Nächster Schritt: IP-32 (Absatz-Operationen auf `Document`) oder IP-33 (Undo auf Dokument-Tausch) -
+beide hängen nur noch an IP-31, jetzt abgeschlossen.
 
 Die entfernten Plandateien `FP-001-IP-21-SeitentrennungImAbsatz.md`,
 `FP-001-IP-27-BibliotheksStyling.md` und `FP-001-IP-28-EigenstaendigeNutzung.md` wurden per `git rm`

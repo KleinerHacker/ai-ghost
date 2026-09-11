@@ -22,10 +22,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.app.ui.component.ProjectListItem
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
-import org.pcsoft.app.aighost.layouting.FixedTextMetrics
-import org.pcsoft.app.aighost.layouting.GreedyLineBreaker
-import org.pcsoft.app.aighost.layouting.LineBreaker
-import org.pcsoft.app.aighost.layouting.model.common.toPageGeometry
 import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.FontData
 import org.pcsoft.app.aighost.model.common.StyleData
@@ -48,14 +44,12 @@ import org.pcsoft.app.aighost.model.project.meta.Meta
  * Developer tests for [BookPartEditorController].
  *
  * The controller holds no state, so every test builds a project property, calls one function and
- * asserts its result. The line breaking runs through [FixedTextMetrics], so no JavaFX toolkit is
- * needed and every measurement is plain arithmetic.
+ * asserts its result. Laying the blocks out onto pages is `PaperSheetView`'s own concern, not
+ * covered here.
  */
 class BookPartEditorControllerTest {
 
     private lateinit var project: ProjectProperty
-
-    private val breaker: LineBreaker = GreedyLineBreaker(FixedTextMetrics())
 
     private fun style(size: Int = 12): StyleData =
         StyleData(font = FontData("Serif", size, bold = false, italic = false), alignment = Alignment.LEFT)
@@ -201,7 +195,7 @@ class BookPartEditorControllerTest {
         val plan = BookPartEditorController.buildBlocks(project.value, design, resolution)
 
         assertEquals(1, plan.blocks.size)
-        assertEquals("", plan.blocks.single().text)
+        assertEquals("", plan.blocks.single().toString())
         assertEquals(listOf(PartTarget.Paragraph(0)), plan.targets)
     }
 
@@ -232,36 +226,6 @@ class BookPartEditorControllerTest {
 
         assertTrue(plan.blocks.isEmpty())
         assertTrue(plan.targets.isEmpty())
-    }
-
-    /**
-     * Use case: the blocks of a part are broken and paginated, so the result carries at least one
-     * page and every laid out line belongs to one of the blocks.
-     */
-    @Test
-    fun laysOutBlocksOntoPages() {
-        val resolution = BookPartEditorController.resolve(project, ProjectListItem.PrologItem(project.value.book.prolog))
-        val plan = BookPartEditorController.buildBlocks(project.value, design, resolution)
-        val geometry = design.pageFormat.toPageGeometry()
-        val columnWidth = BookPartEditorController.columnWidth(design, reported = 0.0)
-
-        val layout = BookPartEditorController.layout(plan.blocks, geometry, columnWidth, breaker)
-
-        assertTrue(layout.pages.isNotEmpty())
-        assertTrue(layout.pages.flatMap { it.lines }.isNotEmpty())
-    }
-
-    /**
-     * Use case: the flow view has not reported a width yet, so the column width falls back to the
-     * plain content width of the page; once it reports one, that value is used.
-     */
-    @Test
-    fun picksTheColumnWidthFromTheReportedValueOrThePage() {
-        val fallback = BookPartEditorController.columnWidth(design, reported = 0.0)
-        val expected = design.pageFormat.width - design.pageFormat.innerMargin - design.pageFormat.outerMargin
-
-        assertEquals(expected, fallback)
-        assertEquals(321.0, BookPartEditorController.columnWidth(design, reported = 321.0))
     }
 
     /**
@@ -348,7 +312,7 @@ class BookPartEditorControllerTest {
 
     /**
      * Use case: splitting in the middle of a paragraph yields two paragraphs whose concatenation
-     * reconstructs the original text exactly - the character-range round trip the sheet relies on.
+     * reconstructs the original text exactly - the character-range round trip IP-32 relies on.
      */
     @Test
     fun splitsAParagraphAtTheGivenOffset() {

@@ -2,13 +2,6 @@
 
 ## [Unreleased]
 
-* Writing surface paragraphs can now be reshaped from the keyboard: Enter splits a paragraph at the
-  caret, Backspace at its very start merges it with the one before, Delete at its very end merges it
-  with the one after, and Ctrl+Shift+Up/Down (or the paragraph's right-click menu) moves it one place
-  up or down; plain Up/Down at the first or the last line of a paragraph now moves the caret into the
-  neighbouring one instead of stopping. Every one of these is its own undo step. Fixes a defect where
-  typing several characters in a row could insert each new one in front of the one typed just before it
-
 * Editor centre is now a writing surface instead of a placeholder: picking the prolog, a chapter, the
   epilog or the blurb in the project tree opens its text on a sheet that already carries the book's
   typography, margins and page structure, with the heading, its further lines and every paragraph as
@@ -16,9 +9,6 @@
   copyright page are shown on the sheet as they will print but stay read only. A design change in the
   Inspector re-lays the sheet at once without moving the caret, and every text change is undone and
   redone from the tool bar, with consecutive typing in one block falling together into a single step
-
-* Writing surface stays responsive in a book-length part: a keystroke only re-lays the paragraph it
-  changed instead of measuring the whole part again, while the page breaks still follow
 
 * Project tree gains a "Title Page" and a "Copyright Page" node ahead of the prolog, so the front
   matter can be opened on the writing surface like every other part
