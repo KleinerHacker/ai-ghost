@@ -43,6 +43,7 @@ class DesignTest {
         assertEquals(BlurbPageDesign(), design.blurbPage)
         assertEquals(ChapterPageDesign(), design.chapterPage)
         assertEquals(EpilogPageDesign(), design.epilogPage)
+        assertEquals(PageNumberDesign(), design.pageNumbering)
         assertEquals(true, design.startWithEmptyPage)
         assertEquals(true, design.endWithEmptyPage)
     }
@@ -83,6 +84,9 @@ class DesignTest {
         assertEquals(14, restored.chapterPage.titleAppendixStyle.font.size)
         assertEquals(Alignment.BLOCK, restored.chapterPage.textStyle.alignment)
         assertEquals(1.45, restored.blurbPage.textStyle.textLineSpacing)
+        assertEquals(PageNumberPosition.BOTTOM_OUTER, restored.pageNumbering.position)
+        assertEquals(3, restored.pageNumbering.startNumber)
+        assertEquals(PageNumberCountingMode.SKIP_EXCLUDED, restored.pageNumbering.countingMode)
         assertEquals(TestData.design(), restored)
     }
 
@@ -121,6 +125,7 @@ class DesignTest {
         assertEquals(false, design.startWithEmptyPage)
         assertEquals(ChapterPageDesign(), design.chapterPage)
         assertEquals(PageFormat(), design.pageFormat)
+        assertEquals(PageNumberDesign(), design.pageNumbering)
         assertEquals(1, design.version)
     }
 

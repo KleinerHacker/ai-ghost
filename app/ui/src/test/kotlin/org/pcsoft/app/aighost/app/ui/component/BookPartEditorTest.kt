@@ -240,7 +240,7 @@ class BookPartEditorTest : ApplicationTest() {
         select(ProjectListItem.TitlePageItem)
 
         assertEquals("My Novel", blockText(0), "the title page is rendered on the sheet")
-        assertEquals(PaperSheetMode.READONLY, sheet.mode)
+        assertEquals(PaperSheetMode.SELECTABLE, sheet.mode)
 
         interact { sheet.requestFocus() }
         typeSlowly("A Different Title")

@@ -24,7 +24,7 @@ Status: IN_PROGRESS
 | IP-15 | Editor Arrangement And Tree Routing            | NOT_STARTED |
 | IP-16 | Writing And Preview Modes                      | NOT_STARTED |
 | IP-18 | AI Actions On Paragraph And Heading            | NOT_STARTED |
-| IP-35 | Page Numbering And Page Modes On simPlay 0.3.0 | NOT_STARTED |
+| IP-35 | Page Numbering And Page Modes On simPlay 0.3.0 | COMPLETED   |
 | IP-23 | Optional Book Parts In The Tree                | NOT_STARTED |
 
 ## Abgelöste Pläne (simPlay-Abweichung)
@@ -48,7 +48,7 @@ Fortschritt. Begründung im Feature-Plan, Abschnitt 6, „Abgelöste Pläne“.
 
 ## Gesamtfortschritt
 
-68 %
+74 %
 
 ## Anmerkungen
 
@@ -135,6 +135,26 @@ Der Nutzer hat simPlay 0.3.0 geliefert: `Document.numbering` (Seitenzahl-Positio
 Inaktiv-Seiten-Teil der TODO aus dem Feature Plan (Abschnitt 9) ab; IP-23 erhält IP-35 als
 zusätzliche Abhängigkeit. Gespiegelte Ränder, Leerseiten und die Klappentext-Kante bleiben offene
 TODOs, da die Online-Dokumentation dazu nichts liefert.
+
+IP-35 abgeschlossen: `simplayVersion` auf `0.3.0` gehoben, `licensee` läuft ohne neue Ausnahme grün.
+`Design` trägt neu `pageNumbering: PageNumberDesign` (`position`, `startNumber`, `countingMode`),
+gespiegelt in `lib/fx-model` als `PageNumberDesignProperty`; Vorgabe ist keine Seitenzahl
+(`PageNumberPosition.OFF`). `BookDocumentBuilder` übersetzt das nach `Document.numbering`
+(`PageNumberingTranslation.kt`) und baut jede Seite mit einer festen, stabilen `id` (`title`,
+`copyright`, `prolog`, `chapter-<n>`, `epilog`, `blurb`) statt simPlays zufälliger Vorgabe, damit
+Titel- und Copyright-Seite als `excludedPageIds` benannt werden können.
+
+**Planabweichung, vom Nutzer bestätigt:** `PageMode.DISABLED` für einen ausgeschalteten optionalen
+Teil wurde NICHT verdrahtet. `BookPartEditor` zeigt je Auswahl ohnehin nur ein Dokument mit genau
+einer Seite; `PageMode` wirkt erst, wo mehrere Seiten gleichzeitig sichtbar sind, was erst die
+künftige Buchvorschau (IP-16) leistet. Die Verdrahtung wandert dorthin; IP-23 bleibt wie im
+Feature-Plan von IP-35 abhängig.
+
+**Nebenbei beim Versionswechsel gefunden:** simPlay 0.3.0 benennt `PaperSheetMode.READONLY` in
+`PaperSheetMode.SELECTABLE` um. In `BookPartEditorViewModel` und `BookPartEditorTest` nachgezogen,
+sonst hätte `app/ui` nicht mehr kompiliert.
+
+Build: `lib:*`, `app:ai-ghost-ui` komplett grün (Kompilierung, Tests, `koverVerify`, `licensee`).
 
 Die entfernten Plandateien `FP-001-IP-21-SeitentrennungImAbsatz.md`,
 `FP-001-IP-27-BibliotheksStyling.md` und `FP-001-IP-28-EigenstaendigeNutzung.md` wurden per `git rm`

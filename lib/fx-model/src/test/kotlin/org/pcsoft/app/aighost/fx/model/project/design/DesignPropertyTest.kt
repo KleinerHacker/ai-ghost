@@ -30,6 +30,9 @@ import org.pcsoft.app.aighost.model.project.design.CopyrightPageDesign
 import org.pcsoft.app.aighost.model.project.design.Design
 import org.pcsoft.app.aighost.model.project.design.EpilogPageDesign
 import org.pcsoft.app.aighost.model.project.design.PageFormat
+import org.pcsoft.app.aighost.model.project.design.PageNumberCountingMode
+import org.pcsoft.app.aighost.model.project.design.PageNumberDesign
+import org.pcsoft.app.aighost.model.project.design.PageNumberPosition
 import org.pcsoft.app.aighost.model.project.design.PrologPageDesign
 import org.pcsoft.app.aighost.model.project.design.TitlePageDesign
 
@@ -105,6 +108,8 @@ class DesignPropertyTest {
             "design.epilogPage.titleStyle.font.name",
             property.epilogPageProperty.titleStyleProperty.fontProperty.nameProperty
         )
+        recorder.watch("design.pageNumbering", property.pageNumberingProperty)
+        recorder.watch("design.pageNumbering.position", property.pageNumberingProperty.positionProperty)
         recorder.watch("design.startWithEmptyPage", property.startWithEmptyPageProperty)
         recorder.watch("design.endWithEmptyPage", property.endWithEmptyPageProperty)
 
@@ -216,6 +221,11 @@ class DesignPropertyTest {
                 alignment = Alignment.BLOCK
             )
         ),
+        pageNumbering = PageNumberDesign(
+            position = PageNumberPosition.BOTTOM_CENTER,
+            startNumber = 1,
+            countingMode = PageNumberCountingMode.CONTINUOUS
+        ),
         startWithEmptyPage = true,
         endWithEmptyPage = false
     )
@@ -325,6 +335,11 @@ class DesignPropertyTest {
                 alignment = Alignment.RIGHT
             )
         ),
+        pageNumbering = PageNumberDesign(
+            position = PageNumberPosition.TOP_OUTER,
+            startNumber = 4,
+            countingMode = PageNumberCountingMode.SKIP_EXCLUDED
+        ),
         startWithEmptyPage = false,
         endWithEmptyPage = true
     )
@@ -347,6 +362,7 @@ class DesignPropertyTest {
             "Epilog Title Serif",
             property.epilogPageProperty.titleStyleProperty.fontProperty.nameProperty.get()
         )
+        assertEquals(PageNumberPosition.BOTTOM_CENTER, property.pageNumberingProperty.positionProperty.get())
         assertTrue(property.startWithEmptyPageProperty.get())
         assertFalse(property.endWithEmptyPageProperty.get())
     }
@@ -420,6 +436,21 @@ class DesignPropertyTest {
         assertFalse(holder.design?.titlePage?.showAuthor ?: true)
         assertEquals(1, recorder.countOf("design.titlePage.showAuthor"))
         assertEquals(1, recorder.countOf("design.titlePage"))
+        assertEquals(1, recorder.countOf("design"))
+        assertEquals(1, parentEvents)
+    }
+
+    /**
+     * Use case: the user turns page numbering on for the manuscript, so the position reaches the page
+     * numbering nested in the design and both levels report the change up to the root.
+     */
+    @Test
+    fun writingThePageNumberPositionReachesTheModelObject() {
+        property.pageNumberingProperty.positionProperty.set(PageNumberPosition.TOP_CENTER)
+
+        assertEquals(PageNumberPosition.TOP_CENTER, holder.design?.pageNumbering?.position)
+        assertEquals(1, recorder.countOf("design.pageNumbering.position"))
+        assertEquals(1, recorder.countOf("design.pageNumbering"))
         assertEquals(1, recorder.countOf("design"))
         assertEquals(1, parentEvents)
     }
@@ -542,6 +573,7 @@ class DesignPropertyTest {
             property.epilogPageProperty.titleStyleProperty.fontProperty.nameProperty.get()
         )
         assertEquals(300.0, property.pageFormatProperty.widthProperty.get())
+        assertEquals(PageNumberPosition.TOP_OUTER, property.pageNumberingProperty.positionProperty.get())
         recorder.assertAllFired("exchanging the design")
         assertEquals(1, parentEvents)
     }
@@ -576,6 +608,7 @@ class DesignPropertyTest {
         assertNull(property.blurbPageProperty.get())
         assertNull(property.chapterPageProperty.get())
         assertNull(property.epilogPageProperty.get())
+        assertNull(property.pageNumberingProperty.get())
         assertFalse(property.startWithEmptyPageProperty.get())
         assertFalse(property.endWithEmptyPageProperty.get())
 

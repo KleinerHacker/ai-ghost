@@ -263,7 +263,9 @@ class BookPartEditorViewModel : ViewModel {
         paperSheetView.mode = if (resolution.mode == PartMode.BOOK_PART || resolution.mode == PartMode.BLURB) {
             PaperSheetMode.EDITABLE
         } else {
-            PaperSheetMode.READONLY
+            // simPlay 0.3.0 renamed the read-only mode to SELECTABLE, the same constant PageMode
+            // uses: selectable, copyable text, no caret, never mutated.
+            PaperSheetMode.SELECTABLE
         }
 
         val layout = design.pageFormat.toPageLayout()

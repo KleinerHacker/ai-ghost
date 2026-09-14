@@ -27,9 +27,14 @@ import org.pcsoft.app.aighost.model.project.book.Copyright
 import org.pcsoft.app.aighost.model.project.book.Epilog
 import org.pcsoft.app.aighost.model.project.book.Prolog
 import org.pcsoft.app.aighost.model.project.design.Design
+import org.pcsoft.app.aighost.model.project.design.PageNumberCountingMode
+import org.pcsoft.app.aighost.model.project.design.PageNumberDesign
+import org.pcsoft.app.aighost.model.project.design.PageNumberPosition
 import org.pcsoft.app.aighost.model.project.meta.Meta
+import org.pcsoft.framework.simplay.engine.PageCountingMode
 import org.pcsoft.framework.simplay.engine.model.FlowPage
 import org.pcsoft.framework.simplay.engine.model.SinglePage
+import org.pcsoft.framework.simplay.engine.model.PageNumberPosition as SimplayPageNumberPosition
 
 /**
  * Developer tests for the whole-book document builder, [BookDocumentBuilder].
@@ -168,5 +173,75 @@ class BookDocumentBuilderTest {
             BookPartBuilder.build(theBook.epilog, design.epilogPage),
             (document.pages[5] as FlowPage).blocks
         )
+    }
+
+    /**
+     * Use case: every page is built with a fixed id instead of simPlay's random default, so the title
+     * and copyright page can be named in the numbering's excluded ids across a rebuild of the document.
+     */
+    @Test
+    fun everyPageCarriesAStableId() {
+        val document = BookDocumentBuilder.build(book(), Design(), meta)
+
+        assertEquals(
+            listOf("title", "copyright", "prolog", "chapter-0", "chapter-1", "epilog", "blurb"),
+            document.pages.map { it.id }
+        )
+    }
+
+    /**
+     * Use case: a fresh project has page numbering switched off, so the built document carries no
+     * number position either, matching the design's default.
+     */
+    @Test
+    fun defaultsToNoPageNumber() {
+        val document = BookDocumentBuilder.build(book(), Design(), meta)
+
+        assertEquals(SimplayPageNumberPosition.OFF, document.numbering.position)
+    }
+
+    /**
+     * Use case: the user turns page numbering on with a start value other than one and asks unnumbered
+     * sheets to skip the counter, so every one of these settings reaches the built document.
+     */
+    @Test
+    fun translatesThePageNumberDesignIntoTheDocument() {
+        val design = Design(
+            pageNumbering = PageNumberDesign(
+                position = PageNumberPosition.BOTTOM_OUTER,
+                startNumber = 3,
+                countingMode = PageNumberCountingMode.SKIP_EXCLUDED
+            )
+        )
+
+        val document = BookDocumentBuilder.build(book(), design, meta)
+
+        assertEquals(SimplayPageNumberPosition.BOTTOM_OUTER, document.numbering.position)
+        assertEquals(3, document.numbering.startNumber)
+        assertEquals(PageCountingMode.SKIP_EXCLUDED, document.numbering.counting)
+    }
+
+    /**
+     * Use case: the title page and the copyright page never carry a number, so both stable ids are
+     * named in the document's excluded ids.
+     */
+    @Test
+    fun excludesTheTitleAndCopyrightPageFromNumbering() {
+        val document = BookDocumentBuilder.build(book(), Design(), meta)
+
+        assertEquals(setOf("title", "copyright"), document.numbering.excludedPageIds)
+    }
+
+    /**
+     * Use case: the copyright page is switched off, so only the title page is left to exclude from
+     * numbering - there is no copyright id on the document to name.
+     */
+    @Test
+    fun excludesOnlyTheTitlePageWhenCopyrightIsOff() {
+        val withoutCopyright = book().copy(copyright = Copyright(included = false))
+
+        val document = BookDocumentBuilder.build(withoutCopyright, Design(), meta)
+
+        assertEquals(setOf("title"), document.numbering.excludedPageIds)
     }
 }

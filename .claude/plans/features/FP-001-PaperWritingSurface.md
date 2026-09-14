@@ -100,16 +100,19 @@ ein einklappbarer **Inspector** rechts, der alles trägt, was kein gedruckter Te
   (Position, Startwert, `excludedPageIds`, `PageCountingMode` `CONTINUOUS`/`SKIP_EXCLUDED`,
   `textStyle`) und, in `simplay-fx`, `PaperSheetView.pageModes` mit `PageMode`
   (`HIDDEN`/`DISABLED`/`STATIC`/`SELECTABLE`/`NAVIGABLE`/`EDITABLE`) je `Page.id`. Seitennummerierung
-  (ungezählte Titel-/Copyright-Seite, Neunummerierung beim Schalten eines optionalen Teils) und
-  inaktive Seiten eines ausgeschalteten Teils sind damit lieferbar (IP-35). Weiterhin **nicht**
+  (ungezählte Titel-/Copyright-Seite, Neunummerierung beim Schalten eines optionalen Teils) ist damit
+  lieferbar (IP-35 ✅); inaktive Seiten eines ausgeschalteten Teils folgen erst mit IP-16, der
+  Buchvorschau mit allen Seiten gleichzeitig - `PageMode` greift dort, wo mehrere Seiten sichtbar
+  sind, nicht im Editor mit seiner einen gezeigten Seite. Weiterhin **nicht**
   geliefert: gespiegelte Ränder (recto/verso), führende/abschließende Leerseiten, die harte Kante des
   Klappentexts. Diese Restpolitik wird **vom Nutzer nachträglich in simPlay eingefügt**; bis dahin
   trägt ai-ghost nur das Nötigste als Zwischenlösung und markiert die Lücke als TODO (Abschnitt 9).
 * **Vorwerk.** Titelseite mit Titel, weiteren Titelzeilen und Autor, gefolgt direkt von der
   Copyright-Seite.
 * **Optionale Teile.** Prolog, Epilog und Klappentext beginnen immer auf einer eigenen Seite, behalten
-  immer ihren Text, bleiben beschreibbar, sind ausgegraut, wenn ausgeschaltet, und über
-  `PageMode.DISABLED` (IP-35) sowie `excludedPageIds` aus der Seitennummerierung genommen. Das
+  immer ihren Text, bleiben beschreibbar, sind ausgegraut, wenn ausgeschaltet, und werden erst mit
+  IP-16 in der Buchvorschau über `PageMode.DISABLED` wirklich inaktiv; die Titel- und Copyright-Seite
+  sind bereits seit IP-35 über `excludedPageIds` aus der Seitennummerierung genommen. Das
   Kontrollkästchen im Baum entscheidet über die Zugehörigkeit zum Buch, nicht über die Existenz.
 * **KI** ist in diesem Feature nur eine Schaltfläche ohne Wirkung: eine schwebende Leiste am
   fokussierten Block (über simPlay `FloatingOverlay`, Trigger `PARAGRAPH_HOVER`/`CARET`) mit
@@ -230,7 +233,8 @@ ProjectProperty
 
 Die Nummerierung bleibt stabil. IP-01, IP-02, IP-09, IP-12, IP-13, IP-14, IP-17, IP-19 und IP-24 sind
 abgeschlossen und von der Abweichung nicht betroffen. IP-15, IP-16, IP-18 und IP-23 bleiben offen und
-sind auf simPlay umgeschrieben. IP-29 bis IP-34 sind neu, IP-35 kommt mit simPlay 0.3.0 hinzu. Die
+sind auf simPlay umgeschrieben. IP-29 bis IP-34 sind neu, IP-35 kommt mit simPlay 0.3.0 hinzu und ist
+abgeschlossen. Die
 Pläne IP-03, IP-04, IP-05, IP-06, IP-07, IP-08, IP-10, IP-11, IP-22, IP-25 und IP-26 sind abgelöst
 (siehe „Abgelöste Pläne“).
 
@@ -254,7 +258,7 @@ Pläne IP-03, IP-04, IP-05, IP-06, IP-07, IP-08, IP-10, IP-11, IP-22, IP-25 und 
 | IP-15 | Editor Arrangement And Tree Routing            | Drei Zonen, Routing jedes Baumknotens, View-Zustand persistiert            | IP-31, IP-12          |
 | IP-16 | Writing And Preview Modes                      | Modus-Schalter, Vorschau des ganzen Buches über `PaperSheetView READONLY`   | IP-30, IP-31, IP-15   |
 | IP-18 | AI Actions On Paragraph And Heading            | Schwebende KI-Leiste über `FloatingOverlay`; Schaltflächen mit `TODO(...)`   | IP-31                 |
-| IP-35 | Page Numbering And Page Modes On simPlay 0.3.0 | Seitenzahl und `PageMode` für ausgeschaltete Teile verdrahten                | IP-30                 |
+| IP-35 | Page Numbering And Page Modes On simPlay 0.3.0 ✅ | Seitenzahl verdrahtet; `PageMode` für ausgeschaltete Teile auf IP-16 vertagt | IP-30                 |
 | IP-23 | Optional Book Parts In The Tree               | Kontrollkästchen schaltet Prolog, Epilog und Klappentext ins Buch          | IP-15, IP-24, IP-35   |
 
 ### Abgelöste Pläne
@@ -505,17 +509,24 @@ Die schwebende Leiste wird als simPlay-`FloatingOverlay` gebaut (Trigger `PARAGR
 jede per FXML `onAction` an eine parameterlose `*View`-Methode mit Rumpf `TODO("AI action: …")`. Keine
 Verdrahtung an den Port aus IP-17, kein Stub, kein Provider.
 
-### IP-35: Page Numbering And Page Modes On simPlay 0.3.0
+### IP-35: Page Numbering And Page Modes On simPlay 0.3.0 ✅
 
-Plan: `FP-001-IP-35-SeitenzahlUndSeitenModiAufSimPlay.md`
+Plan: `FP-001-IP-35-SeitenzahlUndSeitenModiAufSimPlay.md` (entfernt, umgesetzt)
 
 simPlay 0.3.0 liefert `Document.numbering: PageNumbering` (Position, Startwert, `excludedPageIds`,
 `PageCountingMode` `CONTINUOUS`/`SKIP_EXCLUDED`, `textStyle`) und, in `simplay-fx`,
 `PaperSheetView.pageModes: Map<Page.id, PageMode>` (`HIDDEN`/`DISABLED`/`STATIC`/`SELECTABLE`/
-`NAVIGABLE`/`EDITABLE`). `BookDocumentBuilder` (IP-30) setzt die Nummerierung und nimmt Titel-/
-Copyright-Seite über `excludedPageIds` heraus; `app/ui` setzt `PageMode.DISABLED` je Seiten-`id`
-eines ausgeschalteten optionalen Teils. Löst den Nummerierungs- und Inaktiv-Seiten-Teil der TODO aus
-Abschnitt 9 ab; gespiegelte Ränder, Leerseiten und die Klappentext-Kante bleiben offen.
+`NAVIGABLE`/`EDITABLE`). `BookDocumentBuilder` (IP-30) setzt die Nummerierung aus `Design.pageNumbering`
+und nimmt Titel-/Copyright-Seite über `excludedPageIds` heraus; jede Seite trägt dafür eine feste,
+stabile `id` (`title`, `copyright`, `prolog`, `chapter-<n>`, `epilog`, `blurb`) statt simPlays
+zufälliger Vorgabe. Löst den Nummerierungsteil der TODO aus Abschnitt 9 ab.
+**Abweichung vom Plan:** `PageMode.DISABLED` für einen ausgeschalteten optionalen Teil wurde NICHT in
+`BookPartEditor` verdrahtet - der Editor zeigt je Auswahl ohnehin nur ein Dokument mit genau einer
+Seite, `PageMode` greift aber erst dort, wo mehrere Seiten gleichzeitig sichtbar sind. Diese
+Verdrahtung wandert nach IP-16, der künftigen Buchvorschau mit allen Seiten; vom Nutzer bestätigt.
+Gespiegelte Ränder, Leerseiten und die Klappentext-Kante bleiben ebenfalls offen. `PaperSheetMode`
+wurde mit simPlay 0.3.0 zugleich umbenannt (`READONLY` → `SELECTABLE`), in `BookPartEditorViewModel`
+und seinem Test nachgezogen.
 
 ### IP-23: Optional Book Parts In The Tree
 
@@ -523,18 +534,19 @@ Plan: `FP-001-IP-23-OptionaleTeileImBaum.md`
 
 Der eine Plan, der den Projektbaum ändert, und bewusst eng: Struktur und `selectedItem`-API bleiben,
 ein Kontrollkästchen wird auf genau drei Knoten hinzugefügt. `CheckBoxTreeItem` wendet seinen Haken
-standardmäßig auf den Teilbaum an, was eingeschränkt werden muss. Das Ausgrauen zieht sofort nach; die
-Umschaltung ruft zusätzlich `PageMode.DISABLED`/`null` aus IP-35 auf denselben Seiten auf.
+standardmäßig auf den Teilbaum an, was eingeschränkt werden muss. Das Ausgrauen zieht sofort nach.
+`PageMode.DISABLED`/`null` für einen ausgeschalteten Teil ist NICHT hier verdrahtet - das ist mit
+IP-35 nach IP-16 gewandert, der Buchvorschau mit allen Seiten gleichzeitig.
 
 ## 8. Abhängigkeitsgraph
 
 ```text
 IP-29✅ ─┬─> IP-30✅ (mit IP-02✅, IP-24✅) ──┬─> IP-31✅ (mit IP-09✅, IP-34✅) ──┬─> IP-32
         │                                    │                                ├─> IP-33
-        │                                    └─> IP-35 ─────────────────────────┼─> IP-18
+        │                                    └─> IP-35✅ ────────────────────────┼─> IP-18
         └─> IP-34✅ ───────────────────────────────────────────────────────────┘
-                                                                            └─> IP-15 (mit IP-12✅) ──┬─> IP-16 (mit IP-30)
-                                                                                                      └─> IP-23 (mit IP-24✅, IP-35)
+                                                                            └─> IP-15 (mit IP-12✅) ──┬─> IP-16 (mit IP-30, IP-35✅)
+                                                                                                      └─> IP-23 (mit IP-24✅, IP-35✅)
 IP-02✅ ──> IP-13✅, IP-14✅
 IP-12✅ ──> IP-13✅, IP-19✅, IP-15
 IP-17✅  (Port bleibt für spätere Wiederverwendung; nicht verdrahtet)
@@ -550,7 +562,8 @@ das Kontrollkästchen im Baum (IP-23).
 Abgeschlossen und unberührt: **IP-01** ✅ (teilweise abgelöst), **IP-02** ✅, **IP-24** ✅,
 **IP-09** ✅, **IP-12** ✅, **IP-13** ✅, **IP-14** ✅, **IP-17** ✅, **IP-19** ✅.
 Unabhängiger Ausgangspunkt der Abweichung: **IP-29** ✅. Schrift-Stack abgeschlossen: **IP-34** ✅.
-Schreibfläche abgeschlossen: **IP-31** ✅.
+Schreibfläche abgeschlossen: **IP-31** ✅. Seitennummerierung auf simPlay 0.3.0 abgeschlossen:
+**IP-35** ✅.
 
 ## 9. Risiken und offene Fragen
 
@@ -561,10 +574,12 @@ Schreibfläche abgeschlossen: **IP-31** ✅.
 * **ai-ghost-Seitenpolitik, Reststand nach simPlay 0.3.0 – TODO.** Gespiegelte Ränder (recto/verso),
   führende/abschließende Leerseiten und die harte Kante des Klappentexts sind in `simplay-engine`
   weiter nicht vorgesehen. **Der Nutzer fügt diese Politik nachträglich in simPlay ein.**
-  Seitennummerierung (`Document.numbering`, `excludedPageIds`, `PageCountingMode`) und inaktive
-  Seiten eines ausgeschalteten Teils (`PageMode.DISABLED`) sind seit 0.3.0 vorhanden und werden von
-  IP-35 verdrahtet, nicht mehr als Zwischenlösung. Betroffene Abschnitte des Zielzustands stehen
-  weiterhin unter dem Vorbehalt des verbleibenden Rests.
+  Seitennummerierung (`Document.numbering`, `excludedPageIds`, `PageCountingMode`) ist seit 0.3.0
+  vorhanden und von IP-35 verdrahtet, nicht mehr als Zwischenlösung. Inaktive Seiten eines
+  ausgeschalteten Teils (`PageMode.DISABLED`) sind ebenfalls seit 0.3.0 vorhanden, werden aber erst
+  mit IP-16 verdrahtet - `PageMode` greift erst, wo mehrere Seiten gleichzeitig sichtbar sind, was
+  erst die Buchvorschau leistet. Betroffene Abschnitte des Zielzustands stehen weiterhin unter dem
+  Vorbehalt des verbleibenden Rests.
 * **`simplay-fx` liefert seit 0.2.1 Verfügbarkeit und Fingerabdruck selbst** (`FxFontProbe`):
   `checkAvailability`, `fingerprint`, `verify`, `stamp`, intern auf demselben `FontMeasureCalculator`
   wie der Renderpfad. Geklärt; kein Eigenbau mehr in IP-34.

@@ -22,6 +22,7 @@ import org.pcsoft.app.aighost.model.project.design.CopyrightPageDesign
 import org.pcsoft.app.aighost.model.project.design.Design
 import org.pcsoft.app.aighost.model.project.design.EpilogPageDesign
 import org.pcsoft.app.aighost.model.project.design.PageFormat
+import org.pcsoft.app.aighost.model.project.design.PageNumberDesign
 import org.pcsoft.app.aighost.model.project.design.PrologPageDesign
 import org.pcsoft.app.aighost.model.project.design.TitlePageDesign
 
@@ -116,6 +117,16 @@ class DesignProperty internal constructor() : ProjectPartProperty<Design>() {
             epilogPageProperty.set(value)
         }
 
+    /** Page numbering settings, as a property of its own. */
+    val pageNumberingProperty: PageNumberDesignProperty = PageNumberDesignProperty()
+
+    /** Page numbering settings. */
+    var pageNumbering: PageNumberDesign?
+        get() = pageNumberingProperty.get()
+        set(value) {
+            pageNumberingProperty.set(value)
+        }
+
     /** Whether the manuscript starts with an empty page, as a property of its own. */
     val startWithEmptyPageProperty: BooleanProperty = SimpleBooleanProperty()
 
@@ -144,6 +155,7 @@ class DesignProperty internal constructor() : ProjectPartProperty<Design>() {
         fields.model(blurbPageProperty, "blurbPage", blurbPageProperty::refresh)
         fields.model(chapterPageProperty, "chapterPage", chapterPageProperty::refresh)
         fields.model(epilogPageProperty, "epilogPage", epilogPageProperty::refresh)
+        fields.model(pageNumberingProperty, "pageNumbering", pageNumberingProperty::refresh)
         fields.boolean(startWithEmptyPageProperty, "startWithEmptyPage")
         fields.boolean(endWithEmptyPageProperty, "endWithEmptyPage")
 

@@ -29,6 +29,9 @@ import org.pcsoft.app.aighost.model.project.design.CopyrightPageDesign
 import org.pcsoft.app.aighost.model.project.design.Design
 import org.pcsoft.app.aighost.model.project.design.EpilogPageDesign
 import org.pcsoft.app.aighost.model.project.design.PageFormat
+import org.pcsoft.app.aighost.model.project.design.PageNumberCountingMode
+import org.pcsoft.app.aighost.model.project.design.PageNumberDesign
+import org.pcsoft.app.aighost.model.project.design.PageNumberPosition
 import org.pcsoft.app.aighost.model.project.design.PrologPageDesign
 import org.pcsoft.app.aighost.model.project.design.TitlePageDesign
 import org.pcsoft.app.aighost.model.project.meta.Meta
@@ -126,6 +129,13 @@ object TestData {
         mirroredMargins = true
     )
 
+    /** Page numbering settings that differ from the shipped default, so a swapped field is caught. */
+    fun pageNumberDesign(): PageNumberDesign = PageNumberDesign(
+        position = PageNumberPosition.BOTTOM_OUTER,
+        startNumber = 3,
+        countingMode = PageNumberCountingMode.SKIP_EXCLUDED
+    )
+
     /** A design whose parts all differ, so a swapped property is caught by a round trip test. */
     fun design(): Design = Design(
         pageFormat = pageFormat(),
@@ -135,6 +145,7 @@ object TestData {
         blurbPage = blurbPageDesign(),
         chapterPage = chapterPageDesign(),
         epilogPage = epilogPageDesign(),
+        pageNumbering = pageNumberDesign(),
         startWithEmptyPage = true,
         endWithEmptyPage = false
     )

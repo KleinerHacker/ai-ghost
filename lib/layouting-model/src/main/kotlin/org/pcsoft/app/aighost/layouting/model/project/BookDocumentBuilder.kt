@@ -13,6 +13,7 @@
 package org.pcsoft.app.aighost.layouting.model.project
 
 import org.pcsoft.app.aighost.layouting.model.common.toPageLayout
+import org.pcsoft.app.aighost.layouting.model.common.toPageNumbering
 import org.pcsoft.app.aighost.layouting.model.project.book.BlurbBuilder
 import org.pcsoft.app.aighost.layouting.model.project.book.BookPartBuilder
 import org.pcsoft.app.aighost.layouting.model.project.book.TitlePageBuilder
@@ -25,6 +26,12 @@ import org.pcsoft.framework.simplay.engine.model.FlowPage
 import org.pcsoft.framework.simplay.engine.model.Page
 import org.pcsoft.framework.simplay.engine.model.SinglePage
 
+/** Stable id of the title page, never printed with a page number. */
+private const val TITLE_PAGE_ID = "title"
+
+/** Stable id of the copyright page, never printed with a page number. */
+private const val COPYRIGHT_PAGE_ID = "copyright"
+
 /**
  * Turns a whole book into a simPlay [Document].
  *
@@ -34,10 +41,14 @@ import org.pcsoft.framework.simplay.engine.model.SinglePage
  * and the blurb. The title and copyright pages are confined to their sheet ([SinglePage]); every
  * written part flows onto as many sheets as it needs ([FlowPage]).
  *
- * The page policy simPlay does not own yet is marked with TODO(simPlay page policy) throughout: page
- * numbering, mirrored margins, inactive pages of a switched-off part, the hard edge of the blurb and
- * the leading and trailing blank sheets. That policy moves into simPlay and this builder adopts it
- * from there.
+ * Every page is built with a fixed, stable id instead of simPlay's random default, so the title and
+ * copyright page can be named in [Document.numbering]'s `excludedPageIds` without depending on an id
+ * generated somewhere else.
+ *
+ * The page policy simPlay does not own yet is marked with TODO(simPlay page policy) throughout:
+ * mirrored margins, inactive pages of a switched-off part, the hard edge of the blurb and the
+ * leading and trailing blank sheets. That policy moves into simPlay and this builder adopts it from
+ * there.
  */
 object BookDocumentBuilder {
 
@@ -55,29 +66,31 @@ object BookDocumentBuilder {
         //  not expressed yet; simPlay owns that once it lands.
         val layout = design.pageFormat.toPageLayout()
         val pages = ArrayList<Page>()
+        val excludedPageIds = mutableSetOf(TITLE_PAGE_ID)
 
-        pages += SinglePage(layout, TitlePageBuilder.build(book, meta, design))
+        pages += SinglePage(layout, TitlePageBuilder.build(book, meta, design), id = TITLE_PAGE_ID)
 
         val copyrightBlocks = CopyrightPageBuilder.build(book.copyright, meta, design)
         if (copyrightBlocks.isNotEmpty()) {
-            pages += SinglePage(layout, copyrightBlocks)
+            pages += SinglePage(layout, copyrightBlocks, id = COPYRIGHT_PAGE_ID)
+            excludedPageIds += COPYRIGHT_PAGE_ID
         }
 
-        // TODO(simPlay page policy): a part with included == false still gets its page here; dropping
-        //  it from the page numbering and marking the page inactive is page policy simPlay does not
-        //  own yet.
-        pages += FlowPage(layout, BookPartBuilder.build(book.prolog, design.prologPage))
+        // TODO(simPlay page policy): a part with included == false still gets its page here; marking
+        //  that page inactive with PageMode.DISABLED is IP-16's job, the future book preview - it is
+        //  not attempted in the single-part BookPartEditor.
+        pages += FlowPage(layout, BookPartBuilder.build(book.prolog, design.prologPage), id = "prolog")
 
-        book.chapters.forEach { chapter ->
-            pages += FlowPage(layout, BookPartBuilder.build(chapter, design.chapterPage))
+        book.chapters.forEachIndexed { index, chapter ->
+            pages += FlowPage(layout, BookPartBuilder.build(chapter, design.chapterPage), id = "chapter-$index")
         }
 
-        pages += FlowPage(layout, BookPartBuilder.build(book.epilog, design.epilogPage))
+        pages += FlowPage(layout, BookPartBuilder.build(book.epilog, design.epilogPage), id = "epilog")
 
         // TODO(simPlay page policy): the blurb is a plain flow page for now; its hard page edge is
         //  part of the policy that moves into simPlay.
-        pages += FlowPage(layout, BlurbBuilder.build(book.blurb, design))
+        pages += FlowPage(layout, BlurbBuilder.build(book.blurb, design), id = "blurb")
 
-        return Document(pages)
+        return Document(pages, numbering = design.pageNumbering.toPageNumbering(excludedPageIds))
     }
 }

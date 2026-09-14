@@ -43,6 +43,7 @@ private const val VERSION = 1
  * @property blurbPage Typographic settings for the blurb page.
  * @property chapterPage Typographic settings for the chapter pages.
  * @property epilogPage Typographic settings for the epilog page.
+ * @property pageNumbering Page numbering settings, off by default.
  * @property startWithEmptyPage Whether to begin the book with a blank page, true by default.
  * @property endWithEmptyPage Whether to end the book with a blank page, true by default.
  */
@@ -60,6 +61,8 @@ data class Design(
     var blurbPage: BlurbPageDesign = BlurbPageDesign(),
     var chapterPage: ChapterPageDesign = ChapterPageDesign(),
     var epilogPage: EpilogPageDesign = EpilogPageDesign(),
+
+    var pageNumbering: PageNumberDesign = PageNumberDesign(),
 
     var startWithEmptyPage: Boolean = true,
     var endWithEmptyPage: Boolean = true
