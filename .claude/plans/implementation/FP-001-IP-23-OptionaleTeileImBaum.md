@@ -8,7 +8,7 @@
 
 ## Abhängigkeiten
 
-* Voraussetzung: IP-15, IP-24
+* Voraussetzung: IP-15, IP-24, IP-35
 * Start erst, wenn jede Voraussetzung im Feature-Status `COMPLETED` ist.
 * Blockiert: keinen weiteren Plan
 * Reihenfolge und Graph stehen in Abschnitt 8 des Feature Plans.
@@ -37,9 +37,10 @@
 ### 3. Wirkung auf das Blatt
 
 * Ausgrauen des ausgeschalteten Teils unmittelbar nachziehen.
+* `PageMode.DISABLED` (IP-35) auf jede Seiten-`id` des ausgeschalteten Teils setzen, `null` beim
+  Einschalten.
 * Kein erneutes Öffnen des Projekts nötig.
 * Keine Rückfrage stellen, es geht kein Text verloren.
-* TODO: Seitennummerierung/-zahl nachziehen, sobald die simPlay-Seitenpolitik steht (Feature-Plan, Abschnitt 9).
 
 ### 4. Undo
 
@@ -52,7 +53,7 @@
 
 ### 6. Tests
 
-* Umschalten, Gleichlauf und Ausgrauen headless prüfen.
+* Umschalten, Gleichlauf, Ausgrauen und `PageMode`-Zuordnung headless prüfen.
 * Erhalt des Textes über eine Umschaltung prüfen.
 
 ### 7. Abschluss
@@ -63,4 +64,5 @@
 ## Ergebnis
 
 * Prolog, Epilog und Klappentext werden vom Baum aus in das Buch geschaltet.
+* Ein ausgeschalteter Teil ist über `PageMode.DISABLED` auch auf dem Papier wirklich inaktiv.
 * Kein Text geht dabei verloren.

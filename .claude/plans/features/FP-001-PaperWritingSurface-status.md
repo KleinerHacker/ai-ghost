@@ -24,6 +24,7 @@ Status: IN_PROGRESS
 | IP-15 | Editor Arrangement And Tree Routing            | NOT_STARTED |
 | IP-16 | Writing And Preview Modes                      | NOT_STARTED |
 | IP-18 | AI Actions On Paragraph And Heading            | NOT_STARTED |
+| IP-35 | Page Numbering And Page Modes On simPlay 0.3.0 | NOT_STARTED |
 | IP-23 | Optional Book Parts In The Tree                | NOT_STARTED |
 
 ## Abgelöste Pläne (simPlay-Abweichung)
@@ -126,6 +127,14 @@ Build: `lib:*`, `app:ai-ghost-ui` komplett grün (Kompilierung, Tests, `koverVer
 
 Nächster Schritt: IP-32 (Absatz-Operationen auf `Document`) oder IP-33 (Undo auf Dokument-Tausch) -
 beide hängen nur noch an IP-31, jetzt abgeschlossen.
+
+Der Nutzer hat simPlay 0.3.0 geliefert: `Document.numbering` (Seitenzahl-Position, Startwert,
+`excludedPageIds`, `PageCountingMode` `CONTINUOUS`/`SKIP_EXCLUDED`) und, in `simplay-fx`,
+`PaperSheetView.pageModes` mit `PageMode` (`HIDDEN`/`DISABLED`/`STATIC`/`SELECTABLE`/`NAVIGABLE`/
+`EDITABLE`) je `Page.id`. Neuer Plan IP-35 verdrahtet beides und löst den Nummerierungs- und
+Inaktiv-Seiten-Teil der TODO aus dem Feature Plan (Abschnitt 9) ab; IP-23 erhält IP-35 als
+zusätzliche Abhängigkeit. Gespiegelte Ränder, Leerseiten und die Klappentext-Kante bleiben offene
+TODOs, da die Online-Dokumentation dazu nichts liefert.
 
 Die entfernten Plandateien `FP-001-IP-21-SeitentrennungImAbsatz.md`,
 `FP-001-IP-27-BibliotheksStyling.md` und `FP-001-IP-28-EigenstaendigeNutzung.md` wurden per `git rm`
