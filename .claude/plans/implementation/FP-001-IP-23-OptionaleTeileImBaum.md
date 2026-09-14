@@ -8,7 +8,7 @@
 
 ## Abhängigkeiten
 
-* Voraussetzung: IP-15, IP-24, IP-35
+* Voraussetzung: IP-39 (vormals IP-15), IP-24, IP-35
 * Start erst, wenn jede Voraussetzung im Feature-Status `COMPLETED` ist.
 * Blockiert: keinen weiteren Plan
 * Reihenfolge und Graph stehen in Abschnitt 8 des Feature Plans.
@@ -37,8 +37,9 @@
 ### 3. Wirkung auf das Blatt
 
 * Ausgrauen des ausgeschalteten Teils unmittelbar nachziehen.
-* `PageMode.DISABLED` (IP-35) auf jede Seiten-`id` des ausgeschalteten Teils setzen, `null` beim
-  Einschalten.
+* `PageMode.DISABLED` (IP-35) auf jede Seiten-`id`/jeden `TextAnchor` des ausgeschalteten Teils setzen,
+  `null` beim Einschalten - direkt verdrahtet, da IP-39 alle Seiten immer gleichzeitig zeigt (anders
+  als ursprünglich geplant, wo dies einer künftigen Buchvorschau vorbehalten war).
 * Kein erneutes Öffnen des Projekts nötig.
 * Keine Rückfrage stellen, es geht kein Text verloren.
 

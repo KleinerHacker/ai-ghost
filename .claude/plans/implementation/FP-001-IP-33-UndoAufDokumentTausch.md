@@ -9,7 +9,7 @@
 
 ## Abhängigkeiten
 
-* Voraussetzung: IP-31
+* Voraussetzung: IP-39 (vormals IP-31; IP-39 liefert das eine, dauerhafte `Document`)
 * Blockiert: keinen weiteren Plan
 * Reihenfolge und Graph stehen in Abschnitt 8 des Feature Plans.
 
@@ -40,7 +40,8 @@
 ### 3. Wiedergabe
 
 * Undo/Redo setzt das gemerkte `Document` auf `PaperSheetView`.
-* Modell (`List<String>`) aus dem gesetzten `Document` neu ableiten.
+* `Book.chapters`s Reihenfolge/Bestand aus den Ankern des gesetzten `Document` neu ableiten (kein
+  `List<String>`-Modell mehr, seit der TextAnchor-Abweichung, IP-36/IP-38).
 * Caret- und Fokus-Block aus dem Eintrag wiederherstellen.
 
 ### 4. Aufräumen

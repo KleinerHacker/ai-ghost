@@ -8,7 +8,7 @@
 
 ## Abhängigkeiten
 
-* Voraussetzung: IP-31
+* Voraussetzung: IP-39 (vormals IP-31; IP-39 liefert die dauerhafte `PaperSheetView`)
 * Start erst, wenn jede Voraussetzung im Feature-Status `COMPLETED` ist.
 * Blockiert: keinen weiteren Plan
 * Reihenfolge und Graph stehen in Abschnitt 8 des Feature Plans.

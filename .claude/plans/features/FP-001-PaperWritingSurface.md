@@ -12,6 +12,29 @@
 > abgeschlossen geführten Pläne IP-03 bis IP-08, IP-10, IP-11, IP-22, IP-25 und IP-26 sind damit
 > abgelöst (Abschnitt 6, „Abgelöste Pläne“).
 
+> **Zweite große Planabweichung (TextAnchor, ab simPlay 0.3.1).** Vom Nutzer bestätigt, zweite
+> grundlegende Änderung: Es gibt kein pro Buchteil gebautes `Document` mehr. `PaperSheetView` zeigt
+> dauerhaft das ganze Buch als ein einziges, frei editierbares `Document` in der Mitte des Editors; ein
+> Klick im Projektbaum navigiert im gezeigten Dokument, statt ein anderes Dokument einzusetzen. Das
+> ai-ghost-Modell wird umgekehrt: Nicht mehr das Modell (`List<String>` je Buchteil) ist die
+> gespeicherte Quelle, aus der ein `Document` abgeleitet wird - das `Document` selbst ist die
+> gespeicherte Quelle. Das Modell trägt nur noch, was kein Fließtext ist: Reihenfolge und Name der
+> Kapitel im Baum, die Ein-/Ausschalter der optionalen Teile, Prompts, und eine stabile Anker-Kennung
+> je Kapitel. simPlay 0.3.1 liefert dafür einen `TextAnchor`: eine im `Document` gespeicherte, beim
+> Editieren mitwandernde Markierung, mit der ein Fragment (Titel, ein bestimmtes Kapitel, ...)
+> wiedergefunden wird, obwohl sich Seiten und Blockgrenzen beim freien Schreiben verschieben. Statische
+> Teile (Titelseite, Copyright, Prolog, Epilog, Klappentext) bekommen dieselbe feste Anker-Kennung, die
+> `BookDocumentBuilder` bereits als Seiten-`id` verwendet (`title`, `copyright`, `prolog`, `epilog`,
+> `blurb`); jedes Kapitel bekommt eine `UUID`, die im Modell gespeichert wird, statt sich über seine
+> Listenposition zu identifizieren. Der `TextStyle` eines Blocks wird zwar mitgespeichert (`Document`
+> ist ein vollständiges simPlay-Objekt), beim Laden aber verworfen und durch den aus `Design`
+> berechneten Stil ersetzt, damit eine Design-Änderung weiterhin sofort auf dem ganzen, bereits
+> geschriebenen Text wirkt. Abschnitt 2 bis 10 sind auf diesen Stand geschrieben; Abschnitt 6,
+> „Abgelöste Pläne (TextAnchor)“ benennt die betroffenen Pläne. Die genaue API von `TextAnchor` ist zum
+> Zeitpunkt dieser Planänderung nicht freigegeben (simPlay 0.3.1 steht noch aus); Abschnitt 9 hält das
+> als offene Frage fest, ebenso die Jackson-Verträglichkeit des simPlay-`Document` in der bestehenden
+> ZIP-Persistenz.
+
 ## 1. Ziel
 
 Das Schreiben eines Buchteils fühlt sich an wie das Schreiben auf der gedruckten Seite: Titel,
@@ -37,9 +60,13 @@ Apache PDFBox oder das simPlay-Modul `j-pdf` – dieselbe Struktur verbraucht.
 
 * `lib/ai-ghost-model`, `lib/ai-ghost-fx-model` – Manuskript-POJOs und ihre gespiegelten
   FX-Eigenschaften. `Design` trägt `PageFormat` (Größe, Ränder innen/außen/oben/unten,
-  `mirroredMargins`) und Zeilenabstände je Elementklasse (IP-02). `Prolog`, `Epilog`, `Blurb` tragen
-  `included` und immer ihren Text (IP-24). `Preferences` trägt die Gruppe `Editor`
-  (`paragraphMergePauseMillis`).
+  `mirroredMargins`) und Zeilenabstände je Elementklasse (IP-02). `Preferences` trägt die Gruppe
+  `Editor` (`paragraphMergePauseMillis`). **Von der TextAnchor-Abweichung betroffen:** `Book.title`/
+  `titleAppendix`, das `BookPart`-Interface (`title`/`titleAppendix`/`paragraph`) und seine drei
+  Implementierungen `Prolog`, `Epilog`, `Blurb` sowie `Chapter.title`/`titleAppendix`/`paragraph` und
+  `Copyright` tragen heute noch den Fließtext selbst; `Prolog`/`Epilog`/`Blurb` tragen zusätzlich
+  `included` (IP-24, bleibt als Schalter erhalten, das Textfeld daneben entfällt). IP-36 nimmt jedes
+  dieser Textfelder heraus; was bleibt, ist in Abschnitt 3 benannt.
 * `lib/ai-ghost-layouting` – Eigenbau-Satz-Engine (frühere IP-03/IP-04/IP-05/IP-06). **Wird mit
   dieser Abweichung per `git rm` entfernt.**
 * `lib/ai-ghost-layouting-model` – Übersetzer von `Book`, `Design`, `Meta` auf die Engine. **Bleibt,
@@ -53,11 +80,15 @@ Apache PDFBox oder das simPlay-Modul `j-pdf` – dieselbe Struktur verbraucht.
 * `lib/ai-ghost-ai` – der KI-Aktions-Port aus IP-17 (`AiAction`, `AiActionRequest`, Callbacks,
   `AiActionLimits`, `ParagraphSplitter`), ohne Implementierung. Unverändert.
 * `app/ui` – das einzige JavaFX-Modul, MVVM FX, jlink-Image. Trägt heute `FontIdentity`,
-  `FontIdentityCheck`, `FontTranslation`, `FontFingerprintTranslation`, `BookPartEditor` (bettet
-  `PaperFlowView` ein), `Inspector` mit den Abschnitten „Book“/„Chapter“/„Design“ (IP-12/IP-13), den
-  Projekteinstellungsdialog (IP-14), Undo/Redo (IP-09), die KI-Schaltfläche „Kapitel generieren“
-  (IP-19). `BookPartEditor` und die Absatz-Operationen hängen an `PaperFlowView` und werden mit
-  IP-31/IP-32 auf `PaperSheetView` umgestellt.
+  `FontIdentityCheck`, `FontTranslation`, `Inspector` mit den Abschnitten „Book“/„Chapter“/„Design“
+  (IP-12/IP-13), den Projekteinstellungsdialog (IP-14), Undo/Redo (IP-09), die KI-Schaltfläche „Kapitel
+  generieren“ (IP-19). `BookPartEditor`/`BookPartEditorViewModel`/`BookPartEditorController` (IP-31)
+  bauen für den im Baum gewählten Teil je ein eigenes, einseitiges `Document` und tauschen es bei jeder
+  Auswahl aus; `splitParagraph`/`mergeParagraph`/`removeParagraph`/`moveParagraph` liegen fertig, aber
+  unverdrahtet in `BookPartEditorController` (für IP-32 stehengelassen). **Von der
+  TextAnchor-Abweichung abgelöst:** genau dieses Auswechseln des `Document` je Auswahl. IP-38/IP-39
+  ersetzen es durch ein dauerhaft gezeigtes, einziges `Document` des ganzen Buches, in dem eine
+  Baumauswahl nur noch navigiert.
 * `.claude/rules/architecture.md` erlaubt JavaFX in `app/ui` und in der einen
   JavaFX-Komponentenbibliothek unter `lib`. Die zweite Erlaubnis entfällt mit der Entfernung von
   `lib/ai-ghost-layouting-fx`.
@@ -74,15 +105,29 @@ Projektbaum (IP-23).
 
 ## 3. Zielzustand
 
-Drei Zonen rechts des Projektbaums: das **Papier** in der Mitte (eine `PaperSheetView` von simPlay),
-ein einklappbarer **Inspector** rechts, der alles trägt, was kein gedruckter Text ist, und ein
-**Modus-Schalter** zwischen `Schreiben` und `Vorschau` über demselben Inhalt.
+Drei Zonen rechts des Projektbaums: das **Papier** dauerhaft in der Mitte (eine einzige `PaperSheetView`
+von simPlay, die das ganze Buch als ein `Document` zeigt), ein einklappbarer **Inspector** rechts, der
+alles trägt, was kein gedruckter Text ist, und ein **Ansichts-Schalter** zwischen `Schreiben`
+(`EDITABLE`) und `Vorschau` (`SELECTABLE`) auf demselben `Document` - kein zweites `Document`, keine
+zweite `PaperSheetView`, kein zweites `measure`.
 
-* **Treuekette über simPlay.** `simplay-engine` verwandelt ein Rohdokument (`Document` aus `Page`,
-  `TextBlock`, `TextStyle`) in ein `MeasuredDocument` mit absoluten Positionen; `simplay-fx` malt
-  dieses Ergebnis in `PaperSheetView`. Schreibfläche und Vorschau sind dieselbe Komponente in den
-  Modi `EDITABLE` und `READONLY` über demselben `Document`, sodass ein Absatz in beiden auf dieselbe
-  Seite fällt – strukturell, nicht durch einen Vergleich.
+* **Ein Dokument für das ganze Buch.** `Book.document: Document` ist der gespeicherte Zustand, nicht
+  mehr abgeleitet. `BookDocumentBuilder` baut es genau einmal - bei einem neuen Projekt und bei einem
+  Migrationsschritt für ein älteres Projekt (Abschnitt 4) - und reicht danach jede Design-Änderung nur
+  noch als Stil-Auffrischung auf die bestehenden Blöcke durch (Abschnitt 5). Eine Baumauswahl tauscht
+  das `Document` nicht mehr aus, sie navigiert `PaperSheetView` zu dem `TextAnchor`, der zum gewählten
+  Knoten gehört.
+* **`TextAnchor` (simPlay 0.3.1) hält die Fragmente wieder auffindbar.** Titel, Copyright, Prolog,
+  jedes Kapitel, Epilog und Klappentext bekommen beim Bau des `Document` je einen Anker; ein Kapitel
+  behält seinen Anker über eine im Modell gespeicherte `UUID`, die statischen Teile über eine feste
+  Kennung (`title`, `copyright`, `prolog`, `epilog`, `blurb` - dieselben Werte, mit denen
+  `BookDocumentBuilder` heute schon seine Seiten-`id`s vergibt). Der Anker wandert mit, wenn Text davor
+  eingefügt, gelöscht oder umsortiert wird; das Modell muss dafür keine Position mehr führen.
+* **Treuekette über simPlay.** `simplay-engine` verwandelt das Rohdokument (`Document` aus `Page`,
+  `TextBlock`, `TextStyle`, `TextAnchor`) in ein `MeasuredDocument` mit absoluten Positionen;
+  `simplay-fx` malt dieses Ergebnis in `PaperSheetView`. Schreibfläche und Vorschau sind derselbe
+  `Document`-Zustand in den Modi `EDITABLE` und `SELECTABLE`, sodass ein Absatz in beiden auf derselben
+  Seite liegt - strukturell, nicht durch einen Vergleich, und ohne zweiten Aufbau.
 * **Messung.** simPlay misst über einen `FontMeasureCalculator`; `simplay-fx` stellt ihn intern
   bereit und rendert `PaperSheetView` selbst damit – `app/ui` instanziiert keinen eigenen. Keine
   Schriftdatei wird gelesen, geparst oder ausgeliefert. Familien kommen aus
@@ -91,10 +136,14 @@ ein einklappbarer **Inspector** rechts, der alles trägt, was kein gedruckter Te
   stempelt beim Speichern einen Fingerabdruck und meldet beim Öffnen eine Abweichung
   (`MeasuredDocument.fingerprintDeviations`); den Namen der verwendeten Ersatzfamilie ergänzt
   `app/ui` (IP-34).
-* **Der Übersetzer bleibt ai-ghost.** `lib/ai-ghost-layouting-model` baut aus `Book`, `Design` und
-  `Meta` ein simPlay-`Document`: ein `FlowPage` je Buchteil in Reihenfolge, Titelseite und
-  Copyright-Seite als eigene Seiten, der Klappentext als letztes Blatt. `PageLayout` (Größe, Ränder)
-  je Seite wird aus `PageFormat` berechnet.
+* **Der Übersetzer bleibt ai-ghost, baut aber nur noch einmal.** `lib/ai-ghost-layouting-model` baut
+  aus `Book`, `Design` und `Meta` ein simPlay-`Document`: ein `FlowPage` je Buchteil in Reihenfolge,
+  Titelseite und Copyright-Seite als eigene Seiten, der Klappentext als letztes Blatt, jede Seite mit
+  ihrem `TextAnchor`. `PageLayout` (Größe, Ränder) je Seite wird aus `PageFormat` berechnet. Dieser Bau
+  geschieht nur noch beim Anlegen eines neuen Projekts, beim Anlegen eines neuen Kapitels und bei der
+  Migration eines älteren Projekts (IP-36/IP-37) - nicht mehr bei jeder Baumauswahl. Eine
+  Design-Änderung baut nicht neu, sie ersetzt nur den `TextStyle` jedes Blocks anhand der Rolle seines
+  Ankers (IP-38).
 * **ai-ghost-Seitenpolitik, Stand simPlay 0.3.0.** simPlay liefert Zeilen-/Seitenumbruch,
   Ausrichtung, `FlowPage`/`SinglePage`, seit 0.3.0 zusätzlich `Document.numbering: PageNumbering`
   (Position, Startwert, `excludedPageIds`, `PageCountingMode` `CONTINUOUS`/`SKIP_EXCLUDED`,
@@ -110,10 +159,11 @@ ein einklappbarer **Inspector** rechts, der alles trägt, was kein gedruckter Te
 * **Vorwerk.** Titelseite mit Titel, weiteren Titelzeilen und Autor, gefolgt direkt von der
   Copyright-Seite.
 * **Optionale Teile.** Prolog, Epilog und Klappentext beginnen immer auf einer eigenen Seite, behalten
-  immer ihren Text, bleiben beschreibbar, sind ausgegraut, wenn ausgeschaltet, und werden erst mit
-  IP-16 in der Buchvorschau über `PageMode.DISABLED` wirklich inaktiv; die Titel- und Copyright-Seite
-  sind bereits seit IP-35 über `excludedPageIds` aus der Seitennummerierung genommen. Das
-  Kontrollkästchen im Baum entscheidet über die Zugehörigkeit zum Buch, nicht über die Existenz.
+  immer ihren Text, bleiben beschreibbar, sind ausgegraut, wenn ausgeschaltet, und werden über
+  `PageMode.DISABLED` wirklich inaktiv - sofort, nicht erst mit einer künftigen Buchvorschau, weil das
+  ganze Buch inklusive aller Seiten immer schon gleichzeitig sichtbar ist (IP-23). Die Titel- und
+  Copyright-Seite sind bereits seit IP-35 über `excludedPageIds` aus der Seitennummerierung genommen.
+  Das Kontrollkästchen im Baum entscheidet über die Zugehörigkeit zum Buch, nicht über die Existenz.
 * **KI** ist in diesem Feature nur eine Schaltfläche ohne Wirkung: eine schwebende Leiste am
   fokussierten Block (über simPlay `FloatingOverlay`, Trigger `PARAGRAPH_HOVER`/`CARET`) mit
   Umschreiben, Ausbauen und Kürzen, dazu eine Aktion auf Teil-Ebene im Inspector. Jede Schaltfläche
@@ -145,9 +195,13 @@ ein einklappbarer **Inspector** rechts, der alles trägt, was kein gedruckter Te
   unveränderliche `Document`-Instanz zurück.
 * Prompts, Teildaten und Designstile leben im Inspector, Seitenformat und Ränder im
   Projekteinstellungsdialog – nie auf dem Papier.
-* Die Vorschau rendert das ganze Buch (`PaperSheetView` im Modus `READONLY`) und scrollt zu dem im
-  Baum gewählten Teil; ein Absatz fällt in beiden Modi auf dieselbe Seite, da beide dasselbe
-  `Document` und dieselbe Messung verwenden.
+* `PaperSheetView` zeigt immer das ganze Buch; eine Baumauswahl navigiert über den `TextAnchor` des
+  gewählten Teils zu seiner Stelle im Dokument, statt ein anderes Dokument einzusetzen.
+* Die Vorschau ist derselbe `Document`-Zustand im Modus `SELECTABLE` statt `EDITABLE`; ein Absatz liegt
+  in beiden Modi auf derselben Seite, weil es dasselbe `Document` und dieselbe Messung ist, kein
+  zweiter Aufbau und kein Vergleich.
+* Ein vor dieser Abweichung geschriebenes Projekt öffnet mit genau dem Text, den es vorher hatte: eine
+  einmalige Migration baut sein `Document` aus den bisherigen `List<String>`-Feldern.
 
 ### Technische Anforderungen
 
@@ -167,9 +221,17 @@ ein einklappbarer **Inspector** rechts, der alles trägt, was kein gedruckter Te
 * Modelländerungen folgen `fx-model`; UI-Arbeit folgt `ui-styling`, `fx-component-lifecycle`, `icons`
   und `font`; Tests folgen `testing`; Dokumentation folgt `project-docs`; Workflows folgen
   `ci-pipeline`.
-* Der Text eines Teils bleibt `List<String>` im Projektdokument; View-Zustand gehört zu
-  `Preferences`, nie zum Projektdokument. Das simPlay-`Document` ist eine abgeleitete Sicht, kein
-  gespeicherter Zustand.
+* **Umgekehrt zur ursprünglichen Fassung dieses Feature-Plans:** `Book.document: Document` ist der
+  gespeicherte Zustand des Fließtexts; kein Buchteil trägt seinen Text mehr als `List<String>`. Das
+  Modell trägt nur, was kein Fließtext ist: Kapitelname, Kapitel-`UUID`, die Ein-/Ausschalter der
+  optionalen Teile, Prompts. View-Zustand (Splitter, Einklappzustand, Ansicht, Lese-/Schreibposition)
+  bleibt in `Preferences`, nie im Projektdokument.
+* Das im `Document` gespeicherte `TextStyle` jedes Blocks ist beim Laden nicht bindend: Es wird sofort
+  durch den aus `Design` berechneten Stil der Rolle seines Ankers ersetzt, damit eine Design-Änderung
+  auch rückwirkend auf bereits geschriebenem Text wirkt.
+* Ein Projekt, das vor dieser Abweichung gespeichert wurde, trägt kein `Book.document`. Beim Öffnen
+  wird es einmalig aus den bisherigen Feldern gebaut (`BookDocumentBuilder`) und ab dann als
+  `Document` weitergeführt; die bisherigen Textfelder werden nicht weiter gepflegt.
 
 ## 5. Architektur
 
@@ -205,38 +267,52 @@ lib/ai-ghost-layouting-model ──────┘                    │
   Toolkit.
 * **`lib/ai-ghost-ai`** – der KI-Aktions-Port aus IP-17, unverändert und in diesem Feature nicht
   verdrahtet.
-* **`app/ui`** – `BookPartEditor` bettet `PaperSheetView` (`EDITABLE`) ein und hält den Draht
-  zwischen dem `Document` und den `List<String>`-Absätzen des Modells; `Inspector`; der
-  Schreib-/Vorschau-Umschalter mit einer zweiten `PaperSheetView` (`READONLY`) über dem ganzen Buch;
-  die schwebende KI-Leiste über `FloatingOverlay`; Undo/Redo auf dem `Document`-Tausch; `FontIdentity`/
-  `FontIdentityCheck` als dünne Hülle um `simplay-fx`s `FxFontProbe` (Verfügbarkeit, Fingerabdruck,
-  Ersatzfamilie-Name, Familienliste über `javafx.scene.text.Font.getFamilies()`); die Überschreibung
-  der `paper-sheet-view`-`-fx-`-Eigenschaften mit der ai-ghost-Palette.
+* **`app/ui`** – eine dauerhafte `PaperSheetView` (`EDITABLE`/`SELECTABLE` auf demselben `Document`)
+  zeigt das ganze Buch; `Inspector`; der Schreib-/Vorschau-Umschalter schaltet nur den `mode` derselben
+  Ansicht um, baut kein zweites `Document`; die schwebende KI-Leiste über `FloatingOverlay`; Undo/Redo
+  auf dem `Document`-Tausch; `FontIdentity`/`FontIdentityCheck` als dünne Hülle um `simplay-fx`s
+  `FxFontProbe` (Verfügbarkeit, Fingerabdruck, Ersatzfamilie-Name, Familienliste über
+  `javafx.scene.text.Font.getFamilies()`); die Überschreibung der `paper-sheet-view`-`-fx-`-
+  Eigenschaften mit der ai-ghost-Palette. Eine Baumauswahl löst keinen `Document`-Tausch mehr aus,
+  sondern eine Navigation über den `TextAnchor` des gewählten Knotens (IP-39).
 
-**Modellstand.** Keine Modellerweiterung mehr nötig: `PageFormat`, die Zeilenabstände, die
-`included`-Schalter, die `Editor`-Präferenzgruppe bestehen (IP-02/IP-24/IP-10). Der Editor-View-Zustand
-(Splitter, Einklappzustand, Modus, Leseposition) kommt mit IP-15/IP-16 zu `Preferences`. Der
-Metrik-Fingerabdruck bleibt ein Feld von `FontData` (aus IP-22).
+**Modellstand.** `PageFormat`, die Zeilenabstände, die `included`-Schalter, die `Editor`-
+Präferenzgruppe bestehen weiter (IP-02/IP-24/IP-10). Neu durch die TextAnchor-Abweichung: `Book`
+verliert `title`/`titleAppendix`, das `BookPart`-Interface verliert `title`/`titleAppendix`/
+`paragraph` (nur `prompts` bleibt an `Prolog`/`Epilog`/`Chapter`), `Chapter` verliert zusätzlich
+`title`/`titleAppendix`/`paragraph`, behält aber `name` und bekommt eine neue, gespeicherte `id: UUID`
+als Anker; `Copyright` verliert seinen Text ebenso. An ihrer Stelle trägt `Book` das neue Feld
+`document: Document` (IP-36). Der Editor-View-Zustand (Splitter, Einklappzustand, Ansicht,
+Ankerposition) kommt mit IP-39 zu `Preferences`. Der Metrik-Fingerabdruck bleibt ein Feld von
+`FontData` (aus IP-22).
 
 ```text
 ProjectProperty
   ├─ designProperty ─┬─> Inspector (Stilabschnitte)
-  │                  └─> DocumentBuilder ─> simPlay Document ─┬─> PaperSheetView EDITABLE (Schreiben)
-  │                                                           └─> PaperSheetView READONLY (Vorschau)
-  ├─ bookProperty ──> BookPartEditor <──(Dokument-Tausch bei Bearbeitung)──> PaperSheetView
-  └─ (Auswahl) ProjectList.selectedItem ──> EditorViewModel ──> gezeigter Teil
+  │                  └─> Stil-Auffrischung je Anker-Rolle ─> Book.document (bestehendes Document)
+  ├─ bookProperty.documentProperty <──(direkter Sync bei jeder Bearbeitung)──> PaperSheetView
+  │                                                                            (immer EDITABLE/SELECTABLE)
+  └─ (Auswahl) ProjectList.selectedItem ──> TextAnchor auflösen ──> PaperSheetView navigiert
                                                    ▲
                           FxFontProbe (Fingerabdruck) ───┘ (simplay-fx-intern, auf dem FX-Thread)
 ```
 
+Neuer Bau (`BookDocumentBuilder`) findet nur noch beim Anlegen eines Projekts, beim Anlegen eines
+Kapitels und bei der einmaligen Migration eines älteren Projekts statt (IP-36/IP-37/IP-38); jede
+Bearbeitung in `PaperSheetView` schreibt direkt in `Book.document` zurück, nicht mehr über einen
+Baustein pro Auswahl.
+
 ## 6. Übersicht der Implementierungspläne
 
 Die Nummerierung bleibt stabil. IP-01, IP-02, IP-09, IP-12, IP-13, IP-14, IP-17, IP-19 und IP-24 sind
-abgeschlossen und von der Abweichung nicht betroffen. IP-15, IP-16, IP-18 und IP-23 bleiben offen und
-sind auf simPlay umgeschrieben. IP-29 bis IP-34 sind neu, IP-35 kommt mit simPlay 0.3.0 hinzu und ist
-abgeschlossen. Die
-Pläne IP-03, IP-04, IP-05, IP-06, IP-07, IP-08, IP-10, IP-11, IP-22, IP-25 und IP-26 sind abgelöst
-(siehe „Abgelöste Pläne“).
+abgeschlossen und von beiden Abweichungen unberührt. IP-29, IP-30, IP-34, IP-35 sind abgeschlossen und
+bleiben in Kraft (ihre Bausteine werden von IP-36 bis IP-39 weiterverwendet, nicht ersetzt). IP-31 ist
+abgeschlossen, aber sein Ergebnis - das `Document` je Baumauswahl auszutauschen - ist mit der zweiten
+Abweichung abgelöst; seine reinen Funktionen (`splitParagraph` und Geschwister) bleiben nutzbar. IP-15
+und IP-16 sind vollständig abgelöst und in IP-39 aufgegangen (siehe „Abgelöste Pläne (TextAnchor)“).
+IP-32, IP-33, IP-18 und IP-23 bleiben offen, mit angepassten Abhängigkeiten. IP-36 bis IP-39 sind neu.
+Die Pläne IP-03, IP-04, IP-05, IP-06, IP-07, IP-08, IP-10, IP-11, IP-22, IP-25 und IP-26 sind aus der
+ersten Abweichung abgelöst (siehe „Abgelöste Pläne (simPlay)“).
 
 | ID    | Implementierungsplan                          | Ziel                                                                          | Abhängigkeiten        |
 |-------|-----------------------------------------------|------------------------------------------------------------------------------|-----------------------|
@@ -252,16 +328,34 @@ Pläne IP-03, IP-04, IP-05, IP-06, IP-07, IP-08, IP-10, IP-11, IP-22, IP-25 und 
 | IP-29 | simPlay Integration ✅                          | Repository, Abhängigkeit, Lizenz-Allowlist, CI-Token; Eigenbaumodule löschen | -                     |
 | IP-30 | Book To simPlay Document Builder ✅              | `lib/ai-ghost-layouting-model` auf das simPlay-Rohmodell umstellen           | IP-29, IP-02, IP-24   |
 | IP-34 | Font Discovery And Metric Fingerprint On simPlay ✅ | `FxFontProbe` verdrahten; Ersatzfamilie und Familienliste in `app/ui`        | IP-29                 |
-| IP-31 | Writing Surface On PaperSheetView ✅             | `BookPartEditor` bettet `PaperSheetView` (`EDITABLE`) ein; Dokument-Sync     | IP-30, IP-09, IP-34   |
-| IP-32 | Paragraph Structure Operations On Document     | Absätze teilen, verbinden, löschen, umsortieren auf dem `Document`          | IP-31                 |
-| IP-33 | Undo On Immutable Document Swap                | Undo-Einträge auf den `Document`-Tausch umstellen                          | IP-31                 |
-| IP-15 | Editor Arrangement And Tree Routing            | Drei Zonen, Routing jedes Baumknotens, View-Zustand persistiert            | IP-31, IP-12          |
-| IP-16 | Writing And Preview Modes                      | Modus-Schalter, Vorschau des ganzen Buches über `PaperSheetView READONLY`   | IP-30, IP-31, IP-15   |
-| IP-18 | AI Actions On Paragraph And Heading            | Schwebende KI-Leiste über `FloatingOverlay`; Schaltflächen mit `TODO(...)`   | IP-31                 |
-| IP-35 | Page Numbering And Page Modes On simPlay 0.3.0 ✅ | Seitenzahl verdrahtet; `PageMode` für ausgeschaltete Teile auf IP-16 vertagt | IP-30                 |
-| IP-23 | Optional Book Parts In The Tree               | Kontrollkästchen schaltet Prolog, Epilog und Klappentext ins Buch          | IP-15, IP-24, IP-35   |
+| IP-31 | Writing Surface On PaperSheetView ✅ (Ergebnis abgelöst) | Grundlagen (`splitParagraph` &c., Sync-Muster) bleiben; Verdrahtung siehe IP-39 | IP-30, IP-09, IP-34 |
+| IP-35 | Page Numbering And Page Modes On simPlay 0.3.0 ✅ | Seitenzahl verdrahtet; `PageMode` für ausgeschaltete Teile jetzt sofort verdrahtbar | IP-30          |
+| IP-36 | Model Umstellung Auf Anker-Struktur            | `Book`/`Chapter`/`BookPart`/`Copyright` vom Fließtext befreien, Kapitel-`UUID` | IP-24, IP-02          |
+| IP-37 | Dokument-Persistenz Und Migration              | `Book.document: Document` speicherbar machen; Altprojekte migrieren         | IP-36, IP-29           |
+| IP-38 | Buch-Dokument Als Alleinige Basis              | `BookDocumentBuilder` einzige Bauquelle; Anker statt Index; Stil-Auffrischung | IP-37, IP-30, IP-34   |
+| IP-39 | PaperSheetView Dauerhaft Im Zentrum            | Ein `Document`, immer sichtbar; Baumauswahl navigiert über `TextAnchor`      | IP-38, IP-09          |
+| IP-32 | Paragraph Structure Operations On Document     | Absätze teilen, verbinden, löschen, umsortieren, ankerfest                  | IP-39                 |
+| IP-33 | Undo On Immutable Document Swap                | Undo-Einträge auf den `Document`-Tausch umstellen                          | IP-39                 |
+| IP-18 | AI Actions On Paragraph And Heading            | Schwebende KI-Leiste über `FloatingOverlay`; Schaltflächen mit `TODO(...)`   | IP-39                 |
+| IP-23 | Optional Book Parts In The Tree               | Kontrollkästchen schaltet Prolog, Epilog und Klappentext ins Buch, `PageMode` sofort | IP-39, IP-24, IP-35 |
 
-### Abgelöste Pläne
+### Abgelöste Pläne (TextAnchor)
+
+Zweite Abweichung, Grund und Ersatz festgehalten, damit die Frage nicht zurückkehrt.
+
+| ID    | Früherer Plan                              | Ersetzt durch                                              |
+|-------|---------------------------------------------|--------------------------------------------------------------|
+| IP-15 | Editor Arrangement And Tree Routing        | IP-39 (Navigation über `TextAnchor` statt Dokument-Tausch)    |
+| IP-16 | Writing And Preview Modes                  | IP-39 (`mode`-Umschaltung auf demselben `Document`)           |
+
+IP-31s konkretes Ergebnis - `BookPartEditor` baut und tauscht ein `Document` je Baumauswahl - ist damit
+ebenfalls abgelöst; seine reinen Funktionen und das Muster, Bearbeitungen über einen
+`documentProperty`-Listener zu erkennen, gehen unverändert in IP-39 über. IP-30s Bausteine
+(`BookDocumentBuilder`, `TitlePageBuilder`, `CopyrightPageBuilder`, `BookPartBuilder`, `BlurbBuilder`,
+`StyleTranslation`, `PageLayoutTranslation`) bleiben vollständig in Kraft - sie werden von IP-38 weiter
+benutzt, nicht ersetzt.
+
+### Abgelöste Pläne (simPlay)
 
 Mit dem Grund festgehalten, da die Dateien entfernt sind und die Frage sonst wiederkehrt.
 
@@ -427,49 +521,142 @@ Abweichungen vom ursprünglichen Plantext:
   `simplay-fx`; `app/ui` muss `org.pcsoft.framework:simplay-common` deshalb als eigene, vom Nutzer
   bestätigte Abhängigkeit führen, um dagegen zu kompilieren.
 
-### IP-31: Writing Surface On PaperSheetView ✅
+### IP-31: Writing Surface On PaperSheetView ✅ (Ergebnis abgelöst)
 
 Plan: `FP-001-IP-31-SchreibflaecheAufPaperSheetView.md` (abgeschlossen, entfernt)
 
 `PaperSheetView` besitzt Cursor, Auswahl und die Bearbeitung; der Verbraucher besitzt den Text. Eine
-Bearbeitung ersetzt `document` durch eine neue Instanz – die alte bleibt unangetastet, was Undo
-(IP-33) zu einem reinen Instanz-Tausch macht. Der Draht zwischen dem `Document` und den
-`List<String>`-Absätzen des Modells liegt hier; alles ai-ghost-Spezifische wird über simPlay-API
-beantwortet, nie über eine Abhängigkeit zurück aus simPlay. Die Überschreibung der
-`paper-sheet-view`-`-fx-`-Eigenschaften mit der ai-ghost-Palette gehört ebenfalls hierher (früher
-IP-27).
+Bearbeitung ersetzt `document` durch eine neue Instanz – die alte bleibt unangetastet. Der Draht
+zwischen dem `Document` und den `List<String>`-Absätzen des Modells lag hier; alles
+ai-ghost-Spezifische wird über simPlay-API beantwortet, nie über eine Abhängigkeit zurück aus simPlay.
+Die Überschreibung der `paper-sheet-view`-`-fx-`-Eigenschaften mit der ai-ghost-Palette gehört
+ebenfalls hierher (früher IP-27) und bleibt unverändert in Kraft.
 
-Abweichungen vom ursprünglichen Plantext:
+**Durch die TextAnchor-Abweichung abgelöst:** Genau das Muster "pro Teil ein eigenes einseitiges
+`Document`, `paperSheetView.mode` wechselt zwischen `EDITABLE`/`READONLY`, Bearbeitungen werden über
+einen `documentProperty`-`ChangeListener` erkannt und index-weise auf `targets` zurückgeschrieben" wird
+von IP-39 ersetzt: es gibt nur noch ein `Document` für das ganze Buch, das nie ausgetauscht wird. Was
+bleibt: `splitParagraph`/`mergeParagraph`/`removeParagraph`/`moveParagraph` in
+`BookPartEditorController` als reine, bereits getestete Funktionen (IP-32 verdrahtet sie neu, jetzt
+ankerfest), und der gemeldete Upstream-Fehler unten.
 
-* Kein manueller Layout-Stack mehr nötig: `PaperSheetView` bricht Zeilen und paginiert selbst.
-  `IncrementalLineBreaker`/`GreedyLineBreaker`/`JavaFxTextMetrics`/`DocumentLayout`/`LayoutEngine`/
-  `PageGeometry`/`NonePageBreakPolicy` entfallen ersatzlos aus `app/ui`, nicht nur umbenannt.
-* Pro Teil wird ein eigenes einseitiges `Document` gebaut (`SinglePage` für Titel-/Copyright-Seite,
-  `FlowPage` für Prolog/Kapitel/Epilog/Klappentext); `paperSheetView.mode` wechselt dafür zwischen
-  `EDITABLE`/`READONLY` auf derselben Komponente statt zweier Views.
-* `PaperFlowListener` hat kein Äquivalent; Bearbeitungen werden ausschließlich über einen
-  `documentProperty`-`ChangeListener` erkannt und index-weise auf `targets` zurückgeschrieben.
 * **In simPlay 0.2.2 gefunden und dem Maintainer gemeldet:** `TextBlock.toString()` fügt beim
   Zusammensetzen ein Leerzeichen vor jedem `TextWord` ein, das nicht auf ein Leerzeichen im
   Originaltext zurückgeht, sobald ein Wort direkt auf ein Symbol folgt; ein angehängtes, noch
   alleinstehendes Leerzeichen wird beim Retokenisieren verschluckt. Beides bringt den in
   `DocumentEditor.splice()` berechneten `caretIndex` gegenüber dem tatsächlich gespeicherten Text aus
-  dem Takt und lässt jedes weitere getippte Zeichen eine Position zu früh landen. `BookPartEditorTest`
-  umgeht das, indem getippte Fortsetzungen reine Buchstabenfolgen ohne Symbol/Leerzeichen-Übergang
-  sind; **IP-32 tippt echte Trennzeichen und braucht den Fix upstream.**
-* `splitParagraph`/`mergeParagraph`/`removeParagraph`/`moveParagraph` bleiben als reine, bereits
-  getestete Funktionen in `BookPartEditorController` stehen; nur ihre alte Verdrahtung
-  (`applyParagraphOperation`, `flowListener`) ist entfallen. IP-32 verdrahtet sie neu.
+  dem Takt und lässt jedes weitere getippte Zeichen eine Position zu früh landen. **IP-32 tippt echte
+  Trennzeichen und braucht den Fix upstream**, unabhängig von der TextAnchor-Abweichung.
+
+### IP-36: Model Umstellung Auf Anker-Struktur
+
+Plan: `FP-001-IP-36-ModellUmstellungAufAnkerStruktur.md`
+
+**Ziel:** `lib/ai-ghost-model`/`lib/ai-ghost-fx-model` vom Fließtext befreien, den das `Document`
+künftig allein trägt.
+
+**Umfang:** `BookPart`-Interface verliert `title`/`titleAppendix`/`paragraph`, behält `prompts`.
+`Chapter` verliert `title`/`titleAppendix`/`paragraph`, behält `name`/`prompts`, bekommt ein neues
+Feld `id: UUID` als stabiler Anker (bei Neuanlage vergeben, danach unveränderlich). `Prolog`/`Epilog`
+behalten `included`/`prompts`, verlieren ihren Text. `Book` verliert `title`/`titleAppendix`.
+`Copyright` verliert seinen Text, behält, was kein Fließtext ist. Jede Spiegelung in `lib/fx-model`
+folgt (`fx-model`-Skill). **Nicht** Teil dieses Plans: das neue `document`-Feld selbst (IP-37) und
+seine Befüllung (IP-38).
+
+**Abhängigkeiten:** IP-24, IP-02 (die Felder, die bestehen bleiben, sind dort entstanden).
+
+**Technische Überlegungen:** Eine `Chapter`-`UUID` ist nur stabil, wenn sie nie aus der Listenposition
+abgeleitet wird; sie entsteht einmal bei der Anlage und wird danach nur noch gelesen. Was ein Kapitel
+"ist", ändert sich: von "Titel + Text" zu "Name im Baum + Anker in einem fremden Dokument" - eine
+KDoc-Anpassung an `Chapter`/`BookPart` ist Teil dieses Plans (`project-docs`).
+
+### IP-37: Dokument-Persistenz Und Migration
+
+Plan: `FP-001-IP-37-DokumentPersistenzUndMigration.md`
+
+**Ziel:** `Book.document: Document` wird Teil des gespeicherten Projekts; ein vor der Abweichung
+gespeichertes Projekt öffnet unverändert.
+
+**Umfang:** `Book` bekommt das Feld `document: Document`. `ProjectStorage`/`StorageIo` müssen ein
+simPlay-`Document` lesen und schreiben können; `Document`/`Page`/`TextBlock`/`TextAnchor` sind auf
+Kotlin-Multiplatform-Serialisierung (`kotlinx-serialization`) ausgelegt, die bestehende
+Projekt-Persistenz auf Jackson (`StorageIo.loadFromZip`/`saveToZip`, `@JsonIgnoreProperties`) - ein
+Jackson-Modul, eigene (De-)Serialisierer oder eine eingebettete kotlinx-Byte-/Text-Repräsentation
+innerhalb des Jackson-Eintrags sind mögliche Wege, offen als Risiko in Abschnitt 9. Eine Migration
+erkennt ein Projekt ohne `document` (ältere `Book.version`) und baut es einmalig über
+`BookDocumentBuilder` aus den noch vorhandenen Alt-Feldern, bevor `IP-36`s Entfernung dieser Felder
+wirksam werden kann - die Lesereihenfolge von Migration und Modell-Umstellung ist eine harte
+Abhängigkeit dieses Plans von IP-36, nicht umgekehrt.
+
+**Abhängigkeiten:** IP-36 (die Felder, aus denen migriert wird, existieren dort noch als
+Übergangs-DTO), IP-29 (simPlay-Abhängigkeit).
+
+**Technische Überlegungen:** Der Migrationsweg muss die alten Feldnamen so lange lesen können, wie ein
+Projekt ohne `document` im Umlauf sein kann - die Übergangs-DTO trägt daher die entfernten Felder
+weiter, nur als reines Lese-Modell für die Migration, nicht mehr als `Chapter`/`Prolog`/`Epilog`/
+`Blurb`/`Book` selbst.
+
+### IP-38: Buch-Dokument Als Alleinige Basis
+
+Plan: `FP-001-IP-38-BuchDokumentAlsAlleinigeBasis.md`
+
+**Ziel:** `BookDocumentBuilder` (IP-30) wird die einzige Stelle, die ein `Document` baut - beim neuen
+Projekt, beim neuen Kapitel, bei der Migration (IP-37) - und dazu die Stelle, die den `TextStyle`
+jedes Blocks anhand der Rolle seines Ankers aus `Design` auffrischt, statt das ganze `Document` neu zu
+bauen.
+
+**Umfang:** Jede Seite bekommt zusätzlich zu ihrer stabilen Seiten-`id` einen `TextAnchor` (Titel,
+Copyright, Prolog, Epilog, Klappentext statisch; ein Kapitel über `chapter.id`, nicht mehr über
+`chapter-<index>`). Eine neue Funktion liest beim Öffnen und nach jeder Design-Änderung jeden Block
+über seinen Anker aus, bestimmt seine Rolle (Titel/Kapiteltitel/Kapiteltitel-Anhang/Fließtext) und
+ersetzt seinen `TextStyle`, ohne den Text anzufassen. Anlegen eines neuen Kapitels erzeugt eine neue
+`UUID`, baut seine leere `FlowPage` mit `TextAnchor` und fügt sie an der richtigen Stelle in
+`Book.document` ein.
+
+**Abhängigkeiten:** IP-37 (das `document`-Feld existiert), IP-30 (die Builder werden wiederverwendet,
+nicht ersetzt), IP-34 (Schrift-Stack für die Stil-Auffrischung).
+
+**Technische Überlegungen:** Die genaue API von `TextAnchor` (Zuordnung Rolle ↔ Anker, Verhalten beim
+Verschieben von Text über eine Ankergrenze) ist erst mit simPlay 0.3.1 bekannt; dieser Plan wird beim
+Start anhand der dann vorliegenden Dokumentation konkretisiert, wie schon IP-35 es für simPlay 0.3.0
+tat.
+
+### IP-39: PaperSheetView Dauerhaft Im Zentrum
+
+Plan: `FP-001-IP-39-PaperSheetViewDauerhaftImZentrum.md`
+
+**Ziel:** Ersetzt IP-15 (Routing) und IP-16 (Vorschaumodus) vollständig: eine einzige, dauerhaft
+gezeigte `PaperSheetView` über `Book.document`; eine Baumauswahl navigiert, tauscht kein `Document`.
+
+**Umfang:** Drei-Zonen-Aufbau (Baum, Blatt, Inspector) wie ursprünglich in IP-15 geplant, aber ohne
+Dokument-Routing - `EditorViewModel` löst eine Baumauswahl stattdessen auf den `TextAnchor` des
+Knotens auf und lässt `PaperSheetView` dorthin navigieren/scrollen. Jede Bearbeitung schreibt über
+denselben `documentProperty`-Listener (aus IP-31 übernommen) direkt in `Book.document` zurück; eine
+Struktur-Änderung, die die Kapitelliste betrifft (neues/gelöschtes Kapitel über den Baum), hält
+`Book.chapters` mit der Ankerreihenfolge im `Document` synchron. Der Schreib-/Vorschau-Umschalter
+schaltet nur `paperSheetView.mode` zwischen `EDITABLE` und `SELECTABLE` um, ohne zweites `Document`,
+zweite View oder zweites `measure`. Splitter-Position, Einklappzustand, Ansicht und
+Ankerposition kommen in `Preferences` (IP-15s ursprüngliche FX-Modell-Aufgabe).
+
+**Abhängigkeiten:** IP-38 (das eine, dauerhafte `Document` existiert und trägt Anker), IP-09 (Undo).
+
+**Technische Überlegungen:** Das erste `measure` eines langen Buches lief bisher nur pro Teil; mit
+einem einzigen, immer angezeigten Gesamtdokument übernimmt dieser Plan die
+Fortschrittsanzeige/Antwortverhalten-Sorge, die vorher IP-16 trug (Abschnitt 9).
 
 ### IP-32: Paragraph Structure Operations On Document
 
 Plan: `FP-001-IP-32-AbsatzOperationenAufDokument.md`
 
-Teilen, Verbinden, Löschen und Umsortieren sind Operationen auf der `TextBlock`-Liste eines `Page`;
-das Ergebnis ist ein neues `Document`. `CaretModel` adressiert Blöcke, Wörter und Symbole und ersetzt
-die `onSplitRequested`/`onMergeRequested`/`onMoveRequested`-Callbacks des früheren
-`PaperFlowListener`. Enter teilt, Backspace am Blockanfang verbindet, Strg+Umschalt+Pfeil sortiert um
-– als eigene Tastenhandler über der Komponente, da ein Block ein Absatz ist, kein mehrzeiliges Feld.
+Teilen, Verbinden, Löschen und Umsortieren sind Operationen auf der `TextBlock`-Liste einer `Page` des
+einen, ganzen `Book.document`; das Ergebnis ist ein neues `Document`. `CaretModel` adressiert Blöcke,
+Wörter und Symbole. Enter teilt, Backspace am Blockanfang verbindet, Strg+Umschalt+Pfeil sortiert um –
+als eigene Tastenhandler über der Komponente, da ein Block ein Absatz ist, kein mehrzeiliges Feld.
+**Neu durch die TextAnchor-Abweichung:** Keine Operation überschreitet die Grenze eines `TextAnchor` -
+ein Merge am Kapitelanfang darf nicht in den letzten Absatz des vorigen Kapitels hineinlaufen, ein
+Löschen darf den letzten Absatz eines Kapitels nicht mit dem Kapitel selbst verwechseln. Das Anlegen
+und Entfernen eines ganzen Kapitels bleibt eine Operation des Projektbaums (IP-38/IP-39), keine
+Absatz-Operation.
 
 ### IP-33: Undo On Immutable Document Swap
 
@@ -478,26 +665,9 @@ Plan: `FP-001-IP-33-UndoAufDokumentTausch.md`
 Der Tausch der `Document`-Instanz ist die natürliche Undo-Einheit. Ein Textänderungs-Eintrag und ein
 struktureller Eintrag (früher `ParagraphListUndoEntry`) merken sich Vorher- und Nachher-`Document`
 plus das Caret-Ziel und spielen den Tausch in beide Richtungen ab. Merge-Schlüssel und Tipp-Pause aus
-IP-09/IP-10 bleiben.
-
-### IP-15: Editor Arrangement And Tree Routing
-
-Plan: `FP-001-IP-15-EditorAufteilungUndBaumRouting.md`
-
-`ProjectList` behält seine API; das Routing ist ein erschöpfendes `when` in `EditorViewModel`, sodass
-ein Knoten, der später eine Bedeutung bekommt, ein Compilerfehler ist. View-Zustand geht zu
-`Preferences`, nie in das Projektdokument. Von der Abweichung unberührt.
-
-### IP-16: Writing And Preview Modes
-
-Plan: `FP-001-IP-16-SchreibUndVorschauModus.md`
-
-Die Vorschau ist eine zweite `PaperSheetView` im Modus `READONLY` über dem `Document` des ganzen
-Buches; die Seitenvirtualisierung bringt die Komponente mit. Ein Absatz fällt in beiden Modi auf
-dieselbe Seite, weil beide dasselbe `Document` und dieselbe Messung verwenden – kein Vergleich nötig.
-Die FX-Thread-Kosten des ersten `measure`-Aufrufs eines langen Buches werden mit einer
-Fortschrittsanzeige begleitet, nicht weggehofft. Die Leseposition ist eine Absatzreferenz, kein
-Scroll-Versatz.
+IP-09/IP-10 bleiben. Das "Modell", das nach einem Undo/Redo neu abgeleitet wird, ist jetzt nur noch
+`Book.chapters`s Reihenfolge/Bestand aus den Ankern des wiederhergestellten `Document`, nicht mehr
+`List<String>`-Absätze je Teil.
 
 ### IP-18: AI Actions On Paragraph And Heading
 
@@ -507,7 +677,8 @@ Die schwebende Leiste wird als simPlay-`FloatingOverlay` gebaut (Trigger `PARAGR
 `EDITABLE`-Modus zusätzlich `CARET`), sodass simPlay das Anzeigen, Positionieren und Verbergen
 übernimmt. Umschreiben, Ausbauen und Kürzen sind Schaltflächen mit Icons und Hover-/Fade-Verhalten,
 jede per FXML `onAction` an eine parameterlose `*View`-Methode mit Rumpf `TODO("AI action: …")`. Keine
-Verdrahtung an den Port aus IP-17, kein Stub, kein Provider.
+Verdrahtung an den Port aus IP-17, kein Stub, kein Provider. Voraussetzung ist jetzt IP-39 statt IP-31,
+inhaltlich unverändert.
 
 ### IP-35: Page Numbering And Page Modes On simPlay 0.3.0 ✅
 
@@ -520,13 +691,13 @@ simPlay 0.3.0 liefert `Document.numbering: PageNumbering` (Position, Startwert, 
 und nimmt Titel-/Copyright-Seite über `excludedPageIds` heraus; jede Seite trägt dafür eine feste,
 stabile `id` (`title`, `copyright`, `prolog`, `chapter-<n>`, `epilog`, `blurb`) statt simPlays
 zufälliger Vorgabe. Löst den Nummerierungsteil der TODO aus Abschnitt 9 ab.
-**Abweichung vom Plan:** `PageMode.DISABLED` für einen ausgeschalteten optionalen Teil wurde NICHT in
-`BookPartEditor` verdrahtet - der Editor zeigt je Auswahl ohnehin nur ein Dokument mit genau einer
-Seite, `PageMode` greift aber erst dort, wo mehrere Seiten gleichzeitig sichtbar sind. Diese
-Verdrahtung wandert nach IP-16, der künftigen Buchvorschau mit allen Seiten; vom Nutzer bestätigt.
-Gespiegelte Ränder, Leerseiten und die Klappentext-Kante bleiben ebenfalls offen. `PaperSheetMode`
-wurde mit simPlay 0.3.0 zugleich umbenannt (`READONLY` → `SELECTABLE`), in `BookPartEditorViewModel`
-und seinem Test nachgezogen.
+**Abweichung vom Plan, jetzt gegenstandslos:** `PageMode.DISABLED` wurde nicht in `BookPartEditor`
+verdrahtet, weil der Editor je Auswahl nur ein Dokument mit einer Seite zeigte und die künftige
+Buchvorschau (damals IP-16) das nachholen sollte. Mit der TextAnchor-Abweichung zeigt der Editor immer
+alle Seiten gleichzeitig (IP-39); die Verdrahtung findet jetzt direkt in IP-23 statt, ohne eine
+gesonderte Vorschau abzuwarten. Gespiegelte Ränder, Leerseiten und die Klappentext-Kante bleiben
+weiterhin offen. `PaperSheetMode` wurde mit simPlay 0.3.0 zugleich umbenannt (`READONLY` →
+`SELECTABLE`), in `BookPartEditorViewModel` und seinem Test nachgezogen.
 
 ### IP-23: Optional Book Parts In The Tree
 
@@ -535,35 +706,37 @@ Plan: `FP-001-IP-23-OptionaleTeileImBaum.md`
 Der eine Plan, der den Projektbaum ändert, und bewusst eng: Struktur und `selectedItem`-API bleiben,
 ein Kontrollkästchen wird auf genau drei Knoten hinzugefügt. `CheckBoxTreeItem` wendet seinen Haken
 standardmäßig auf den Teilbaum an, was eingeschränkt werden muss. Das Ausgrauen zieht sofort nach.
-`PageMode.DISABLED`/`null` für einen ausgeschalteten Teil ist NICHT hier verdrahtet - das ist mit
-IP-35 nach IP-16 gewandert, der Buchvorschau mit allen Seiten gleichzeitig.
+**Nicht mehr aufgeschoben:** `PageMode.DISABLED`/`null` für einen ausgeschalteten Teil wird von diesem
+Plan direkt verdrahtet - die frühere Vertagung auf eine künftige Buchvorschau entfällt, weil IP-39 alle
+Seiten ohnehin immer gleichzeitig zeigt.
 
 ## 8. Abhängigkeitsgraph
 
 ```text
-IP-29✅ ─┬─> IP-30✅ (mit IP-02✅, IP-24✅) ──┬─> IP-31✅ (mit IP-09✅, IP-34✅) ──┬─> IP-32
-        │                                    │                                ├─> IP-33
-        │                                    └─> IP-35✅ ────────────────────────┼─> IP-18
-        └─> IP-34✅ ───────────────────────────────────────────────────────────┘
-                                                                            └─> IP-15 (mit IP-12✅) ──┬─> IP-16 (mit IP-30, IP-35✅)
-                                                                                                      └─> IP-23 (mit IP-24✅, IP-35✅)
+IP-24✅ ─┬─> IP-36 (mit IP-02✅) ──> IP-37 (mit IP-29✅) ──> IP-38 (mit IP-30✅, IP-34✅) ──> IP-39 (mit IP-09✅)
+        │                                                                                   ├─> IP-32
+IP-29✅ ─┴─> IP-30✅ (mit IP-02✅, IP-24✅) ─┬─> IP-35✅                                       ├─> IP-33
+        └─> IP-34✅                        │                                                 ├─> IP-18
+                                           └───────────────────────────────────────────────> IP-23 (mit IP-24✅, IP-35✅)
 IP-02✅ ──> IP-13✅, IP-14✅
-IP-12✅ ──> IP-13✅, IP-19✅, IP-15
+IP-12✅ ──> IP-13✅, IP-19✅
 IP-17✅  (Port bleibt für spätere Wiederverwendung; nicht verdrahtet)
 ```
 
-Ein einziger Strang: IP-29 führt simPlay ein und räumt den Eigenbau ab. IP-30 stellt den Übersetzer
-um, IP-34 den Schrift-Stack. Auf beiden ruht IP-31, die Schreibfläche auf `PaperSheetView`; aus ihr
-wachsen die Absatz-Operationen (IP-32), das umgestellte Undo (IP-33), die KI-Leiste (IP-18) und die
-Editor-Aufteilung (IP-15). Aus IP-30 wächst außerdem IP-35 (Seitenzahl und `PageMode` auf simPlay
-0.3.0), die IP-23 als Abhängigkeit braucht. Aus IP-15 folgen wiederum der Vorschaumodus (IP-16) und
-das Kontrollkästchen im Baum (IP-23).
+Seit der zweiten Abweichung ein anderer Strang: IP-36 löst den Fließtext aus dem Modell (auf IP-24/
+IP-02 aufbauend), IP-37 macht das entstehende `Document` speicherbar und migriert Altprojekte, IP-38
+macht `BookDocumentBuilder` zur einzigen, dauerhaften Dokumentbasis mit `TextAnchor` statt Index. Erst
+danach folgt IP-39, die dauerhaft gezeigte `PaperSheetView` - sie ersetzt, was vorher IP-15 und IP-16
+werden sollten. Aus IP-39 wachsen die Absatz-Operationen (IP-32), das umgestellte Undo (IP-33) und die
+KI-Leiste (IP-18); IP-23 (Kontrollkästchen im Baum) hängt zusätzlich an IP-35 (`PageMode`), das seinerseits
+unverändert an IP-30 hängt. IP-29, IP-30 und IP-34 bleiben der unveränderte Unterbau aus der ersten
+Abweichung, deren Bausteine IP-38 weiterverwendet.
 
 Abgeschlossen und unberührt: **IP-01** ✅ (teilweise abgelöst), **IP-02** ✅, **IP-24** ✅,
-**IP-09** ✅, **IP-12** ✅, **IP-13** ✅, **IP-14** ✅, **IP-17** ✅, **IP-19** ✅.
-Unabhängiger Ausgangspunkt der Abweichung: **IP-29** ✅. Schrift-Stack abgeschlossen: **IP-34** ✅.
-Schreibfläche abgeschlossen: **IP-31** ✅. Seitennummerierung auf simPlay 0.3.0 abgeschlossen:
-**IP-35** ✅.
+**IP-09** ✅, **IP-12** ✅, **IP-13** ✅, **IP-14** ✅, **IP-17** ✅, **IP-19** ✅, **IP-29** ✅,
+**IP-30** ✅, **IP-34** ✅, **IP-35** ✅. Abgeschlossen, Ergebnis durch die zweite Abweichung abgelöst:
+**IP-31** ✅ (Grundfunktionen bleiben nutzbar, siehe IP-32/IP-39). Vollständig abgelöst, keine Datei
+mehr: **IP-15**, **IP-16** (siehe Abschnitt 6).
 
 ## 9. Risiken und offene Fragen
 
@@ -576,10 +749,32 @@ Schreibfläche abgeschlossen: **IP-31** ✅. Seitennummerierung auf simPlay 0.3.
   weiter nicht vorgesehen. **Der Nutzer fügt diese Politik nachträglich in simPlay ein.**
   Seitennummerierung (`Document.numbering`, `excludedPageIds`, `PageCountingMode`) ist seit 0.3.0
   vorhanden und von IP-35 verdrahtet, nicht mehr als Zwischenlösung. Inaktive Seiten eines
-  ausgeschalteten Teils (`PageMode.DISABLED`) sind ebenfalls seit 0.3.0 vorhanden, werden aber erst
-  mit IP-16 verdrahtet - `PageMode` greift erst, wo mehrere Seiten gleichzeitig sichtbar sind, was
-  erst die Buchvorschau leistet. Betroffene Abschnitte des Zielzustands stehen weiterhin unter dem
-  Vorbehalt des verbleibenden Rests.
+  ausgeschalteten Teils (`PageMode.DISABLED`) sind ebenfalls seit 0.3.0 vorhanden und werden jetzt
+  direkt von IP-23 verdrahtet, da IP-39 alle Seiten ohnehin gleichzeitig zeigt - die frühere Vertagung
+  auf eine gesonderte Buchvorschau entfällt. Betroffene Abschnitte des Zielzustands stehen weiterhin
+  unter dem Vorbehalt des verbleibenden Rests.
+* **`TextAnchor` ist zum Zeitpunkt dieser Planänderung nicht freigegeben (simPlay 0.3.1 steht noch
+  aus).** Diese Abweichung setzt voraus, dass ein Anker eine Textstelle über beliebige Einfügungen,
+  Löschungen und Verschiebungen davor hinweg wiederfindet, dass ihm eine Rolle beigegeben werden kann
+  (welcher Design-Stil gilt) und dass er persistierbar ist. IP-38 konkretisiert die genaue API erst,
+  wenn 0.3.1 vorliegt, wie schon IP-35 es für 0.3.0 tat. Trifft die API die Annahmen nicht, ist IP-38
+  neu zu bewerten, bevor IP-39 beginnt.
+* **Was schützt einen Anker vor versehentlichem Löschen?** Löscht der Nutzer den gesamten Text eines
+  Kapitels bis vor seinen Anker, oder markiert und löscht er über eine Kapitelgrenze hinweg, muss klar
+  sein, ob der Anker (und damit das Kapitel) verschwindet oder stehen bleibt. IP-32/IP-39 legen fest,
+  dass eine Absatz-Operation nie über eine Ankergrenze hinausgreift; ein ganzes Kapitel entfernt sich
+  weiterhin nur über den Projektbaum, nie durch Text-Löschen im Blatt. Offen: ob das Entfernen eines
+  Kapitels über den Baum eine Rückfrage braucht (anders als die textbehaltenden optionalen Teile aus
+  IP-24, hier geht Text wirklich verloren) - vom Nutzer vor IP-39 zu bestätigen.
+* **Jackson-Persistenz gegen ein kotlinx-serialization-Modell.** `Document`/`Page`/`TextBlock`/
+  `TextAnchor` sind auf simPlays eigene, Multiplatform-taugliche Serialisierung ausgelegt; die
+  bestehende Projekt-Persistenz (`StorageIo`, `ProjectStorage`) ist Jackson-basiert. IP-37 muss einen
+  Weg festlegen (Jackson-Modul, eigene Serialisierer oder eine eingebettete kotlinx-Repräsentation im
+  Jackson-Baum) - ungeklärt, bis IP-37 beginnt.
+* **Migrationsreihenfolge.** Ein Projekt ohne `document` muss noch gelesen werden können, nachdem
+  `IP-36` die alten Textfelder aus `Chapter`/`Prolog`/`Epilog`/`Blurb`/`Book`/`Copyright` entfernt hat.
+  IP-37 braucht dafür ein von den produktiven Modellklassen unabhängiges Lese-Modell für genau diese
+  Migration (siehe IP-37, „Technische Überlegungen“).
 * **`simplay-fx` liefert seit 0.2.1 Verfügbarkeit und Fingerabdruck selbst** (`FxFontProbe`):
   `checkAvailability`, `fingerprint`, `verify`, `stamp`, intern auf demselben `FontMeasureCalculator`
   wie der Renderpfad. Geklärt; kein Eigenbau mehr in IP-34.
@@ -596,16 +791,17 @@ Schreibfläche abgeschlossen: **IP-31** ✅. Seitennummerierung auf simPlay 0.3.
 * **Reife und Versionierung von simPlay.** Eine feste Version wird gepinnt. Ein Bruch in einer
   Minor-Version träfe den ganzen Renderpfad. IP-29 pinnt exakt und hält die Version an einer Stelle.
 * **Das Messen gehört dem FX-Thread.** `simplay-engine.measure` läuft synchron; das erste Layout
-  eines langen Buches kann das Fenster einfrieren. IP-16 begleitet es mit einer Fortschrittsanzeige
-  und misst die Kosten, statt sie zu verbergen.
+  eines langen Buches kann das Fenster einfrieren, jetzt für das ganze Buch auf einmal statt je Teil.
+  IP-39 begleitet es mit einer Fortschrittsanzeige und misst die Kosten, statt sie zu verbergen.
 * **`PaperSheetView` im `EDITABLE`-Modus ist eine vollständige Editorkomponente.** Der Teil, der am
   ehesten ai-ghost-spezifisches Verhalten verlangt (Absatz-als-Einheit, Enter teilt statt Umbruch).
   Jeder solche Bedarf wird über die simPlay-API (`CaretModel`, `TextSelectionModel`, Tastenhandler
   darüber) beantwortet, nie über eine Erweiterung von simPlay im ai-ghost-Repository.
 * **Rückabbildung Dokument → Modell.** `PaperSheetView` gibt bei einer Bearbeitung ein neues
-  `Document` heraus; IP-31 muss daraus die `List<String>`-Absätze je Teil rekonstruieren. Ein harter
-  Zeilenumbruch innerhalb eines `TextBlock` (im Modell heute nicht vorgesehen) würde diesen Weg
-  stören.
+  `Document` heraus; das Modell trägt seit der TextAnchor-Abweichung ohnehin keine
+  `List<String>`-Absätze mehr, IP-39 schreibt das neue `Document` direkt in `Book.document` und hält
+  nur noch `Book.chapters`s Reihenfolge/Bestand mit den Ankern synchron. Ein harter Zeilenumbruch
+  innerhalb eines `TextBlock` (weiterhin nicht vorgesehen) würde diesen Weg stören.
 * **Die Standardschrift eines neuen Projekts** bleibt offen: `FontData` fällt auf `Arial` zurück, das
   nicht überall installiert ist; eine über die Fallback-Kette auflösende Vorgabe wird benötigt.
 * **Übereinstimmung pro Maschine.** IP-34 macht eine Ersetzung sichtbar; beseitigen kann sie sie
@@ -645,6 +841,13 @@ Schreibfläche abgeschlossen: **IP-31** ✅. Seitennummerierung auf simPlay 0.3.
   immer das letzte Blatt, durch eine harte Kante abgesetzt, ohne Seitenzahl.
 * **Optionale Teile** beginnen immer auf einer eigenen Seite (ein `FlowPage` je Teil), behalten ihren
   Text, sind ausgegraut und bleiben beschreibbar.
+* **Das `Document` ist der gespeicherte Zustand des Fließtexts** (`Book.document`), nicht mehr eine
+  aus `List<String>`-Feldern abgeleitete Sicht; `TextAnchor` (simPlay 0.3.1) hält Titel, Kapitel,
+  Prolog, Epilog und Klappentext wiederauffindbar, Kapitel über eine gespeicherte `UUID`. Der
+  `TextStyle` im `Document` wird beim Laden verworfen und durch den aus `Design` berechneten Stil
+  ersetzt.
+* **`PaperSheetView` wird nicht mehr je Baumauswahl neu gebaut**, sie zeigt dauerhaft das ganze Buch;
+  eine Baumauswahl navigiert über den `TextAnchor` des gewählten Knotens.
 * **Der Metrik-Fingerabdruck** wird über `simplay-fx`s `FxFontProbe` aus `simplay-engine`s
   `FontFingerprint` genommen (Lateinschrift plus Diakritika/Satzzeichen bei Normgröße 100.0, mit
   Ascent, Descent und Advances je Glyph). Referenzsatz und Größe sind von simPlay fest vorgegeben.
@@ -674,12 +877,16 @@ Schreibfläche abgeschlossen: **IP-31** ✅. Seitennummerierung auf simPlay 0.3.
   `settings.gradle.kts` entfernt; der Build kennt sie nicht mehr.
 * `lib/ai-ghost-layouting-model` baut aus `Book`, `Design` und `Meta` ein simPlay-`Document` und
   hängt von `simplay-engine`, nicht von JavaFX ab.
-* Schreibfläche und Vorschau sind `PaperSheetView` in den Modi `EDITABLE` und `READONLY` über
-  demselben `Document`; ein Absatz fällt in beiden auf dieselbe Seite.
+* `PaperSheetView` ist eine dauerhafte, einzige Instanz über dem ganzen Buch; Schreiben und Vorschau
+  sind ihre Modi `EDITABLE` und `SELECTABLE` auf demselben `Document`, ohne zweiten Aufbau; eine
+  Baumauswahl navigiert über den `TextAnchor` des gewählten Teils, statt ein anderes Dokument
+  einzusetzen.
 * Prolog, Epilog und Klappentext werden aus dem Baum geschaltet; ein ausgeschalteter Teil behält
-  seinen Text, ist ausgegraut und bleibt beschreibbar. (Neunummerierung und Klappentext-Kante gelten,
-  sobald die simPlay-Seitenpolitik steht; bis dahin als TODO dokumentiert.)
-* Ein vor diesem Feature geschriebenes Dokument öffnet mit genau den Teilen, die es früher hatte.
+  seinen Text, ist ausgegraut, bleibt beschreibbar und ist sofort über `PageMode.DISABLED` auch auf
+  dem Papier inaktiv. (Neunummerierung und Klappentext-Kante gelten, sobald die simPlay-Seitenpolitik
+  steht; bis dahin als TODO dokumentiert.)
+* Ein vor diesem Feature geschriebenes Dokument öffnet mit genau den Teilen, die es früher hatte; die
+  einmalige Migration baut sein `Document` aus den bisherigen Feldern.
 * Text wird in der Typografie, den Rändern und der Seitenstruktur des Buches geschrieben, mit echten
   Blattgrenzen dort, wo das gedruckte Buch umbricht.
 * Schriften kommen aus den installierten Familien; keine Manuskriptschrift wird ausgeliefert und keine
