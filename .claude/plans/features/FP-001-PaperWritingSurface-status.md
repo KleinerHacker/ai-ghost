@@ -23,7 +23,7 @@ Status: IN_PROGRESS
 | IP-36 | Model Umstellung Auf Anker-Struktur             | COMPLETED   |
 | IP-37 | Dokument-Persistenz Und Migration               | COMPLETED   |
 | IP-38 | Buch-Dokument Als Alleinige Basis               | COMPLETED   |
-| IP-39 | PaperSheetView Dauerhaft Im Zentrum             | NOT_STARTED |
+| IP-39 | PaperSheetView Dauerhaft Im Zentrum             | COMPLETED   |
 | IP-32 | Paragraph Structure Operations On Document     | NOT_STARTED |
 | IP-33 | Undo On Immutable Document Swap                | NOT_STARTED |
 | IP-18 | AI Actions On Paragraph And Heading            | NOT_STARTED |
@@ -62,8 +62,8 @@ nur seine reinen Funktionen und sein Sync-Muster gehen in IP-39 über.
 
 ## Gesamtfortschritt
 
-73 % (16 von 22 zählenden Plänen abgeschlossen; IP-31 zählt als abgeschlossen, aber sein Ergebnis ist
-abgelöst und wird von IP-39 neu erbracht)
+77 % (17 von 22 zählenden Plänen abgeschlossen; IP-31 zählt als abgeschlossen, aber sein Ergebnis ist
+abgelöst und wurde von IP-39 neu erbracht)
 
 ## Anmerkungen
 
@@ -174,4 +174,24 @@ aus dem sichtbaren, ankerbereinigten linearen Text (`DocumentTextIndex.text`) ne
 als `1.0-SNAPSHOT` getestet, inzwischen als reguläres Release `0.3.2` veröffentlicht;
 `simplayVersion` im Wurzel-Build steht darauf.
 
-Nächster Schritt: IP-39 (`PaperSheetView` dauerhaft im Zentrum, Navigation über `TextAnchor`).
+IP-39 abgeschlossen: `PaperSheetView` zeigt seither dauerhaft das ganze Buch als einziges `Document`
+(`BookPartEditorController.buildWholeDocument`); eine Baumauswahl navigiert nur noch über
+`caretModel.moveToAnchor(anchorId)`, baut kein neues `Document` mehr. Rückschreiben läuft generalisiert
+über alle Seiten gleichzeitig (`handleDocumentChanged`) und schließt seit dieser Umsetzung auch Titel-
+und Copyright-Seite ein - beide waren bereits vor IP-39 ankerbasiert aus `Book.document` lesbar, nur
+bisher nie editierbar geschaltet; der Klappentext-Anker wird beim Zurückschreiben abgestreift, damit
+`Book.blurb.paragraph` sauber bleibt. Neue Werkzeugleiste in `EditorView.fxml` mit einem
+Schreiben/Vorschau-`ToggleButton` (`WritingMode`-Enum, neu in `lib/model`, da `PaperSheetMode` als
+JavaFX-Typ dort nicht zulässig ist); Modus und zuletzt angesteuerte Anker-Position werden in
+`Preferences.editor` (`writingMode`, `lastAnchorId`) gemerkt und beim Öffnen wiederhergestellt. Der
+erste Dokumentaufbau nach dem Öffnen eines Projekts wird um einen `Platform.runLater`-Takt verzögert,
+damit ein `ProgressIndicator` vor dem blockierenden `simplay-engine.measure`-Aufruf sichtbar wird.
+
+**Abweichungen:** Kein Icon auf dem Umschalter - der `icon-creator`-Agent verfügt in dieser Umgebung nur
+über `Read`/`Glob`/`Grep`, keine Bilderzeugung; bleibt TODO. Keine echte Fortschritts-%-Anzeige, nur ein
+unbestimmter Spinner, da `simplay-engine.measure()` keine inkrementelle API bietet; die Kosten eines
+langen Buches wurden mangels Testprojekt nicht real gemessen. `Editor.inspectorCollapsed` liegt im
+Modell bereit, ist aber nicht an die Oberfläche angebunden; Splitter-Positionen werden nicht gemerkt -
+beides bleibt offenes TODO, da `Inspector`/`EditorView` noch keinen Gesamt-Einklappmechanismus besitzen.
+
+Nächster Schritt: IP-32, IP-33, IP-18 oder IP-23 (alle jetzt durch IP-39 freigegeben).

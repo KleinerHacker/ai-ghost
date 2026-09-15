@@ -16,7 +16,9 @@ import de.saxsys.mvvmfx.FxmlView
 import de.saxsys.mvvmfx.InjectViewModel
 import javafx.fxml.FXML
 import javafx.fxml.Initializable
+import javafx.scene.control.ToggleButton
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
+import org.pcsoft.app.aighost.model.pref.WritingMode
 import java.net.URL
 import java.util.*
 
@@ -43,6 +45,9 @@ class EditorView : FxmlView<EditorViewModel>, Initializable {
     @FXML
     private lateinit var bookPartEditor: BookPartEditor
 
+    @FXML
+    private lateinit var btnWritingMode: ToggleButton
+
     @InjectViewModel
     private lateinit var viewModel: EditorViewModel
 
@@ -56,6 +61,22 @@ class EditorView : FxmlView<EditorViewModel>, Initializable {
         viewModel.selectedProjectTreeItem.bind(pnlProjectList.selectedItem)
         inspector.bindSelection(viewModel.selectedProjectTreeItem)
         bookPartEditor.bindSelection(viewModel.selectedProjectTreeItem)
+
+        btnWritingMode.isSelected = bookPartEditor.writingModeProperty.get() == WritingMode.PREVIEW
+        bookPartEditor.writingModeProperty.addListener { _, _, mode ->
+            btnWritingMode.isSelected = mode == WritingMode.PREVIEW
+        }
+    }
+
+    /**
+     * Switches the writing surface between writing and preview, following the tool bar's toggle
+     * button.
+     *
+     * Triggered by [btnWritingMode].
+     */
+    @FXML
+    private fun actionToggleWritingMode() {
+        bookPartEditor.setWritingMode(if (btnWritingMode.isSelected) WritingMode.PREVIEW else WritingMode.WRITING)
     }
 
     /**

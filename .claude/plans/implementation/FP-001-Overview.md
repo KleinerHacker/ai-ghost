@@ -43,7 +43,7 @@
 | IP-36 | Modell-Umstellung auf Anker-Struktur | `FP-001-IP-36-ModellUmstellungAufAnkerStruktur.md` | IP-24, IP-02 |
 | IP-37 | Dokument-Persistenz und Migration | `FP-001-IP-37-DokumentPersistenzUndMigration.md` | IP-36, IP-29 |
 | IP-38 | Buch-Dokument als alleinige Basis | `FP-001-IP-38-BuchDokumentAlsAlleinigeBasis.md` | IP-37, IP-30, IP-34 |
-| IP-39 | PaperSheetView dauerhaft im Zentrum | `FP-001-IP-39-PaperSheetViewDauerhaftImZentrum.md` | IP-38, IP-09 |
+| IP-39 ✅ | PaperSheetView dauerhaft im Zentrum | (Datei entfernt) | IP-38, IP-09 |
 | IP-32 | Absatz-Operationen auf dem Dokument | `FP-001-IP-32-AbsatzOperationenAufDokument.md` | IP-39 |
 | IP-33 | Undo auf dem unveränderlichen Dokument-Tausch | `FP-001-IP-33-UndoAufDokumentTausch.md` | IP-39 |
 | IP-18 | KI-Schaltflächen an Absatz und Überschrift | `FP-001-IP-18-AiAktionenAmAbsatz.md` | IP-39 |
@@ -61,7 +61,15 @@
   gehen in IP-39 über. Plandatei entfernt.
 * IP-35 – Seitenzahl und Seitenmodi auf simPlay 0.3.0. `PageMode.DISABLED`-Verdrahtung war auf eine
   künftige Buchvorschau vertagt; findet jetzt direkt in IP-23 statt. Plandatei entfernt.
+* IP-36 – Modell-Umstellung auf Anker-Struktur. Plandatei entfernt.
+* IP-37 – Dokument-Persistenz und Migration (ohne Migration alter Projekte). Plandatei entfernt.
+* IP-38 – Buch-Dokument als alleinige Basis. Plandatei entfernt.
+* IP-39 – PaperSheetView dauerhaft im Zentrum. Werkzeugleisten-Umschalter ohne Icon (Tooling-Blocker),
+  Splitter-Positionen/Inspector-Einklappzustand nicht umgesetzt (offene TODOs). Plandatei entfernt.
 
 ## Startbereit (Voraussetzungen erfüllt)
 
-* IP-36 – Modell-Umstellung auf Anker-Struktur (Voraussetzungen IP-24 ✅, IP-02 ✅)
+* IP-32 – Absatz-Operationen auf dem Dokument (Voraussetzung IP-39 ✅)
+* IP-33 – Undo auf dem unveränderlichen Dokument-Tausch (Voraussetzung IP-39 ✅)
+* IP-18 – KI-Schaltflächen an Absatz und Überschrift (Voraussetzung IP-39 ✅)
+* IP-23 – Optionale Teile im Projektbaum (Voraussetzungen IP-39 ✅, IP-24 ✅, IP-35 ✅)

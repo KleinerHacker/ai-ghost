@@ -12,133 +12,97 @@
 
 package org.pcsoft.app.aighost.app.controller
 
-import javafx.beans.property.ListProperty
 import org.pcsoft.app.aighost.app.ui.component.ProjectListItem
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
-import org.pcsoft.app.aighost.fx.model.project.book.BookPartProperty
-import org.pcsoft.app.aighost.fx.model.project.book.ChapterProperty
 import org.pcsoft.app.aighost.layouting.model.common.toPageLayout
 import org.pcsoft.app.aighost.layouting.model.common.toTextStyle
-import org.pcsoft.app.aighost.layouting.model.project.book.BlurbBuilder
-import org.pcsoft.app.aighost.layouting.model.project.book.BookPartBuilder
-import org.pcsoft.app.aighost.layouting.model.project.book.TitlePageBuilder
-import org.pcsoft.app.aighost.layouting.model.project.meta.CopyrightPageBuilder
+import org.pcsoft.app.aighost.layouting.model.project.BookDocumentBuilder
 import org.pcsoft.app.aighost.model.project.Project
 import org.pcsoft.app.aighost.model.project.design.Design
+import org.pcsoft.app.aighost.model.project.meta.Meta
+import org.pcsoft.framework.simplay.engine.model.Document
 import org.pcsoft.framework.simplay.engine.model.FlowPage
 import org.pcsoft.framework.simplay.engine.model.Page
 import org.pcsoft.framework.simplay.engine.model.SinglePage
 import org.pcsoft.framework.simplay.engine.model.TextBlock
 
 /**
- * The domain logic of the book part writing surface, kept out of its view model.
+ * The domain logic of the book's writing surface, kept out of its view model.
  *
- * The view model owns everything that has a lifetime - the sheet it drives, one string property per
- * editable block, the caret, the undo history. This controller owns none of that: every function here
- * takes what it needs as an argument and returns a plain result, the same way [IoController] reads and
- * writes documents without holding an open one. That is what makes the routing of a tree node, the
- * assembly of the sheet's blocks and the mapping of a block back onto a manuscript field testable on
- * their own, without a JavaFX toolkit.
+ * Since IP-39 the sheet always shows the whole book as one [Document], built by
+ * [BookDocumentBuilder]; a tree selection only navigates to the picked part's `TextAnchor`, it never
+ * swaps the document. This controller resolves a picked [ProjectListItem] onto that anchor id
+ * ([resolve]), builds the whole-book document together with the write-back target of every block
+ * ([buildWholeDocument]), and maps a block back onto the manuscript field it stands for
+ * ([readModel]/[writeModel]) - the same way [org.pcsoft.app.aighost.app.controller.IoController] reads
+ * and writes documents without holding an open one, so all of this is testable without a JavaFX
+ * toolkit.
  *
- * Since IP-38 a prolog, a chapter and an epilog are read from and written back into the book's simPlay
- * `Document` through the anchor id of their page - `"prolog"`, `"epilog"` or a chapter's
- * `id.toString()` - via [org.pcsoft.app.aighost.layouting.model.project.book.BookPartBuilder]. Only the
- * blurb, which still carries its own paragraphs, and the read-only title and copyright pages keep a
- * different path.
+ * A prolog, a chapter, an epilog, the title page and the copyright page are all read from and written
+ * back into the book's simPlay `Document` through the anchor id of their page - `"prolog"`,
+ * `"epilog"`, `"title"`, `"copyright"` or a chapter's `id.toString()` - via
+ * [org.pcsoft.app.aighost.layouting.model.project.book.BookPartBuilder]. The title and the copyright
+ * page may carry one further, non-anchored block with the author's name, rebuilt fresh from [Meta] on
+ * every call; that block is never part of a block's write-back target. Only the blurb, which still
+ * carries its own paragraphs on the model directly, keeps a different path:
+ * [org.pcsoft.app.aighost.layouting.model.project.book.BlurbBuilder] embeds the blurb's anchor token
+ * inside the first paragraph's own text instead of a block of its own, so [writeModel] strips it back
+ * off before the clean paragraph is stored.
  */
 object BookPartEditorController {
 
     /**
-     * Routes the picked project tree node onto the mode of the sheet and the part it edits.
-     *
-     * @param project the open project, `null` when none is open
-     * @param item the picked node, `null` when nothing is picked
-     * @return the mode, the bound part (for a prolog, chapter or epilog) and the id used as the undo
-     * merge key; the bound part is `null` for every read-only or headingless mode
+     * The anchor token [org.pcsoft.app.aighost.layouting.model.project.book.BlurbBuilder] embeds at
+     * the start of the blurb's first block; stripped back off before the paragraph is stored.
      */
-    fun resolve(project: ProjectProperty?, item: ProjectListItem?): PartResolution {
-        val book = project?.bookProperty?.value
-        if (project == null || book == null) {
-            return PartResolution(PartMode.NONE, null, "")
-        }
+    private const val BLURB_ANCHOR_TOKEN = "\${blurb}"
 
-        return when (item) {
-            is ProjectListItem.TitlePageItem -> PartResolution(PartMode.TITLE_PAGE, null, "")
-            is ProjectListItem.CopyrightPageItem -> PartResolution(PartMode.COPYRIGHT_PAGE, null, "")
-            is ProjectListItem.PrologItem ->
-                PartResolution(PartMode.BOOK_PART, project.bookProperty.prologProperty, "prolog")
-
-            is ProjectListItem.EpilogItem ->
-                PartResolution(PartMode.BOOK_PART, project.bookProperty.epilogProperty, "epilog")
-
-            is ProjectListItem.ChapterItem ->
-                PartResolution(
-                    PartMode.BOOK_PART,
-                    ChapterProperty.of(item.chapter),
-                    "chapter:" + item.chapter.id
-                )
-
-            is ProjectListItem.BlurbItem -> PartResolution(PartMode.BLURB, null, "")
-            else -> PartResolution(PartMode.NONE, null, "")
-        }
+    /**
+     * Resolves the picked project tree node onto the `TextAnchor` id `PaperSheetView` navigates to.
+     *
+     * @param item the picked node, `null` when nothing is picked
+     * @return the mode of the resolved part and its anchor id; the anchor id is empty for
+     * [PartMode.NONE]
+     */
+    fun resolve(item: ProjectListItem?): PartResolution = when (item) {
+        is ProjectListItem.TitlePageItem -> PartResolution(PartMode.TITLE_PAGE, "title")
+        is ProjectListItem.CopyrightPageItem -> PartResolution(PartMode.COPYRIGHT_PAGE, "copyright")
+        is ProjectListItem.PrologItem -> PartResolution(PartMode.BOOK_PART, "prolog")
+        is ProjectListItem.EpilogItem -> PartResolution(PartMode.BOOK_PART, "epilog")
+        is ProjectListItem.ChapterItem -> PartResolution(PartMode.BOOK_PART, item.chapter.id.toString())
+        is ProjectListItem.BlurbItem -> PartResolution(PartMode.BLURB, "blurb")
+        else -> PartResolution(PartMode.NONE, "")
     }
 
     /**
-     * Builds the text blocks of the resolved part and the target each of them writes back to.
-     *
-     * A writable part that has no content yet is given a single empty paragraph block, so the sheet
-     * has somewhere to place a caret and the user has somewhere to type; [PartMode.BOOK_PART] never
-     * needs that seed of its own, since [BookPartBuilder] already seeds an anchor-only block for a
-     * part with no page yet.
+     * Builds the whole-book document together with the write-back target of every one of its blocks.
      *
      * @param project the open project
      * @param design the design of the project
-     * @param resolution the resolved part, from [resolve]
-     * @return the blocks in the order they are set and one target per block; both empty for
-     * [PartMode.NONE] and for a book part with no bound model
+     * @param meta the project meta data, needed for the author blocks of the title and the copyright
+     * page
+     * @return the document [org.pcsoft.framework.simplay.fx.PaperSheetView] is given, and one list of
+     * [PartTarget] per page, keyed by the page's id (its anchor id)
      */
-    fun buildBlocks(project: Project, design: Design, resolution: PartResolution): BlockPlan {
-        val book = project.book
-        val meta = project.meta
-
-        return when (resolution.mode) {
-            PartMode.TITLE_PAGE ->
-                BlockPlan(TitlePageBuilder.build(book.document, meta, design), emptyList())
-
-            PartMode.COPYRIGHT_PAGE ->
-                BlockPlan(CopyrightPageBuilder.build(book.document, book.copyright, meta, design), emptyList())
-
-            PartMode.BLURB -> {
-                val blocks = BlurbBuilder.build(book.blurb, design)
-                val targets = book.blurb.paragraph.indices.map { PartTarget.Paragraph(it) }
-                ensureWritableBlock(blocks, design, resolution, targets)
-            }
-
-            PartMode.BOOK_PART -> {
-                if (resolution.boundPart?.value == null) return BlockPlan(emptyList(), emptyList())
-                val anchorId = anchorIdOf(resolution)
-                val pageDesign = pageDesignOf(resolution, design)
-                val blocks = BookPartBuilder.build(book.document, anchorId, pageDesign.textStyle.toTextStyle())
-                val targets = blocks.indices.map { PartTarget.AnchorBlock(anchorId, it) }
-                BlockPlan(blocks, targets)
-            }
-
-            PartMode.NONE -> BlockPlan(emptyList(), emptyList())
-        }
+    fun buildWholeDocument(project: Project, design: Design, meta: Meta): WholeDocumentPlan {
+        val document = BookDocumentBuilder.build(project.book, design, meta)
+        val targets = document.pages.associate { page -> page.id to targetsOf(page, design, meta) }
+        return WholeDocumentPlan(document, targets)
     }
 
     /**
      * Reads the current text of one block from the model.
      *
-     * @param project the open project, needed for the blurb whose paragraphs are not on
-     * [PartResolution.boundPart], and for an anchor block, whose text lives on [ProjectProperty.bookProperty]
-     * @param resolution the resolved part
+     * @param project the open project, needed for the blurb whose paragraphs are not addressed by an
+     * anchor, and for an anchor block, whose text lives on [ProjectProperty.bookProperty]
      * @param target the block whose text is read
      * @return the text, or the empty string when the target does not resolve to a set field
      */
-    fun readModel(project: ProjectProperty, resolution: PartResolution, target: PartTarget): String =
+    fun readModel(project: ProjectProperty, target: PartTarget): String =
         when (target) {
-            is PartTarget.Paragraph -> paragraphListProperty(project, resolution)?.getOrNull(target.index).orEmpty()
+            is PartTarget.Paragraph -> project.bookProperty.blurbProperty.paragraphProperty
+                .getOrNull(target.index).orEmpty()
+
             is PartTarget.AnchorBlock -> pageOf(project, target.anchorId)
                 ?.blocks?.getOrNull(target.blockIndex)?.toString().orEmpty()
         }
@@ -146,27 +110,25 @@ object BookPartEditorController {
     /**
      * Writes the text of one block back into the model.
      *
-     * A paragraph target one past the end of the list appends, so a freshly seeded empty paragraph
-     * becomes a real one on the first keystroke. An anchor block target's page may not exist in the
-     * document yet either - [buildBlocks] only ever seeds a block for display, it never persists it -
-     * so the very first edit of a prolog, a chapter or an epilog creates that page here, the same way
-     * a fresh paragraph target creates its entry.
+     * A paragraph target one past the end of the list appends. An anchor block target's page may not
+     * exist in the document yet - the very first edit of a prolog, a chapter, an epilog, the title or
+     * the copyright page creates that page here.
      *
      * @param project the open project
      * @param design the design of the project, needed to lay out a page an anchor block target
      * creates because none existed yet
-     * @param resolution the resolved part
      * @param target the block whose text changed
      * @param value the new text
      */
-    fun writeModel(project: ProjectProperty, design: Design, resolution: PartResolution, target: PartTarget, value: String) {
+    fun writeModel(project: ProjectProperty, design: Design, target: PartTarget, value: String) {
         when (target) {
             is PartTarget.Paragraph -> {
-                val list = paragraphListProperty(project, resolution) ?: return
+                val list = project.bookProperty.blurbProperty.paragraphProperty
+                val cleaned = if (target.index == 0) value.removePrefix(BLURB_ANCHOR_TOKEN) else value
                 if (target.index in list.indices) {
-                    list[target.index] = value
+                    list[target.index] = cleaned
                 } else if (target.index == list.size) {
-                    list.add(value)
+                    list.add(cleaned)
                 }
             }
 
@@ -176,7 +138,7 @@ object BookPartEditorController {
 
                 if (pageIndex < 0) {
                     if (target.blockIndex != 0) return
-                    val style = pageDesignOf(resolution, design).textStyle.toTextStyle()
+                    val style = styleOfAnchor(target.anchorId, design)
                     val newPage = FlowPage(design.pageFormat.toPageLayout(), listOf(TextBlock.of(value, style)), id = target.anchorId)
                     project.bookProperty.document = document.copy(pages = document.pages + newPage)
                     return
@@ -193,37 +155,29 @@ object BookPartEditorController {
         }
     }
 
-    /**
-     * Resolves the paragraph list a structural operation - split, merge, move or removal - acts on.
-     *
-     * @param project the open project, needed for the blurb whose paragraphs are not on [PartResolution.boundPart]
-     * @param resolution the resolved part
-     * @return the paragraph list, or `null` for a mode with no plain paragraph list of its own -
-     * [PartMode.BOOK_PART] included, whose blocks are addressed through [PartTarget.AnchorBlock] instead
-     */
-    fun paragraphListProperty(project: ProjectProperty, resolution: PartResolution): ListProperty<String>? =
-        when (resolution.mode) {
-            PartMode.BLURB -> blurbParagraphs(project)
-            else -> null
-        }
+    /** The targets of every block of [page], in block order; empty for a page with no target at all. */
+    private fun targetsOf(page: Page, design: Design, meta: Meta): List<PartTarget> = when (page.id) {
+        "title" -> anchorTargets(page, "title", design.titlePage.showAuthor && meta.author.isNotBlank())
+        "copyright" -> anchorTargets(page, "copyright", design.copyrightPage.showAuthor && meta.author.isNotBlank())
+        "blurb" -> page.blocks.indices.map { PartTarget.Paragraph(it) }
+        else -> anchorTargets(page, page.id, hasTrailingAuthorBlock = false)
+    }
 
-    private fun blurbParagraphs(project: ProjectProperty) =
-        project.bookProperty.blurbProperty.paragraphProperty
+    // The title and the copyright page may carry one further, non-anchored author block, rebuilt fresh
+    // from Meta on every call; it is never a write-back target of its own.
+    private fun anchorTargets(page: Page, anchorId: String, hasTrailingAuthorBlock: Boolean): List<PartTarget> {
+        val count = if (hasTrailingAuthorBlock) (page.blocks.size - 1).coerceAtLeast(0) else page.blocks.size
+        return (0 until count).map { PartTarget.AnchorBlock(anchorId, it) }
+    }
 
-    /** The anchor id of the resolved part - `"prolog"`, `"epilog"` or a chapter's `id.toString()`. */
-    private fun anchorIdOf(resolution: PartResolution): String =
-        when (val prefix = resolution.partId.substringBefore(':')) {
-            "prolog", "epilog" -> prefix
-            else -> resolution.partId.substringAfter(':')
-        }
-
-    /** The page design the resolved [PartMode.BOOK_PART] part is styled with. */
-    private fun pageDesignOf(resolution: PartResolution, design: Design) =
-        when (resolution.partId.substringBefore(':')) {
-            "prolog" -> design.prologPage
-            "epilog" -> design.epilogPage
-            else -> design.chapterPage
-        }
+    /** The style a freshly seeded block of the anchor [anchorId] is built with. */
+    private fun styleOfAnchor(anchorId: String, design: Design) = when (anchorId) {
+        "title" -> design.titlePage.titleStyle.toTextStyle()
+        "copyright" -> design.copyrightPage.copyrightStyle.toTextStyle()
+        "prolog" -> design.prologPage.textStyle.toTextStyle()
+        "epilog" -> design.epilogPage.textStyle.toTextStyle()
+        else -> design.chapterPage.textStyle.toTextStyle()
+    }
 
     /** The page of [ProjectProperty.bookProperty]'s document whose id is [anchorId], if any. */
     private fun pageOf(project: ProjectProperty, anchorId: String): Page? =
@@ -313,47 +267,25 @@ object BookPartEditorController {
         return result
     }
 
-    // A writable part needs at least one block; an empty blurb gets one empty paragraph block.
-    private fun ensureWritableBlock(
-        blocks: List<TextBlock>,
-        design: Design,
-        resolution: PartResolution,
-        targets: List<PartTarget>
-    ): BlockPlan {
-        if (blocks.isNotEmpty()) return BlockPlan(blocks, targets)
-        if (resolution.mode != PartMode.BLURB) {
-            return BlockPlan(blocks, targets)
-        }
-
-        return BlockPlan(
-            listOf(TextBlock.of("", design.blurbPage.textStyle.toTextStyle())),
-            listOf(PartTarget.Paragraph(0))
-        )
-    }
-
     /**
      * The resolved part behind a picked project tree node.
      *
-     * @property mode which kind of part the sheet shows
-     * @property boundPart the editable property of a prolog, chapter or epilog; `null` for every
-     * other mode, including the blurb, whose paragraphs are reached through the project instead
-     * @property partId a stable id of the part, used as the undo merge key and to pick the page design -
-     * `"prolog"`, `"epilog"` or `"chapter:" + the chapter's id` for [PartMode.BOOK_PART]
+     * @property mode which kind of part is picked
+     * @property anchorId the `TextAnchor` id `PaperSheetView` navigates to; empty for [PartMode.NONE]
      */
     data class PartResolution(
         val mode: PartMode,
-        val boundPart: BookPartProperty<*>?,
-        val partId: String
+        val anchorId: String
     )
 
     /**
-     * The blocks of a part and the target each of them writes back to, in block order.
+     * The whole-book document and the write-back target of every one of its blocks.
      *
-     * @property blocks the text blocks `PaperSheetView` lays out and paginates on its own
-     * @property targets one entry per block, naming the model field it edits
+     * @property document the document [org.pcsoft.framework.simplay.fx.PaperSheetView] is given
+     * @property targets one list of [PartTarget] per page, keyed by the page's id
      */
-    data class BlockPlan(
-        val blocks: List<TextBlock>,
-        val targets: List<PartTarget>
+    data class WholeDocumentPlan(
+        val document: Document,
+        val targets: Map<String, List<PartTarget>>
     )
 }

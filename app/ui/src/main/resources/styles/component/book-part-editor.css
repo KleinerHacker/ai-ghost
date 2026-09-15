@@ -42,3 +42,11 @@
 .paper-sheet-view:readonly {
     -fx-selection-color: -ghost-tint-pressed;
 }
+
+/*
+ * Shown once, while the whole book is measured for the first time after opening a project - simPlay's
+ * measure is a synchronous call on the FX thread, so this is the only feedback available while it runs.
+ */
+.book-part-editor-progress {
+    -fx-progress-color: -ghost-accent;
+}

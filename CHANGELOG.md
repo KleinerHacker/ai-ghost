@@ -2,29 +2,32 @@
 
 ## [Unreleased]
 
-* Book, its prolog, its chapters, its epilog and its copyright page no longer carry a heading, further
-  heading lines or flowing text of their own as separate fields: that text now lives in the
-  manuscript's own document model. Picking the prolog, a chapter or the epilog on the writing surface
-  opens it there, the same way the blurb already did; picking the title page or the copyright page
-  still shows only the author name where they used to show the title, its further lines and the
-  copyright notice - those two stay read only. A chapter carries a stable identity of its own behind
-  the scenes, invisible to the user, that survives a rename
+* Book, its prolog, its chapters, its epilog, its title page and its copyright page no longer carry a
+  heading, further heading lines or flowing text of their own as separate fields: that text now lives
+  in the manuscript's own document model. A chapter carries a stable identity of its own behind the
+  scenes, invisible to the user, that survives a rename
 
 * Project tree gains chapter management: "Add Chapter" on the chapters branch or on a chapter creates
   a new, empty chapter ready to write; a chapter's own menu also offers "Rename Chapter" and "Delete
   Chapter", the latter asking for confirmation first, since the chapter's text is removed with it and
   cannot be brought back
 
-* Editor centre is now a writing surface instead of a placeholder: picking the blurb in the project
-  tree opens its text on a sheet that already carries the book's typography, margins and page
-  structure, with every paragraph as its own text block; every keystroke is taken straight into the
-  project. The title page and the copyright page are shown on the sheet as they will print but stay
-  read only. A design change in the Inspector re-lays the sheet at once without moving the caret, and
-  every text change is undone and redone from the tool bar, with consecutive typing in one block
-  falling together into a single step
+* Editor centre is now a writing surface instead of a placeholder, always showing the whole book as one
+  sheet that already carries its typography, margins and page structure; picking a part in the project
+  tree - the title page, the copyright page, the prolog, a chapter, the epilog or the blurb - jumps to
+  its place on that same sheet instead of opening a document of its own, and every one of them,
+  including the title page and the copyright page, is written on directly, with every keystroke taken
+  straight into the project. A design change in the Inspector re-lays the sheet at once without moving
+  the caret, and every text change is undone and redone from the tool bar, with consecutive typing in
+  one block falling together into a single step
 
 * Project tree gains a "Title Page" and a "Copyright Page" node ahead of the prolog, so the front
   matter can be opened on the writing surface like every other part
+
+* Editor gains a tool bar above the writing surface with a "Preview" toggle, switching the whole sheet
+  between writing and a read-only preview of the printed page; the position last written at and the
+  chosen mode are both remembered and restored the next time the project is opened. Opening a long book
+  for the first time shows a brief loading indicator while it is laid out
 
 * Editor gains an Inspector on the right of the manuscript, next to the project tree: a "Book"
   section holds the author and both prompts of the manuscript, and a "Chapter" section shows the name

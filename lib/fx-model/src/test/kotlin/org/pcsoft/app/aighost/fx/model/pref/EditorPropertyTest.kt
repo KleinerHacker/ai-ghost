@@ -13,7 +13,9 @@
 package org.pcsoft.app.aighost.fx.model.pref
 
 import javafx.beans.binding.Bindings
+import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleLongProperty
+import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.beans.property.StringProperty
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -22,6 +24,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.model.pref.Editor
 import org.pcsoft.app.aighost.model.pref.Preferences
+import org.pcsoft.app.aighost.model.pref.WritingMode
 
 /**
  * Developer tests for [EditorProperty].
@@ -48,9 +51,28 @@ class EditorPropertyTest {
     private lateinit var pauseView: StringProperty
     private var pauseViewChanges = 0
 
+    /** Binding on the writing mode, standing for a view bound to that single field. */
+    private lateinit var writingModeView: StringProperty
+    private var writingModeViewChanges = 0
+
+    /** Binding on the Inspector collapse state, standing for a view bound to that single field. */
+    private lateinit var inspectorCollapsedView: StringProperty
+    private var inspectorCollapsedViewChanges = 0
+
+    /** Binding on the last anchor id, standing for a view bound to that single field. */
+    private lateinit var lastAnchorIdView: StringProperty
+    private var lastAnchorIdViewChanges = 0
+
     @BeforeEach
     fun setUp() {
-        preferences = Preferences(editor = Editor(paragraphMergePauseMillis = 600))
+        preferences = Preferences(
+            editor = Editor(
+                paragraphMergePauseMillis = 600,
+                writingMode = WritingMode.WRITING,
+                inspectorCollapsed = false,
+                lastAnchorId = "prolog"
+            )
+        )
         parentEvents = 0
         property = EditorProperty()
         // A parent property reports a change of a nested one as its own and writes an exchanged object
@@ -72,24 +94,58 @@ class EditorPropertyTest {
         pauseBinding.addListener { _, _, _ -> pauseViewChanges++ }
         pauseView.bind(pauseBinding)
 
+        writingModeView = SimpleStringProperty()
+        val writingModeBinding = Bindings.createStringBinding({ property.writingMode.toString() }, property.writingModeProperty)
+        writingModeBinding.addListener { _, _, _ -> writingModeViewChanges++ }
+        writingModeView.bind(writingModeBinding)
+
+        inspectorCollapsedView = SimpleStringProperty()
+        val inspectorCollapsedBinding = property.inspectorCollapsedProperty.asString()
+        inspectorCollapsedBinding.addListener { _, _, _ -> inspectorCollapsedViewChanges++ }
+        inspectorCollapsedView.bind(inspectorCollapsedBinding)
+
+        lastAnchorIdView = SimpleStringProperty()
+        val lastAnchorIdBinding = Bindings.createStringBinding({ property.lastAnchorId ?: "" }, property.lastAnchorIdProperty)
+        lastAnchorIdBinding.addListener { _, _, _ -> lastAnchorIdViewChanges++ }
+        lastAnchorIdView.bind(lastAnchorIdBinding)
+
         parentEvents = 0
         objectViewChanges = 0
         pauseViewChanges = 0
+        writingModeViewChanges = 0
+        inspectorCollapsedViewChanges = 0
+        lastAnchorIdViewChanges = 0
     }
 
     /** Text form of a writing-surface settings object, used as the value of the binding on the whole object. */
-    private fun state(editor: Editor): String = editor.paragraphMergePauseMillis.toString()
+    private fun state(editor: Editor): String =
+        "${editor.paragraphMergePauseMillis}|${editor.writingMode}|${editor.inspectorCollapsed}|${editor.lastAnchorId}"
 
     /**
      * Asserts that every binding of the object tree delivers the given state, so no view keeps the
      * value of a previous object or of a previous field value.
      */
-    private fun assertTreeShows(paragraphMergePauseMillis: Long) {
-        assertEquals(paragraphMergePauseMillis.toString(), objectView.get()) {
-            "the binding on the writing-surface settings delivers an outdated state"
-        }
+    private fun assertTreeShows(
+        paragraphMergePauseMillis: Long,
+        writingMode: WritingMode,
+        inspectorCollapsed: Boolean,
+        lastAnchorId: String?
+    ) {
+        assertEquals(
+            "$paragraphMergePauseMillis|$writingMode|$inspectorCollapsed|$lastAnchorId",
+            objectView.get()
+        ) { "the binding on the writing-surface settings delivers an outdated state" }
         assertEquals(paragraphMergePauseMillis.toString(), pauseView.get()) {
             "the binding on the typing pause delivers an outdated value"
+        }
+        assertEquals(writingMode.toString(), writingModeView.get()) {
+            "the binding on the writing mode delivers an outdated value"
+        }
+        assertEquals(inspectorCollapsed.toString(), inspectorCollapsedView.get()) {
+            "the binding on the Inspector collapse state delivers an outdated value"
+        }
+        assertEquals(lastAnchorId ?: "", lastAnchorIdView.get()) {
+            "the binding on the last anchor id delivers an outdated value"
         }
     }
 
@@ -109,9 +165,15 @@ class EditorPropertyTest {
      */
     @Test
     fun readsInitialValuesFromModel() {
-        assertEquals(Editor(paragraphMergePauseMillis = 600), property.value)
+        assertEquals(
+            Editor(paragraphMergePauseMillis = 600, writingMode = WritingMode.WRITING, inspectorCollapsed = false, lastAnchorId = "prolog"),
+            property.value
+        )
         assertEquals(600, property.paragraphMergePauseMillis)
-        assertTreeShows(paragraphMergePauseMillis = 600)
+        assertEquals(WritingMode.WRITING, property.writingMode)
+        assertEquals(false, property.inspectorCollapsed)
+        assertEquals("prolog", property.lastAnchorId)
+        assertTreeShows(600, WritingMode.WRITING, false, "prolog")
     }
 
     /**
@@ -123,7 +185,7 @@ class EditorPropertyTest {
         property.paragraphMergePauseMillis = 900
 
         assertEquals(900, preferences.editor.paragraphMergePauseMillis)
-        assertTreeShows(paragraphMergePauseMillis = 900)
+        assertTreeShows(900, WritingMode.WRITING, false, "prolog")
         assertFieldChangeReachedWholeTree(pauseViewChanges)
     }
 
@@ -139,8 +201,95 @@ class EditorPropertyTest {
         source.set(1200)
 
         assertEquals(1200, preferences.editor.paragraphMergePauseMillis)
-        assertTreeShows(paragraphMergePauseMillis = 1200)
+        assertTreeShows(1200, WritingMode.WRITING, false, "prolog")
         assertFieldChangeReachedWholeTree(pauseViewChanges)
+    }
+
+    /**
+     * Use case: the user switches the sheet to the preview, so the new mode lands in the model object
+     * and every binding of the object tree shows it.
+     */
+    @Test
+    fun writesWritingModeToModelAndNotifiesTree() {
+        property.writingMode = WritingMode.PREVIEW
+
+        assertEquals(WritingMode.PREVIEW, preferences.editor.writingMode)
+        assertTreeShows(600, WritingMode.PREVIEW, false, "prolog")
+        assertFieldChangeReachedWholeTree(writingModeViewChanges)
+    }
+
+    /**
+     * Use case: the writing mode is bound to a toggle button of the tool bar, so every value that
+     * control produces reaches the model object and every binding of the object tree shows it.
+     */
+    @Test
+    fun writesBoundWritingModeToModelAndNotifiesTree() {
+        val source = SimpleObjectProperty(WritingMode.WRITING)
+        property.writingModeProperty.bind(source)
+
+        source.set(WritingMode.PREVIEW)
+
+        assertEquals(WritingMode.PREVIEW, preferences.editor.writingMode)
+        assertTreeShows(600, WritingMode.PREVIEW, false, "prolog")
+        assertFieldChangeReachedWholeTree(writingModeViewChanges)
+    }
+
+    /**
+     * Use case: the user collapses the Inspector, so the new state lands in the model object and every
+     * binding of the object tree shows it.
+     */
+    @Test
+    fun writesInspectorCollapsedToModelAndNotifiesTree() {
+        property.inspectorCollapsed = true
+
+        assertEquals(true, preferences.editor.inspectorCollapsed)
+        assertTreeShows(600, WritingMode.WRITING, true, "prolog")
+        assertFieldChangeReachedWholeTree(inspectorCollapsedViewChanges)
+    }
+
+    /**
+     * Use case: the Inspector collapse state is bound to the split pane's own divider, so every value
+     * it produces reaches the model object and every binding of the object tree shows it.
+     */
+    @Test
+    fun writesBoundInspectorCollapsedToModelAndNotifiesTree() {
+        val source = SimpleBooleanProperty(false)
+        property.inspectorCollapsedProperty.bind(source)
+
+        source.set(true)
+
+        assertEquals(true, preferences.editor.inspectorCollapsed)
+        assertTreeShows(600, WritingMode.WRITING, true, "prolog")
+        assertFieldChangeReachedWholeTree(inspectorCollapsedViewChanges)
+    }
+
+    /**
+     * Use case: the user navigates to another part of the book, so the new anchor id lands in the
+     * model object and every binding of the object tree shows it.
+     */
+    @Test
+    fun writesLastAnchorIdToModelAndNotifiesTree() {
+        property.lastAnchorId = "epilog"
+
+        assertEquals("epilog", preferences.editor.lastAnchorId)
+        assertTreeShows(600, WritingMode.WRITING, false, "epilog")
+        assertFieldChangeReachedWholeTree(lastAnchorIdViewChanges)
+    }
+
+    /**
+     * Use case: the last anchor id is bound to the navigation of the writing surface, so every value
+     * it produces reaches the model object and every binding of the object tree shows it.
+     */
+    @Test
+    fun writesBoundLastAnchorIdToModelAndNotifiesTree() {
+        val source = SimpleStringProperty("prolog")
+        property.lastAnchorIdProperty.bind(source)
+
+        source.set("blurb")
+
+        assertEquals("blurb", preferences.editor.lastAnchorId)
+        assertTreeShows(600, WritingMode.WRITING, false, "blurb")
+        assertFieldChangeReachedWholeTree(lastAnchorIdViewChanges)
     }
 
     /**
@@ -150,12 +299,23 @@ class EditorPropertyTest {
      */
     @Test
     fun writesReplacedObjectToModelAndNotifiesTree() {
-        property.value = Editor(paragraphMergePauseMillis = 450)
+        property.value = Editor(
+            paragraphMergePauseMillis = 450,
+            writingMode = WritingMode.PREVIEW,
+            inspectorCollapsed = true,
+            lastAnchorId = "blurb"
+        )
 
-        assertEquals(Editor(paragraphMergePauseMillis = 450), preferences.editor)
-        assertTreeShows(paragraphMergePauseMillis = 450)
+        assertEquals(
+            Editor(paragraphMergePauseMillis = 450, writingMode = WritingMode.PREVIEW, inspectorCollapsed = true, lastAnchorId = "blurb"),
+            preferences.editor
+        )
+        assertTreeShows(450, WritingMode.PREVIEW, true, "blurb")
         assertTrue(objectViewChanges > 0) { "the binding on the writing-surface settings was not re-evaluated" }
         assertTrue(pauseViewChanges > 0) { "the binding on the typing pause was not re-evaluated" }
+        assertTrue(writingModeViewChanges > 0) { "the binding on the writing mode was not re-evaluated" }
+        assertTrue(inspectorCollapsedViewChanges > 0) { "the binding on the Inspector collapse state was not re-evaluated" }
+        assertTrue(lastAnchorIdViewChanges > 0) { "the binding on the last anchor id was not re-evaluated" }
         assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
     }
 
@@ -165,24 +325,50 @@ class EditorPropertyTest {
      */
     @Test
     fun keepsFieldsQuietWhenReplacedObjectCarriesTheSameValues() {
-        property.value = Editor(paragraphMergePauseMillis = 600)
+        property.value = Editor(
+            paragraphMergePauseMillis = 600,
+            writingMode = WritingMode.WRITING,
+            inspectorCollapsed = false,
+            lastAnchorId = "prolog"
+        )
 
-        assertTreeShows(paragraphMergePauseMillis = 600)
+        assertTreeShows(600, WritingMode.WRITING, false, "prolog")
         assertEquals(0, pauseViewChanges) { "the typing pause was reported as changed although it did not change" }
+        assertEquals(0, writingModeViewChanges) { "the writing mode was reported as changed although it did not change" }
+        assertEquals(0, inspectorCollapsedViewChanges) { "the Inspector collapse state was reported as changed although it did not change" }
+        assertEquals(0, lastAnchorIdViewChanges) { "the last anchor id was reported as changed although it did not change" }
     }
 
     /**
-     * Use case: a field of the wrapped object is changed by application code past the property, so the
-     * property is told to read that object again and the field property delivers the current value
-     * afterwards.
+     * Use case: every field of the wrapped object is changed by application code past the property, so
+     * the property is told to read that object again and every field property delivers the current
+     * value afterwards.
      */
     @Test
     fun readsFieldsChangedOnModel() {
         preferences.editor.paragraphMergePauseMillis = 250
+        preferences.editor.writingMode = WritingMode.PREVIEW
+        preferences.editor.inspectorCollapsed = true
+        preferences.editor.lastAnchorId = "epilog"
 
         property.refresh()
 
         assertEquals(250, property.paragraphMergePauseMillis)
-        assertTreeShows(paragraphMergePauseMillis = 250)
+        assertEquals(WritingMode.PREVIEW, property.writingMode)
+        assertEquals(true, property.inspectorCollapsed)
+        assertEquals("epilog", property.lastAnchorId)
+        assertTreeShows(250, WritingMode.PREVIEW, true, "epilog")
+    }
+
+    /**
+     * Use case: nothing was ever picked on the writing surface yet, so the last anchor id property
+     * carries `null` instead of failing.
+     */
+    @Test
+    fun readsAnAbsentLastAnchorIdAsNull() {
+        property.value = Editor(lastAnchorId = null)
+
+        assertEquals(null, property.lastAnchorId)
+        assertEquals("", lastAnchorIdView.get())
     }
 }

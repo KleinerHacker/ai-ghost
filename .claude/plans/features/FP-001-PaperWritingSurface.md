@@ -333,7 +333,7 @@ ersten Abweichung abgelöst (siehe „Abgelöste Pläne (simPlay)“).
 | IP-36 | Model Umstellung Auf Anker-Struktur ✅          | `Book`/`Chapter`/`BookPart`/`Copyright` vom Fließtext befreien, Kapitel-`UUID` | IP-24, IP-02          |
 | IP-37 | Dokument-Persistenz Und Migration ✅ (ohne Migration) | `Book.document: Document` speicherbar machen; Migration bewusst nicht gebaut | IP-36, IP-29           |
 | IP-38 | Buch-Dokument Als Alleinige Basis ✅            | `BookDocumentBuilder` einzige Bauquelle; Anker statt Index; Stil-Auffrischung | IP-37, IP-30, IP-34   |
-| IP-39 | PaperSheetView Dauerhaft Im Zentrum            | Ein `Document`, immer sichtbar; Baumauswahl navigiert über `TextAnchor`      | IP-38, IP-09          |
+| IP-39 | PaperSheetView Dauerhaft Im Zentrum ✅          | Ein `Document`, immer sichtbar; Baumauswahl navigiert über `TextAnchor`      | IP-38, IP-09          |
 | IP-32 | Paragraph Structure Operations On Document     | Absätze teilen, verbinden, löschen, umsortieren, ankerfest                  | IP-39                 |
 | IP-33 | Undo On Immutable Document Swap                | Undo-Einträge auf den `Document`-Tausch umstellen                          | IP-39                 |
 | IP-18 | AI Actions On Paragraph And Heading            | Schwebende KI-Leiste über `FloatingOverlay`; Schaltflächen mit `TODO(...)`   | IP-39                 |
@@ -648,28 +648,41 @@ Verschieben von Text über eine Ankergrenze) ist erst mit simPlay 0.3.1 bekannt;
 Start anhand der dann vorliegenden Dokumentation konkretisiert, wie schon IP-35 es für simPlay 0.3.0
 tat.
 
-### IP-39: PaperSheetView Dauerhaft Im Zentrum
+### IP-39: PaperSheetView Dauerhaft Im Zentrum ✅
 
-Plan: `FP-001-IP-39-PaperSheetViewDauerhaftImZentrum.md`
+Plan: `FP-001-IP-39-PaperSheetViewDauerhaftImZentrum.md` (umgesetzt, Datei entfernt)
 
 **Ziel:** Ersetzt IP-15 (Routing) und IP-16 (Vorschaumodus) vollständig: eine einzige, dauerhaft
 gezeigte `PaperSheetView` über `Book.document`; eine Baumauswahl navigiert, tauscht kein `Document`.
 
-**Umfang:** Drei-Zonen-Aufbau (Baum, Blatt, Inspector) wie ursprünglich in IP-15 geplant, aber ohne
-Dokument-Routing - `EditorViewModel` löst eine Baumauswahl stattdessen auf den `TextAnchor` des
-Knotens auf und lässt `PaperSheetView` dorthin navigieren/scrollen. Jede Bearbeitung schreibt über
-denselben `documentProperty`-Listener (aus IP-31 übernommen) direkt in `Book.document` zurück; eine
-Struktur-Änderung, die die Kapitelliste betrifft (neues/gelöschtes Kapitel über den Baum), hält
-`Book.chapters` mit der Ankerreihenfolge im `Document` synchron. Der Schreib-/Vorschau-Umschalter
-schaltet nur `paperSheetView.mode` zwischen `EDITABLE` und `SELECTABLE` um, ohne zweites `Document`,
-zweite View oder zweites `measure`. Splitter-Position, Einklappzustand, Ansicht und
-Ankerposition kommen in `Preferences` (IP-15s ursprüngliche FX-Modell-Aufgabe).
+**Ergebnis:** `EditorView.fxml`s Drei-Zonen-`SplitPane` bestand bereits unverändert aus IP-38; kein
+Umbau nötig. `BookPartEditorController.resolve(item)` löst nur noch den Anker auf (`"title"`,
+`"copyright"`, `"prolog"`, `"epilog"`, `"blurb"`, Kapitel-`id`); `buildWholeDocument(project, design,
+meta)` baut über `BookDocumentBuilder` das ganze Buch inklusive Titel-/Copyright-Seite und liefert je
+Seite die `PartTarget`-Liste. `BookPartEditorViewModel.navigateTo` ruft nur noch
+`caretModel.moveToAnchor(anchorId)`; `handleDocumentChanged` liest jede Seite des Live-Dokuments gegen
+ihre Zielliste und schreibt abweichende Blöcke generalisiert zurück, inklusive Titel-/Copyright-Anker
+und mit Abstreifung des Klappentext-Ankers vor dem Speichern in `Book.blurb.paragraph`. Neue
+Werkzeugleiste in `EditorView.fxml` mit einem Schreiben/Vorschau-`ToggleButton`; Modus
+(`WritingMode`-Enum, neu in `lib/model`) und zuletzt angesteuerte Anker-Position landen in
+`Preferences.editor` (`writingMode`, `lastAnchorId`) und werden beim Öffnen wiederhergestellt. Der
+erste Dokumentaufbau nach dem Öffnen wird um einen `Platform.runLater`-Takt verzögert, damit ein
+`ProgressIndicator` vor dem blockierenden `measure`-Aufruf sichtbar wird.
+
+**Abweichungen vom Plantext:**
+
+* Titel- und Copyright-Seite sind seit dieser Umsetzung ebenfalls über ihren Anker beschreibbar, nicht
+  mehr read-only - beide lasen ihre Blöcke bereits seit IP-38 ankerbasiert aus `Book.document`, nur der
+  Autor-Block bleibt aus `Meta` abgeleitet und vom Rückschreiben ausgenommen.
+* Kein Icon auf dem Schreiben/Vorschau-Umschalter: Der laut `icons`-Skill zwingende `icon-creator`-Agent
+  verfügt in dieser Umgebung nur über `Read`/`Glob`/`Grep`, keine Bilderzeugung. Bleibt TODO.
+* Nur ein unbestimmter Spinner statt echter Fortschritts-%-Anzeige, da `simplay-engine.measure()` keine
+  inkrementelle API bietet; die Kosten eines langen Buches wurden mangels Testprojekt nicht gemessen.
+* Splitter-Positionen und Inspector-Gesamt-Einklappzustand nicht umgesetzt (`Editor.inspectorCollapsed`
+  liegt im Modell bereit, ist aber nicht angebunden) - `Inspector`/`EditorView` besitzen noch keinen
+  Gesamt-Einklappmechanismus, dessen korrekter Bau mehr Aufwand als in dieser Umsetzung investiert war.
 
 **Abhängigkeiten:** IP-38 (das eine, dauerhafte `Document` existiert und trägt Anker), IP-09 (Undo).
-
-**Technische Überlegungen:** Das erste `measure` eines langen Buches lief bisher nur pro Teil; mit
-einem einzigen, immer angezeigten Gesamtdokument übernimmt dieser Plan die
-Fortschrittsanzeige/Antwortverhalten-Sorge, die vorher IP-16 trug (Abschnitt 9).
 
 ### IP-32: Paragraph Structure Operations On Document
 
@@ -740,7 +753,7 @@ Seiten ohnehin immer gleichzeitig zeigt.
 ## 8. Abhängigkeitsgraph
 
 ```text
-IP-24✅ ─┬─> IP-36✅ (mit IP-02✅) ──> IP-37✅ (mit IP-29✅) ──> IP-38✅ (mit IP-30✅, IP-34✅) ──> IP-39 (mit IP-09✅)
+IP-24✅ ─┬─> IP-36✅ (mit IP-02✅) ──> IP-37✅ (mit IP-29✅) ──> IP-38✅ (mit IP-30✅, IP-34✅) ──> IP-39✅ (mit IP-09✅)
         │                                                                                   ├─> IP-32
 IP-29✅ ─┴─> IP-30✅ (mit IP-02✅, IP-24✅) ─┬─> IP-35✅                                       ├─> IP-33
         └─> IP-34✅                        │                                                 ├─> IP-18

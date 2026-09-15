@@ -29,6 +29,7 @@ import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.book.Chapter
 import org.pcsoft.app.aighost.model.project.book.Epilog
 import org.pcsoft.app.aighost.model.project.book.Prolog
+import org.pcsoft.app.aighost.model.pref.WritingMode
 
 /**
  * Developer tests for [BookPartEditorViewModel] - the routing of a picked tree node onto the mode of
@@ -46,10 +47,12 @@ class BookPartEditorViewModelTest {
     private lateinit var selection: SimpleObjectProperty<ProjectListItem?>
 
     private var originalPause: Long = 0
+    private var originalWritingMode: WritingMode = WritingMode.WRITING
 
     @BeforeEach
     fun setUp() {
         originalPause = IoController.preferences.editorProperty.paragraphMergePauseMillis
+        originalWritingMode = IoController.preferences.editorProperty.writingMode
         viewModel = BookPartEditorViewModel()
         project = ProjectProperty(
             Project(
@@ -67,6 +70,7 @@ class BookPartEditorViewModelTest {
     @AfterEach
     fun tearDown() {
         IoController.preferences.editorProperty.paragraphMergePauseMillis = originalPause
+        IoController.preferences.editorProperty.writingMode = originalWritingMode
     }
 
     /**
@@ -110,10 +114,11 @@ class BookPartEditorViewModelTest {
     }
 
     /**
-     * Use case: the user picks the title page, so the sheet shows it but does not let it be written.
+     * Use case: the user picks the title page, so the sheet shows it and, since IP-39, lets it be
+     * written like every other part of the whole book document.
      */
     @Test
-    fun showsAReadOnlySheetForTheTitlePage() {
+    fun showsAWritableSheetForTheTitlePage() {
         viewModel.bindProject(project)
         viewModel.bindSelection(selection)
 
@@ -121,22 +126,22 @@ class BookPartEditorViewModelTest {
 
         assertEquals(PartMode.TITLE_PAGE, viewModel.mode.value)
         assertTrue(viewModel.contentAvailable.get())
-        assertFalse(viewModel.editable.get())
+        assertTrue(viewModel.editable.get())
     }
 
     /**
-     * Use case: the user picks the copyright page, so the sheet shows it read only, the same way as
+     * Use case: the user picks the copyright page, so the sheet shows it writable, the same way as
      * the title page.
      */
     @Test
-    fun showsAReadOnlySheetForTheCopyrightPage() {
+    fun showsAWritableSheetForTheCopyrightPage() {
         viewModel.bindProject(project)
         viewModel.bindSelection(selection)
 
         selection.value = ProjectListItem.CopyrightPageItem
 
         assertEquals(PartMode.COPYRIGHT_PAGE, viewModel.mode.value)
-        assertFalse(viewModel.editable.get())
+        assertTrue(viewModel.editable.get())
     }
 
     /**
@@ -155,18 +160,19 @@ class BookPartEditorViewModelTest {
     }
 
     /**
-     * Use case: the user picks a structural node such as the chapters branch, so the sheet shows
-     * nothing to write.
+     * Use case: the user picks a structural node such as the chapters branch, so nothing on the tree
+     * is addressed to navigate to, but the whole book document keeps showing - since IP-39 the sheet
+     * is not swapped per selection any more.
      */
     @Test
-    fun showsNothingForAStructuralNode() {
+    fun showsNothingToNavigateToForAStructuralNode() {
         viewModel.bindProject(project)
         viewModel.bindSelection(selection)
 
         selection.value = ProjectListItem.Chapters
 
         assertEquals(PartMode.NONE, viewModel.mode.value)
-        assertFalse(viewModel.contentAvailable.get())
+        assertTrue(viewModel.contentAvailable.get())
     }
 
     /**
@@ -209,5 +215,25 @@ class BookPartEditorViewModelTest {
         viewModel.bindUndoStack(stack)
 
         assertEquals(450, stack.mergeTimeoutMillis)
+    }
+
+    /**
+     * Use case: nothing was ever switched yet, so the sheet starts out in the writing mode.
+     */
+    @Test
+    fun startsInTheWritingMode() {
+        assertEquals(WritingMode.WRITING, viewModel.writingMode.value)
+    }
+
+    /**
+     * Use case: the user switches the sheet to the preview, so the new mode is reported by the
+     * property and saved to the preferences, ready to be restored the next time the project is opened.
+     */
+    @Test
+    fun switchesToPreviewAndSavesItToThePreferences() {
+        viewModel.setWritingMode(WritingMode.PREVIEW)
+
+        assertEquals(WritingMode.PREVIEW, viewModel.writingMode.value)
+        assertEquals(WritingMode.PREVIEW, IoController.preferences.editorProperty.writingMode)
     }
 }

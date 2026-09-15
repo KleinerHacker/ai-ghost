@@ -13,6 +13,9 @@
   -->
 
 <?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.BorderPane?>
 <?import org.pcsoft.app.aighost.app.ui.component.ProjectList?>
 <?import javafx.geometry.Insets?>
@@ -21,6 +24,15 @@
 <fx:root type="BorderPane" xmlns="http://javafx.com/javafx"
          xmlns:fx="http://javafx.com/fxml"
          fx:controller="org.pcsoft.app.aighost.app.ui.component.EditorView">
+    <top>
+        <ToolBar>
+            <ToggleButton fx:id="btnWritingMode" text="%component.editor.toolbar.writingMode" onAction="#actionToggleWritingMode">
+                <tooltip>
+                    <Tooltip text="%component.editor.toolbar.writingMode.tooltip"/>
+                </tooltip>
+            </ToggleButton>
+        </ToolBar>
+    </top>
     <center>
         <SplitPane dividerPositions="0.22, 0.72">
             <ProjectList fx:id="pnlProjectList" minWidth="250" SplitPane.resizableWithParent="false">

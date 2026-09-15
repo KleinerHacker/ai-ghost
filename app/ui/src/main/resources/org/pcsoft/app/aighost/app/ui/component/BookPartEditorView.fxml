@@ -13,6 +13,7 @@
   -->
 
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressIndicator?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.StackPane?>
 <?import org.pcsoft.framework.simplay.fx.PaperSheetView?>
@@ -23,6 +24,7 @@
         <StackPane>
             <PaperSheetView fx:id="sheet"/>
             <Label fx:id="lblEmpty" styleClass="book-part-editor-empty" text="%component.bookPartEditor.empty"/>
+            <ProgressIndicator fx:id="prgLoading" styleClass="book-part-editor-progress" maxWidth="64" maxHeight="64"/>
         </StackPane>
     </center>
 </fx:root>

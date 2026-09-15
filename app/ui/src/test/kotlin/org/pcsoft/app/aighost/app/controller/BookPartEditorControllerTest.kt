@@ -13,9 +13,8 @@
 package org.pcsoft.app.aighost.app.controller
 
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.Assertions.assertSame
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -30,6 +29,7 @@ import org.pcsoft.app.aighost.model.project.Project
 import org.pcsoft.app.aighost.model.project.book.Blurb
 import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.book.Chapter
+import org.pcsoft.app.aighost.model.project.book.Copyright
 import org.pcsoft.app.aighost.model.project.book.Epilog
 import org.pcsoft.app.aighost.model.project.book.Prolog
 import org.pcsoft.app.aighost.model.project.design.BlurbPageDesign
@@ -40,13 +40,17 @@ import org.pcsoft.app.aighost.model.project.design.EpilogPageDesign
 import org.pcsoft.app.aighost.model.project.design.PrologPageDesign
 import org.pcsoft.app.aighost.model.project.design.TitlePageDesign
 import org.pcsoft.app.aighost.model.project.meta.Meta
+import org.pcsoft.framework.simplay.engine.model.Document
+import org.pcsoft.framework.simplay.engine.model.FlowPage
+import org.pcsoft.framework.simplay.engine.model.TextBlock
 
 /**
  * Developer tests for [BookPartEditorController].
  *
- * Since IP-38 a prolog, a chapter and an epilog are read from and written back into the book's simPlay
- * `Document` through their anchor id; the blurb still carries its own paragraphs, and the title and
- * copyright page stay read-only.
+ * Since IP-39 the sheet always shows the whole book as one [Document]; a tree selection resolves onto
+ * a `TextAnchor` id instead of a bound model property, and a prolog, a chapter, an epilog, the title
+ * page and the copyright page are all read from and written back into the book's simPlay `Document`
+ * through that anchor. Only the blurb still carries its own paragraphs on the model directly.
  */
 class BookPartEditorControllerTest {
 
@@ -56,28 +60,32 @@ class BookPartEditorControllerTest {
     private fun style(size: Int = 12): StyleData =
         StyleData(font = FontData("Serif", size, bold = false, italic = false), alignment = Alignment.LEFT)
 
+    private fun project(book: Book, meta: Meta = Meta(name = "My Novel", author = "Jane Doe")) = ProjectProperty(
+        Project(
+            meta = meta,
+            design = Design(
+                titlePage = TitlePageDesign(style(), style(), showAuthor = true, authorStyle = style()),
+                copyrightPage = CopyrightPageDesign(style(), style(), showAuthor = false, authorStyle = style()),
+                prologPage = PrologPageDesign(style(), style(), style()),
+                blurbPage = BlurbPageDesign(style()),
+                chapterPage = ChapterPageDesign(style(), style(), style()),
+                epilogPage = EpilogPageDesign(style(), style(), style()),
+                startWithEmptyPage = false,
+                endWithEmptyPage = false
+            ),
+            book = book
+        )
+    )
+
     @BeforeEach
     fun setUp() {
         chapter = Chapter("first")
-        project = ProjectProperty(
-            Project(
-                meta = Meta(name = "My Novel", author = "Jane Doe"),
-                design = Design(
-                    titlePage = TitlePageDesign(style(), style(), showAuthor = true, authorStyle = style()),
-                    copyrightPage = CopyrightPageDesign(style(), style(), showAuthor = false, authorStyle = style()),
-                    prologPage = PrologPageDesign(style(), style(), style()),
-                    blurbPage = BlurbPageDesign(style()),
-                    chapterPage = ChapterPageDesign(style(), style(), style()),
-                    epilogPage = EpilogPageDesign(style(), style(), style()),
-                    startWithEmptyPage = false,
-                    endWithEmptyPage = false
-                ),
-                book = Book(
-                    prolog = Prolog(included = true),
-                    chapters = listOf(chapter),
-                    epilog = Epilog(),
-                    blurb = Blurb(paragraph = listOf("A gripping tale."))
-                )
+        project = project(
+            Book(
+                prolog = Prolog(included = true),
+                chapters = listOf(chapter),
+                epilog = Epilog(),
+                blurb = Blurb(paragraph = listOf("A gripping tale."))
             )
         )
     }
@@ -85,78 +93,65 @@ class BookPartEditorControllerTest {
     private val design: Design get() = project.value.design
 
     /**
-     * Use case: nothing is picked, so the controller reports the empty mode with no bound part.
+     * Use case: nothing is picked, so the controller reports the empty mode with an empty anchor id.
      */
     @Test
     fun resolvesNothingToTheEmptyMode() {
-        val resolution = BookPartEditorController.resolve(project, null)
+        val resolution = BookPartEditorController.resolve(null)
 
         assertEquals(PartMode.NONE, resolution.mode)
-        assertNull(resolution.boundPart)
-        assertEquals("", resolution.partId)
+        assertEquals("", resolution.anchorId)
     }
 
     /**
-     * Use case: no project is open, so any picked node still resolves to the empty mode.
+     * Use case: the prolog is picked, so it resolves to a writable book part keyed by the `"prolog"`
+     * anchor.
      */
     @Test
-    fun resolvesToNothingWithoutAProject() {
-        val resolution = BookPartEditorController.resolve(null, ProjectListItem.PrologItem(null))
-
-        assertEquals(PartMode.NONE, resolution.mode)
-    }
-
-    /**
-     * Use case: the prolog is picked, so it resolves to a writable book part bound to the prolog
-     * property and keyed as "prolog".
-     */
-    @Test
-    fun resolvesThePrologToAWritableBookPart() {
-        val resolution = BookPartEditorController.resolve(project, ProjectListItem.PrologItem(project.value.book.prolog))
+    fun resolvesThePrologToItsAnchor() {
+        val resolution = BookPartEditorController.resolve(ProjectListItem.PrologItem(project.value.book.prolog))
 
         assertEquals(PartMode.BOOK_PART, resolution.mode)
-        assertEquals("prolog", resolution.partId)
-        assertSame(project.bookProperty.prologProperty, resolution.boundPart)
+        assertEquals("prolog", resolution.anchorId)
     }
 
     /**
-     * Use case: a chapter is picked, so it resolves to a writable book part whose id carries the
-     * chapter's stable id - not its name, which the user may still change - so consecutive typing
-     * in different chapters never merges into one undo step and a rename never breaks the merge key.
+     * Use case: a chapter is picked, so it resolves to its own stable id - not its name, which the
+     * user may still change - so a rename never breaks the anchor.
      */
     @Test
-    fun resolvesAChapterWithItsIdInTheId() {
-        val resolution = BookPartEditorController.resolve(project, ProjectListItem.ChapterItem(chapter))
+    fun resolvesAChapterToItsOwnId() {
+        val resolution = BookPartEditorController.resolve(ProjectListItem.ChapterItem(chapter))
 
         assertEquals(PartMode.BOOK_PART, resolution.mode)
-        assertEquals("chapter:" + chapter.id, resolution.partId)
-        assertNotNull(resolution.boundPart)
+        assertEquals(chapter.id.toString(), resolution.anchorId)
     }
 
     /**
-     * Use case: the title page and the copyright page are picked, so both resolve to their read-only
-     * mode with no bound part.
+     * Use case: the title page and the copyright page are picked, so both resolve to their own anchor,
+     * writable since IP-39 instead of read only.
      */
     @Test
-    fun resolvesTheFrontMatterToItsReadOnlyModes() {
-        assertEquals(PartMode.TITLE_PAGE, BookPartEditorController.resolve(project, ProjectListItem.TitlePageItem).mode)
-        assertEquals(
-            PartMode.COPYRIGHT_PAGE,
-            BookPartEditorController.resolve(project, ProjectListItem.CopyrightPageItem).mode
-        )
-        assertNull(BookPartEditorController.resolve(project, ProjectListItem.TitlePageItem).boundPart)
+    fun resolvesTheFrontMatterToItsAnchors() {
+        val title = BookPartEditorController.resolve(ProjectListItem.TitlePageItem)
+        val copyright = BookPartEditorController.resolve(ProjectListItem.CopyrightPageItem)
+
+        assertEquals(PartMode.TITLE_PAGE, title.mode)
+        assertEquals("title", title.anchorId)
+        assertEquals(PartMode.COPYRIGHT_PAGE, copyright.mode)
+        assertEquals("copyright", copyright.anchorId)
     }
 
     /**
-     * Use case: the blurb is picked, so it resolves to the headingless writable mode; its paragraphs
-     * are reached through the project, not through a bound part.
+     * Use case: the blurb is picked, so it resolves to the headingless writable mode, keyed by the
+     * `"blurb"` anchor.
      */
     @Test
-    fun resolvesTheBlurbToTheHeadinglessMode() {
-        val resolution = BookPartEditorController.resolve(project, ProjectListItem.BlurbItem(project.value.book.blurb))
+    fun resolvesTheBlurbToItsAnchor() {
+        val resolution = BookPartEditorController.resolve(ProjectListItem.BlurbItem(project.value.book.blurb))
 
         assertEquals(PartMode.BLURB, resolution.mode)
-        assertNull(resolution.boundPart)
+        assertEquals("blurb", resolution.anchorId)
     }
 
     /**
@@ -165,114 +160,119 @@ class BookPartEditorControllerTest {
      */
     @Test
     fun resolvesAStructuralNodeToTheEmptyMode() {
-        assertEquals(PartMode.NONE, BookPartEditorController.resolve(project, ProjectListItem.Chapters).mode)
+        assertEquals(PartMode.NONE, BookPartEditorController.resolve(ProjectListItem.Chapters).mode)
     }
 
     /**
-     * Use case: a prolog with no page in the document yet is picked, so it gives a single seeded
-     * block carrying only its anchor, and one matching target.
+     * Use case: a prolog with no page in the document yet is built into the whole document, so it
+     * gives a single seeded block carrying only its anchor, and one matching target.
      */
     @Test
     fun bookPartWithNoPageYetGivesTheSeededAnchorBlock() {
-        val resolution = BookPartEditorController.resolve(project, ProjectListItem.PrologItem(project.value.book.prolog))
+        val plan = BookPartEditorController.buildWholeDocument(project.value, design, project.value.meta)
 
-        val plan = BookPartEditorController.buildBlocks(project.value, design, resolution)
-
-        assertEquals(listOf("\${prolog}"), plan.blocks.map { it.toString() })
-        assertEquals(listOf(PartTarget.AnchorBlock("prolog", 0)), plan.targets)
+        val prologPage = plan.document.pages.single { it.id == "prolog" }
+        assertEquals(listOf("\${prolog}"), prologPage.blocks.map { it.toString() })
+        assertEquals(listOf(PartTarget.AnchorBlock("prolog", 0)), plan.targets.getValue("prolog"))
     }
 
     /**
-     * Use case: a chapter whose page already carries text is picked, so that text is read back
-     * unchanged, addressed by the chapter's own id.
+     * Use case: a chapter whose page already carries text is built into the whole document, so that
+     * text is read back unchanged, addressed by the chapter's own id.
      */
     @Test
     fun bookPartWithExistingTextReadsItBackByItsAnchor() {
         val anchorId = chapter.id.toString()
-        project.bookProperty.document = org.pcsoft.framework.simplay.engine.model.Document(
+        project.bookProperty.document = Document(
             pages = listOf(
-                org.pcsoft.framework.simplay.engine.model.FlowPage(
+                FlowPage(
                     design.pageFormat.toPageLayout(),
-                    listOf(
-                        org.pcsoft.framework.simplay.engine.model.TextBlock.of(
-                            "\${$anchorId}Once upon a time.",
-                            design.chapterPage.textStyle.toTextStyle()
-                        )
-                    ),
+                    listOf(TextBlock.of("\${$anchorId}Once upon a time.", design.chapterPage.textStyle.toTextStyle())),
                     id = anchorId
                 )
             )
         )
-        val resolution = BookPartEditorController.resolve(project, ProjectListItem.ChapterItem(chapter))
 
-        val plan = BookPartEditorController.buildBlocks(project.value, design, resolution)
+        val plan = BookPartEditorController.buildWholeDocument(project.value, design, project.value.meta)
 
-        assertEquals(listOf("\${$anchorId}Once upon a time."), plan.blocks.map { it.toString() })
-        assertEquals(listOf(PartTarget.AnchorBlock(anchorId, 0)), plan.targets)
+        val chapterPage = plan.document.pages.single { it.id == anchorId }
+        assertEquals(listOf("\${$anchorId}Once upon a time."), chapterPage.blocks.map { it.toString() })
+        assertEquals(listOf(PartTarget.AnchorBlock(anchorId, 0)), plan.targets.getValue(anchorId))
     }
 
     /**
-     * Use case: an empty blurb has nothing to show, so it is seeded with a single empty paragraph
-     * block and a matching target, giving the user somewhere to type.
+     * Use case: the title page carries an author block appended from the meta data, so the whole
+     * document's target list excludes it - only the anchor-addressed blocks before it are writable.
      */
     @Test
-    fun seedsAnEmptyBlurbWithOneParagraph() {
-        val emptyBlurbProject = ProjectProperty(project.value.copy(book = project.value.book.copy(blurb = Blurb())))
-        val resolution = BookPartEditorController.resolve(
-            emptyBlurbProject,
-            ProjectListItem.BlurbItem(emptyBlurbProject.value.book.blurb)
+    fun titlePageExcludesItsAuthorBlockFromTheTargets() {
+        val plan = BookPartEditorController.buildWholeDocument(project.value, design, project.value.meta)
+
+        val titlePage = plan.document.pages.single { it.id == "title" }
+        assertEquals(2, titlePage.blocks.size)
+        assertEquals(listOf(PartTarget.AnchorBlock("title", 0)), plan.targets.getValue("title"))
+    }
+
+    /**
+     * Use case: the copyright page is switched off, so the whole document has no page and no target
+     * list for it at all.
+     */
+    @Test
+    fun copyrightPageIsAbsentWhenNotIncluded() {
+        val withoutCopyright = project(
+            Book(
+                copyright = Copyright(included = false),
+                prolog = Prolog(),
+                chapters = emptyList(),
+                epilog = Epilog(),
+                blurb = Blurb()
+            )
         )
 
-        val plan = BookPartEditorController.buildBlocks(emptyBlurbProject.value, design, resolution)
+        val plan = BookPartEditorController.buildWholeDocument(withoutCopyright.value, design, withoutCopyright.value.meta)
 
-        assertEquals(1, plan.blocks.size)
-        assertEquals("", plan.blocks.single().toString())
-        assertEquals(listOf(PartTarget.Paragraph(0)), plan.targets)
+        assertTrue(plan.document.pages.none { it.id == "copyright" })
+        assertNull(plan.targets["copyright"])
     }
 
     /**
-     * Use case: the title page is picked, so its blocks are built for display but carry no targets,
-     * because a read-only sheet writes nothing back.
+     * Use case: an empty blurb is still seeded with its anchor token, so the whole document has one
+     * block and one matching paragraph target for it.
      */
     @Test
-    fun buildsBlocksWithoutTargetsForTheReadOnlyTitlePage() {
-        val resolution = BookPartEditorController.resolve(project, ProjectListItem.TitlePageItem)
-
-        val plan = BookPartEditorController.buildBlocks(project.value, design, resolution)
-
-        assertTrue(plan.targets.isEmpty())
-    }
-
-    /**
-     * Use case: nothing is picked, so there are neither blocks nor targets to lay out.
-     */
-    @Test
-    fun buildsNothingForTheEmptyMode() {
-        val plan = BookPartEditorController.buildBlocks(
-            project.value,
-            design,
-            BookPartEditorController.PartResolution(PartMode.NONE, null, "")
+    fun emptyBlurbIsSeededWithOneParagraphTarget() {
+        val emptyBlurbProject = project(
+            Book(prolog = Prolog(), chapters = emptyList(), epilog = Epilog(), blurb = Blurb())
         )
 
-        assertTrue(plan.blocks.isEmpty())
-        assertTrue(plan.targets.isEmpty())
+        val plan = BookPartEditorController.buildWholeDocument(emptyBlurbProject.value, design, emptyBlurbProject.value.meta)
+
+        val blurbPage = plan.document.pages.single { it.id == "blurb" }
+        assertEquals(1, blurbPage.blocks.size)
+        assertEquals(listOf(PartTarget.Paragraph(0)), plan.targets.getValue("blurb"))
     }
 
     /**
-     * Use case: the blurb is edited, so the text is written into the blurb paragraphs of the book,
-     * which are reached through the project and not through a bound part.
+     * Use case: the blurb's first paragraph is edited, so the anchor token
+     * [org.pcsoft.app.aighost.layouting.model.project.book.BlurbBuilder] mixes into its live block
+     * text is stripped back off before the clean paragraph is stored.
      */
     @Test
-    fun writesBlurbParagraphsThroughTheProject() {
-        val resolution = BookPartEditorController.resolve(project, ProjectListItem.BlurbItem(project.value.book.blurb))
-
-        BookPartEditorController.writeModel(project, design, resolution, PartTarget.Paragraph(0), "A sharper piece of cover text.")
+    fun writingTheFirstBlurbParagraphStripsItsAnchorToken() {
+        BookPartEditorController.writeModel(project, design, PartTarget.Paragraph(0), "\${blurb}A sharper piece of cover text.")
 
         assertEquals(listOf("A sharper piece of cover text."), project.value.book.blurb.paragraph)
-        assertEquals(
-            "A sharper piece of cover text.",
-            BookPartEditorController.readModel(project, resolution, PartTarget.Paragraph(0))
-        )
+        assertEquals("A sharper piece of cover text.", BookPartEditorController.readModel(project, PartTarget.Paragraph(0)))
+    }
+
+    /**
+     * Use case: a further blurb paragraph carries no anchor token, so it is stored exactly as typed.
+     */
+    @Test
+    fun writingAFurtherBlurbParagraphKeepsItUnchanged() {
+        BookPartEditorController.writeModel(project, design, PartTarget.Paragraph(1), "A second paragraph.")
+
+        assertEquals(listOf("A gripping tale.", "A second paragraph."), project.value.book.blurb.paragraph)
     }
 
     /**
@@ -281,19 +281,11 @@ class BookPartEditorControllerTest {
      */
     @Test
     fun writingAnAnchorBlockCreatesItsPageWhenNoneExistsYet() {
-        val resolution = BookPartEditorController.resolve(project, ProjectListItem.PrologItem(project.value.book.prolog))
-
-        BookPartEditorController.writeModel(
-            project,
-            design,
-            resolution,
-            PartTarget.AnchorBlock("prolog", 0),
-            "\${prolog}It was a dark night."
-        )
+        BookPartEditorController.writeModel(project, design, PartTarget.AnchorBlock("prolog", 0), "\${prolog}It was a dark night.")
 
         assertEquals(
             "\${prolog}It was a dark night.",
-            BookPartEditorController.readModel(project, resolution, PartTarget.AnchorBlock("prolog", 0))
+            BookPartEditorController.readModel(project, PartTarget.AnchorBlock("prolog", 0))
         )
         assertEquals(
             "\${prolog}It was a dark night.",
@@ -307,10 +299,9 @@ class BookPartEditorControllerTest {
      */
     @Test
     fun writingAnAnchorBlockReplacesAnExistingBlock() {
-        val resolution = BookPartEditorController.resolve(project, ProjectListItem.PrologItem(project.value.book.prolog))
-        BookPartEditorController.writeModel(project, design, resolution, PartTarget.AnchorBlock("prolog", 0), "\${prolog}First draft.")
+        BookPartEditorController.writeModel(project, design, PartTarget.AnchorBlock("prolog", 0), "\${prolog}First draft.")
 
-        BookPartEditorController.writeModel(project, design, resolution, PartTarget.AnchorBlock("prolog", 0), "\${prolog}Second draft.")
+        BookPartEditorController.writeModel(project, design, PartTarget.AnchorBlock("prolog", 0), "\${prolog}Second draft.")
 
         assertEquals(1, project.value.book.document.pages.count { it.id == "prolog" })
         assertEquals(
@@ -325,46 +316,34 @@ class BookPartEditorControllerTest {
      */
     @Test
     fun readsAnUnknownAnchorBlockAsEmpty() {
-        val resolution = BookPartEditorController.resolve(project, ProjectListItem.PrologItem(project.value.book.prolog))
-
-        assertEquals(
-            "",
-            BookPartEditorController.readModel(project, resolution, PartTarget.AnchorBlock("prolog", 0))
-        )
-        assertEquals(
-            "",
-            BookPartEditorController.readModel(project, resolution, PartTarget.AnchorBlock("unknown", 0))
-        )
+        assertEquals("", BookPartEditorController.readModel(project, PartTarget.AnchorBlock("prolog", 0)))
+        assertEquals("", BookPartEditorController.readModel(project, PartTarget.AnchorBlock("unknown", 0)))
     }
 
     /**
-     * Use case: a target that does not resolve to a set field - a paragraph target on a book part,
-     * which has none since IP-36 - reads back as the empty string instead of failing.
+     * Use case: a paragraph target past the end of the blurb's paragraphs reads back as the empty
+     * string instead of failing.
      */
     @Test
     fun readsAnUnsetParagraphTargetAsEmpty() {
-        val resolution = BookPartEditorController.resolve(project, ProjectListItem.PrologItem(project.value.book.prolog))
-
-        assertEquals("", BookPartEditorController.readModel(project, resolution, PartTarget.Paragraph(0)))
+        assertEquals("", BookPartEditorController.readModel(project, PartTarget.Paragraph(5)))
     }
 
     /**
-     * Use case: the resolved part's paragraph list is looked up for the blurb, and not at all for a
-     * book part, a read-only mode or the empty mode.
+     * Use case: a target whose page index falls outside the existing page's blocks is ignored instead
+     * of throwing, since [org.pcsoft.framework.simplay.fx.PaperSheetView] never reports such a target.
      */
     @Test
-    fun resolvesTheParagraphListPerMode() {
-        val bookPartResolution =
-            BookPartEditorController.resolve(project, ProjectListItem.PrologItem(project.value.book.prolog))
-        val blurbResolution = BookPartEditorController.resolve(project, ProjectListItem.BlurbItem(project.value.book.blurb))
-        val titleResolution = BookPartEditorController.resolve(project, ProjectListItem.TitlePageItem)
+    fun writingAnOutOfRangeAnchorBlockIndexIsIgnored() {
+        BookPartEditorController.writeModel(project, design, PartTarget.AnchorBlock("prolog", 0), "\${prolog}First draft.")
 
-        assertSame(
-            project.bookProperty.blurbProperty.paragraphProperty,
-            BookPartEditorController.paragraphListProperty(project, blurbResolution)
+        BookPartEditorController.writeModel(project, design, PartTarget.AnchorBlock("prolog", 5), "Ignored.")
+
+        assertEquals(
+            "\${prolog}First draft.",
+            project.value.book.document.pages.single { it.id == "prolog" }.blocks.single().toString()
         )
-        assertNull(BookPartEditorController.paragraphListProperty(project, bookPartResolution))
-        assertNull(BookPartEditorController.paragraphListProperty(project, titleResolution))
+        assertFalse(project.value.book.document.pages.single { it.id == "prolog" }.blocks.map { it.toString() }.contains("Ignored."))
     }
 
     /**

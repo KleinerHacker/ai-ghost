@@ -126,7 +126,8 @@ class PreferencesTest {
             """{"recentOpened":{"max":10,"entries":[]},""" +
                 """"appearance":{"themeMode":"DARK"},""" +
                 """"ai":{"maxStoryCharacters":5000,"maxStyleCharacters":1000},""" +
-                """"editor":{"paragraphMergePauseMillis":600}}""",
+                """"editor":{"paragraphMergePauseMillis":600,"writingMode":"WRITING",""" +
+                """"inspectorCollapsed":false,"lastAnchorId":null}}""",
             json
         )
     }

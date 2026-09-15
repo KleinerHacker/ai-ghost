@@ -18,13 +18,16 @@ import javafx.scene.Scene
 import javafx.scene.input.KeyCode
 import javafx.scene.input.KeyEvent
 import javafx.stage.Stage
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.app.Messages
+import org.pcsoft.app.aighost.app.controller.IoController
 import org.pcsoft.app.aighost.app.undo.UndoStack
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
+import org.pcsoft.app.aighost.model.pref.WritingMode
 import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.FontData
 import org.pcsoft.app.aighost.model.common.StyleData
@@ -74,6 +77,22 @@ class BookPartEditorTest : ApplicationTest() {
     private lateinit var projectModel: ProjectProperty
     private lateinit var selection: SimpleObjectProperty<ProjectListItem?>
     private lateinit var undoStack: UndoStack
+    private lateinit var stage: Stage
+
+    private var originalWritingMode: WritingMode = WritingMode.WRITING
+    private var originalLastAnchorId: String? = null
+
+    @BeforeEach
+    fun rememberPreferences() {
+        originalWritingMode = IoController.preferences.editorProperty.writingMode
+        originalLastAnchorId = IoController.preferences.editorProperty.lastAnchorId
+    }
+
+    @AfterEach
+    fun restorePreferences() {
+        IoController.preferences.editorProperty.writingMode = originalWritingMode
+        IoController.preferences.editorProperty.lastAnchorId = originalLastAnchorId
+    }
 
     override fun start(stage: Stage) {
         MvvmFX.setGlobalResourceBundle(
@@ -94,6 +113,7 @@ class BookPartEditorTest : ApplicationTest() {
         editor.bindSelection(selection)
         sheet = editor.lookup(".paper-sheet-view") as PaperSheetView
 
+        this.stage = stage
         stage.scene = Scene(editor, 700.0, 600.0)
         stage.show()
     }
@@ -129,9 +149,23 @@ class BookPartEditorTest : ApplicationTest() {
     private val blurb: Blurb get() = projectModel.value.book.blurb
     private val chapter: Chapter get() = projectModel.value.book.chapters.single()
 
-    /** Text of the block at [index] of the sheet's current document, or `null` past its end. */
-    private fun blockText(index: Int): String? =
-        sheet.document?.pages?.firstOrNull()?.blocks?.getOrNull(index)?.toString()
+    /** Text of the block at [index] of the page whose id is [pageId], or `null` past its end. */
+    private fun blockText(pageId: String, index: Int): String? =
+        sheet.document?.pages?.firstOrNull { it.id == pageId }?.blocks?.getOrNull(index)?.toString()
+
+    /**
+     * The whole document shown by the sheet flattens every page's blocks into one sequence the caret
+     * moves through, so a page-local block index must be translated into that global index before it
+     * is handed to [org.pcsoft.framework.simplay.fx.CaretModel].
+     */
+    private fun globalBlockIndex(pageId: String, indexInPage: Int): Int {
+        var offset = 0
+        for (page in sheet.document?.pages.orEmpty()) {
+            if (page.id == pageId) return offset + indexInPage
+            offset += page.blocks.size
+        }
+        return offset + indexInPage
+    }
 
     private fun select(item: ProjectListItem?) {
         interact { selection.value = item }
@@ -156,11 +190,16 @@ class BookPartEditorTest : ApplicationTest() {
     }
 
     /**
-     * Use case: nothing is picked, so the sheet shows its hint instead of a writing surface.
+     * Use case: nothing is picked yet, so the sheet already shows the whole book - since IP-39 it is
+     * never swapped per selection, a tree pick only navigates within it.
      */
     @Test
-    fun showsAHintWhileNothingIsPicked() {
-        assertFalse(sheet.isVisible, "the sheet stays hidden while nothing is picked")
+    fun showsTheWholeBookBeforeAnythingIsPicked() {
+        // The very first measure after opening a project is deferred by one pulse, so its progress
+        // indicator gets a chance to paint before the synchronous measure call blocks the FX thread.
+        WaitForAsyncUtils.waitForFxEvents()
+
+        assertTrue(sheet.isVisible, "the sheet shows the whole book as soon as a project is open")
     }
 
     /**
@@ -170,7 +209,9 @@ class BookPartEditorTest : ApplicationTest() {
     fun opensTheBlurbTextOnTheSheet() {
         select(ProjectListItem.BlurbItem(blurb))
 
-        assertEquals("The first paragraph", blockText(0))
+        // The block itself still carries the blurb's anchor token at its start (IP-39); the model
+        // field the user actually cares about is clean, proven separately in writesEveryKeystrokeIntoTheModel.
+        assertEquals("\${blurb}The first paragraph", blockText("blurb", 0))
     }
 
     /**
@@ -182,7 +223,7 @@ class BookPartEditorTest : ApplicationTest() {
         select(ProjectListItem.BlurbItem(blurb))
         interact {
             sheet.requestFocus()
-            sheet.caretModel.moveToEndOfBlock(0)
+            sheet.caretModel.moveToEndOfBlock(globalBlockIndex("blurb", 0))
         }
         WaitForAsyncUtils.waitForFxEvents()
 
@@ -199,16 +240,16 @@ class BookPartEditorTest : ApplicationTest() {
     @Test
     fun opensAChapterOnTheSheetAndWritesTypedTextIntoItsAnchorPage() {
         select(ProjectListItem.ChapterItem(chapter))
+        val anchorId = chapter.id.toString()
         interact {
             sheet.requestFocus()
-            sheet.caretModel.moveToEndOfBlock(0)
+            sheet.caretModel.moveToEndOfBlock(globalBlockIndex(anchorId, 0))
         }
         WaitForAsyncUtils.waitForFxEvents()
 
         // Letter-only continuation, no space and no symbol - see the class KDoc.
         typeSlowly("Onceuponatime")
 
-        val anchorId = chapter.id.toString()
         val page = projectModel.value.book.document.pages.single { it.id == anchorId }
         assertEquals("\${$anchorId}Onceuponatime", page.blocks.single().toString())
     }
@@ -221,7 +262,7 @@ class BookPartEditorTest : ApplicationTest() {
         select(ProjectListItem.BlurbItem(blurb))
         interact {
             sheet.requestFocus()
-            sheet.caretModel.moveToEndOfBlock(0)
+            sheet.caretModel.moveToEndOfBlock(globalBlockIndex("blurb", 0))
         }
         WaitForAsyncUtils.waitForFxEvents()
 
@@ -243,9 +284,10 @@ class BookPartEditorTest : ApplicationTest() {
         select(ProjectListItem.BlurbItem(blurb))
         interact {
             sheet.requestFocus()
-            sheet.caretModel.moveIntoBlock(0, 4)
+            sheet.caretModel.moveIntoBlock(globalBlockIndex("blurb", 0), 4)
         }
         WaitForAsyncUtils.waitForFxEvents()
+        val caretBefore = sheet.caretModel.position
 
         interact {
             projectModel.value.design.blurbPage = BlurbPageDesign(style(size = 16))
@@ -255,27 +297,34 @@ class BookPartEditorTest : ApplicationTest() {
         interact { editor.scene.root.layout() }
         WaitForAsyncUtils.waitForFxEvents()
 
-        assertEquals(4, sheet.caretModel.position, "the caret keeps its offset across the restyling")
+        assertEquals(caretBefore, sheet.caretModel.position, "the caret keeps its offset across the restyling")
     }
 
     /**
-     * Use case: the user picks the title page, so it is shown read only and a typed change is
-     * discarded instead of reaching the model.
+     * Use case: the user picks the title page, so it turns up on the sheet like every other part of
+     * the whole book document and a typed change reaches the book's `Document`, in the title's own
+     * anchor block.
      */
     @Test
-    fun showsTheTitlePageReadOnly() {
+    fun showsTheTitlePageWritable() {
         select(ProjectListItem.TitlePageItem)
 
-        // Block 0 is the title's own anchor seed (IP-38), invisible on the rendered sheet; the author
-        // name - still built fresh from Meta - follows it as block 1.
-        assertEquals("Jane Doe", blockText(1), "the title page is rendered on the sheet")
-        assertEquals(PaperSheetMode.SELECTABLE, sheet.mode)
+        // Block 0 is the title's own anchor seed (IP-38); the author name - still built fresh from
+        // Meta, never a write-back target - follows it as block 1.
+        assertEquals("Jane Doe", blockText("title", 1), "the title page is rendered on the sheet")
+        assertEquals(PaperSheetMode.EDITABLE, sheet.mode)
 
-        interact { sheet.requestFocus() }
-        typeSlowly("A Different Title")
+        interact {
+            sheet.requestFocus()
+            sheet.caretModel.moveToEndOfBlock(globalBlockIndex("title", 0))
+        }
+        WaitForAsyncUtils.waitForFxEvents()
+        typeSlowly("ATitle")
 
-        assertEquals("Jane Doe", projectModel.value.meta.author, "the title page must not be writable")
-        assertFalse(undoStack.canUndoProperty.get(), "a read-only sheet records no undo entry")
+        val titlePage = projectModel.value.book.document.pages.single { it.id == "title" }
+        assertEquals("\${title}ATitle", titlePage.blocks.single().toString())
+        assertEquals("Jane Doe", projectModel.value.meta.author, "the author name stays a Meta field")
+        assertTrue(undoStack.canUndoProperty.get(), "the title page is writable since IP-39")
     }
 
     /**
@@ -288,13 +337,58 @@ class BookPartEditorTest : ApplicationTest() {
         select(ProjectListItem.BlurbItem(blurb))
         interact {
             sheet.requestFocus()
-            sheet.caretModel.moveToEndOfBlock(0)
+            sheet.caretModel.moveToEndOfBlock(globalBlockIndex("blurb", 0))
         }
         WaitForAsyncUtils.waitForFxEvents()
+        val caretBefore = sheet.caretModel.position
 
         typeSlowly("XYZ")
 
-        assertEquals("The first paragraphXYZ", blockText(0))
-        assertEquals(22, sheet.caretModel.position, "the caret must sit right after the last character typed")
+        assertEquals("\${blurb}The first paragraphXYZ", blockText("blurb", 0))
+        assertEquals(caretBefore + 3, sheet.caretModel.position, "the caret must sit right after the last character typed")
+    }
+
+    /**
+     * Use case: the user switches the sheet to the preview, so the real `PaperSheetView` mode changes
+     * from writable to selectable and the choice is saved to the preferences.
+     */
+    @Test
+    fun switchesTheRealSheetToPreview() {
+        interact { editor.setWritingMode(WritingMode.PREVIEW) }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        assertEquals(PaperSheetMode.SELECTABLE, sheet.mode)
+        assertEquals(WritingMode.PREVIEW, IoController.preferences.editorProperty.writingMode)
+    }
+
+    /**
+     * Use case: the user navigates to a chapter, so the anchor id is saved to the preferences and a
+     * freshly bound editor - the next time the project is opened - lands right back on it.
+     */
+    @Test
+    fun restoresTheLastAnchorOnAFreshBind() {
+        select(ProjectListItem.ChapterItem(chapter))
+        val anchorId = chapter.id.toString()
+        assertEquals(anchorId, IoController.preferences.editorProperty.lastAnchorId)
+        val positionAfterNavigating = sheet.caretModel.position
+
+        val freshEditor = BookPartEditor()
+        interact {
+            // Swapped into the real, shown stage before binding - like `select()` relies on for the
+            // original editor - since the sheet only resolves an anchor to a caret position once it is
+            // actually part of a shown scene and laid out.
+            stage.scene = Scene(freshEditor, 700.0, 600.0)
+            freshEditor.bindProject(projectModel)
+            freshEditor.bindUndoStack(UndoStack())
+            freshEditor.bindSelection(SimpleObjectProperty(null))
+        }
+        WaitForAsyncUtils.waitForFxEvents()
+        interact { freshEditor.scene.root.layout() }
+        WaitForAsyncUtils.waitForFxEvents()
+        val freshSheet = freshEditor.lookup(".paper-sheet-view") as PaperSheetView
+
+        // Same document, same anchor, so the deterministic linear caret position matches, without
+        // depending on a way to read the anchor id back off the caret.
+        assertEquals(positionAfterNavigating, freshSheet.caretModel.position)
     }
 }

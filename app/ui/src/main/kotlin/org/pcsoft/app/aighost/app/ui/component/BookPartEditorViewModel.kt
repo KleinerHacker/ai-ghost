@@ -13,10 +13,12 @@
 package org.pcsoft.app.aighost.app.ui.component
 
 import de.saxsys.mvvmfx.ViewModel
+import javafx.application.Platform
 import javafx.beans.InvalidationListener
 import javafx.beans.Observable
 import javafx.beans.binding.Bindings
 import javafx.beans.binding.BooleanBinding
+import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.beans.property.StringProperty
@@ -29,12 +31,9 @@ import org.pcsoft.app.aighost.app.controller.PartMode
 import org.pcsoft.app.aighost.app.controller.PartTarget
 import org.pcsoft.app.aighost.app.undo.UndoStack
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
-import org.pcsoft.app.aighost.layouting.model.common.toPageLayout
 import org.pcsoft.app.aighost.layouting.model.project.DocumentStyleRefresher
+import org.pcsoft.app.aighost.model.pref.WritingMode
 import org.pcsoft.framework.simplay.engine.model.Document
-import org.pcsoft.framework.simplay.engine.model.FlowPage
-import org.pcsoft.framework.simplay.engine.model.Page
-import org.pcsoft.framework.simplay.engine.model.SinglePage
 import org.pcsoft.framework.simplay.fx.PaperSheetMode
 import org.pcsoft.framework.simplay.fx.PaperSheetView
 
@@ -46,26 +45,30 @@ import org.pcsoft.framework.simplay.fx.PaperSheetView
  * itself and never wrapped in a property of their own. The [PaperSheetView] the view holds is handed
  * in once through [attach].
  *
- * The domain logic - routing a tree node onto a part, assembling the blocks from the model and the
- * design, and mapping a block back onto a manuscript field - lives in [BookPartEditorController]. This
- * view model keeps only what has a lifetime: the sheet it drives, one [StringProperty] per editable
- * block for the undo history, and the current [BookPartEditorController.PartResolution]. Laying the
- * blocks out onto pages, breaking lines and pagination are [PaperSheetView]'s own concern.
+ * Since IP-39 there is exactly one `Document` for the whole book, built by
+ * [BookPartEditorController.buildWholeDocument] and pushed to the sheet whenever the project is bound
+ * or the design changes; a tree selection never swaps it, it only moves the sheet's caret to the
+ * picked part's `TextAnchor` ([navigateTo]). The domain logic - resolving a tree node onto an anchor
+ * id, assembling the whole document from the model and mapping a block back onto a manuscript field -
+ * lives in [BookPartEditorController]. This view model keeps only what has a lifetime: the sheet it
+ * drives, one [StringProperty] per block for the undo history, and the write-back target of every
+ * block of the current document.
  *
- * Every edit [PaperSheetView] makes replaces its whole `document`; this view model reads the changed
- * blocks back against [targets] and writes the ones that differ into the model, folded into a single
- * undo entry per block for the length of a typing pause. A design change restyles the book's stored
+ * Every edit [PaperSheetView] makes changes its `document` in place; this view model reads the pages
+ * back against [targets] and writes the blocks that differ into the model, folded into a single undo
+ * entry per block for the length of a typing pause. A design change restyles the book's stored
  * `Document` in place through [DocumentStyleRefresher] - text and every anchor stay untouched - and
- * only then rebuilds the sheet's single-part `document` from it, so every block picks up its new
- * style; the caret's linear position is read before and restored after, since restyling never changes
- * the text itself.
+ * only then rebuilds the sheet's whole-book `document` from it, so every block picks up its new style;
+ * the caret's linear position is read before and restored after, since restyling never changes the
+ * text itself. Typing itself never triggers a rebuild, so `simplay-engine.measure` only runs once per
+ * project open or design change, not per keystroke.
  *
  * Splitting, merging, removing and reordering a paragraph is not attempted here: `PaperSheetView`'s
  * own editing turns a line break into a space and never creates a new block, so that stays IP-32's
  * job, wired as key handlers of its own. A delete reaching across a paragraph boundary can still merge
- * two of `PaperSheetView`'s blocks on its own; this view model detects that (the block count no longer
- * matches [targets]) and rejects it by rebuilding from the untouched model, rather than guessing which
- * paragraph the merged text belongs to.
+ * two of `PaperSheetView`'s blocks on its own; this view model detects that (a page's block count no
+ * longer matches its targets) and rejects it by rebuilding the whole document from the untouched
+ * model, rather than guessing which paragraph the merged text belongs to.
  *
  * The component follows only models handed to it and registers nothing in a global registry, so the
  * `showingBinding` pattern of `fx-component-lifecycle` does not apply here, the same as for
@@ -73,18 +76,20 @@ import org.pcsoft.framework.simplay.fx.PaperSheetView
  */
 class BookPartEditorViewModel : ViewModel {
 
-    /** Which kind of part the sheet currently shows, driving the empty state and the read-only flag. */
+    /** Which kind of part is currently picked in the project tree. */
     val mode: SimpleObjectProperty<PartMode> = SimpleObjectProperty(this, "mode", PartMode.NONE)
 
-    /** Whether a part is shown at all, so the sheet is visible instead of the empty state. */
-    val contentAvailable: BooleanBinding =
-        Bindings.createBooleanBinding({ mode.value != PartMode.NONE }, mode)
+    /** Whether a project is open, so the sheet is visible instead of the empty state. */
+    val contentAvailable: SimpleBooleanProperty = SimpleBooleanProperty(this, "contentAvailable", false)
 
-    /** Whether the shown part may be written, `false` for the title page and the copyright page. */
-    val editable: BooleanBinding = Bindings.createBooleanBinding(
-        { mode.value == PartMode.BOOK_PART || mode.value == PartMode.BLURB },
-        mode
-    )
+    /** Whether the picked part may be written; `false` only while nothing is picked yet. */
+    val editable: BooleanBinding = Bindings.createBooleanBinding({ mode.value != PartMode.NONE }, mode)
+
+    /** Whether the sheet is switched to writing or to preview, restored from and saved to the preferences. */
+    val writingMode: SimpleObjectProperty<WritingMode> = SimpleObjectProperty(this, "writingMode", WritingMode.WRITING)
+
+    /** Whether the whole book is measured for the first time after opening a project right now. */
+    val loading: SimpleBooleanProperty = SimpleBooleanProperty(this, "loading", false)
 
     // The sheet the view holds, handed in once after the FXML is loaded.
     private lateinit var paperSheetView: PaperSheetView
@@ -93,12 +98,8 @@ class BookPartEditorViewModel : ViewModel {
     private var undoStack: UndoStack? = null
     private var lastSelection: ProjectListItem? = null
 
-    // The part currently edited, resolved from the picked tree node by the controller.
-    private var resolution: BookPartEditorController.PartResolution =
-        BookPartEditorController.PartResolution(PartMode.NONE, null, "")
-
-    // What each block of the current document writes back to, in block order.
-    private var targets: List<PartTarget> = emptyList()
+    // The write-back target of every block of the current document, keyed by page (anchor) id.
+    private var targets: Map<String, List<PartTarget>> = emptyMap()
 
     // One string property per block target, so a text change can be recorded as an undo step and an
     // undo can play it back through the same path a keystroke takes.
@@ -112,7 +113,7 @@ class BookPartEditorViewModel : ViewModel {
     // write the model twice.
     private var writingTarget = false
 
-    private val designListener = InvalidationListener { recompute() }
+    private val designListener = InvalidationListener { pushWholeDocument() }
     private var boundDesign: Observable? = null
 
     private val selectionListener =
@@ -129,7 +130,28 @@ class BookPartEditorViewModel : ViewModel {
      */
     internal fun attach(paperSheetView: PaperSheetView) {
         this.paperSheetView = paperSheetView
+        writingMode.value = IoController.preferences.editorProperty.writingMode
+        paperSheetView.mode = writingMode.value.toPaperSheetMode()
         paperSheetView.documentProperty.addListener(documentListener)
+    }
+
+    /**
+     * Switches the sheet between writing and preview, applies it to [PaperSheetView.mode] and saves it
+     * to the preferences of the user.
+     *
+     * @param mode the mode to switch to
+     */
+    internal fun setWritingMode(mode: WritingMode) {
+        writingMode.value = mode
+        IoController.preferences.editorProperty.writingMode = mode
+        if (::paperSheetView.isInitialized) {
+            paperSheetView.mode = mode.toPaperSheetMode()
+        }
+    }
+
+    private fun WritingMode.toPaperSheetMode(): PaperSheetMode = when (this) {
+        WritingMode.WRITING -> PaperSheetMode.EDITABLE
+        WritingMode.PREVIEW -> PaperSheetMode.SELECTABLE
     }
 
     /**
@@ -142,7 +164,36 @@ class BookPartEditorViewModel : ViewModel {
         this.project = project
         boundDesign = project?.designProperty?.also { it.addListener(designListener) }
 
-        onSelectionChanged(lastSelection)
+        if (project == null || !::paperSheetView.isInitialized) {
+            pushWholeDocument()
+            if (project != null) {
+                if (lastSelection != null) navigateTo(lastSelection) else restoreLastAnchor()
+            }
+            return
+        }
+
+        // The very first measure of a freshly opened project can be expensive for a long book.
+        // simplay-engine.measure is a synchronous call on this same FX thread, so showing the indicator
+        // before it runs needs a pulse of its own - otherwise nothing would ever be painted before the
+        // call blocks the thread.
+        loading.value = true
+        Platform.runLater {
+            pushWholeDocument()
+            if (lastSelection != null) {
+                navigateTo(lastSelection)
+            } else {
+                restoreLastAnchor()
+            }
+            loading.value = false
+        }
+    }
+
+    // Moves the caret to the anchor last navigated to before the project was closed, without needing
+    // to reconstruct the project tree node that once stood for it.
+    private fun restoreLastAnchor() {
+        if (!::paperSheetView.isInitialized || project == null) return
+        val anchorId = IoController.preferences.editorProperty.lastAnchorId ?: return
+        paperSheetView.caretModel.moveToAnchor(anchorId)
     }
 
     /**
@@ -180,61 +231,69 @@ class BookPartEditorViewModel : ViewModel {
             paperSheetView.documentProperty.removeListener(documentListener)
         }
         targetProperties.clear()
-        targets = emptyList()
+        targets = emptyMap()
     }
 
     private fun onSelectionChanged(item: ProjectListItem?) {
-        lastSelection = item
         undoStack?.endMerging()
-        targetProperties.clear()
+        navigateTo(item)
+    }
 
-        resolution = BookPartEditorController.resolve(project, item)
-        mode.value = resolution.mode
+    // Moves the sheet's caret to the picked part's anchor instead of swapping the document.
+    private fun navigateTo(item: ProjectListItem?) {
+        lastSelection = item
+        val resolution = BookPartEditorController.resolve(item)
+        mode.value = if (project != null) resolution.mode else PartMode.NONE
 
-        recompute()
+        if (!::paperSheetView.isInitialized || project == null || resolution.anchorId.isEmpty()) return
+        paperSheetView.caretModel.moveToAnchor(resolution.anchorId)
+        IoController.preferences.editorProperty.lastAnchorId = resolution.anchorId
     }
 
     // Reads back what PaperSheetView's own editing changed and writes the differing blocks into the
-    // model; a block count that no longer matches targets means a delete merged two blocks across
-    // their boundary, a structural change this plan does not attempt - it is rejected by recompute().
+    // model; a page whose block count no longer matches its targets means a delete merged two blocks
+    // across their boundary, a structural change this plan does not attempt - it is rejected by
+    // rebuilding the whole document from the untouched model.
     private fun handleDocumentChanged(document: Document?) {
         if (applyingDocument) return
-        if (mode.value != PartMode.BOOK_PART && mode.value != PartMode.BLURB) return
         val projectProperty = project ?: return
-        val design = projectProperty.value?.design ?: return
+        val proj = projectProperty.value ?: return
+        val design = proj.design
 
-        val blocks = document?.pages?.firstOrNull()?.blocks.orEmpty()
-        if (blocks.size != targets.size) {
-            recompute()
-            return
-        }
-
-        writingTarget = true
-        try {
-            targets.forEachIndexed { index, target ->
-                val text = blocks[index].toString()
-                val property = propertyFor(target)
-                val old = property.value ?: ""
-                if (text == old) return@forEachIndexed
-
-                property.value = text
-                BookPartEditorController.writeModel(projectProperty, design, resolution, target, text)
-                undoStack?.record(
-                    Messages["component.bookPartEditor.undo.edit"],
-                    property,
-                    old,
-                    text,
-                    mergeKey = resolution.partId to target
-                )
+        for (page in document?.pages.orEmpty()) {
+            val pageTargets = targets[page.id] ?: continue
+            if (page.blocks.size < pageTargets.size) {
+                pushWholeDocument()
+                return
             }
-        } finally {
-            writingTarget = false
+
+            writingTarget = true
+            try {
+                pageTargets.forEachIndexed { index, target ->
+                    val text = page.blocks[index].toString()
+                    val property = propertyFor(target)
+                    val old = property.value ?: ""
+                    if (text == old) return@forEachIndexed
+
+                    property.value = text
+                    BookPartEditorController.writeModel(projectProperty, design, target, text)
+                    undoStack?.record(
+                        Messages["component.bookPartEditor.undo.edit"],
+                        property,
+                        old,
+                        text,
+                        mergeKey = page.id to target
+                    )
+                }
+            } finally {
+                writingTarget = false
+            }
         }
     }
 
     private fun propertyFor(target: PartTarget): StringProperty =
         targetProperties.getOrPut(target) {
-            val initial = project?.let { BookPartEditorController.readModel(it, resolution, target) } ?: ""
+            val initial = project?.let { BookPartEditorController.readModel(it, target) } ?: ""
             SimpleStringProperty(initial).apply {
                 addListener { _, _, newValue ->
                     if (writingTarget) return@addListener
@@ -242,68 +301,56 @@ class BookPartEditorViewModel : ViewModel {
                     val projectProperty = project
                     val design = projectProperty?.value?.design
                     if (projectProperty != null && design != null) {
-                        BookPartEditorController.writeModel(projectProperty, design, resolution, target, newValue ?: "")
+                        BookPartEditorController.writeModel(projectProperty, design, target, newValue ?: "")
                     }
-                    recompute()
+                    pushWholeDocument()
                 }
             }
         }
 
-    private fun recompute() {
-        if (!::paperSheetView.isInitialized) return
-
+    // Rebuilds the whole-book document from the model and hands it to the sheet, without the
+    // document-change event of the assignment itself being taken for an edit, and restores the
+    // caret's linear position afterwards - a rebuild never changes the text, only the style, so the
+    // same linear offset still names the same character.
+    private fun pushWholeDocument() {
         val projectProperty = this.project
         val project = projectProperty?.value
         val design = project?.design
-        if (projectProperty == null || project == null || design == null || mode.value == PartMode.NONE) {
-            targets = emptyList()
-            pushDocument(null)
+        contentAvailable.value = projectProperty != null && project != null && design != null
+
+        if (projectProperty == null || project == null || design == null) {
+            targets = emptyMap()
+            targetProperties.clear()
+            if (::paperSheetView.isInitialized) {
+                applyingDocument = true
+                try {
+                    paperSheetView.document = null
+                } finally {
+                    applyingDocument = false
+                }
+            }
             return
         }
 
         // A design change never rewrites text or moves an anchor, only the style of the blocks that
         // already sit on each page - restyling the stored document here, through the property so the
-        // write reaches the real Book instance, means buildBlocks() below reads it back already in
-        // its new style, the same way it would after a reload.
+        // write reaches the real Book instance, means buildWholeDocument() below reads it back already
+        // in its new style, the same way it would after a reload.
         projectProperty.bookProperty.document = DocumentStyleRefresher.refresh(project.book, design)
 
-        val plan = BookPartEditorController.buildBlocks(project, design, resolution)
+        val plan = BookPartEditorController.buildWholeDocument(project, design, project.meta)
         targets = plan.targets
+        targetProperties.clear()
 
-        if (plan.blocks.isEmpty()) {
-            pushDocument(null)
-            return
-        }
+        if (!::paperSheetView.isInitialized) return
 
-        paperSheetView.mode = if (resolution.mode == PartMode.BOOK_PART || resolution.mode == PartMode.BLURB) {
-            PaperSheetMode.EDITABLE
-        } else {
-            // simPlay 0.3.0 renamed the read-only mode to SELECTABLE, the same constant PageMode
-            // uses: selectable, copyable text, no caret, never mutated.
-            PaperSheetMode.SELECTABLE
-        }
-
-        val layout = design.pageFormat.toPageLayout()
-        val page: Page = when (resolution.mode) {
-            PartMode.TITLE_PAGE, PartMode.COPYRIGHT_PAGE -> SinglePage(layout, plan.blocks)
-            else -> FlowPage(layout, plan.blocks)
-        }
-        pushDocument(Document(listOf(page)))
-    }
-
-    // Hands a freshly built document to the sheet without the document-change event of the assignment
-    // itself being taken for an edit, and restores the caret's linear position afterwards - a rebuild
-    // never changes the text, only the style, so the same linear offset still names the same character.
-    private fun pushDocument(document: Document?) {
         val caretBefore = paperSheetView.caretModel.position
         applyingDocument = true
         try {
-            paperSheetView.document = document
+            paperSheetView.document = plan.document
         } finally {
             applyingDocument = false
         }
-        if (document != null && paperSheetView.mode == PaperSheetMode.EDITABLE) {
-            paperSheetView.caretModel.moveTo(caretBefore)
-        }
+        paperSheetView.caretModel.moveTo(caretBefore)
     }
 }
