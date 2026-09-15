@@ -13,7 +13,6 @@
 package org.pcsoft.app.aighost.layouting.model.project.book
 
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.FontData
@@ -22,14 +21,15 @@ import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.design.Design
 import org.pcsoft.app.aighost.model.project.design.TitlePageDesign
 import org.pcsoft.app.aighost.model.project.meta.Meta
+import org.pcsoft.framework.simplay.engine.model.Document
 import org.pcsoft.framework.simplay.engine.model.TextAlignment
 
 /**
  * Developer tests for the blocks of the title page, [TitlePageBuilder].
  *
- * IP-36 removed the main title and its further lines from [Book] - that text now lives only in the
- * book's simPlay `Document` (IP-37/IP-38) - so only the author name, still carried by [Meta], is built
- * here until IP-38 rebuilds this builder around the title's anchor in that document.
+ * IP-36 removed the main title and its further lines from [Book]; since IP-38 that text lives only in
+ * the book's simPlay [Document], read back through the `"title"` anchor via [BookPartBuilder]. The
+ * author name still lives in [Meta] and is appended after the anchor-addressed title blocks.
  */
 class TitlePageBuilderTest {
 
@@ -55,40 +55,52 @@ class TitlePageBuilderTest {
     )
 
     /**
-     * Use case: an author name was typed and the design shows it, so the title page gives exactly the
-     * author block, styled with the author style of the design.
+     * Use case: a freshly created project has no title text yet, so the title page gives only the
+     * seeded `"title"` anchor block, followed by the author block the design asks for.
      */
     @Test
-    fun theTitlePageIsTheAuthorBlockAlone() {
-        val blocks = TitlePageBuilder.build(Book(), Meta(author = "Jane Doe"), design)
+    fun theTitlePageIsTheAnchorFollowedByTheAuthorBlock() {
+        val blocks = TitlePageBuilder.build(Document(), Meta(author = "Jane Doe"), design)
 
-        assertEquals(listOf("Jane Doe"), blocks.map { it.toString() })
-        assertEquals("Garamond", blocks[0].style.font.family)
-        assertEquals(16.0, blocks[0].style.font.size)
-        assertEquals(TextAlignment.CENTER, blocks[0].style.alignment)
-        assertEquals(1.1, blocks[0].style.lineSpacing.factor)
+        assertEquals(listOf("\${title}", "Jane Doe"), blocks.map { it.toString() })
+        assertEquals("Garamond", blocks[1].style.font.family)
+        assertEquals(16.0, blocks[1].style.font.size)
+        assertEquals(TextAlignment.CENTER, blocks[1].style.alignment)
+        assertEquals(1.1, blocks[1].style.lineSpacing.factor)
     }
 
     /**
-     * Use case: the design hides the author name on the title page, so no block is built even though
-     * an author was typed.
+     * Use case: the anchor block is seeded in the title's own style, not the author's, so it already
+     * matches the design the moment the user starts typing a title.
+     */
+    @Test
+    fun theAnchorBlockIsSeededInTheTitleStyle() {
+        val blocks = TitlePageBuilder.build(Document(), Meta(author = ""), design)
+
+        assertEquals("Garamond", blocks[0].style.font.family)
+        assertEquals(28.0, blocks[0].style.font.size)
+    }
+
+    /**
+     * Use case: the design hides the author name on the title page, so only the anchor block remains,
+     * even though an author was typed.
      */
     @Test
     fun theAuthorIsLeftOutWhenTheDesignHidesIt() {
         val hidden = design.copy(titlePage = design.titlePage.copy(showAuthor = false))
 
-        val blocks = TitlePageBuilder.build(Book(), Meta(author = "Jane Doe"), hidden)
+        val blocks = TitlePageBuilder.build(Document(), Meta(author = "Jane Doe"), hidden)
 
-        assertTrue(blocks.isEmpty())
+        assertEquals(listOf("\${title}"), blocks.map { it.toString() })
     }
 
     /**
-     * Use case: no author was typed, so the title page gives no block at all.
+     * Use case: no author was typed, so only the anchor block remains.
      */
     @Test
-    fun anEmptyAuthorGivesNoBlock() {
-        val blocks = TitlePageBuilder.build(Book(), Meta(author = ""), design)
+    fun anEmptyAuthorGivesOnlyTheAnchorBlock() {
+        val blocks = TitlePageBuilder.build(Document(), Meta(author = ""), design)
 
-        assertTrue(blocks.isEmpty())
+        assertEquals(listOf("\${title}"), blocks.map { it.toString() })
     }
 }

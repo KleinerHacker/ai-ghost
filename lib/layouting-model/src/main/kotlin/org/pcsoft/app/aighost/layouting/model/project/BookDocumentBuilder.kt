@@ -14,6 +14,7 @@ package org.pcsoft.app.aighost.layouting.model.project
 
 import org.pcsoft.app.aighost.layouting.model.common.toPageLayout
 import org.pcsoft.app.aighost.layouting.model.common.toPageNumbering
+import org.pcsoft.app.aighost.layouting.model.common.toTextStyle
 import org.pcsoft.app.aighost.layouting.model.project.book.BlurbBuilder
 import org.pcsoft.app.aighost.layouting.model.project.book.BookPartBuilder
 import org.pcsoft.app.aighost.layouting.model.project.book.TitlePageBuilder
@@ -43,7 +44,11 @@ private const val COPYRIGHT_PAGE_ID = "copyright"
  *
  * Every page is built with a fixed, stable id instead of simPlay's random default, so the title and
  * copyright page can be named in [Document.numbering]'s `excludedPageIds` without depending on an id
- * generated somewhere else.
+ * generated somewhere else. Since IP-38 that id doubles as the page's `TextAnchor` id for every
+ * written part: [book]'s own [Book.document] is threaded through every part builder, so an existing
+ * page's text survives a rebuild and only a part with no page yet is seeded with an empty,
+ * anchor-only block - a chapter's page id is its stable [org.pcsoft.app.aighost.model.project.book.Chapter.id],
+ * not its position, so renaming or reordering chapters never orphans a page.
  *
  * The page policy simPlay does not own yet is marked with TODO(simPlay page policy) throughout:
  * mirrored margins, inactive pages of a switched-off part, the hard edge of the blurb and the
@@ -55,7 +60,8 @@ object BookDocumentBuilder {
     /**
      * Builds the [Document] of [book] under [design], taking the author name from [meta].
      *
-     * @param book The manuscript - title, copyright, prolog, chapters, epilog and blurb.
+     * @param book The manuscript - title, copyright, prolog, chapters, epilog, blurb and its current
+     * [Book.document], read for every part's existing anchor-addressed text.
      * @param design The typography and the page geometry every page shares.
      * @param meta The project meta data the author name is read from.
      * @return One [Document] whose pages follow the reading order of the book.
@@ -65,31 +71,48 @@ object BookDocumentBuilder {
         //  and the leading/trailing blank sheets of Design.startWithEmptyPage / endWithEmptyPage are
         //  not expressed yet; simPlay owns that once it lands.
         val layout = design.pageFormat.toPageLayout()
+        val document = book.document
         val pages = ArrayList<Page>()
         val excludedPageIds = mutableSetOf(TITLE_PAGE_ID)
 
-        pages += SinglePage(layout, TitlePageBuilder.build(book, meta, design), id = TITLE_PAGE_ID)
+        pages += SinglePage(layout, TitlePageBuilder.build(document, meta, design), id = TITLE_PAGE_ID)
 
-        val copyrightBlocks = CopyrightPageBuilder.build(book.copyright, meta, design)
-        if (copyrightBlocks.isNotEmpty()) {
-            pages += SinglePage(layout, copyrightBlocks, id = COPYRIGHT_PAGE_ID)
+        if (book.copyright.included) {
+            pages += SinglePage(
+                layout,
+                CopyrightPageBuilder.build(document, book.copyright, meta, design),
+                id = COPYRIGHT_PAGE_ID
+            )
             excludedPageIds += COPYRIGHT_PAGE_ID
         }
 
         // TODO(simPlay page policy): a part with included == false still gets its page here; marking
         //  that page inactive with PageMode.DISABLED is IP-16's job, the future book preview - it is
         //  not attempted in the single-part BookPartEditor.
-        pages += FlowPage(layout, BookPartBuilder.build(book.prolog, design.prologPage), id = "prolog")
+        pages += FlowPage(
+            layout,
+            BookPartBuilder.build(document, "prolog", design.prologPage.textStyle.toTextStyle()),
+            id = "prolog"
+        )
 
-        book.chapters.forEachIndexed { index, chapter ->
-            pages += FlowPage(layout, BookPartBuilder.build(chapter, design.chapterPage), id = "chapter-$index")
+        book.chapters.forEach { chapter ->
+            val anchorId = chapter.id.toString()
+            pages += FlowPage(
+                layout,
+                BookPartBuilder.build(document, anchorId, design.chapterPage.textStyle.toTextStyle()),
+                id = anchorId
+            )
         }
 
-        pages += FlowPage(layout, BookPartBuilder.build(book.epilog, design.epilogPage), id = "epilog")
+        pages += FlowPage(
+            layout,
+            BookPartBuilder.build(document, "epilog", design.epilogPage.textStyle.toTextStyle()),
+            id = "epilog"
+        )
 
         // TODO(simPlay page policy): the blurb is a plain flow page for now; its hard page edge is
         //  part of the policy that moves into simPlay.
-        pages += FlowPage(layout, BlurbBuilder.build(book.blurb, design), id = "blurb")
+        pages += FlowPage(layout, BlurbBuilder.build(book.blurb, design, withAnchor = true), id = "blurb")
 
         return Document(pages, numbering = design.pageNumbering.toPageNumbering(excludedPageIds))
     }

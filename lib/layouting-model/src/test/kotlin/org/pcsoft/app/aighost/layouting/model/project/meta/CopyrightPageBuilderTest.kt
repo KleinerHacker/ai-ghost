@@ -22,14 +22,16 @@ import org.pcsoft.app.aighost.model.project.book.Copyright
 import org.pcsoft.app.aighost.model.project.design.CopyrightPageDesign
 import org.pcsoft.app.aighost.model.project.design.Design
 import org.pcsoft.app.aighost.model.project.meta.Meta
+import org.pcsoft.framework.simplay.engine.model.Document
 import org.pcsoft.framework.simplay.engine.model.FontStyle
 
 /**
  * Developer tests for the blocks of the copyright page, [CopyrightPageBuilder].
  *
- * IP-36 removed the copyright notice and its further lines from [Copyright] - that text now lives only
- * in the book's simPlay `Document` (IP-37/IP-38) - so only the author name, still carried by [Meta], is
- * built here until IP-38 rebuilds this builder around the copyright page's anchor in that document.
+ * IP-36 removed the copyright notice and its further lines from [Copyright]; since IP-38 that text
+ * lives only in the book's simPlay [Document], read back through the `"copyright"` anchor via
+ * [org.pcsoft.app.aighost.layouting.model.project.book.BookPartBuilder]. The author name still lives
+ * in [Meta] and is appended after the anchor-addressed notice blocks.
  */
 class CopyrightPageBuilderTest {
 
@@ -56,33 +58,37 @@ class CopyrightPageBuilderTest {
 
     /**
      * Use case: the design asks for the author name on the copyright page and the page is included, so
-     * the author block is built in the author style.
+     * the copyright page gives the seeded `"copyright"` anchor block followed by the author block, in
+     * the author style.
      */
     @Test
-    fun theAuthorIsBuiltWhenTheDesignAsksForIt() {
-        val blocks = CopyrightPageBuilder.build(Copyright(included = true), Meta(author = "Jane Doe"), design)
+    fun theAuthorIsBuiltAfterTheAnchorWhenTheDesignAsksForIt() {
+        val blocks = CopyrightPageBuilder.build(Document(), Copyright(included = true), Meta(author = "Jane Doe"), design)
 
-        assertEquals(listOf("Jane Doe"), blocks.map { it.toString() })
-        assertEquals(10.0, blocks[0].style.font.size)
-        assertEquals(FontStyle.ITALIC, blocks[0].style.font.style)
+        assertEquals(listOf("\${copyright}", "Jane Doe"), blocks.map { it.toString() })
+        assertEquals(10.0, blocks[1].style.font.size)
+        assertEquals(FontStyle.ITALIC, blocks[1].style.font.style)
     }
 
     /**
-     * Use case: the design asks for the author name but none was typed, so no block is built.
+     * Use case: the design asks for the author name but none was typed, so only the anchor block
+     * remains.
      */
     @Test
     fun theAuthorLineIsLeftOutWhenNoAuthorWasTyped() {
-        val blocks = CopyrightPageBuilder.build(Copyright(included = true), Meta(author = ""), design)
+        val blocks = CopyrightPageBuilder.build(Document(), Copyright(included = true), Meta(author = ""), design)
 
-        assertTrue(blocks.isEmpty())
+        assertEquals(listOf("\${copyright}"), blocks.map { it.toString() })
     }
 
     /**
-     * Use case: the user took the copyright page out of the book, so it gives no block no matter what
-     * the design or the meta data carry.
+     * Use case: the user took the copyright page out of the book, so it gives no block at all, not
+     * even the anchor - there is no page for it to seed.
      */
     @Test
     fun aPageThatIsNotIncludedGivesNoBlock() {
-        assertTrue(CopyrightPageBuilder.build(Copyright(included = false), Meta(author = "Jane Doe"), design).isEmpty())
+        val blocks = CopyrightPageBuilder.build(Document(), Copyright(included = false), Meta(author = "Jane Doe"), design)
+
+        assertTrue(blocks.isEmpty())
     }
 }

@@ -30,6 +30,7 @@ import org.pcsoft.app.aighost.app.controller.PartTarget
 import org.pcsoft.app.aighost.app.undo.UndoStack
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
 import org.pcsoft.app.aighost.layouting.model.common.toPageLayout
+import org.pcsoft.app.aighost.layouting.model.project.DocumentStyleRefresher
 import org.pcsoft.framework.simplay.engine.model.Document
 import org.pcsoft.framework.simplay.engine.model.FlowPage
 import org.pcsoft.framework.simplay.engine.model.Page
@@ -53,9 +54,11 @@ import org.pcsoft.framework.simplay.fx.PaperSheetView
  *
  * Every edit [PaperSheetView] makes replaces its whole `document`; this view model reads the changed
  * blocks back against [targets] and writes the ones that differ into the model, folded into a single
- * undo entry per block for the length of a typing pause. A design change rebuilds the `document` from
- * the model so every block picks up its new style; the caret's linear position is read before and
- * restored after, since restyling never changes the text itself.
+ * undo entry per block for the length of a typing pause. A design change restyles the book's stored
+ * `Document` in place through [DocumentStyleRefresher] - text and every anchor stay untouched - and
+ * only then rebuilds the sheet's single-part `document` from it, so every block picks up its new
+ * style; the caret's linear position is read before and restored after, since restyling never changes
+ * the text itself.
  *
  * Splitting, merging, removing and reordering a paragraph is not attempted here: `PaperSheetView`'s
  * own editing turns a line break into a space and never creates a new block, so that stays IP-32's
@@ -198,6 +201,7 @@ class BookPartEditorViewModel : ViewModel {
         if (applyingDocument) return
         if (mode.value != PartMode.BOOK_PART && mode.value != PartMode.BLURB) return
         val projectProperty = project ?: return
+        val design = projectProperty.value?.design ?: return
 
         val blocks = document?.pages?.firstOrNull()?.blocks.orEmpty()
         if (blocks.size != targets.size) {
@@ -214,7 +218,7 @@ class BookPartEditorViewModel : ViewModel {
                 if (text == old) return@forEachIndexed
 
                 property.value = text
-                BookPartEditorController.writeModel(projectProperty, resolution, target, text)
+                BookPartEditorController.writeModel(projectProperty, design, resolution, target, text)
                 undoStack?.record(
                     Messages["component.bookPartEditor.undo.edit"],
                     property,
@@ -235,7 +239,11 @@ class BookPartEditorViewModel : ViewModel {
                 addListener { _, _, newValue ->
                     if (writingTarget) return@addListener
                     // Reached only through an undo or redo, which plays the value back the same way.
-                    project?.let { BookPartEditorController.writeModel(it, resolution, target, newValue ?: "") }
+                    val projectProperty = project
+                    val design = projectProperty?.value?.design
+                    if (projectProperty != null && design != null) {
+                        BookPartEditorController.writeModel(projectProperty, design, resolution, target, newValue ?: "")
+                    }
                     recompute()
                 }
             }
@@ -244,13 +252,20 @@ class BookPartEditorViewModel : ViewModel {
     private fun recompute() {
         if (!::paperSheetView.isInitialized) return
 
-        val project = this.project?.value
+        val projectProperty = this.project
+        val project = projectProperty?.value
         val design = project?.design
-        if (project == null || design == null || mode.value == PartMode.NONE) {
+        if (projectProperty == null || project == null || design == null || mode.value == PartMode.NONE) {
             targets = emptyList()
             pushDocument(null)
             return
         }
+
+        // A design change never rewrites text or moves an anchor, only the style of the blocks that
+        // already sit on each page - restyling the stored document here, through the property so the
+        // write reaches the real Book instance, means buildBlocks() below reads it back already in
+        // its new style, the same way it would after a reload.
+        projectProperty.bookProperty.document = DocumentStyleRefresher.refresh(project.book, design)
 
         val plan = BookPartEditorController.buildBlocks(project, design, resolution)
         targets = plan.targets

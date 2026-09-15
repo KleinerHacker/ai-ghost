@@ -60,6 +60,7 @@ opened once the user accepts it. Both documents are written with Jackson.
 | Menu bar with icons and keyboard shortcuts        | Implemented |
 | Editor and preview tabs of the main window        | Implemented |
 | Project tree with title page, copyright page, prolog, chapters, epilog, blurb | Implemented |
+| Project tree: add, rename and delete chapters, with confirmation before deleting | Implemented |
 | Editor split into project tree, writing surface and inspector | Implemented |
 | Writing surface: book parts and front matter written on the paginated sheet | Implemented |
 | Writing surface: split, merge, move and cross-paragraph caret navigation | Planned |

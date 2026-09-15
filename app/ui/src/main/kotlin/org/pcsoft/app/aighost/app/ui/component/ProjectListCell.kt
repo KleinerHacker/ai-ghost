@@ -14,8 +14,11 @@ package org.pcsoft.app.aighost.app.ui.component
 
 import javafx.scene.control.ContextMenu
 import javafx.scene.control.MenuItem
+import javafx.scene.control.TextInputDialog
 import javafx.scene.control.TreeCell
 import org.pcsoft.app.aighost.app.AiGhostIcons
+import org.pcsoft.app.aighost.app.ui.AiGhostDialog
+import org.pcsoft.app.aighost.model.project.book.Chapter
 import java.util.*
 
 /**
@@ -25,10 +28,19 @@ import java.util.*
  * gave the chapter - not by its printed heading, which may still be empty while the chapter is only
  * outlined.
  *
+ * Adding, renaming and removing a chapter (IP-38) is carried out here, in the one place that already
+ * shows the tree and can ask the user - [viewModel] only ever changes the manuscript once it is told
+ * to, unconditionally.
+ *
  * @property messages the bundle the view was loaded with, so a cell speaks the same language as the
  *   FXML around it
+ * @property viewModel the view model of the surrounding [ProjectList], carrying out every change a
+ *   context menu action here decides on
  */
-internal class ProjectListCell(private val messages: ResourceBundle) : TreeCell<ProjectListItem>() {
+internal class ProjectListCell(
+    private val messages: ResourceBundle,
+    private val viewModel: ProjectListViewModel
+) : TreeCell<ProjectListItem>() {
 
     override fun updateItem(item: ProjectListItem?, empty: Boolean) {
         super.updateItem(item, empty)
@@ -36,6 +48,7 @@ internal class ProjectListCell(private val messages: ResourceBundle) : TreeCell<
         if (empty || item == null) {
             text = null
             graphic = null
+            contextMenu = null
             return
         }
 
@@ -66,17 +79,52 @@ internal class ProjectListCell(private val messages: ResourceBundle) : TreeCell<
             is ProjectListItem.TitlePageItem -> null
             is ProjectListItem.CopyrightPageItem -> null
             is ProjectListItem.PrologItem -> null
-            is ProjectListItem.Chapters -> ContextMenu(
-                MenuItem(messages.getString("component.projectList.menu.addChapter"), AiGhostIcons.treeChapter())
-            )
-
+            is ProjectListItem.Chapters -> ContextMenu(addChapterItem())
             is ProjectListItem.ChapterItem -> ContextMenu(
-                MenuItem(messages.getString("component.projectList.menu.addChapter"), AiGhostIcons.treeChapter()),
-                MenuItem(messages.getString("component.projectList.menu.deleteChapter"))
+                addChapterItem(),
+                renameChapterItem(item.chapter),
+                deleteChapterItem(item.chapter)
             )
 
             is ProjectListItem.EpilogItem -> null
             is ProjectListItem.BlurbItem -> null
         }
     }
+
+    private fun addChapterItem(): MenuItem =
+        MenuItem(messages.getString("component.projectList.menu.addChapter"), AiGhostIcons.treeChapter()).apply {
+            setOnAction { viewModel.addChapter() }
+        }
+
+    private fun renameChapterItem(chapter: Chapter): MenuItem =
+        MenuItem(messages.getString("component.projectList.menu.renameChapter")).apply {
+            setOnAction {
+                val dialog = TextInputDialog(chapter.name)
+                dialog.title = messages.getString("dialog.renameChapter.title")
+                dialog.headerText = null
+                dialog.contentText = messages.getString("dialog.renameChapter.label")
+                scene?.window?.let(dialog::initOwner)
+
+                dialog.showAndWait().ifPresent { name ->
+                    if (name.isNotBlank()) {
+                        viewModel.renameChapter(chapter, name)
+                    }
+                }
+            }
+        }
+
+    private fun deleteChapterItem(chapter: Chapter): MenuItem =
+        MenuItem(messages.getString("component.projectList.menu.deleteChapter")).apply {
+            setOnAction {
+                val confirmed = AiGhostDialog.showWarningConfirm(
+                    title = messages.getString("dialog.deleteChapter.title"),
+                    caption = messages.getString("dialog.deleteChapter.caption"),
+                    message = messages.getString("dialog.deleteChapter.message"),
+                    owner = scene?.window
+                )
+                if (confirmed) {
+                    viewModel.removeChapter(chapter)
+                }
+            }
+        }
 }

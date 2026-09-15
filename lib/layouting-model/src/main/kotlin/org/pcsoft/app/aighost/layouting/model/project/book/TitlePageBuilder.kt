@@ -16,33 +16,36 @@ import org.pcsoft.app.aighost.layouting.model.common.toTextStyle
 import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.design.Design
 import org.pcsoft.app.aighost.model.project.meta.Meta
+import org.pcsoft.framework.simplay.engine.model.Document
 import org.pcsoft.framework.simplay.engine.model.TextBlock
+
+/** Stable id of the title page's anchor, matching [org.pcsoft.app.aighost.layouting.model.project.BookDocumentBuilder]'s page id. */
+internal const val TITLE_ANCHOR_ID = "title"
 
 /**
  * Builds the blocks of the title page.
  *
- * IP-36 removed the main title and its further lines from [Book]: that text now lives only in the
- * simPlay `Document` the book carries (IP-37/IP-38), addressed through the title's anchor. Until
- * IP-38 rebuilds this builder around that anchor, only the author name - which still lives in
- * [Meta] - is built here.
+ * IP-36 removed the main title and its further lines from [Book]; that text lives only in the book's
+ * simPlay [Document] since IP-38, addressed through the `"title"` anchor and read back via
+ * [BookPartBuilder]. The author name still lives in [Meta] and is built fresh on every call, appended
+ * after the anchor-addressed title blocks.
  */
 object TitlePageBuilder {
 
     /**
      * Builds the title page.
      *
-     * @param book Book the title page belongs to - no longer a source of text, kept for the future
-     * anchor lookup of IP-38.
+     * @param document The book's document, searched for the `"title"` anchor's page.
      * @param meta Meta data the author name is taken from.
      * @param design Design the title page styles are taken from.
-     * @return The author block, when the design shows it and one was typed; otherwise empty until
-     * IP-38 rebuilds this method around the title's anchor in the book's `Document`.
+     * @return The title's anchor-addressed blocks, followed by the author block when the design shows
+     * it and one was typed.
      */
-    fun build(book: Book, meta: Meta, design: Design): List<TextBlock> {
-        // TODO(IP-38): read the title and its further lines from the book's Document through the
-        //  "title" anchor id instead.
-        val blocks = ArrayList<TextBlock>()
+    fun build(document: Document, meta: Meta, design: Design): List<TextBlock> {
         val titlePage = design.titlePage
+        val blocks = ArrayList<TextBlock>()
+
+        blocks += BookPartBuilder.build(document, TITLE_ANCHOR_ID, titlePage.titleStyle.toTextStyle())
 
         if (titlePage.showAuthor && meta.author.isNotBlank()) {
             blocks += TextBlock.of(meta.author, titlePage.authorStyle.toTextStyle())

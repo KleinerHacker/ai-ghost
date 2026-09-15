@@ -3,12 +3,17 @@
 ## [Unreleased]
 
 * Book, its prolog, its chapters, its epilog and its copyright page no longer carry a heading, further
-  heading lines or flowing text of their own: that text is moving into the manuscript's document model
-  (coming with a follow-up feature) and is not yet editable through the project tree or the Inspector.
-  Picking the prolog, a chapter or the epilog on the writing surface currently shows nothing; picking
-  the blurb, the title page or the copyright page still works as before, the latter two now showing
-  only the author name where they used to show the title, its further lines and the copyright notice.
-  A chapter now carries a stable identity of its own behind the scenes, invisible to the user
+  heading lines or flowing text of their own as separate fields: that text now lives in the
+  manuscript's own document model. Picking the prolog, a chapter or the epilog on the writing surface
+  opens it there, the same way the blurb already did; picking the title page or the copyright page
+  still shows only the author name where they used to show the title, its further lines and the
+  copyright notice - those two stay read only. A chapter carries a stable identity of its own behind
+  the scenes, invisible to the user, that survives a rename
+
+* Project tree gains chapter management: "Add Chapter" on the chapters branch or on a chapter creates
+  a new, empty chapter ready to write; a chapter's own menu also offers "Rename Chapter" and "Delete
+  Chapter", the latter asking for confirmation first, since the chapter's text is removed with it and
+  cannot be brought back
 
 * Editor centre is now a writing surface instead of a placeholder: picking the blurb in the project
   tree opens its text on a sheet that already carries the book's typography, margins and page

@@ -330,9 +330,9 @@ ersten Abweichung abgelöst (siehe „Abgelöste Pläne (simPlay)“).
 | IP-34 | Font Discovery And Metric Fingerprint On simPlay ✅ | `FxFontProbe` verdrahten; Ersatzfamilie und Familienliste in `app/ui`        | IP-29                 |
 | IP-31 | Writing Surface On PaperSheetView ✅ (Ergebnis abgelöst) | Grundlagen (`splitParagraph` &c., Sync-Muster) bleiben; Verdrahtung siehe IP-39 | IP-30, IP-09, IP-34 |
 | IP-35 | Page Numbering And Page Modes On simPlay 0.3.0 ✅ | Seitenzahl verdrahtet; `PageMode` für ausgeschaltete Teile jetzt sofort verdrahtbar | IP-30          |
-| IP-36 | Model Umstellung Auf Anker-Struktur            | `Book`/`Chapter`/`BookPart`/`Copyright` vom Fließtext befreien, Kapitel-`UUID` | IP-24, IP-02          |
-| IP-37 | Dokument-Persistenz Und Migration              | `Book.document: Document` speicherbar machen; Altprojekte migrieren         | IP-36, IP-29           |
-| IP-38 | Buch-Dokument Als Alleinige Basis              | `BookDocumentBuilder` einzige Bauquelle; Anker statt Index; Stil-Auffrischung | IP-37, IP-30, IP-34   |
+| IP-36 | Model Umstellung Auf Anker-Struktur ✅          | `Book`/`Chapter`/`BookPart`/`Copyright` vom Fließtext befreien, Kapitel-`UUID` | IP-24, IP-02          |
+| IP-37 | Dokument-Persistenz Und Migration ✅ (ohne Migration) | `Book.document: Document` speicherbar machen; Migration bewusst nicht gebaut | IP-36, IP-29           |
+| IP-38 | Buch-Dokument Als Alleinige Basis ✅            | `BookDocumentBuilder` einzige Bauquelle; Anker statt Index; Stil-Auffrischung | IP-37, IP-30, IP-34   |
 | IP-39 | PaperSheetView Dauerhaft Im Zentrum            | Ein `Document`, immer sichtbar; Baumauswahl navigiert über `TextAnchor`      | IP-38, IP-09          |
 | IP-32 | Paragraph Structure Operations On Document     | Absätze teilen, verbinden, löschen, umsortieren, ankerfest                  | IP-39                 |
 | IP-33 | Undo On Immutable Document Swap                | Undo-Einträge auf den `Document`-Tausch umstellen                          | IP-39                 |
@@ -548,9 +548,12 @@ ankerfest), und der gemeldete Upstream-Fehler unten.
   dem Takt und lässt jedes weitere getippte Zeichen eine Position zu früh landen. **IP-32 tippt echte
   Trennzeichen und braucht den Fix upstream**, unabhängig von der TextAnchor-Abweichung.
 
-### IP-36: Model Umstellung Auf Anker-Struktur
+### IP-36: Model Umstellung Auf Anker-Struktur ✅
 
 Plan: `FP-001-IP-36-ModellUmstellungAufAnkerStruktur.md`
+
+**Ergebnis:** wie geplant umgesetzt. `lib/model/.../book/legacy/LegacyBookText.kt` ist das reine
+Lese-Modell für eine künftige Migration; es wird produktiv (noch) nirgends verwendet, siehe IP-37.
 
 **Ziel:** `lib/ai-ghost-model`/`lib/ai-ghost-fx-model` vom Fließtext befreien, den das `Document`
 künftig allein trägt.
@@ -570,9 +573,19 @@ abgeleitet wird; sie entsteht einmal bei der Anlage und wird danach nur noch gel
 "ist", ändert sich: von "Titel + Text" zu "Name im Baum + Anker in einem fremden Dokument" - eine
 KDoc-Anpassung an `Chapter`/`BookPart` ist Teil dieses Plans (`project-docs`).
 
-### IP-37: Dokument-Persistenz Und Migration
+### IP-37: Dokument-Persistenz Und Migration ✅ (ohne Migration)
 
 Plan: `FP-001-IP-37-DokumentPersistenzUndMigration.md`
+
+**Ergebnis, abweichend vom Plantext:** `Book.document: Document` existiert, JSON-kodiert
+(`DocumentCodec`) in einem `documentPayload`-Feld, das Jackson als reinen `String` sieht - kein
+Jackson-Modul, kein eigener (De-)Serializer für `Document` selbst. **Die Migration wurde auf
+ausdrücklichen Nutzerwunsch NICHT gebaut**: `LegacyBook`, eine Migrationsfunktion und der beschriebene
+`BookDocumentBuilder`-Aufruf aus Alt-Feldern existieren nicht. Ein Projekt ohne `document`-Feld ist
+schlicht nicht behandelt und bleibt ein offener Punkt für später. Ein beschädigtes `documentPayload`
+wird als `ProjectStorage.Error.Corrupt` erkannt (wie jeder andere unlesbare Standardteil), nicht als
+eigener `Error.Malformed`-Fall - diese Fehlerklasse bleibt architekturbedingt unerreichbar, da
+`StorageIo.loadFromZip` jeden Parse-Fehler eines Standardteils bereits selbst abfängt.
 
 **Ziel:** `Book.document: Document` wird Teil des gespeicherten Projekts; ein vor der Abweichung
 gespeichertes Projekt öffnet unverändert.
@@ -596,9 +609,23 @@ Projekt ohne `document` im Umlauf sein kann - die Übergangs-DTO trägt daher di
 weiter, nur als reines Lese-Modell für die Migration, nicht mehr als `Chapter`/`Prolog`/`Epilog`/
 `Blurb`/`Book` selbst.
 
-### IP-38: Buch-Dokument Als Alleinige Basis
+### IP-38: Buch-Dokument Als Alleinige Basis ✅
 
 Plan: `FP-001-IP-38-BuchDokumentAlsAlleinigeBasis.md`
+
+**Ergebnis, abweichend vom Plantext:** `BookPartEditor` zeigt weiterhin, wie in IP-31 gebaut, je
+Baumauswahl ein eigenes Ein-Seiten-`Document` - **nicht** dauerhaft das ganze Buch als ein einziges,
+navigierbares `Document` (das bleibt IP-39). `BookPartBuilder`/`TitlePageBuilder`/`CopyrightPageBuilder`
+lesen ihre Blöcke jetzt über den Anker aus `Book.document`, statt leer zu bleiben; ohne vorhandene
+Seite wird ein Seed-Block mit nur dem `${anchorId}`-Token gebaut. `DocumentStyleRefresher` (neu) tauscht
+nach Laden und Design-Änderung nur den `TextStyle`, Text/Anker bleiben unangetastet.
+`BookDocumentBuilder` wird von `app/ui` weiterhin nirgends aufgerufen (bleibt für die künftige
+Buchvorschau/IP-16-Nachfolge vorbereitet); "beim neuen Projekt" baut daher noch nichts über sie. Kapitel
+anlegen/umbenennen/entfernen ist im Projektbaum komplett neu verdrahtet (Kontextmenü,
+`ProjectListViewModel`), Entfernen fragt vorher nach Bestätigung. **In simPlay 0.3.1 gefunden:**
+`DocumentEditor.splice()` verlor den `TextAnchor` eines Blocks bei jeder Bearbeitung, die ihn berührte,
+weil der Block ausschließlich aus dem ankerbereinigten linearen Text neu aufgebaut wurde - vom Nutzer
+behoben, als reguläres Release `0.3.2` veröffentlicht; `simplayVersion` im Wurzel-Build steht darauf.
 
 **Ziel:** `BookDocumentBuilder` (IP-30) wird die einzige Stelle, die ein `Document` baut - beim neuen
 Projekt, beim neuen Kapitel, bei der Migration (IP-37) - und dazu die Stelle, die den `TextStyle`
@@ -713,7 +740,7 @@ Seiten ohnehin immer gleichzeitig zeigt.
 ## 8. Abhängigkeitsgraph
 
 ```text
-IP-24✅ ─┬─> IP-36 (mit IP-02✅) ──> IP-37 (mit IP-29✅) ──> IP-38 (mit IP-30✅, IP-34✅) ──> IP-39 (mit IP-09✅)
+IP-24✅ ─┬─> IP-36✅ (mit IP-02✅) ──> IP-37✅ (mit IP-29✅) ──> IP-38✅ (mit IP-30✅, IP-34✅) ──> IP-39 (mit IP-09✅)
         │                                                                                   ├─> IP-32
 IP-29✅ ─┴─> IP-30✅ (mit IP-02✅, IP-24✅) ─┬─> IP-35✅                                       ├─> IP-33
         └─> IP-34✅                        │                                                 ├─> IP-18

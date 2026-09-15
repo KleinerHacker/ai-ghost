@@ -57,7 +57,7 @@ class ProjectListView : FxmlView<ProjectListViewModel>, Initializable {
 
         treProject.root = rootItem
         treProject.isShowRoot = true
-        treProject.setCellFactory { ProjectListCell(messages) }
+        treProject.setCellFactory { ProjectListCell(messages, viewModel) }
 
         // The nodes stay in place while the project changes; only the model object they carry is
         // exchanged, so an expanded branch is not collapsed by a reload.

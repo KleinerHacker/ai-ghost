@@ -15,6 +15,7 @@ package org.pcsoft.app.aighost.layouting.model.project
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.layouting.model.common.toPageLayout
+import org.pcsoft.app.aighost.layouting.model.common.toTextStyle
 import org.pcsoft.app.aighost.layouting.model.project.book.BookPartBuilder
 import org.pcsoft.app.aighost.model.project.book.*
 import org.pcsoft.app.aighost.model.project.design.Design
@@ -30,11 +31,10 @@ import org.pcsoft.framework.simplay.engine.model.PageNumberPosition as SimplayPa
 /**
  * Developer tests for the whole-book document builder, [BookDocumentBuilder].
  *
- * IP-36 removed the heading and the flowing text from every book part, so the blocks these pages
- * carry are no longer part of what this class asserts - [BookPartBuilderTest] and
- * [org.pcsoft.app.aighost.layouting.model.project.book.TitlePageBuilderTest] already cover that the
- * per-part builders give an empty (or author-only) block list; this class only proves the page
- * arrangement, ids and numbering that [BookDocumentBuilder] itself is responsible for.
+ * The blocks these pages carry are covered by [org.pcsoft.app.aighost.layouting.model.project.book.BookPartBuilderTest],
+ * [org.pcsoft.app.aighost.layouting.model.project.book.TitlePageBuilderTest] and
+ * [org.pcsoft.app.aighost.layouting.model.project.meta.CopyrightPageBuilderTest]; this class only
+ * proves the page arrangement, ids and numbering that [BookDocumentBuilder] itself is responsible for.
  */
 class BookDocumentBuilderTest {
 
@@ -98,7 +98,7 @@ class BookDocumentBuilderTest {
 
         assertEquals(7, document.pages.size)
         assertEquals(
-            BookPartBuilder.build(withOff.prolog, Design().prologPage),
+            BookPartBuilder.build(withOff.document, "prolog", Design().prologPage.textStyle.toTextStyle()),
             (document.pages[2] as FlowPage).blocks
         )
     }
@@ -116,6 +116,19 @@ class BookDocumentBuilderTest {
         assertEquals(6, document.pages.size)
         assertInstanceOf(SinglePage::class.java, document.pages[0]) // title
         assertInstanceOf(FlowPage::class.java, document.pages[1]) // prolog, no copyright before it
+    }
+
+    /**
+     * Use case: a copyright page with no author line still gets a sheet, since it now always carries
+     * its anchor - only switching the page off leaves it out entirely.
+     */
+    @Test
+    fun anIncludedCopyrightPageAlwaysGetsASheetEvenWithoutAnAuthorLine() {
+        val withoutAuthor = book()
+        val document = BookDocumentBuilder.build(withoutAuthor, Design(), Meta(author = ""))
+
+        assertEquals(7, document.pages.size)
+        assertEquals("copyright", document.pages[1].id)
     }
 
     /**
@@ -144,25 +157,32 @@ class BookDocumentBuilderTest {
         val document = BookDocumentBuilder.build(theBook, design, meta)
 
         assertEquals(
-            BookPartBuilder.build(theBook.chapters[0], design.chapterPage),
+            BookPartBuilder.build(theBook.document, theBook.chapters[0].id.toString(), design.chapterPage.textStyle.toTextStyle()),
             (document.pages[3] as FlowPage).blocks
         )
         assertEquals(
-            BookPartBuilder.build(theBook.epilog, design.epilogPage),
+            BookPartBuilder.build(theBook.document, "epilog", design.epilogPage.textStyle.toTextStyle()),
             (document.pages[5] as FlowPage).blocks
         )
     }
 
     /**
      * Use case: every page is built with a fixed id instead of simPlay's random default, so the title
-     * and copyright page can be named in the numbering's excluded ids across a rebuild of the document.
+     * and copyright page can be named in the numbering's excluded ids across a rebuild of the document,
+     * and a chapter's page id is its stable [Chapter.id] instead of its position.
      */
     @Test
     fun everyPageCarriesAStableId() {
-        val document = BookDocumentBuilder.build(book(), Design(), meta)
+        val theBook = book()
+
+        val document = BookDocumentBuilder.build(theBook, Design(), meta)
 
         assertEquals(
-            listOf("title", "copyright", "prolog", "chapter-0", "chapter-1", "epilog", "blurb"),
+            listOf(
+                "title", "copyright", "prolog",
+                theBook.chapters[0].id.toString(), theBook.chapters[1].id.toString(),
+                "epilog", "blurb"
+            ),
             document.pages.map { it.id }
         )
     }

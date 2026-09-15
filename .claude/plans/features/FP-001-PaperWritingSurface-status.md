@@ -20,9 +20,9 @@ Status: IN_PROGRESS
 | IP-34 | Font Discovery And Metric Fingerprint On simPlay | COMPLETED   |
 | IP-35 | Page Numbering And Page Modes On simPlay 0.3.0 | COMPLETED   |
 | IP-31 | Writing Surface On PaperSheetView (Ergebnis abgelöst) | COMPLETED (abgelöst) |
-| IP-36 | Model Umstellung Auf Anker-Struktur             | NOT_STARTED |
-| IP-37 | Dokument-Persistenz Und Migration               | NOT_STARTED |
-| IP-38 | Buch-Dokument Als Alleinige Basis               | NOT_STARTED |
+| IP-36 | Model Umstellung Auf Anker-Struktur             | COMPLETED   |
+| IP-37 | Dokument-Persistenz Und Migration               | COMPLETED   |
+| IP-38 | Buch-Dokument Als Alleinige Basis               | COMPLETED   |
 | IP-39 | PaperSheetView Dauerhaft Im Zentrum             | NOT_STARTED |
 | IP-32 | Paragraph Structure Operations On Document     | NOT_STARTED |
 | IP-33 | Undo On Immutable Document Swap                | NOT_STARTED |
@@ -62,7 +62,7 @@ nur seine reinen Funktionen und sein Sync-Muster gehen in IP-39 über.
 
 ## Gesamtfortschritt
 
-59 % (13 von 22 zählenden Plänen abgeschlossen; IP-31 zählt als abgeschlossen, aber sein Ergebnis ist
+73 % (16 von 22 zählenden Plänen abgeschlossen; IP-31 zählt als abgeschlossen, aber sein Ergebnis ist
 abgelöst und wird von IP-39 neu erbracht)
 
 ## Anmerkungen
@@ -141,9 +141,37 @@ IP-15/IP-16). IP-32, IP-33, IP-18, IP-23 bleiben inhaltlich bestehen, mit IP-39 
 Abhängigkeit; IP-23 verdrahtet `PageMode.DISABLED` jetzt sofort, ohne auf eine gesonderte Buchvorschau
 zu warten.
 
-Offene Fragen, vor Start von IP-38/IP-39 zu klären: genaue API von `TextAnchor` (simPlay 0.3.1 steht
-noch aus), Jackson-Verträglichkeit des simPlay-`Document` in der bestehenden ZIP-Persistenz (IP-37),
-Rückfrage-Verhalten beim Entfernen eines ganzen Kapitels über den Baum. Details im Feature-Plan,
-Abschnitt 9.
+IP-36 abgeschlossen: `title`/`titleAppendix`/`paragraph` aus `BookPart`/`Book`/`Copyright` entfernt,
+`Chapter.id: UUID` als unveränderlicher Anker ergänzt. FX-Modelle entsprechend verschlankt,
+`ChapterProperty.idProperty` neu. Ein reines Lese-Modell für eine künftige Migration
+(`lib/model/.../book/legacy/LegacyBookText.kt`) liegt bereit, wird aber nirgends produktiv genutzt, da
+der Nutzer Migration für Teil B/C ausdrücklich abgelehnt hat (siehe IP-37).
 
-Nächster Schritt: IP-36 (Modell-Umstellung auf Anker-Struktur).
+IP-37 abgeschlossen, mit vom Nutzer bestätigter Abweichung: `Book.document: Document` neu, als JSON
+kodiert (`DocumentCodec`) und über ein `documentPayload`-Feld in die bestehende Jackson-ZIP-Persistenz
+eingebettet - kein eigener Jackson-Serializer für `Document` selbst. `lib/model` bekam dafür
+`kotlinx-serialization-json` und `simplay-engine-jvm` als neue, vom Nutzer genehmigte Abhängigkeiten.
+**Abweichung:** keine Migration alter Projekte gebaut; ein Altprojekt ohne `document`-Feld wird beim
+Laden nicht behandelt (offen für später). Ein beschädigtes `documentPayload` wird korrekt als
+`ProjectStorage.Error.Corrupt` erkannt, wie jeder andere unlesbare Standardteil.
+
+IP-38 abgeschlossen: `BookPartBuilder`/`TitlePageBuilder`/`CopyrightPageBuilder` lesen ihre Blöcke seit
+IP-38 über den Anker aus `Book.document`, statt leer zu bleiben; ein Teil ohne eigene Seite bekommt
+einen Seed-Block mit nur dem `${anchorId}`-Token. `BookDocumentBuilder`s Kapitel-Seiten-`id` läuft
+jetzt über `chapter.id.toString()` statt `chapter-<index>` (Seiten-`id` = Anker-`id`, vom Nutzer
+bestätigt). Neue Klasse `DocumentStyleRefresher` tauscht nach Laden und nach jeder Design-Änderung nur
+den `TextStyle` der Blöcke aus, Text/Anker bleiben unangetastet. `PartTarget.AnchorBlock` neu, Prolog/
+Kapitel/Epilog sind damit im `BookPartEditor` erstmals wirklich editierbar - zuvor zeigten sie nichts.
+Kapitel anlegen/umbenennen/entfernen im Projektbaum komplett neu gebaut (`ProjectListViewModel`,
+Kontextmenü in `ProjectListCell`), Entfernen fragt vorher nach Bestätigung (`AiGhostDialog.
+showWarningConfirm`), da der Text sonst unwiderruflich verloren geht.
+
+**In simPlay 0.3.1 gefunden, vom Nutzer behoben:** `DocumentEditor.splice()`
+(`ui/common/.../DocumentEditor.kt`) baute jeden von einer Bearbeitung berührten Block ausschließlich
+aus dem sichtbaren, ankerbereinigten linearen Text (`DocumentTextIndex.text`) neu auf - ein
+`TextAnchor` trägt dort laut Design 0 Zeichen bei und hatte deshalb keine Chance, eine Bearbeitung zu
+überleben; jede Bearbeitung eines ankertragenden Blocks löschte dessen Anker ersatzlos. Zunächst lokal
+als `1.0-SNAPSHOT` getestet, inzwischen als reguläres Release `0.3.2` veröffentlicht;
+`simplayVersion` im Wurzel-Build steht darauf.
+
+Nächster Schritt: IP-39 (`PaperSheetView` dauerhaft im Zentrum, Navigation über `TextAnchor`).

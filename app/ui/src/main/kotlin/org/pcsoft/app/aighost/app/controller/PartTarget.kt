@@ -19,9 +19,11 @@ package org.pcsoft.app.aighost.app.controller
  * keeps the list of targets in block order, and [BookPartEditorController.readModel] and
  * [BookPartEditorController.writeModel] turn one of these back into the actual model field.
  *
- * IP-36 removed the heading and its further lines from every book part, so [Paragraph] is the only
- * target left here - and, until IP-38 rebuilds the writing surface around the book's anchor-addressed
- * `Document`, it only ever resolves for the blurb (see [org.pcsoft.app.aighost.model.project.book.Blurb]).
+ * [Paragraph] resolves for the blurb, whose paragraphs still live on
+ * [org.pcsoft.app.aighost.model.project.book.Blurb] itself. [AnchorBlock] resolves for a prolog, a
+ * chapter or an epilog (IP-38): their text lives only in the book's simPlay `Document`, so the target
+ * names the anchor id of the part's page and the position of the block inside it instead of a plain
+ * list index.
  */
 sealed interface PartTarget {
 
@@ -31,4 +33,13 @@ sealed interface PartTarget {
      * @property index Index into the part's paragraph list.
      */
     data class Paragraph(val index: Int) : PartTarget
+
+    /**
+     * A block of a prolog, a chapter or an epilog, addressed through its part's anchor.
+     *
+     * @property anchorId The anchor id of the part's page in the book's `Document` - `"prolog"`,
+     * `"epilog"` or a chapter's `id.toString()`.
+     * @property blockIndex Index into that page's block list.
+     */
+    data class AnchorBlock(val anchorId: String, val blockIndex: Int) : PartTarget
 }

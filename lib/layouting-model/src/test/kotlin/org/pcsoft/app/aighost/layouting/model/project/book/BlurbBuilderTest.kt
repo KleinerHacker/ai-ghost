@@ -87,4 +87,32 @@ class BlurbBuilderTest {
     fun anEmptyBlurbGivesNoBlock() {
         assertTrue(BlurbBuilder.build(Blurb(), design).isEmpty())
     }
+
+    /**
+     * Use case: the whole-book document is built, so the blurb's first block carries the `${blurb}`
+     * anchor in front of its text - the single-part writing surface never asks for this, so its own
+     * paragraph text stays free of the marker.
+     */
+    @Test
+    fun theWholeBookDocumentEmbedsTheBlurbAnchorInTheFirstBlock() {
+        val blurb = Blurb(paragraph = listOf("A harbour town keeps its secrets.", "Until one summer."))
+
+        val blocks = BlurbBuilder.build(blurb, design, withAnchor = true)
+
+        assertEquals(
+            listOf("\${blurb}A harbour town keeps its secrets.", "Until one summer."),
+            blocks.map { it.toString() }
+        )
+    }
+
+    /**
+     * Use case: the whole-book document is built before any blurb was written, so the blurb still gets
+     * a page carrying its anchor instead of being left out of the document entirely.
+     */
+    @Test
+    fun theWholeBookDocumentSeedsTheAnchorEvenForAnEmptyBlurb() {
+        val blocks = BlurbBuilder.build(Blurb(), design, withAnchor = true)
+
+        assertEquals(listOf("\${blurb}"), blocks.map { it.toString() })
+    }
 }

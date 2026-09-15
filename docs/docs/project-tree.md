@@ -40,8 +40,12 @@ chapter is listed by its **name**, not by the heading it is printed with: the he
 empty while the chapter is only outlined, whereas the name is what tells the chapters apart while
 writing.
 
-New chapters are added through `File > New > Chapter...` (`Ctrl+Alt+C`) and appear in the tree right
-away.
+Right-clicking `Chapter` or a chapter node opens a menu:
+
+* **Add Chapter** appends a new, empty chapter and shows it in the tree right away.
+* **Rename Chapter** (on a chapter node) asks for a new name.
+* **Delete Chapter** (on a chapter node) removes the chapter and its text; since that text cannot be
+  brought back, a confirmation is asked for first.
 
 ## Language
 

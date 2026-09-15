@@ -12,29 +12,42 @@
 
 package org.pcsoft.app.aighost.layouting.model.project.book
 
-import org.pcsoft.app.aighost.model.project.book.BookPart
-import org.pcsoft.app.aighost.model.project.design.BookPartPageDesign
+import org.pcsoft.framework.simplay.engine.model.Document
 import org.pcsoft.framework.simplay.engine.model.TextBlock
+import org.pcsoft.framework.simplay.engine.model.TextStyle
 
 /**
- * Builds the blocks of a written part - a prolog, a chapter or an epilog.
+ * Builds the blocks of a written part - a prolog, a chapter or an epilog - from its anchor in the
+ * book's simPlay [Document].
  *
- * IP-36 removed the heading and the paragraphs from [BookPart]: that text now lives only in the
- * simPlay `Document` a book carries (IP-37/IP-38), addressed through the part's anchor. Until IP-38
- * rebuilds this builder around that anchor, a written part contributes no block of its own here.
+ * IP-36 removed the heading and the paragraphs from every book part; their text lives only in
+ * [Document] since IP-37, addressed through a `${anchorId}` token (a simPlay `TextAnchor`) at the
+ * start of the part's first block. This builder is the single place both directions of that anchor
+ * meet: a part whose anchor already has a page in [Document] hands that page's blocks back unchanged
+ * (the editor's read path), while a part with no such page yet - a freshly created project, or a
+ * chapter just added to the tree - gets a fresh, empty block carrying nothing but the anchor (the
+ * seed a new part starts writing into).
  */
 object BookPartBuilder {
 
     /**
-     * Builds one written part.
+     * Builds one written part, identified by [anchorId].
      *
-     * @param part Part the blocks would be built from.
-     * @param pageDesign Page design of the part - the styles of the heading, its further lines and the text.
-     * @return Always empty until IP-38 rebuilds this method around the part's anchor in the book's
-     * `Document`.
+     * @param document The book's document, searched for a page whose id is [anchorId].
+     * @param anchorId The part's anchor id - `"prolog"`, `"epilog"` or a chapter's
+     * `id.toString()` - used both as the token embedded in the first block and as the id of the page
+     * that carries it.
+     * @param style The style a freshly seeded block is built with; ignored when [document] already
+     * carries the part's page.
+     * @return The existing blocks of the part's page, or - when there is none yet - a single block
+     * holding only the `${anchorId}` anchor.
      */
-    fun build(part: BookPart, pageDesign: BookPartPageDesign): List<TextBlock> {
-        // TODO(IP-38): read the part's blocks from the book's Document through its anchor id instead.
-        return emptyList()
+    fun build(document: Document, anchorId: String, style: TextStyle): List<TextBlock> {
+        val existing = document.pages.firstOrNull { it.id == anchorId }?.blocks
+        if (!existing.isNullOrEmpty()) {
+            return existing
+        }
+
+        return listOf(TextBlock.of("\${$anchorId}", style))
     }
 }

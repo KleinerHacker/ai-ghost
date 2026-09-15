@@ -127,6 +127,7 @@ class BookPartEditorTest : ApplicationTest() {
     )
 
     private val blurb: Blurb get() = projectModel.value.book.blurb
+    private val chapter: Chapter get() = projectModel.value.book.chapters.single()
 
     /** Text of the block at [index] of the sheet's current document, or `null` past its end. */
     private fun blockText(index: Int): String? =
@@ -191,6 +192,28 @@ class BookPartEditorTest : ApplicationTest() {
     }
 
     /**
+     * Use case: the user picks a chapter, so its anchor seed turns up on the sheet - invisible, since
+     * a `TextAnchor` renders as nothing - and typing lands right after it, in the chapter's own page of
+     * the book's document (IP-38).
+     */
+    @Test
+    fun opensAChapterOnTheSheetAndWritesTypedTextIntoItsAnchorPage() {
+        select(ProjectListItem.ChapterItem(chapter))
+        interact {
+            sheet.requestFocus()
+            sheet.caretModel.moveToEndOfBlock(0)
+        }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        // Letter-only continuation, no space and no symbol - see the class KDoc.
+        typeSlowly("Onceuponatime")
+
+        val anchorId = chapter.id.toString()
+        val page = projectModel.value.book.document.pages.single { it.id == anchorId }
+        assertEquals("\${$anchorId}Onceuponatime", page.blocks.single().toString())
+    }
+
+    /**
      * Use case: the user undoes a text change on the sheet, so the paragraph returns to what it was.
      */
     @Test
@@ -243,7 +266,9 @@ class BookPartEditorTest : ApplicationTest() {
     fun showsTheTitlePageReadOnly() {
         select(ProjectListItem.TitlePageItem)
 
-        assertEquals("Jane Doe", blockText(0), "the title page is rendered on the sheet")
+        // Block 0 is the title's own anchor seed (IP-38), invisible on the rendered sheet; the author
+        // name - still built fresh from Meta - follows it as block 1.
+        assertEquals("Jane Doe", blockText(1), "the title page is rendered on the sheet")
         assertEquals(PaperSheetMode.SELECTABLE, sheet.mode)
 
         interact { sheet.requestFocus() }

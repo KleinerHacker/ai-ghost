@@ -13,40 +13,47 @@
 package org.pcsoft.app.aighost.layouting.model.project.meta
 
 import org.pcsoft.app.aighost.layouting.model.common.toTextStyle
+import org.pcsoft.app.aighost.layouting.model.project.book.BookPartBuilder
 import org.pcsoft.app.aighost.model.project.book.Copyright
 import org.pcsoft.app.aighost.model.project.design.Design
 import org.pcsoft.app.aighost.model.project.meta.Meta
+import org.pcsoft.framework.simplay.engine.model.Document
 import org.pcsoft.framework.simplay.engine.model.TextBlock
+
+/** Stable id of the copyright page's anchor, matching [org.pcsoft.app.aighost.layouting.model.project.BookDocumentBuilder]'s page id. */
+internal const val COPYRIGHT_ANCHOR_ID = "copyright"
 
 /**
  * Builds the blocks of the copyright page.
  *
- * IP-36 removed the copyright notice and its further lines from [Copyright]: that text now lives only
- * in the simPlay `Document` the book carries (IP-37/IP-38), addressed through the copyright page's
- * anchor. Until IP-38 rebuilds this builder around that anchor, only the author name - which still
- * lives in [Meta] - is built here, and only while the page still belongs to the book.
+ * IP-36 removed the copyright notice and its further lines from [Copyright]; that text lives only in
+ * the book's simPlay [Document] since IP-38, addressed through the `"copyright"` anchor and read back
+ * via [BookPartBuilder]. The author name still lives in [Meta] and is built fresh on every call,
+ * appended after the anchor-addressed notice blocks - but only while the page still belongs to the
+ * book.
  */
 object CopyrightPageBuilder {
 
     /**
      * Builds the copyright page.
      *
-     * @param copyright Copyright page of the book - no longer a source of text, kept for its switch
-     * and for the future anchor lookup of IP-38.
+     * @param document The book's document, searched for the `"copyright"` anchor's page.
+     * @param copyright Copyright page of the book - only its switch matters here, its text lives in
+     * [document].
      * @param meta Meta data the author name is taken from.
      * @param design Design the copyright page styles are taken from.
-     * @return The author block, when the page is included, the design shows it and one was typed;
-     * otherwise empty until IP-38 rebuilds this method around the copyright page's anchor.
+     * @return Empty when the page is not included; otherwise the notice's anchor-addressed blocks,
+     * followed by the author block when the design shows it and one was typed.
      */
-    fun build(copyright: Copyright, meta: Meta, design: Design): List<TextBlock> {
+    fun build(document: Document, copyright: Copyright, meta: Meta, design: Design): List<TextBlock> {
         if (!copyright.included) {
             return emptyList()
         }
 
-        // TODO(IP-38): read the notice and its further lines from the book's Document through the
-        //  "copyright" anchor id instead.
         val copyrightPage = design.copyrightPage
         val blocks = ArrayList<TextBlock>()
+
+        blocks += BookPartBuilder.build(document, COPYRIGHT_ANCHOR_ID, copyrightPage.copyrightStyle.toTextStyle())
 
         if (copyrightPage.showAuthor && meta.author.isNotBlank()) {
             blocks += TextBlock.of(meta.author, copyrightPage.authorStyle.toTextStyle())

@@ -21,6 +21,13 @@
   * `testing` - before a test class is created or changed
   * `project-docs` - after EVERY change, to check README, MkDocs, KDoc and CHANGELOG.md
   * `ci-pipeline` - before a workflow file under `.github` is created or changed
+  * `translation` - whenever a message bundle key is added, renamed, removed or its English text
+    changes, and before any translation content is written or reviewed
+
+## Translation
+
+* A translation of a message bundle key MUST NEVER be written inline in the main session
+* The `translator` agent MUST be used for EVERY translation, per the `translation` skill
 
 ## Concurrency
 
