@@ -14,6 +14,10 @@ import com.github.jk1.license.render.ReportRenderer
 
 plugins {
     id("org.jetbrains.kotlin.jvm") version "2.4.10" apply false
+    // Same version as the Kotlin compiler plugin above - the serialization plugin is versioned in
+    // lock step with the Kotlin compiler it plugs into. Wired up in IP-37 (ai-ghost-model), for the
+    // simPlay `Document` that is now embedded in `Book`.
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.4.10" apply false
     id("org.jetbrains.dokka") version "2.2.0" apply false
     id("org.jetbrains.kotlinx.kover") version "0.9.9" apply false
     id("com.github.jk1.dependency-license-report") version "3.1.4" apply false
@@ -32,7 +36,7 @@ val junitVersion = "6.1.3"
 // 0.2.2 renames the Maven artifact ids with a `simplay-` prefix (previously `engine`/`engine-jvm`)
 // and adds a proper <licenses> block to the POMs, closing the interim licensee exception in
 // lib/layouting-model/build.gradle.kts.
-val simplayVersion by extra("0.3.0")
+val simplayVersion by extra("0.3.1")
 
 // The UI module shipping the distribution; the licence report and the API docs are taken from it.
 val uiProject = ":app:ai-ghost-ui"

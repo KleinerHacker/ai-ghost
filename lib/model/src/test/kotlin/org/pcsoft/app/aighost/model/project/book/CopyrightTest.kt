@@ -27,49 +27,22 @@ class CopyrightTest {
     private val mapper: ObjectMapper = ObjectMapper().registerKotlinModule()
 
     /**
-     * Use case: a book is created before the user wrote its front matter, so the copyright page is
-     * prefilled with a notice, carries no further lines and belongs to the book.
+     * Use case: a book is created before the user wrote its front matter, so the copyright page
+     * already belongs to the book.
      */
     @Test
-    fun defaultsToAPrefilledIncludedPage() {
-        val copyright = Copyright()
-
-        assertTrue(copyright.copyright.startsWith("Copyright "))
-        assertEquals(emptyList<String>(), copyright.copyrightAppendix)
-        assertEquals(true, copyright.included)
+    fun defaultsToIncluded() {
+        assertEquals(true, Copyright().included)
     }
 
     /**
-     * Use case: the user takes the copyright page out of the book and puts it back later on, so the
-     * text and its further lines are still there instead of having been thrown away with the switch.
+     * Use case: the copyright page is written to disk, so its switch appears in the JSON under the
+     * stable property name the file format promises.
      */
     @Test
-    fun keepsTextWhenSwitchedOffAndOnAgain() {
-        val copyright = Copyright(
-            copyright = "(c) 2026 Jane Doe",
-            copyrightAppendix = listOf("All rights reserved."),
-            included = true
-        )
+    fun serialisesSwitch() {
+        val json = mapper.writeValueAsString(Copyright(included = false))
 
-        copyright.included = false
-        copyright.included = true
-
-        assertEquals("(c) 2026 Jane Doe", copyright.copyright)
-        assertEquals(listOf("All rights reserved."), copyright.copyrightAppendix)
-    }
-
-    /**
-     * Use case: the copyright page is written to disk, so its notice, its further lines and the
-     * switch appear in the JSON under the stable property names the file format promises.
-     */
-    @Test
-    fun serialisesNoticeAppendixAndSwitch() {
-        val json = mapper.writeValueAsString(
-            Copyright("(c) 2026 Jane Doe", listOf("All rights reserved."), included = false)
-        )
-
-        assertTrue(json.contains(""""copyright":"(c) 2026 Jane Doe""""))
-        assertTrue(json.contains(""""copyrightAppendix":["All rights reserved."]"""))
         assertTrue(json.contains(""""included":false"""))
     }
 
@@ -79,7 +52,7 @@ class CopyrightTest {
      */
     @Test
     fun roundTripsEveryProperty() {
-        val copyright = Copyright("(c) 2026 Jane Doe", listOf("All rights reserved.", "Printed in the EU."))
+        val copyright = Copyright(included = false)
 
         val restored: Copyright = mapper.readValue(mapper.writeValueAsString(copyright))
 
@@ -87,15 +60,13 @@ class CopyrightTest {
     }
 
     /**
-     * Use case: a document holds the notice only, so the remaining properties are filled with their
-     * defaults instead of the part being rejected.
+     * Use case: a document holds no properties at all, so the switch is filled with its default
+     * instead of the part being rejected.
      */
     @Test
-    fun readsPartialDocumentWithDefaults() {
-        val copyright: Copyright = mapper.readValue("""{"copyright":"(c) 2026 Jane Doe"}""")
+    fun readsEmptyDocumentWithDefaults() {
+        val copyright: Copyright = mapper.readValue("""{}""")
 
-        assertEquals("(c) 2026 Jane Doe", copyright.copyright)
-        assertEquals(emptyList<String>(), copyright.copyrightAppendix)
         assertEquals(true, copyright.included)
     }
 
@@ -105,8 +76,22 @@ class CopyrightTest {
      */
     @Test
     fun ignoresUnknownProperties() {
-        val copyright: Copyright = mapper.readValue("""{"copyright":"(c) 2026","isbn":"123"}""")
+        val copyright: Copyright = mapper.readValue("""{"included":false,"isbn":"123"}""")
 
-        assertEquals("(c) 2026", copyright.copyright)
+        assertEquals(false, copyright.included)
+    }
+
+    /**
+     * Use case: an old project written before IP-36 still carries `copyright` and
+     * `copyrightAppendix` in its JSON, so opening it drops those fields instead of failing to parse -
+     * the hard requirement IP-36 leaves for IP-37's migration to build on.
+     */
+    @Test
+    fun ignoresFieldsRemovedByThePreviousModelVersion() {
+        val copyright: Copyright = mapper.readValue(
+            """{"copyright":"(c) 2026","copyrightAppendix":["All rights reserved."],"included":true}"""
+        )
+
+        assertEquals(true, copyright.included)
     }
 }

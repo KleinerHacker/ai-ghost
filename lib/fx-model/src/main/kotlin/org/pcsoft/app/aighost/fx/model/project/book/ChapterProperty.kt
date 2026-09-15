@@ -12,9 +12,12 @@
 
 package org.pcsoft.app.aighost.fx.model.project.book
 
+import javafx.beans.property.ReadOnlyObjectProperty
+import javafx.beans.property.ReadOnlyObjectWrapper
 import javafx.beans.property.SimpleStringProperty
 import javafx.beans.property.StringProperty
 import org.pcsoft.app.aighost.model.project.book.Chapter
+import java.util.UUID
 
 /**
  * Property wrapping a single chapter of a book - the one the user is working on for instance - and
@@ -42,8 +45,21 @@ class ChapterProperty internal constructor() : BookPartProperty<Chapter?>() {
             nameProperty.set(value)
         }
 
+    // The chapter's id is a `val` on the POJO and carries no setter, so it MUST NOT be registered with
+    // BeanFields (see the fx-model skill) - it is taken over by hand instead, on every exchange of the
+    // wrapped chapter. It never changes on its own once a chapter sits behind this property, so no
+    // further reporting up to the root is needed for it.
+    private val idWrapper: ReadOnlyObjectWrapper<UUID?> = ReadOnlyObjectWrapper(null)
+
+    /** Stable id of the wrapped chapter, read only since [Chapter.id] itself is immutable. */
+    val idProperty: ReadOnlyObjectProperty<UUID?> = idWrapper.readOnlyProperty
+
+    /** Stable id of the wrapped chapter, `null` while no chapter is bound. */
+    val id: UUID? get() = idProperty.get()
+
     init {
         fields.string(nameProperty, "name")
+        addListener { _, _, newValue -> idWrapper.set(newValue?.id) }
     }
 
     companion object {

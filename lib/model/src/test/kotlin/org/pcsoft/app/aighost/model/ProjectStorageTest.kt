@@ -21,8 +21,11 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.pcsoft.app.aighost.model.project.Project
 import org.pcsoft.app.aighost.model.project.book.Book
+import org.pcsoft.app.aighost.model.project.book.DocumentCodec
 import org.pcsoft.app.aighost.model.project.design.Design
 import org.pcsoft.app.aighost.model.project.meta.Meta
+import org.pcsoft.framework.simplay.engine.model.Document
+import org.pcsoft.framework.simplay.engine.model.PageNumbering
 import java.io.File
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
@@ -46,6 +49,43 @@ class ProjectStorageTest {
         assertTrue(ProjectStorage.save(TestData.project(), file).isRight())
 
         assertEquals(TestData.project(), ProjectStorage.load(file).getOrNull())
+    }
+
+    /**
+     * Use case: the user writes the manuscript on the writing surface and saves the project, so the
+     * document comes back exactly as it was written the next time the project is opened.
+     */
+    @Test
+    fun documentSurvivesARoundTrip() {
+        val project = TestData.project().apply {
+            book = book.copy(
+                documentPayload = DocumentCodec.encode(Document(numbering = PageNumbering.OFF.copy(startNumber = 3)))
+            )
+        }
+
+        assertTrue(ProjectStorage.save(project, file).isRight())
+
+        assertEquals(project.book.document, ProjectStorage.load(file).getOrNull()?.book?.document)
+    }
+
+    /**
+     * Use case: the archive was damaged and `book.json` now carries a `document` field that is not
+     * valid `Document` JSON, so the book cannot be parsed at all and is as gone as a missing entry -
+     * the same as [reportsWrongDocumentAsCorrupt] - instead of being handed out with a book nobody can
+     * trust.
+     */
+    @Test
+    fun reportsCorruptDocumentPayloadAsCorrupt() {
+        writeArchive(
+            "meta.json" to "{}",
+            "design.json" to "{}",
+            "book.json" to """{"document":"not a document"}"""
+        )
+
+        val error = ProjectStorage.load(file).leftOrNull()
+
+        val corrupt = assertInstanceOf(ProjectStorage.Error.Corrupt::class.java, error)
+        assertEquals(setOf(Project.PART_BOOK), corrupt.missing)
     }
 
     /**

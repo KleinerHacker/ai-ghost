@@ -13,7 +13,6 @@
 package org.pcsoft.app.aighost.app.controller
 
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertSame
@@ -43,9 +42,10 @@ import org.pcsoft.app.aighost.model.project.meta.Meta
 /**
  * Developer tests for [BookPartEditorController].
  *
- * The controller holds no state, so every test builds a project property, calls one function and
- * asserts its result. Laying the blocks out onto pages is `PaperSheetView`'s own concern, not
- * covered here.
+ * IP-36 removed the heading and the flowing text from every book part - that text now lives only in
+ * the book's simPlay `Document` (IP-37/IP-38) - so [PartMode.BOOK_PART] resolves to no block and no
+ * target here until IP-38 rebuilds the writing surface around the part's anchor; only the blurb, which
+ * still carries its own paragraphs, and the read-only front matter are covered beyond routing.
  */
 class BookPartEditorControllerTest {
 
@@ -70,9 +70,8 @@ class BookPartEditorControllerTest {
                     endWithEmptyPage = false
                 ),
                 book = Book(
-                    title = "My Novel",
-                    prolog = Prolog(title = "Before It All", paragraph = listOf("The first paragraph.")),
-                    chapters = listOf(Chapter("first", "The First Part", paragraph = listOf("Once upon a time."))),
+                    prolog = Prolog(included = true),
+                    chapters = listOf(Chapter("first")),
                     epilog = Epilog(),
                     blurb = Blurb(paragraph = listOf("A gripping tale."))
                 )
@@ -169,30 +168,32 @@ class BookPartEditorControllerTest {
     }
 
     /**
-     * Use case: the prolog carries a heading and a paragraph, so its blocks map to a title target
-     * followed by one paragraph target.
+     * Use case: a book part (prolog, chapter, epilog) is picked, so it gives neither block nor target
+     * - the text lives only in the book's `Document`, which this controller does not read yet.
      */
     @Test
-    fun buildsBlocksAndTargetsForAWrittenBookPart() {
+    fun bookPartResolutionGivesNoBlockOrTarget() {
         val resolution = BookPartEditorController.resolve(project, ProjectListItem.PrologItem(project.value.book.prolog))
 
         val plan = BookPartEditorController.buildBlocks(project.value, design, resolution)
 
-        assertTrue(plan.blocks.isNotEmpty())
-        assertEquals(PartTarget.Title, plan.targets.first())
-        assertTrue(plan.targets.contains(PartTarget.Paragraph(0)))
+        assertTrue(plan.blocks.isEmpty())
+        assertTrue(plan.targets.isEmpty())
     }
 
     /**
-     * Use case: an empty writable part has nothing to show, so it is seeded with a single empty
-     * paragraph block and a matching target, giving the user somewhere to type.
+     * Use case: an empty blurb has nothing to show, so it is seeded with a single empty paragraph
+     * block and a matching target, giving the user somewhere to type.
      */
     @Test
-    fun seedsAnEmptyWritablePartWithOneParagraph() {
-        // The epilog is built empty in setUp: no heading, no appendix, no paragraphs.
-        val resolution = BookPartEditorController.resolve(project, ProjectListItem.EpilogItem(project.value.book.epilog))
+    fun seedsAnEmptyBlurbWithOneParagraph() {
+        val emptyBlurbProject = ProjectProperty(project.value.copy(book = project.value.book.copy(blurb = Blurb())))
+        val resolution = BookPartEditorController.resolve(
+            emptyBlurbProject,
+            ProjectListItem.BlurbItem(emptyBlurbProject.value.book.blurb)
+        )
 
-        val plan = BookPartEditorController.buildBlocks(project.value, design, resolution)
+        val plan = BookPartEditorController.buildBlocks(emptyBlurbProject.value, design, resolution)
 
         assertEquals(1, plan.blocks.size)
         assertEquals("", plan.blocks.single().toString())
@@ -209,7 +210,6 @@ class BookPartEditorControllerTest {
 
         val plan = BookPartEditorController.buildBlocks(project.value, design, resolution)
 
-        assertTrue(plan.blocks.isNotEmpty())
         assertTrue(plan.targets.isEmpty())
     }
 
@@ -226,37 +226,6 @@ class BookPartEditorControllerTest {
 
         assertTrue(plan.blocks.isEmpty())
         assertTrue(plan.targets.isEmpty())
-    }
-
-    /**
-     * Use case: a heading change on the sheet is written back, so the new title stands in the prolog
-     * of the manuscript and reads back the same way.
-     */
-    @Test
-    fun writesAndReadsTheHeadingOfABookPart() {
-        val resolution = BookPartEditorController.resolve(project, ProjectListItem.PrologItem(project.value.book.prolog))
-
-        BookPartEditorController.writeModel(project, resolution, PartTarget.Title, "A New Prolog Title")
-
-        assertEquals("A New Prolog Title", project.value.book.prolog.title)
-        assertEquals("A New Prolog Title", BookPartEditorController.readModel(project, resolution, PartTarget.Title))
-    }
-
-    /**
-     * Use case: an existing paragraph is edited and a further one is added past the end of the list,
-     * so both land in the paragraph list of the part.
-     */
-    @Test
-    fun writesAnExistingParagraphAndAppendsANewOne() {
-        val resolution = BookPartEditorController.resolve(project, ProjectListItem.PrologItem(project.value.book.prolog))
-
-        BookPartEditorController.writeModel(project, resolution, PartTarget.Paragraph(0), "The rewritten first paragraph.")
-        BookPartEditorController.writeModel(project, resolution, PartTarget.Paragraph(1), "A brand new second paragraph.")
-
-        assertEquals(
-            listOf("The rewritten first paragraph.", "A brand new second paragraph."),
-            project.value.book.prolog.paragraph
-        )
     }
 
     /**
@@ -277,20 +246,19 @@ class BookPartEditorControllerTest {
     }
 
     /**
-     * Use case: a target that does not resolve to a set field - a heading on the headingless blurb -
-     * reads back as the empty string instead of failing.
+     * Use case: a target that does not resolve to a set field - a book part, since IP-36 - reads back
+     * as the empty string instead of failing.
      */
     @Test
     fun readsAnUnsetTargetAsEmpty() {
-        val resolution = BookPartEditorController.resolve(project, ProjectListItem.BlurbItem(project.value.book.blurb))
+        val resolution = BookPartEditorController.resolve(project, ProjectListItem.PrologItem(project.value.book.prolog))
 
-        assertEquals("", BookPartEditorController.readModel(project, resolution, PartTarget.Title))
-        assertFalse(BookPartEditorController.readModel(project, resolution, PartTarget.Paragraph(0)).isEmpty())
+        assertEquals("", BookPartEditorController.readModel(project, resolution, PartTarget.Paragraph(0)))
     }
 
     /**
-     * Use case: the resolved part's paragraph list is looked up for a book part, for the blurb, and
-     * not at all for a read-only or empty mode.
+     * Use case: the resolved part's paragraph list is looked up for the blurb, and not at all for a
+     * book part, a read-only mode or the empty mode.
      */
     @Test
     fun resolvesTheParagraphListPerMode() {
@@ -300,13 +268,10 @@ class BookPartEditorControllerTest {
         val titleResolution = BookPartEditorController.resolve(project, ProjectListItem.TitlePageItem)
 
         assertSame(
-            project.bookProperty.prologProperty.paragraphProperty,
-            BookPartEditorController.paragraphListProperty(project, bookPartResolution)
-        )
-        assertSame(
             project.bookProperty.blurbProperty.paragraphProperty,
             BookPartEditorController.paragraphListProperty(project, blurbResolution)
         )
+        assertNull(BookPartEditorController.paragraphListProperty(project, bookPartResolution))
         assertNull(BookPartEditorController.paragraphListProperty(project, titleResolution))
     }
 

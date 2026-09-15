@@ -58,6 +58,36 @@ class ModelJsonTest {
     fun parsesHandWrittenBookDocument() {
         val json = """
             {
+              "prompts" : { "contentPrompt" : "Tell a story in two parts.", "stylePrompt" : "Warm and calm." },
+              "prolog" : { "included" : true },
+              "chapters" : [
+                { "name" : "first" },
+                { "name" : "second" }
+              ],
+              "epilog" : { "included" : true },
+              "blurb" : { "paragraph" : [ "A gripping tale." ] }
+            }
+        """.trimIndent()
+
+        val book: Book = mapper.readValue(json)
+
+        assertEquals(AIPrompt("Tell a story in two parts.", "Warm and calm."), book.prompts)
+        assertEquals(listOf("first", "second"), book.chapters.map(Chapter::name))
+        assertEquals(Prolog(included = true), book.prolog)
+        assertEquals(Epilog(included = true), book.epilog)
+        assertEquals(Blurb(paragraph = listOf("A gripping tale.")), book.blurb)
+    }
+
+    /**
+     * Use case: an old project written before IP-36 still carries `title`, `titleAppendix` and
+     * `paragraph` on the book, its parts and its chapters, so opening it drops every one of those
+     * fields instead of failing to parse - the hard requirement IP-36 leaves for IP-37's migration to
+     * build on.
+     */
+    @Test
+    fun parsesHandWrittenBookDocumentFromBeforeTheAnchorRework() {
+        val json = """
+            {
               "title" : "My Novel",
               "prompts" : { "contentPrompt" : "Tell a story in two parts.", "stylePrompt" : "Warm and calm." },
               "prolog" : { "title" : "Before It All", "paragraph" : [ "Long before." ] },
@@ -72,12 +102,8 @@ class ModelJsonTest {
 
         val book: Book = mapper.readValue(json)
 
-        assertEquals("My Novel", book.title)
         assertEquals(AIPrompt("Tell a story in two parts.", "Warm and calm."), book.prompts)
         assertEquals(listOf("first", "second"), book.chapters.map(Chapter::name))
-        assertEquals(listOf("The beginning.", "And on it went."), book.chapters[1].paragraph)
-        assertEquals(Prolog("Before It All", paragraph = listOf("Long before.")), book.prolog)
-        assertEquals(Epilog("After It All", paragraph = listOf("And that was that.")), book.epilog)
         assertEquals(Blurb(paragraph = listOf("A gripping tale.")), book.blurb)
     }
 
@@ -131,8 +157,7 @@ class ModelJsonTest {
     fun parsesBookDocumentWithoutOptionalParts() {
         val json = """
             {
-              "title" : "My Novel",
-              "chapters" : [ { "name" : "first", "title" : "Prologue" } ]
+              "chapters" : [ { "name" : "first" } ]
             }
         """.trimIndent()
 
@@ -166,13 +191,10 @@ class ModelJsonTest {
     @Test
     fun escapesSpecialCharactersInChapterText() {
         val book = Book(
-            title = "Special\"Characters",
-            titleAppendix = listOf("A \\ backslash"),
             chapters = listOf(
                 Chapter(
                     "chapter\\1",
-                    "Chapter\\1",
-                    paragraph = listOf("He said: \"Hello\"\nand left.\tEnd")
+                    prompts = AIPrompt(contentPrompt = "He said: \"Hello\"\nand left.\tEnd")
                 )
             )
         )
@@ -190,9 +212,8 @@ class ModelJsonTest {
     fun keepsUnicodeText() {
         val meta = Meta(name = "Café Notes", author = "Renée Müller")
         val book = Book(
-            title = "Café Notes",
             chapters = listOf(
-                Chapter("naïve", "Naïve Beginnings", paragraph = listOf("A café, a résumé – ok."))
+                Chapter("naïve", prompts = AIPrompt(contentPrompt = "A café, a résumé – ok."))
             ),
             blurb = Blurb(paragraph = listOf("Crème de la crème – a novel."))
         )
@@ -233,7 +254,7 @@ class ModelJsonTest {
     @Test
     fun rejectsBrokenDocument() {
         assertThrows<JsonProcessingException> {
-            mapper.readValue<Book>("""{"title":""")
+            mapper.readValue<Book>("""{"prompts":""")
         }
     }
 

@@ -29,126 +29,92 @@ class EpilogTest {
     private val mapper: ObjectMapper = ObjectMapper().registerKotlinModule()
 
     /**
-     * Use case: the user creates the epilog and only titles it, so it starts without appendix lines,
-     * without prompts and without text instead of forcing content up front.
+     * Use case: the user creates the epilog before writing anything, so it starts without prompts
+     * instead of forcing content up front.
      */
     @Test
-    fun defaultsToEmptyAppendixPromptsAndText() {
-        val epilog = Epilog("After It All")
-
-        assertEquals(emptyList<String>(), epilog.titleAppendix)
-        assertEquals(AIPrompt(), epilog.prompts)
-        assertEquals(emptyList<String>(), epilog.paragraph)
+    fun defaultsToEmptyPrompts() {
+        assertEquals(AIPrompt(), Epilog().prompts)
     }
 
     /**
      * Use case: a book is created before the user decided about its epilog, so the epilog is already
-     * there, without a heading and without belonging to the book yet.
+     * there, without belonging to the book yet.
      */
     @Test
-    fun defaultsToEmptyTitleAndNotIncluded() {
-        val epilog = Epilog()
-
-        assertEquals("", epilog.title)
-        assertFalse(epilog.included)
+    fun defaultsToNotIncluded() {
+        assertFalse(Epilog().included)
     }
 
     /**
-     * Use case: the epilog is rendered like any other written part, so it can be handed over as a
+     * Use case: the epilog is handled like any other written part, so it can be handed over as a
      * [org.pcsoft.app.aighost.model.project.book.BookPart] together with chapters and the prolog.
      */
     @Test
     fun isABookPart() {
-        val part: BookPart = Epilog(
-            "After It All",
-            listOf("A last word"),
-            AIPrompt("Tell how it ended.", "Calm and slow."),
-            listOf("Text.")
-        )
+        val part: BookPart = Epilog(AIPrompt("Tell how it ended.", "Calm and slow."))
 
-        assertEquals("After It All", part.title)
-        assertEquals(listOf("A last word"), part.titleAppendix)
         assertEquals(AIPrompt("Tell how it ended.", "Calm and slow."), part.prompts)
-        assertEquals(listOf("Text."), part.paragraph)
     }
 
     /**
-     * Use case: the user takes the epilog out of the book and puts it back in later on, so everything
-     * written into it is still there instead of having been thrown away with the switch.
+     * Use case: the user takes the epilog out of the book and puts it back in later on, so its
+     * prompts are still there instead of having been thrown away with the switch.
      */
     @Test
-    fun keepsTextWhenSwitchedOffAndOnAgain() {
+    fun keepsPromptsWhenSwitchedOffAndOnAgain() {
         val epilog = Epilog(
-            "After It All",
-            listOf("A last word"),
             AIPrompt("Tell how it ended.", "Calm and slow."),
-            listOf("And that was that.", "Nobody came back."),
             included = true
         )
 
         epilog.included = false
         epilog.included = true
 
-        assertEquals("After It All", epilog.title)
-        assertEquals(listOf("A last word"), epilog.titleAppendix)
         assertEquals(AIPrompt("Tell how it ended.", "Calm and slow."), epilog.prompts)
-        assertEquals(listOf("And that was that.", "Nobody came back."), epilog.paragraph)
     }
 
     /**
-     * Use case: the epilog is written to disk, so heading, appendix lines, prompts, paragraphs and the
-     * switch appear in the JSON under the stable property names the file format promises.
+     * Use case: the epilog is written to disk, so its prompts and the switch appear in the JSON under
+     * the stable property names the file format promises.
      */
     @Test
-    fun serialisesTitleAppendixPromptsParagraphsAndSwitch() {
-        val epilog = Epilog(
-            "After It All",
-            listOf("A last word"),
-            AIPrompt("Tell how it ended.", "Calm and slow."),
-            listOf("And that was that.")
-        )
+    fun serialisesPromptsAndSwitch() {
+        val epilog = Epilog(AIPrompt("Tell how it ended.", "Calm and slow."))
 
         val json = mapper.writeValueAsString(epilog)
 
         assertEquals(
-            """{"title":"After It All","titleAppendix":["A last word"],""" +
-                """"prompts":{"contentPrompt":"Tell how it ended.","stylePrompt":"Calm and slow."},""" +
-                """"paragraph":["And that was that."],"included":false}""",
+            """{"prompts":{"contentPrompt":"Tell how it ended.","stylePrompt":"Calm and slow."},""" +
+                """"included":false}""",
             json
         )
     }
 
     /**
-     * Use case: a stored epilog is read back, so heading, prompts, all paragraphs and the switch
-     * survive the round trip unchanged and keep their order.
+     * Use case: a stored epilog is read back, so its prompts and the switch survive the round trip
+     * unchanged.
      */
     @Test
-    fun roundTripsParagraphsInOrder() {
-        val epilog = Epilog(
-            "After It All",
-            listOf("A last word", "and another"),
-            AIPrompt("Tell how it ended.", "Calm and slow."),
-            listOf("First paragraph.", "Second paragraph."),
-            included = true
-        )
+    fun roundTripsPromptsAndSwitch() {
+        val epilog = Epilog(AIPrompt("Tell how it ended.", "Calm and slow."), included = true)
 
         val restored: Epilog = mapper.readValue(mapper.writeValueAsString(epilog))
 
         assertEquals(epilog, restored)
         assertEquals(AIPrompt("Tell how it ended.", "Calm and slow."), restored.prompts)
-        assertEquals(listOf("First paragraph.", "Second paragraph."), restored.paragraph)
         assertTrue(restored.included)
     }
 
     /**
-     * Use case: a project file holds an epilog with its title only, so it is read back as an outlined
-     * epilog that does not belong to the book yet instead of failing.
+     * Use case: a project file holds an epilog with no properties at all, so it is read back as an
+     * outlined epilog that does not belong to the book yet instead of failing.
      */
     @Test
-    fun readsDocumentWithTitleOnly() {
-        val epilog: Epilog = mapper.readValue("""{"title":"After It All"}""")
+    fun readsEmptyDocumentWithDefaults() {
+        val epilog: Epilog = mapper.readValue("""{}""")
 
-        assertEquals(Epilog("After It All"), epilog)
+        assertEquals(Epilog(), epilog)
     }
 
     /**
@@ -157,8 +123,22 @@ class EpilogTest {
      */
     @Test
     fun ignoresUnknownProperties() {
-        val epilog: Epilog = mapper.readValue("""{"title":"After It All","summary":"short"}""")
+        val epilog: Epilog = mapper.readValue("""{"summary":"short"}""")
 
-        assertEquals(Epilog("After It All"), epilog)
+        assertEquals(Epilog(), epilog)
+    }
+
+    /**
+     * Use case: an old project written before IP-36 still carries `title`, `titleAppendix` and
+     * `paragraph` in its JSON, so opening it drops those fields instead of failing to parse - the
+     * hard requirement IP-36 leaves for IP-37's migration to build on.
+     */
+    @Test
+    fun ignoresFieldsRemovedByThePreviousModelVersion() {
+        val epilog: Epilog = mapper.readValue(
+            """{"title":"After It All","titleAppendix":["A last word"],"paragraph":["And that was that."]}"""
+        )
+
+        assertEquals(Epilog(), epilog)
     }
 }

@@ -54,10 +54,9 @@ class BookPartEditorViewModelTest {
         project = ProjectProperty(
             Project(
                 book = Book(
-                    title = "My Novel",
-                    prolog = Prolog(title = "Before It All"),
-                    chapters = listOf(Chapter("first", "The First Part")),
-                    epilog = Epilog(title = "After It All"),
+                    prolog = Prolog(included = true),
+                    chapters = listOf(Chapter("first")),
+                    epilog = Epilog(included = true),
                     blurb = Blurb(paragraph = listOf("A gripping tale."))
                 )
             )

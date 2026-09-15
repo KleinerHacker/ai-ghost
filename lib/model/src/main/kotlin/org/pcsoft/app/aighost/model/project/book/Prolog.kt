@@ -19,23 +19,16 @@ import org.pcsoft.app.aighost.model.project.common.AIPrompt
  * The prolog of a [Book], printed before the first chapter.
  *
  * Every book carries its prolog, [Book.prolog] is never empty. Whether the prolog belongs to the book
- * is told by [included] alone; what was written into it stays untouched while it does not, so
- * switching it off and on again gives the text back unchanged.
+ * is told by [included] alone. The heading and the written text that used to sit on this class moved
+ * to the simPlay `Document` of [Book] (IP-36/37/38); the prolog contributes to that document through
+ * its anchor instead.
  *
- * @property title Heading of the prolog, empty by default.
- * @property titleAppendix Further heading lines shown below the title, empty by default.
  * @property prompts Prompts for the prolog, empty by default.
- * @property paragraph Paragraphs of the prolog in their order, empty by default.
  * @property included Whether the prolog belongs to the book, `false` by default.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Prolog(
-    override var title: String = "",
-    override var titleAppendix: List<String> = listOf(),
-
     override var prompts: AIPrompt = AIPrompt(),
-
-    override var paragraph: List<String> = emptyList(),
 
     var included: Boolean = false
 ) : BookPart

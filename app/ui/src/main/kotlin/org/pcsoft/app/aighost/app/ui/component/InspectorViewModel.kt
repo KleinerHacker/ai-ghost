@@ -13,7 +13,6 @@
 package org.pcsoft.app.aighost.app.ui.component
 
 import de.saxsys.mvvmfx.ViewModel
-import javafx.beans.binding.Bindings
 import javafx.beans.property.BooleanProperty
 import javafx.beans.property.LongProperty
 import javafx.beans.property.SimpleBooleanProperty
@@ -22,8 +21,6 @@ import javafx.beans.property.SimpleStringProperty
 import javafx.beans.property.StringProperty
 import javafx.beans.value.ChangeListener
 import javafx.beans.value.ObservableValue
-import javafx.collections.FXCollections
-import javafx.collections.ObservableList
 import org.pcsoft.app.aighost.app.controller.IoController
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
 import org.pcsoft.app.aighost.fx.model.project.book.BookProperty
@@ -58,12 +55,6 @@ class InspectorViewModel : ViewModel {
     /** Whether a project is bound at all, so the "Design" section shows its fields instead of an empty state. */
     val designAvailable: BooleanProperty = SimpleBooleanProperty(this, "designAvailable", false)
 
-    /** Main title of the manuscript, empty while no manuscript is bound. */
-    val title: StringProperty = SimpleStringProperty(this, "title", "")
-
-    /** Further title lines shown below the main title, in the order the user arranged them in. */
-    val titleAppendix: ObservableList<String> = FXCollections.observableArrayList()
-
     /** Description of what the manuscript is about, empty while no manuscript is bound. */
     val contentPrompt: StringProperty = SimpleStringProperty(this, "contentPrompt", "")
 
@@ -72,9 +63,6 @@ class InspectorViewModel : ViewModel {
 
     /** Author printed in the manuscript, empty while no project is bound. */
     val author: StringProperty = SimpleStringProperty(this, "author", "")
-
-    /** Copyright notice printed in the manuscript, empty while no manuscript is bound. */
-    val copyright: StringProperty = SimpleStringProperty(this, "copyright", "")
 
     /** Maximum number of characters allowed in the content prompt fields. */
     val maxContentPromptCharacters: LongProperty = IoController.preferences.aiProperty.maxStoryCharactersProperty
@@ -99,8 +87,8 @@ class InspectorViewModel : ViewModel {
     val blurbPrompt: StringProperty = SimpleStringProperty(this, "blurbPrompt", "")
 
     /**
-     * Embedded editor for the style of the book title, wired up by [InspectorView] once the FXML of
-     * the "Design" section is loaded.
+     * Embedded editor for the style of the title page's title text, wired up by [InspectorView] once
+     * the FXML of the "Design" section is loaded.
      */
     internal lateinit var titleStyleEditor: StyleDataEditor
 
@@ -112,14 +100,6 @@ class InspectorViewModel : ViewModel {
 
     /** Embedded editor for the style of the chapter body text. */
     internal lateinit var bodyTextStyleEditor: StyleDataEditor
-
-    /**
-     * Asks the user whether the title line holding the given text may be removed.
-     *
-     * Set by [InspectorView], which shows the question as a dialog. Answering with no, or not
-     * answering at all, keeps the line.
-     */
-    internal var confirmRemoveTitleAppendix: ((String) -> Boolean)? = null
 
     // The project the "Book" section is bound to right now, so the bindings can be released again
     // when another project takes its place.
@@ -137,48 +117,23 @@ class InspectorViewModel : ViewModel {
         ChangeListener<ProjectListItem?> { _, _, newValue -> onSelectionChanged(newValue) }
 
     /**
-     * Appends an empty title line, which the user fills in afterwards.
-     */
-    fun addTitleAppendix() {
-        titleAppendix.add("")
-    }
-
-    /**
-     * Removes the title line at the given position, after the user agreed to lose it.
-     *
-     * @param index position of the title line
-     */
-    fun removeTitleAppendix(index: Int) {
-        if (index < 0 || index >= titleAppendix.size) return
-        if (confirmRemoveTitleAppendix?.invoke(titleAppendix[index]) == false) return
-
-        titleAppendix.removeAt(index)
-    }
-
-    /**
      * Binds the "Book" section to the given project and releases the one bound before.
      *
      * @param project the open project, `null` to follow none
      */
     internal fun bindProject(project: ProjectProperty?) {
         boundProject?.also { old ->
-            title.unbindBidirectional(old.bookProperty.titleProperty)
             contentPrompt.unbindBidirectional(old.bookProperty.promptsProperty.contentPromptProperty)
             stylePrompt.unbindBidirectional(old.bookProperty.promptsProperty.stylePromptProperty)
-            Bindings.unbindContentBidirectional(titleAppendix, old.bookProperty.titleAppendixProperty)
             author.unbindBidirectional(old.metaProperty.authorProperty)
-            copyright.unbindBidirectional(old.bookProperty.copyrightProperty.copyrightProperty)
         }
         boundProject = project
 
         if (project == null) {
             bookAvailable.value = false
-            title.value = ""
             contentPrompt.value = ""
             stylePrompt.value = ""
-            titleAppendix.clear()
             author.value = ""
-            copyright.value = ""
             unbindBlurb()
             bindDesign(null)
             return
@@ -188,18 +143,13 @@ class InspectorViewModel : ViewModel {
 
         // The project is the source of truth, so the fields take over its values instead of writing
         // their own into it: a bidirectional binding starts from the property it is called on.
-        title.value = project.bookProperty.titleProperty.value
         contentPrompt.value = project.bookProperty.promptsProperty.contentPromptProperty.value
         stylePrompt.value = project.bookProperty.promptsProperty.stylePromptProperty.value
         author.value = project.metaProperty.authorProperty.value
-        copyright.value = project.bookProperty.copyrightProperty.copyrightProperty.value
 
-        title.bindBidirectional(project.bookProperty.titleProperty)
         contentPrompt.bindBidirectional(project.bookProperty.promptsProperty.contentPromptProperty)
         stylePrompt.bindBidirectional(project.bookProperty.promptsProperty.stylePromptProperty)
-        Bindings.bindContentBidirectional(titleAppendix, project.bookProperty.titleAppendixProperty)
         author.bindBidirectional(project.metaProperty.authorProperty)
-        copyright.bindBidirectional(project.bookProperty.copyrightProperty.copyrightProperty)
 
         // The blurb belongs to the book of this project, so it follows the project's lifetime; which
         // item of the tree is picked decides whether its prompt is shown.

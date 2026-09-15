@@ -15,6 +15,15 @@ module org.pcsoft.app.aighost.model {
     // Arrow's Either appears in the signatures of the storage, so consumers need it as well.
     requires transitive arrow.core;
 
+    // simPlay's raw layout model (Document, Page, TextBlock, TextStyle, geometry). `Book.document`
+    // exposes it, so consumers see the type as well. The name is the `Automatic-Module-Name` simPlay's
+    // engine jar sets in its manifest, kept in sync with simPlay's build.
+    requires transitive org.pcsoft.framework.simplay.engine;
+
+    // Only used internally by DocumentCodec to encode/decode a Document to the JSON string Jackson
+    // sees - not part of this module's exported API, so not requires transitive.
+    requires kotlinx.serialization.json;
+
     requires org.slf4j;
 
     exports org.pcsoft.app.aighost.model;

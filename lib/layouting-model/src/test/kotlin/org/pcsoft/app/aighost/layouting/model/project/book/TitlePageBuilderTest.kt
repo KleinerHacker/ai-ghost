@@ -26,6 +26,10 @@ import org.pcsoft.framework.simplay.engine.model.TextAlignment
 
 /**
  * Developer tests for the blocks of the title page, [TitlePageBuilder].
+ *
+ * IP-36 removed the main title and its further lines from [Book] - that text now lives only in the
+ * book's simPlay `Document` (IP-37/IP-38) - so only the author name, still carried by [Meta], is built
+ * here until IP-38 rebuilds this builder around the title's anchor in that document.
  */
 class TitlePageBuilderTest {
 
@@ -51,84 +55,39 @@ class TitlePageBuilderTest {
     )
 
     /**
-     * Use case: a complete title page is built - the title, its further lines and the author name -
-     * and every block carries the text and the style the design gives for it.
+     * Use case: an author name was typed and the design shows it, so the title page gives exactly the
+     * author block, styled with the author style of the design.
      */
     @Test
-    fun theTitlePageIsTitleAppendixAndAuthor() {
-        val book = Book(title = "The Silent Harbour", titleAppendix = listOf("A Novel", "Volume One"))
-        val meta = Meta(author = "Jane Doe")
+    fun theTitlePageIsTheAuthorBlockAlone() {
+        val blocks = TitlePageBuilder.build(Book(), Meta(author = "Jane Doe"), design)
 
-        val blocks = TitlePageBuilder.build(book, meta, design)
-
-        assertEquals(
-            listOf("The Silent Harbour", "A Novel", "Volume One", "Jane Doe"),
-            blocks.map { it.toString() }
-        )
-        assertEquals(listOf("Garamond", "Garamond", "Garamond", "Garamond"), blocks.map { it.style.font.family })
-        assertEquals(listOf(28.0, 28.0, 28.0, 16.0), blocks.map { it.style.font.size })
-        assertTrue(blocks.all { it.style.alignment == TextAlignment.CENTER })
+        assertEquals(listOf("Jane Doe"), blocks.map { it.toString() })
+        assertEquals("Garamond", blocks[0].style.font.family)
+        assertEquals(16.0, blocks[0].style.font.size)
+        assertEquals(TextAlignment.CENTER, blocks[0].style.alignment)
+        assertEquals(1.1, blocks[0].style.lineSpacing.factor)
     }
 
     /**
-     * Use case: the title and the author are set with the line spacing their own style carries, not
-     * with a single one for the whole page.
-     */
-    @Test
-    fun everyBlockCarriesTheLineSpacingOfItsOwnStyle() {
-        val blocks = TitlePageBuilder.build(
-            Book(title = "The Silent Harbour", titleAppendix = listOf("A Novel")),
-            Meta(author = "Jane Doe"),
-            design
-        )
-
-        assertEquals(listOf(1.4, 1.4, 1.1), blocks.map { it.style.lineSpacing.factor })
-    }
-
-    /**
-     * Use case: a book without further title lines is built as well; the page is then just the title
-     * and the author name.
-     */
-    @Test
-    fun withoutFurtherTitleLinesTheTitleAndAuthorRemain() {
-        val blocks = TitlePageBuilder.build(Book(title = "The Silent Harbour"), Meta(author = "Jane Doe"), design)
-
-        assertEquals(listOf("The Silent Harbour", "Jane Doe"), blocks.map { it.toString() })
-    }
-
-    /**
-     * Use case: the design hides the author name on the title page, so the block is left out even
-     * though an author was typed.
+     * Use case: the design hides the author name on the title page, so no block is built even though
+     * an author was typed.
      */
     @Test
     fun theAuthorIsLeftOutWhenTheDesignHidesIt() {
         val hidden = design.copy(titlePage = design.titlePage.copy(showAuthor = false))
 
-        val blocks = TitlePageBuilder.build(Book(title = "The Silent Harbour"), Meta(author = "Jane Doe"), hidden)
+        val blocks = TitlePageBuilder.build(Book(), Meta(author = "Jane Doe"), hidden)
 
-        assertEquals(listOf("The Silent Harbour"), blocks.map { it.toString() })
+        assertTrue(blocks.isEmpty())
     }
 
     /**
-     * Use case: what the user left empty must not take a line of its own, so a blank title, a blank
-     * further line and a missing author are left out instead of being set as empty blocks.
+     * Use case: no author was typed, so the title page gives no block at all.
      */
     @Test
-    fun whatWasLeftEmptyIsLeftOut() {
-        val book = Book(title = "   ", titleAppendix = listOf("A Novel", "  "))
-
-        val blocks = TitlePageBuilder.build(book, Meta(author = ""), design)
-
-        assertEquals(listOf("A Novel"), blocks.map { it.toString() })
-    }
-
-    /**
-     * Use case: nothing was typed at all, so the title page carries no block instead of a page of
-     * empty lines.
-     */
-    @Test
-    fun anEmptyBookAndAnEmptyMetaGiveNoBlock() {
-        val blocks = TitlePageBuilder.build(Book(title = ""), Meta(author = ""), design)
+    fun anEmptyAuthorGivesNoBlock() {
+        val blocks = TitlePageBuilder.build(Book(), Meta(author = ""), design)
 
         assertTrue(blocks.isEmpty())
     }

@@ -63,14 +63,8 @@ class InspectorTest : ApplicationTest() {
     private val chapterSection: TitledPane
         get() = inspector.lookup("#pnlChapterSection") as TitledPane
 
-    private val bookTitleInput: TextField
-        get() = (inspector.lookup("#txtBookTitle") as AiTextField).lookup(".text-field") as TextField
-
     private val bookAuthorInput: TextField
         get() = inspector.lookup("#txtBookAuthor") as TextField
-
-    private val bookCopyrightInput: TextField
-        get() = inspector.lookup("#txtBookCopyright") as TextField
 
     private val bookContentPromptInput: TextArea
         get() = (inspector.lookup("#txaBookContentPrompt") as AiPromptArea).lookup(".text-area") as TextArea
@@ -198,15 +192,12 @@ class InspectorTest : ApplicationTest() {
     fun boundProjectFillsTheBookSection() {
         show(
             Book(
-                title = "The Silent House",
-                titleAppendix = listOf("A ghost story"),
                 prompts = AIPrompt(contentPrompt = "A house nobody lives in", stylePrompt = "Dark and quiet")
             )
         )
 
         assertFalse(bookEmptyBox.isVisible, "the empty state is shown although a project is bound")
         assertTrue(bookFieldsBox.isVisible, "the fields are hidden although a project is bound")
-        assertEquals("The Silent House", bookTitleInput.text)
         assertEquals("Jane Doe", bookAuthorInput.text)
         assertEquals("A house nobody lives in", bookContentPromptInput.text)
         assertEquals("Dark and quiet", bookStylePromptInput.text)
@@ -218,21 +209,17 @@ class InspectorTest : ApplicationTest() {
      */
     @Test
     fun everyBookFieldWritesThroughToTheModel() {
-        val book = Book(title = "")
+        val book = Book()
         val property = show(book)
 
-        clickOn(bookTitleInput).write("The Silent House")
         interact {
             bookAuthorInput.text = "John Smith"
-            bookCopyrightInput.text = "(c) 2026"
             bookContentPromptInput.text = "A house nobody lives in"
             bookStylePromptInput.text = "Dark and quiet"
         }
         WaitForAsyncUtils.waitForFxEvents()
 
-        assertEquals("The Silent House", book.title)
         assertEquals("John Smith", property.metaProperty.author)
-        assertEquals("(c) 2026", book.copyright.copyright)
         assertEquals("A house nobody lives in", book.prompts.contentPrompt)
         assertEquals("Dark and quiet", book.prompts.stylePrompt)
     }
@@ -246,13 +233,11 @@ class InspectorTest : ApplicationTest() {
         val property = show(Book())
 
         interact {
-            property.bookProperty.title = "The Silent House"
             property.bookProperty.promptsProperty.contentPrompt = "A house nobody lives in"
             property.metaProperty.author = "John Smith"
         }
         WaitForAsyncUtils.waitForFxEvents()
 
-        assertEquals("The Silent House", bookTitleInput.text)
         assertEquals("A house nobody lives in", bookContentPromptInput.text)
         assertEquals("John Smith", bookAuthorInput.text)
     }
@@ -272,7 +257,7 @@ class InspectorTest : ApplicationTest() {
      */
     @Test
     fun pickedChapterFillsTheChapterSection() {
-        val chapter = Chapter(name = "Chapter one", title = "The arrival")
+        val chapter = Chapter(name = "Chapter one")
         select(ProjectListItem.ChapterItem(chapter))
 
         assertFalse(chapterEmptyBox.isVisible, "the empty state is shown although a chapter is picked")
@@ -286,7 +271,7 @@ class InspectorTest : ApplicationTest() {
      */
     @Test
     fun chapterFieldsWriteThroughToTheChapter() {
-        val chapter = Chapter(name = "Chapter one", title = "The arrival")
+        val chapter = Chapter(name = "Chapter one")
         select(ProjectListItem.ChapterItem(chapter))
 
         clickOn(chapterNameInput).write(" and two")
@@ -336,7 +321,7 @@ class InspectorTest : ApplicationTest() {
      */
     @Test
     fun bookSectionCanBeCollapsedAndExpanded() {
-        show(Book(title = "The Silent House"))
+        show(Book(prompts = AIPrompt(contentPrompt = "A house nobody lives in")))
         assertTrue(bookSection.isExpanded, "the section starts collapsed")
 
         interact { bookSection.isExpanded = false }
@@ -346,7 +331,7 @@ class InspectorTest : ApplicationTest() {
         interact { bookSection.isExpanded = true }
         WaitForAsyncUtils.waitForFxEvents()
         assertTrue(bookSection.isExpanded)
-        assertEquals("The Silent House", bookTitleInput.text)
+        assertEquals("A house nobody lives in", bookContentPromptInput.text)
     }
 
     /**

@@ -16,12 +16,12 @@ import de.saxsys.mvvmfx.MvvmFX
 import javafx.geometry.Orientation
 import javafx.scene.Scene
 import javafx.scene.control.SplitPane
-import javafx.scene.control.TextField
 import javafx.scene.control.TreeView
 import javafx.stage.Stage
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.app.Messages
+import org.pcsoft.app.aighost.app.ui.component.base.AiPromptArea
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
 import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.FontData
@@ -29,6 +29,7 @@ import org.pcsoft.app.aighost.model.common.StyleData
 import org.pcsoft.app.aighost.model.project.Project
 import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.book.Chapter
+import org.pcsoft.app.aighost.model.project.common.AIPrompt
 import org.pcsoft.app.aighost.model.project.design.*
 import org.pcsoft.app.aighost.model.project.meta.Meta
 import org.testfx.framework.junit5.ApplicationTest
@@ -146,15 +147,15 @@ class EditorTest : ApplicationTest() {
         )
     }
 
-    /** The chapter titles the project tree on the left currently lists. */
+    /** The chapter names the project tree on the left currently lists. */
     @Suppress("UNCHECKED_CAST")
-    private fun chapterTitles(): List<String> {
+    private fun chapterNames(): List<String> {
         val tree = projectList.lookup(".tree-view") as TreeView<ProjectListItem>
 
         return tree.root.children
             .first { it.value is ProjectListItem.Chapters }
             .children
-            .map { (it.value as ProjectListItem.ChapterItem).chapter.title }
+            .map { (it.value as ProjectListItem.ChapterItem).chapter.name }
     }
 
     /** Puts [project] into the model the editor was handed and lets the controls follow it. */
@@ -169,9 +170,9 @@ class EditorTest : ApplicationTest() {
      */
     @Test
     fun handsTheBoundProjectOnToTheProjectTree() {
-        setProject(project(Book(title = "My Novel", chapters = listOf(Chapter("first", "The First Part")))))
+        setProject(project(Book(chapters = listOf(Chapter("first")))))
 
-        assertEquals(listOf("The First Part"), chapterTitles())
+        assertEquals(listOf("first"), chapterNames())
     }
 
     /**
@@ -180,23 +181,24 @@ class EditorTest : ApplicationTest() {
      */
     @Test
     fun handsTheClosedProjectOnToTheProjectTree() {
-        setProject(project(Book(title = "My Novel", chapters = listOf(Chapter("first", "The First Part")))))
+        setProject(project(Book(chapters = listOf(Chapter("first")))))
 
         setProject(Project())
 
-        assertEquals(emptyList<String>(), chapterTitles())
+        assertEquals(emptyList<String>(), chapterNames())
     }
 
     /**
-     * Use case: the manuscript of the bound project reaches the inspector, so its title stands in the
-     * title field of the "Book" section without the surrounding window binding that field itself.
+     * Use case: the manuscript of the bound project reaches the inspector, so its content prompt
+     * stands in the content prompt field of the "Book" section without the surrounding window binding
+     * that field itself.
      */
     @Test
     fun handsTheManuscriptOnToTheInspector() {
-        setProject(project(Book(title = "My Novel")))
+        setProject(project(Book(prompts = AIPrompt(contentPrompt = "A house nobody lives in"))))
 
-        val title = editor.lookup("#txtBookTitle").lookup(".text-field") as TextField
+        val contentPrompt = editor.lookup("#txaBookContentPrompt") as AiPromptArea
 
-        assertEquals("My Novel", title.text)
+        assertEquals("A house nobody lives in", contentPrompt.text.value)
     }
 }

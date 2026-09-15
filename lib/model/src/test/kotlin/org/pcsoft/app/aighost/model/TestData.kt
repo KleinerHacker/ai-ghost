@@ -35,6 +35,7 @@ import org.pcsoft.app.aighost.model.project.design.PageNumberPosition
 import org.pcsoft.app.aighost.model.project.design.PrologPageDesign
 import org.pcsoft.app.aighost.model.project.design.TitlePageDesign
 import org.pcsoft.app.aighost.model.project.meta.Meta
+import java.util.UUID
 
 /**
  * Fully populated model instances shared by the tests of this module.
@@ -42,8 +43,19 @@ import org.pcsoft.app.aighost.model.project.meta.Meta
  * A project is made of several parts, each of them carrying nested styles, so building one inline
  * would bury the actual assertion of every test that needs a project. The fixtures here are created
  * fresh on each access, so a test may copy and modify them without affecting the next one.
+ *
+ * [book]'s two chapters are built with the fixed [FIRST_CHAPTER_ID] and [SECOND_CHAPTER_ID] instead of
+ * a freshly assigned one, so two separate calls to [book] or [project] still compare equal - `Chapter`
+ * would otherwise never be equal to a chapter built by another call, since [Chapter.id] is assigned at
+ * random.
  */
 object TestData {
+
+    /** Stable id of the first fixture chapter, so two calls to [book] compare equal. */
+    private val FIRST_CHAPTER_ID: UUID = UUID.fromString("11111111-1111-1111-1111-111111111111")
+
+    /** Stable id of the second fixture chapter, so two calls to [book] compare equal. */
+    private val SECOND_CHAPTER_ID: UUID = UUID.fromString("22222222-2222-2222-2222-222222222222")
 
     /** A font that differs from every other fixture font, so a mix up shows up in an assertion. */
     fun font(name: String = "Serif", size: Int = 12): FontData =
@@ -68,10 +80,8 @@ object TestData {
         author = "Jane Doe"
     )
 
-    /** The copyright page of the book, with an appendix line and switched on. */
+    /** The copyright page of the book, switched on. */
     fun copyright(): Copyright = Copyright(
-        copyright = "(c) 2026 Jane Doe",
-        copyrightAppendix = listOf("All rights reserved."),
         included = true
     )
 
@@ -154,26 +164,18 @@ object TestData {
     fun bookPrompts(): AIPrompt = prompt("Tell a story in two parts.", "Warm and calm.")
 
     /**
-     * A prolog with an appendix line, prompts and text, belonging to the book, so a dropped property
-     * shows up.
+     * A prolog with prompts, belonging to the book, so a dropped property shows up.
      */
     fun prolog(): Prolog = Prolog(
-        title = "Before It All",
-        titleAppendix = listOf("A word up front"),
         prompts = prompt("Tell what happened before the story.", "Quiet and slow."),
-        paragraph = listOf("Long before the story started."),
         included = true
     )
 
     /**
-     * An epilog with an appendix line, prompts and text, belonging to the book, so a dropped property
-     * shows up.
+     * An epilog with prompts, belonging to the book, so a dropped property shows up.
      */
     fun epilog(): Epilog = Epilog(
-        title = "After It All",
-        titleAppendix = listOf("A last word"),
         prompts = prompt("Tell how everybody went on.", "Quiet and slow."),
-        paragraph = listOf("And that was that."),
         included = true
     )
 
@@ -187,22 +189,18 @@ object TestData {
         included = true
     )
 
-    /** A book with copyright, prolog, epilog, blurb and two chapters, the second one still without text. */
+    /** A book with copyright, prolog, epilog, blurb and two chapters, the second one still without prompts. */
     fun book(): Book = Book(
-        title = "My Novel",
-        titleAppendix = listOf("A Story in Two Parts"),
         prompts = bookPrompts(),
         copyright = copyright(),
         prolog = prolog(),
         chapters = listOf(
             Chapter(
                 name = "first",
-                title = "The First Part",
-                titleAppendix = listOf("How it started"),
-                prompts = prompt("Tell how the journey started.", "Lively and warm."),
-                paragraph = listOf("Once upon a time.", "And then.")
+                id = FIRST_CHAPTER_ID,
+                prompts = prompt("Tell how the journey started.", "Lively and warm.")
             ),
-            Chapter(name = "second", title = "The Second Part")
+            Chapter(name = "second", id = SECOND_CHAPTER_ID)
         ),
         epilog = epilog(),
         blurb = blurb()

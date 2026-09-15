@@ -23,10 +23,13 @@ import org.pcsoft.app.aighost.model.project.design.CopyrightPageDesign
 import org.pcsoft.app.aighost.model.project.design.Design
 import org.pcsoft.app.aighost.model.project.meta.Meta
 import org.pcsoft.framework.simplay.engine.model.FontStyle
-import org.pcsoft.framework.simplay.engine.model.TextAlignment
 
 /**
  * Developer tests for the blocks of the copyright page, [CopyrightPageBuilder].
+ *
+ * IP-36 removed the copyright notice and its further lines from [Copyright] - that text now lives only
+ * in the book's simPlay `Document` (IP-37/IP-38) - so only the author name, still carried by [Meta], is
+ * built here until IP-38 rebuilds this builder around the copyright page's anchor in that document.
  */
 class CopyrightPageBuilderTest {
 
@@ -42,7 +45,7 @@ class CopyrightPageBuilderTest {
                 textLineSpacing = 1.1,
                 alignment = Alignment.RIGHT
             ),
-            showAuthor = false,
+            showAuthor = true,
             authorStyle = StyleData(
                 font = FontData("Baskerville", 10, italic = true),
                 textLineSpacing = 1.2,
@@ -52,121 +55,34 @@ class CopyrightPageBuilderTest {
     )
 
     /**
-     * Use case: the notice the user typed is built into a block and carries the style and the line
-     * spacing the design gives for the copyright page.
+     * Use case: the design asks for the author name on the copyright page and the page is included, so
+     * the author block is built in the author style.
      */
     @Test
-    fun theNoticeIsSetInTheCopyrightDesign() {
-        val blocks = CopyrightPageBuilder.build(
-            Copyright(copyright = "Copyright 2026 Jane Doe"),
-            Meta(),
-            design
-        )
+    fun theAuthorIsBuiltWhenTheDesignAsksForIt() {
+        val blocks = CopyrightPageBuilder.build(Copyright(included = true), Meta(author = "Jane Doe"), design)
 
-        val block = blocks.single()
-        assertEquals("Copyright 2026 Jane Doe", block.toString())
-        assertEquals("Baskerville", block.style.font.family)
-        assertEquals(9.0, block.style.font.size)
-        assertEquals(TextAlignment.RIGHT, block.style.alignment)
-        assertEquals(1.15, block.style.lineSpacing.factor)
+        assertEquals(listOf("Jane Doe"), blocks.map { it.toString() })
+        assertEquals(10.0, blocks[0].style.font.size)
+        assertEquals(FontStyle.ITALIC, blocks[0].style.font.style)
     }
 
     /**
-     * Use case: the user typed the notice over several lines; a block carries no line break, so every
-     * one of those lines becomes a block of its own and is set on its own line.
-     */
-    @Test
-    fun everyTypedLineBecomesABlockOfItsOwn() {
-        val copyright = Copyright(copyright = "Copyright 2026 Jane Doe\nAll rights reserved\n\nFirst edition")
-
-        val blocks = CopyrightPageBuilder.build(copyright, Meta(), design)
-
-        assertEquals(
-            listOf("Copyright 2026 Jane Doe", "All rights reserved", "", "First edition"),
-            blocks.map { it.toString() }
-        )
-        assertTrue(blocks.all { it.style == blocks.first().style })
-    }
-
-    /**
-     * Use case: the further copyright lines follow the notice, each set in the appendix style instead
-     * of the notice style.
-     */
-    @Test
-    fun theFurtherLinesAreSetInTheAppendixStyle() {
-        val copyright = Copyright(
-            copyright = "Copyright 2026 Jane Doe",
-            copyrightAppendix = listOf("All rights reserved", "  ", "First edition")
-        )
-
-        val blocks = CopyrightPageBuilder.build(copyright, Meta(), design)
-
-        assertEquals(
-            listOf("Copyright 2026 Jane Doe", "All rights reserved", "First edition"),
-            blocks.map { it.toString() }
-        )
-        assertEquals(8.0, blocks[1].style.font.size)
-        assertEquals(1.1, blocks[1].style.lineSpacing.factor)
-    }
-
-    /**
-     * Use case: the design asks for the author name on the copyright page, so it closes the page in
-     * the author style.
-     */
-    @Test
-    fun theAuthorClosesThePageWhenTheDesignAsksForIt() {
-        val withAuthor = design.copy(copyrightPage = design.copyrightPage.copy(showAuthor = true))
-
-        val blocks = CopyrightPageBuilder.build(
-            Copyright(copyright = "Copyright 2026 Jane Doe"),
-            Meta(author = "Jane Doe"),
-            withAuthor
-        )
-
-        assertEquals(listOf("Copyright 2026 Jane Doe", "Jane Doe"), blocks.map { it.toString() })
-        assertEquals(10.0, blocks[1].style.font.size)
-        assertEquals(FontStyle.ITALIC, blocks[1].style.font.style)
-    }
-
-    /**
-     * Use case: the design asks for the author name but none was typed, so the page still ends with
-     * the notice instead of an empty author line.
+     * Use case: the design asks for the author name but none was typed, so no block is built.
      */
     @Test
     fun theAuthorLineIsLeftOutWhenNoAuthorWasTyped() {
-        val withAuthor = design.copy(copyrightPage = design.copyrightPage.copy(showAuthor = true))
+        val blocks = CopyrightPageBuilder.build(Copyright(included = true), Meta(author = ""), design)
 
-        val blocks = CopyrightPageBuilder.build(
-            Copyright(copyright = "Copyright 2026 Jane Doe"),
-            Meta(author = ""),
-            withAuthor
-        )
-
-        assertEquals(listOf("Copyright 2026 Jane Doe"), blocks.map { it.toString() })
-    }
-
-    /**
-     * Use case: nothing was typed, so the page carries no block and the caller can leave it out of
-     * the book altogether.
-     */
-    @Test
-    fun withoutANoticeNoBlockIsBuilt() {
-        assertTrue(CopyrightPageBuilder.build(Copyright(copyright = ""), Meta(), design).isEmpty())
-        assertTrue(CopyrightPageBuilder.build(Copyright(copyright = "   "), Meta(), design).isEmpty())
+        assertTrue(blocks.isEmpty())
     }
 
     /**
      * Use case: the user took the copyright page out of the book, so it gives no block no matter what
-     * text it still carries.
+     * the design or the meta data carry.
      */
     @Test
     fun aPageThatIsNotIncludedGivesNoBlock() {
-        val copyright = Copyright(
-            copyright = "Copyright 2026 Jane Doe",
-            copyrightAppendix = listOf("All rights reserved"),
-            included = false
-        )
-
-        assertTrue(CopyrightPageBuilder.build(copyright, Meta(author = "Jane Doe"), design).isEmpty())
+        assertTrue(CopyrightPageBuilder.build(Copyright(included = false), Meta(author = "Jane Doe"), design).isEmpty())
     }
 }

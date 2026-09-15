@@ -21,32 +21,28 @@ import org.pcsoft.framework.simplay.engine.model.TextBlock
 /**
  * Builds the blocks of the title page.
  *
- * The page is the title of the book, the further title lines below it and the author name from the
- * meta data. Everything that was left empty is left out: a book without additional title lines gets
- * no empty blocks that would only push the author down the page.
+ * IP-36 removed the main title and its further lines from [Book]: that text now lives only in the
+ * simPlay `Document` the book carries (IP-37/IP-38), addressed through the title's anchor. Until
+ * IP-38 rebuilds this builder around that anchor, only the author name - which still lives in
+ * [Meta] - is built here.
  */
 object TitlePageBuilder {
 
     /**
      * Builds the title page.
      *
-     * @param book Book the title and its further lines are taken from.
+     * @param book Book the title page belongs to - no longer a source of text, kept for the future
+     * anchor lookup of IP-38.
      * @param meta Meta data the author name is taken from.
      * @param design Design the title page styles are taken from.
-     * @return The blocks in the order they are set.
+     * @return The author block, when the design shows it and one was typed; otherwise empty until
+     * IP-38 rebuilds this method around the title's anchor in the book's `Document`.
      */
     fun build(book: Book, meta: Meta, design: Design): List<TextBlock> {
+        // TODO(IP-38): read the title and its further lines from the book's Document through the
+        //  "title" anchor id instead.
         val blocks = ArrayList<TextBlock>()
         val titlePage = design.titlePage
-
-        if (book.title.isNotBlank()) {
-            blocks += TextBlock.of(book.title, titlePage.titleStyle.toTextStyle())
-        }
-
-        val appendixStyle = titlePage.titleAppendixStyle.toTextStyle()
-        book.titleAppendix.filter { it.isNotBlank() }.forEach { line ->
-            blocks += TextBlock.of(line, appendixStyle)
-        }
 
         if (titlePage.showAuthor && meta.author.isNotBlank()) {
             blocks += TextBlock.of(meta.author, titlePage.authorStyle.toTextStyle())

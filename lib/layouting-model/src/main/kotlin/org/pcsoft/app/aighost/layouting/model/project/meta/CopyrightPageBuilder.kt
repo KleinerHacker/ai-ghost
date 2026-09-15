@@ -21,42 +21,32 @@ import org.pcsoft.framework.simplay.engine.model.TextBlock
 /**
  * Builds the blocks of the copyright page.
  *
- * The notice is one text the user typed and it may carry line breaks of its own. A block never does,
- * so the text is cut at its breaks and every part becomes a block. The further copyright lines follow
- * below it, and the author name closes the page when the design asks for it.
- *
- * Whether the page is printed at all is a switch of the copyright itself: a page that does not belong
- * to the book gives no block.
+ * IP-36 removed the copyright notice and its further lines from [Copyright]: that text now lives only
+ * in the simPlay `Document` the book carries (IP-37/IP-38), addressed through the copyright page's
+ * anchor. Until IP-38 rebuilds this builder around that anchor, only the author name - which still
+ * lives in [Meta] - is built here, and only while the page still belongs to the book.
  */
 object CopyrightPageBuilder {
 
     /**
      * Builds the copyright page.
      *
-     * @param copyright Copyright page of the book - the notice, its further lines and the switch.
+     * @param copyright Copyright page of the book - no longer a source of text, kept for its switch
+     * and for the future anchor lookup of IP-38.
      * @param meta Meta data the author name is taken from.
      * @param design Design the copyright page styles are taken from.
-     * @return The blocks in the order they are set, empty when the page does not belong to the book.
+     * @return The author block, when the page is included, the design shows it and one was typed;
+     * otherwise empty until IP-38 rebuilds this method around the copyright page's anchor.
      */
     fun build(copyright: Copyright, meta: Meta, design: Design): List<TextBlock> {
         if (!copyright.included) {
             return emptyList()
         }
 
+        // TODO(IP-38): read the notice and its further lines from the book's Document through the
+        //  "copyright" anchor id instead.
         val copyrightPage = design.copyrightPage
         val blocks = ArrayList<TextBlock>()
-
-        if (copyright.copyright.isNotBlank()) {
-            val noticeStyle = copyrightPage.copyrightStyle.toTextStyle()
-            copyright.copyright.lines().forEach { line ->
-                blocks += TextBlock.of(line, noticeStyle)
-            }
-        }
-
-        val appendixStyle = copyrightPage.copyrightAppendixStyle.toTextStyle()
-        copyright.copyrightAppendix.filter { it.isNotBlank() }.forEach { line ->
-            blocks += TextBlock.of(line, appendixStyle)
-        }
 
         if (copyrightPage.showAuthor && meta.author.isNotBlank()) {
             blocks += TextBlock.of(meta.author, copyrightPage.authorStyle.toTextStyle())

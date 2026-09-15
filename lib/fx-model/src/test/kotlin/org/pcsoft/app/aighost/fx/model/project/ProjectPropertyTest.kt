@@ -36,10 +36,12 @@ import org.pcsoft.app.aighost.model.project.Project
 import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.book.Chapter
 import org.pcsoft.app.aighost.model.project.book.Prolog
+import org.pcsoft.app.aighost.model.project.common.AIPrompt
 import org.pcsoft.app.aighost.model.project.design.ChapterPageDesign
 import org.pcsoft.app.aighost.model.project.design.Design
 import org.pcsoft.app.aighost.model.project.meta.Meta
 import org.pcsoft.app.aighost.plugin.api.model.project.ProjectPart
+import java.util.UUID
 
 /**
  * Developer tests for [ProjectProperty].
@@ -81,12 +83,12 @@ class ProjectPropertyTest {
             designProperty.chapterPageProperty.textStyleProperty.fontProperty.sizeProperty
         )
         recorder.watch("project.book", bookProperty)
-        recorder.watch("project.book.title", bookProperty.titleProperty)
+        recorder.watch("project.book.prompts", bookProperty.promptsProperty)
         recorder.watch("project.book.chapters", bookProperty.chaptersProperty)
         recorder.watch("project.book.copyright", bookProperty.copyrightProperty)
-        recorder.watch("project.book.copyright.copyright", bookProperty.copyrightProperty.copyrightProperty)
+        recorder.watch("project.book.copyright.included", bookProperty.copyrightProperty.includedProperty)
         recorder.watch("project.book.prolog", bookProperty.prologProperty)
-        recorder.watch("project.book.prolog.title", bookProperty.prologProperty.titleProperty)
+        recorder.watch("project.book.prolog.included", bookProperty.prologProperty.includedProperty)
         recorder.watch("project.notes", notesProperty)
         recorder.watch("project.notes.note", notesProperty.noteProperty)
     }
@@ -102,12 +104,10 @@ class ProjectPropertyTest {
             endWithEmptyPage = false
         ),
         book = Book(
-            title = "My Novel",
-            copyright = org.pcsoft.app.aighost.model.project.book.Copyright(
-                copyright = "Copyright 2026 Jane Doe"
-            ),
-            prolog = Prolog("Before It All", paragraph = listOf("Long before.")),
-            chapters = listOf(Chapter("first", "The First Part"))
+            prompts = AIPrompt(contentPrompt = "My Novel"),
+            copyright = org.pcsoft.app.aighost.model.project.book.Copyright(included = true),
+            prolog = Prolog(included = true),
+            chapters = listOf(Chapter("first", id = FIRST_CHAPTER_ID))
         ),
         extensionParts = mapOf(NOTES to NotesPart(note = "Written by a plugin"))
     )
@@ -122,12 +122,10 @@ class ProjectPropertyTest {
             startWithEmptyPage = false
         ),
         book = Book(
-            title = "Other Novel",
-            copyright = org.pcsoft.app.aighost.model.project.book.Copyright(
-                copyright = "Copyright 2026 John Doe"
-            ),
-            prolog = Prolog("Another Start"),
-            chapters = listOf(Chapter("only", "The Only Part"))
+            prompts = AIPrompt(contentPrompt = "Other Novel"),
+            copyright = org.pcsoft.app.aighost.model.project.book.Copyright(included = false),
+            prolog = Prolog(included = false),
+            chapters = listOf(Chapter("only", SECOND_CHAPTER_ID))
         ),
         extensionParts = mapOf(NOTES to NotesPart(note = "Written elsewhere"))
     )
@@ -175,25 +173,25 @@ class ProjectPropertyTest {
      */
     @Test
     fun writingDeepInsideTheBookReachesTheProject() {
-        bookProperty.prologProperty.titleProperty.set("A New Start")
+        bookProperty.prologProperty.included = false
 
-        assertEquals("A New Start", project.book.prolog.title)
-        assertEquals(1, recorder.countOf("project.book.prolog.title"))
+        assertFalse(project.book.prolog.included)
+        assertEquals(1, recorder.countOf("project.book.prolog.included"))
         assertEquals(1, recorder.countOf("project.book.prolog"))
         assertEquals(1, recorder.countOf("project.book"))
         assertEquals(1, recorder.countOf("project"))
     }
 
     /**
-     * Use case: the user types another copyright notice, so the value travels through book and
-     * copyright page into the project and every level of that path reports the change.
+     * Use case: the user takes the copyright page out of the book, so the value travels through book
+     * and copyright page into the project and every level of that path reports the change.
      */
     @Test
-    fun writingTheCopyrightNoticeReachesTheProject() {
-        bookProperty.copyrightProperty.copyrightProperty.set("Copyright 2027 Jane Doe")
+    fun writingTheCopyrightSwitchReachesTheProject() {
+        bookProperty.copyrightProperty.includedProperty.set(false)
 
-        assertEquals("Copyright 2027 Jane Doe", project.book.copyright.copyright)
-        assertEquals(1, recorder.countOf("project.book.copyright.copyright"))
+        assertFalse(project.book.copyright.included)
+        assertEquals(1, recorder.countOf("project.book.copyright.included"))
         assertEquals(1, recorder.countOf("project.book.copyright"))
         assertEquals(1, recorder.countOf("project.book"))
         assertEquals(1, recorder.countOf("project"))
@@ -372,8 +370,8 @@ class ProjectPropertyTest {
         property.set(otherProject())
 
         assertEquals("Other Novel", property.metaProperty.nameProperty.get())
-        assertEquals("Another Start", bookProperty.prologProperty.titleProperty.get())
-        assertEquals("Copyright 2026 John Doe", bookProperty.copyrightProperty.copyrightProperty.get())
+        assertFalse(bookProperty.prologProperty.includedProperty.get())
+        assertFalse(bookProperty.copyrightProperty.includedProperty.get())
         assertEquals(
             12,
             designProperty.chapterPageProperty.textStyleProperty.fontProperty.sizeProperty.get()
@@ -404,14 +402,14 @@ class ProjectPropertyTest {
         recorder.reset()
 
         project.meta.name = "Renamed Past The Property"
-        project.book.title = "Retitled Past The Property"
+        project.book.prompts = AIPrompt(contentPrompt = "Retitled Past The Property")
 
         property.refresh()
 
         assertEquals("Renamed Past The Property", property.metaProperty.nameProperty.get())
-        assertEquals("Retitled Past The Property", bookProperty.titleProperty.get())
+        assertEquals("Retitled Past The Property", bookProperty.promptsProperty.contentPromptProperty.get())
         assertEquals(1, recorder.countOf("project.meta.name"))
-        assertEquals(1, recorder.countOf("project.book.title"))
+        assertEquals(1, recorder.countOf("project.book.prompts"))
     }
 
     /**
@@ -449,6 +447,8 @@ class ProjectPropertyTest {
     private companion object {
         const val NOTES = "notes"
         const val OUTLINE = "outline"
+        val FIRST_CHAPTER_ID: UUID = UUID.fromString("11111111-1111-1111-1111-111111111111")
+        val SECOND_CHAPTER_ID: UUID = UUID.fromString("22222222-2222-2222-2222-222222222222")
     }
 
     /** A part of a plugin, standing in for what such a plugin puts into a project. */

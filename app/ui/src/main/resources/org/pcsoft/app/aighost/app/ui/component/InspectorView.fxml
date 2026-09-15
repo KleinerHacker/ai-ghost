@@ -27,7 +27,6 @@
 <?import org.pcsoft.app.aighost.app.ui.component.StyleDataEditor?>
 <?import org.pcsoft.app.aighost.app.ui.component.base.AiPromptArea?>
 <?import org.pcsoft.app.aighost.app.ui.component.base.AiTextField?>
-<?import org.pcsoft.app.aighost.app.ui.component.base.AiTextFieldList?>
 <fx:root type="BorderPane" styleClass="inspector" xmlns="http://javafx.com/javafx"
          xmlns:fx="http://javafx.com/fxml"
          fx:controller="org.pcsoft.app.aighost.app.ui.component.InspectorView">
@@ -45,29 +44,8 @@
                             <Label styleClass="inspector-empty-label" text="%component.inspector.book.empty"/>
                         </VBox>
                         <VBox fx:id="boxBookFields" spacing="6">
-                            <Label styleClass="inspector-label" text="%component.inspector.book.title.label"/>
-                            <AiTextField fx:id="txtBookTitle"/>
-
-                            <Label styleClass="inspector-label" text="%component.inspector.book.titleAppendix.label">
-                                <VBox.margin>
-                                    <Insets top="10"/>
-                                </VBox.margin>
-                            </Label>
-                            <AiTextFieldList fx:id="lstBookTitleAppendix"/>
-
-                            <Label styleClass="inspector-label" text="%component.inspector.book.author.label">
-                                <VBox.margin>
-                                    <Insets top="10"/>
-                                </VBox.margin>
-                            </Label>
+                            <Label styleClass="inspector-label" text="%component.inspector.book.author.label"/>
                             <TextField fx:id="txtBookAuthor"/>
-
-                            <Label styleClass="inspector-label" text="%component.inspector.book.copyright.label">
-                                <VBox.margin>
-                                    <Insets top="10"/>
-                                </VBox.margin>
-                            </Label>
-                            <TextField fx:id="txtBookCopyright"/>
 
                             <Label styleClass="inspector-label" text="%component.inspector.book.prompt.content.label">
                                 <VBox.margin>

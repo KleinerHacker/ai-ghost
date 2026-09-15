@@ -12,20 +12,11 @@
 
 package org.pcsoft.app.aighost.layouting.model.project
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertInstanceOf
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.layouting.model.common.toPageLayout
 import org.pcsoft.app.aighost.layouting.model.project.book.BookPartBuilder
-import org.pcsoft.app.aighost.model.common.FontData
-import org.pcsoft.app.aighost.model.common.StyleData
-import org.pcsoft.app.aighost.model.project.book.Blurb
-import org.pcsoft.app.aighost.model.project.book.Book
-import org.pcsoft.app.aighost.model.project.book.Chapter
-import org.pcsoft.app.aighost.model.project.book.Copyright
-import org.pcsoft.app.aighost.model.project.book.Epilog
-import org.pcsoft.app.aighost.model.project.book.Prolog
+import org.pcsoft.app.aighost.model.project.book.*
 import org.pcsoft.app.aighost.model.project.design.Design
 import org.pcsoft.app.aighost.model.project.design.PageNumberCountingMode
 import org.pcsoft.app.aighost.model.project.design.PageNumberDesign
@@ -38,19 +29,24 @@ import org.pcsoft.framework.simplay.engine.model.PageNumberPosition as SimplayPa
 
 /**
  * Developer tests for the whole-book document builder, [BookDocumentBuilder].
+ *
+ * IP-36 removed the heading and the flowing text from every book part, so the blocks these pages
+ * carry are no longer part of what this class asserts - [BookPartBuilderTest] and
+ * [org.pcsoft.app.aighost.layouting.model.project.book.TitlePageBuilderTest] already cover that the
+ * per-part builders give an empty (or author-only) block list; this class only proves the page
+ * arrangement, ids and numbering that [BookDocumentBuilder] itself is responsible for.
  */
 class BookDocumentBuilderTest {
 
     private val meta = Meta(author = "Jane Doe")
 
     private fun book() = Book(
-        title = "The Silent Harbour",
-        prolog = Prolog(title = "Before", paragraph = listOf("It began earlier."), included = true),
+        prolog = Prolog(included = true),
         chapters = listOf(
-            Chapter(name = "One", title = "The Arrival", paragraph = listOf("The harbour was quiet.")),
-            Chapter(name = "Two", title = "The Departure", paragraph = listOf("Then it was over."))
+            Chapter(name = "One"),
+            Chapter(name = "Two")
         ),
-        epilog = Epilog(title = "After", paragraph = listOf("It ended later."), included = true),
+        epilog = Epilog(included = true),
         blurb = Blurb(paragraph = listOf("A harbour town keeps its secrets."))
     )
 
@@ -134,24 +130,6 @@ class BookDocumentBuilderTest {
         val document = BookDocumentBuilder.build(book(), design, meta)
 
         assertTrue(document.pages.all { it.layout == expected })
-    }
-
-    /**
-     * Use case: the document is a derived view of the design, so changing a page design changes the
-     * style of the blocks that design produces.
-     */
-    @Test
-    fun aDesignChangeChangesTheBlockStyles() {
-        val design = Design()
-        val changed = design.copy(
-            chapterPage = design.chapterPage.copy(
-                textStyle = StyleData(font = FontData(name = "Courier", size = 13))
-            )
-        )
-
-        val chapterPage = BookDocumentBuilder.build(book(), changed, meta).pages[3] as FlowPage
-
-        assertTrue(chapterPage.blocks.any { it.style.font.family == "Courier" && it.style.font.size == 13.0 })
     }
 
     /**

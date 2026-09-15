@@ -29,6 +29,7 @@ import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.FontData
 import org.pcsoft.app.aighost.model.common.StyleData
 import org.pcsoft.app.aighost.model.project.Project
+import org.pcsoft.app.aighost.model.project.book.Blurb
 import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.book.Chapter
 import org.pcsoft.app.aighost.model.project.book.Epilog
@@ -113,16 +114,19 @@ class BookPartEditorTest : ApplicationTest() {
             endWithEmptyPage = false
         ),
         book = Book(
-            title = "My Novel",
-            // No trailing punctuation: the fixture ends on a word, so a typed continuation extends
-            // it without ever putting a word directly after a symbol - see the class KDoc.
-            prolog = Prolog(paragraph = listOf("The first paragraph")),
-            chapters = listOf(Chapter("first", "The First Part")),
-            epilog = Epilog()
+            prolog = Prolog(included = true),
+            chapters = listOf(Chapter("first")),
+            epilog = Epilog(),
+            blurb = Blurb(
+                // No trailing punctuation: the fixture ends on a word, so a typed continuation extends
+                // it without ever putting a word directly after a symbol - see the class KDoc.
+                paragraph = listOf("The first paragraph"),
+                included = true
+            )
         )
     )
 
-    private val prolog: Prolog get() = projectModel.value.book.prolog
+    private val blurb: Blurb get() = projectModel.value.book.blurb
 
     /** Text of the block at [index] of the sheet's current document, or `null` past its end. */
     private fun blockText(index: Int): String? =
@@ -159,11 +163,11 @@ class BookPartEditorTest : ApplicationTest() {
     }
 
     /**
-     * Use case: the user picks the prolog, so its paragraph turns up on the sheet as its one block.
+     * Use case: the user picks the blurb, so its paragraph turns up on the sheet as its one block.
      */
     @Test
-    fun opensThePrologTextOnTheSheet() {
-        select(ProjectListItem.PrologItem(prolog))
+    fun opensTheBlurbTextOnTheSheet() {
+        select(ProjectListItem.BlurbItem(blurb))
 
         assertEquals("The first paragraph", blockText(0))
     }
@@ -174,7 +178,7 @@ class BookPartEditorTest : ApplicationTest() {
      */
     @Test
     fun writesEveryKeystrokeIntoTheModel() {
-        select(ProjectListItem.PrologItem(prolog))
+        select(ProjectListItem.BlurbItem(blurb))
         interact {
             sheet.requestFocus()
             sheet.caretModel.moveToEndOfBlock(0)
@@ -183,7 +187,7 @@ class BookPartEditorTest : ApplicationTest() {
 
         typeSlowly("Extended")
 
-        assertEquals(listOf("The first paragraphExtended"), prolog.paragraph)
+        assertEquals(listOf("The first paragraphExtended"), blurb.paragraph)
     }
 
     /**
@@ -191,7 +195,7 @@ class BookPartEditorTest : ApplicationTest() {
      */
     @Test
     fun undoesATextChange() {
-        select(ProjectListItem.PrologItem(prolog))
+        select(ProjectListItem.BlurbItem(blurb))
         interact {
             sheet.requestFocus()
             sheet.caretModel.moveToEndOfBlock(0)
@@ -204,16 +208,16 @@ class BookPartEditorTest : ApplicationTest() {
         interact { undoStack.undo() }
         WaitForAsyncUtils.waitForFxEvents()
 
-        assertEquals(listOf("The first paragraph"), prolog.paragraph)
+        assertEquals(listOf("The first paragraph"), blurb.paragraph)
     }
 
     /**
-     * Use case: a design value changes while the prolog is open, so the sheet is rebuilt with the new
+     * Use case: a design value changes while the blurb is open, so the sheet is rebuilt with the new
      * style and the caret keeps its linear place, since restyling never changes the text itself.
      */
     @Test
     fun keepsTheCaretAcrossADesignChange() {
-        select(ProjectListItem.PrologItem(prolog))
+        select(ProjectListItem.BlurbItem(blurb))
         interact {
             sheet.requestFocus()
             sheet.caretModel.moveIntoBlock(0, 4)
@@ -221,7 +225,7 @@ class BookPartEditorTest : ApplicationTest() {
         WaitForAsyncUtils.waitForFxEvents()
 
         interact {
-            projectModel.value.design.prologPage = PrologPageDesign(style(), style(), style(size = 16))
+            projectModel.value.design.blurbPage = BlurbPageDesign(style(size = 16))
             projectModel.designProperty.refresh()
         }
         WaitForAsyncUtils.waitForFxEvents()
@@ -239,13 +243,13 @@ class BookPartEditorTest : ApplicationTest() {
     fun showsTheTitlePageReadOnly() {
         select(ProjectListItem.TitlePageItem)
 
-        assertEquals("My Novel", blockText(0), "the title page is rendered on the sheet")
+        assertEquals("Jane Doe", blockText(0), "the title page is rendered on the sheet")
         assertEquals(PaperSheetMode.SELECTABLE, sheet.mode)
 
         interact { sheet.requestFocus() }
         typeSlowly("A Different Title")
 
-        assertEquals("My Novel", projectModel.value.book.title, "the title page must not be writable")
+        assertEquals("Jane Doe", projectModel.value.meta.author, "the title page must not be writable")
         assertFalse(undoStack.canUndoProperty.get(), "a read-only sheet records no undo entry")
     }
 
@@ -256,7 +260,7 @@ class BookPartEditorTest : ApplicationTest() {
      */
     @Test
     fun caretAdvancesWhileTypingSeveralCharactersInARow() {
-        select(ProjectListItem.PrologItem(prolog))
+        select(ProjectListItem.BlurbItem(blurb))
         interact {
             sheet.requestFocus()
             sheet.caretModel.moveToEndOfBlock(0)

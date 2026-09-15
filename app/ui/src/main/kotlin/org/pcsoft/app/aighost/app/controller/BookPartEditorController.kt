@@ -36,12 +36,11 @@ import org.pcsoft.framework.simplay.engine.model.TextBlock
  * assembly of the sheet's blocks and the mapping of a block back onto a manuscript field testable on
  * their own, without a JavaFX toolkit.
  *
- * The functions fall into three groups: [resolve] turns the picked project tree node into a
- * [PartResolution]; [buildBlocks] turns a resolution plus the design into the blocks `PaperSheetView`
- * lays out and paginates on its own; [readModel] and [writeModel] move a single block's text between
- * the sheet and the model. [splitParagraph], [mergeParagraph], [removeParagraph] and [moveParagraph]
- * are pure paragraph-list transforms kept here for IP-32, which wires them to key handlers of its own;
- * this plan does not call them.
+ * IP-36 removed the heading and the flowing text from [org.pcsoft.app.aighost.model.project.book.BookPart]:
+ * that text now lives only in the book's simPlay `Document`, addressed through the part's anchor
+ * (IP-37/IP-38). Until IP-38 rebuilds the writing surface around that anchor, [PartMode.BOOK_PART]
+ * (prolog, chapter, epilog) therefore resolves to no block and no target at all; only the blurb - which
+ * still carries its own paragraphs - and the read-only front matter keep working here.
  */
 object BookPartEditorController {
 
@@ -80,13 +79,14 @@ object BookPartEditorController {
      * Builds the text blocks of the resolved part and the target each of them writes back to.
      *
      * A writable part that has no content yet is given a single empty paragraph block, so the sheet
-     * has somewhere to place a caret and the user has somewhere to type.
+     * has somewhere to place a caret and the user has somewhere to type. [PartMode.BOOK_PART] carries
+     * no such field anymore (see the class KDoc), so it never gets seeded.
      *
      * @param project the open project
      * @param design the design of the project
      * @param resolution the resolved part, from [resolve]
      * @return the blocks in the order they are set and one target per block; both empty for
-     * [PartMode.NONE] and for a book part with no bound model
+     * [PartMode.NONE], for [PartMode.BOOK_PART] and for a book part with no bound model
      */
     fun buildBlocks(project: Project, design: Design, resolution: PartResolution): BlockPlan {
         val book = project.book
@@ -94,15 +94,10 @@ object BookPartEditorController {
 
         return when (resolution.mode) {
             PartMode.TITLE_PAGE ->
-                ensureWritableBlock(TitlePageBuilder.build(book, meta, design), design, resolution, emptyList())
+                BlockPlan(TitlePageBuilder.build(book, meta, design), emptyList())
 
             PartMode.COPYRIGHT_PAGE ->
-                ensureWritableBlock(
-                    CopyrightPageBuilder.build(book.copyright, meta, design),
-                    design,
-                    resolution,
-                    emptyList()
-                )
+                BlockPlan(CopyrightPageBuilder.build(book.copyright, meta, design), emptyList())
 
             PartMode.BLURB -> {
                 val blocks = BlurbBuilder.build(book.blurb, design)
@@ -117,18 +112,9 @@ object BookPartEditorController {
                     "epilog" -> design.epilogPage
                     else -> design.chapterPage
                 }
-                val blocks = BookPartBuilder.build(part, pageDesign)
-                val targets = ArrayList<PartTarget>()
-                if (part.title.isNotBlank()) {
-                    targets += PartTarget.Title
-                }
-                part.titleAppendix.forEachIndexed { index, line ->
-                    if (line.isNotBlank()) {
-                        targets += PartTarget.AppendixLine(index)
-                    }
-                }
-                part.paragraph.indices.forEach { targets += PartTarget.Paragraph(it) }
-                ensureWritableBlock(blocks, design, resolution, targets)
+                // TODO(IP-38): build the blocks and targets from the part's anchor in the book's
+                //  Document instead of the empty list BookPartBuilder gives until then.
+                BlockPlan(BookPartBuilder.build(part, pageDesign), emptyList())
             }
 
             PartMode.NONE -> BlockPlan(emptyList(), emptyList())
@@ -143,17 +129,10 @@ object BookPartEditorController {
      * @param target the block whose text is read
      * @return the text, or the empty string when the target does not resolve to a set field
      */
-    fun readModel(project: ProjectProperty, resolution: PartResolution, target: PartTarget): String {
-        val boundPart = resolution.boundPart
-        return when (target) {
-            is PartTarget.Title -> boundPart?.titleProperty?.get().orEmpty()
-            is PartTarget.AppendixLine -> boundPart?.titleAppendixProperty?.getOrNull(target.modelIndex).orEmpty()
-            is PartTarget.Paragraph -> when (resolution.mode) {
-                PartMode.BLURB -> blurbParagraphs(project).getOrNull(target.index).orEmpty()
-                else -> boundPart?.paragraphProperty?.getOrNull(target.index).orEmpty()
-            }
+    fun readModel(project: ProjectProperty, resolution: PartResolution, target: PartTarget): String =
+        when (target) {
+            is PartTarget.Paragraph -> paragraphListProperty(project, resolution)?.getOrNull(target.index).orEmpty()
         }
-    }
 
     /**
      * Writes the text of one block back into the model.
@@ -167,17 +146,7 @@ object BookPartEditorController {
      * @param value the new text
      */
     fun writeModel(project: ProjectProperty, resolution: PartResolution, target: PartTarget, value: String) {
-        val boundPart = resolution.boundPart
         when (target) {
-            is PartTarget.Title -> boundPart?.titleProperty?.set(value)
-
-            is PartTarget.AppendixLine -> {
-                val list = boundPart?.titleAppendixProperty ?: return
-                if (target.modelIndex in list.indices) {
-                    list[target.modelIndex] = value
-                }
-            }
-
             is PartTarget.Paragraph -> {
                 val list = paragraphListProperty(project, resolution) ?: return
                 if (target.index in list.indices) {
@@ -194,12 +163,12 @@ object BookPartEditorController {
      *
      * @param project the open project, needed for the blurb whose paragraphs are not on [PartResolution.boundPart]
      * @param resolution the resolved part
-     * @return the paragraph list, or `null` for a mode with no paragraphs of its own
+     * @return the paragraph list, or `null` for a mode with no paragraphs of its own - which, since
+     * IP-36, includes [PartMode.BOOK_PART] until IP-38 rebuilds it around the book's anchors
      */
     fun paragraphListProperty(project: ProjectProperty, resolution: PartResolution): ListProperty<String>? =
         when (resolution.mode) {
             PartMode.BLURB -> blurbParagraphs(project)
-            PartMode.BOOK_PART -> resolution.boundPart?.paragraphProperty
             else -> null
         }
 
@@ -284,7 +253,7 @@ object BookPartEditorController {
         return result
     }
 
-    // A writable part needs at least one block; an empty prolog gets one empty paragraph block.
+    // A writable part needs at least one block; an empty blurb gets one empty paragraph block.
     private fun ensureWritableBlock(
         blocks: List<TextBlock>,
         design: Design,
@@ -292,20 +261,12 @@ object BookPartEditorController {
         targets: List<PartTarget>
     ): BlockPlan {
         if (blocks.isNotEmpty()) return BlockPlan(blocks, targets)
-        if (resolution.mode != PartMode.BOOK_PART && resolution.mode != PartMode.BLURB) {
+        if (resolution.mode != PartMode.BLURB) {
             return BlockPlan(blocks, targets)
         }
 
-        val styleData = when (resolution.mode) {
-            PartMode.BLURB -> design.blurbPage.textStyle
-            else -> when (resolution.partId.substringBefore(':')) {
-                "prolog" -> design.prologPage.textStyle
-                "epilog" -> design.epilogPage.textStyle
-                else -> design.chapterPage.textStyle
-            }
-        }
         return BlockPlan(
-            listOf(TextBlock.of("", styleData.toTextStyle())),
+            listOf(TextBlock.of("", design.blurbPage.textStyle.toTextStyle())),
             listOf(PartTarget.Paragraph(0))
         )
     }

@@ -14,28 +14,28 @@ package org.pcsoft.app.aighost.model.project.book
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import org.pcsoft.app.aighost.model.project.common.AIPrompt
+import java.util.UUID
 
 /**
  * A single chapter of a [Book].
  *
- * A chapter is the smallest unit the user writes in: it carries its heading and the written text,
- * split into paragraphs. The text may be empty while the chapter is only outlined. Unlike the other
- * parts of a book a chapter carries a [name] as well, because the user works with many of them and
- * needs to tell them apart before their headings are written.
+ * A chapter is the smallest unit the user writes in. Unlike the other parts of a book a chapter
+ * carries a [name] as well, because the user works with many of them and needs to tell them apart
+ * before their headings are written.
+ *
+ * [id] is handed out once, when the chapter is created, and never changes afterwards - not when the
+ * chapter is renamed, not when its prompts change, not across a save and reload. It is the anchor id
+ * the chapter's flowing text is addressed by in the simPlay `Document` of [Book] (IP-38); the heading
+ * and the written text themselves no longer live on this class, they live in that document.
  *
  * @property name Name of the chapter as shown in the project tree.
- * @property title Heading of the chapter as printed in the manuscript.
- * @property titleAppendix Further heading lines shown below the title, empty by default.
+ * @property id Stable id of the chapter, assigned once at creation and never changed afterwards.
  * @property prompts Prompts for the chapter, empty by default.
- * @property paragraph Paragraphs of the chapter in their order, empty by default.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Chapter(
     var name: String,
-    override var title: String,
-    override var titleAppendix: List<String> = listOf(),
+    val id: UUID = UUID.randomUUID(),
 
-    override var prompts: AIPrompt = AIPrompt(),
-
-    override var paragraph: List<String> = emptyList()
+    override var prompts: AIPrompt = AIPrompt()
 ) : BookPart

@@ -18,23 +18,17 @@ package org.pcsoft.app.aighost.app.controller
  * A block of the sheet does not know which field of the manuscript it stands for; the view model
  * keeps the list of targets in block order, and [BookPartEditorController.readModel] and
  * [BookPartEditorController.writeModel] turn one of these back into the actual model field.
+ *
+ * IP-36 removed the heading and its further lines from every book part, so [Paragraph] is the only
+ * target left here - and, until IP-38 rebuilds the writing surface around the book's anchor-addressed
+ * `Document`, it only ever resolves for the blurb (see [org.pcsoft.app.aighost.model.project.book.Blurb]).
  */
 sealed interface PartTarget {
-
-    /** The heading of the part. */
-    data object Title : PartTarget
-
-    /**
-     * A further heading line of the part.
-     *
-     * @property modelIndex Index into the part's `titleAppendix` list, blank lines included.
-     */
-    data class AppendixLine(val modelIndex: Int) : PartTarget
 
     /**
      * A paragraph of the part.
      *
-     * @property index Index into the part's `paragraph` list.
+     * @property index Index into the part's paragraph list.
      */
     data class Paragraph(val index: Int) : PartTarget
 }

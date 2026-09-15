@@ -23,12 +23,9 @@ import javafx.scene.control.TextField
 import javafx.scene.control.TitledPane
 import javafx.scene.layout.VBox
 import org.pcsoft.app.aighost.app.Messages
-import org.pcsoft.app.aighost.app.ui.AiGhostDialog
 import org.pcsoft.app.aighost.app.ui.component.base.AiPromptArea
 import org.pcsoft.app.aighost.app.ui.component.base.AiTextField
-import org.pcsoft.app.aighost.app.ui.component.base.AiTextFieldList
 import java.net.URL
-import java.text.MessageFormat
 import java.util.ResourceBundle
 
 /**
@@ -52,16 +49,7 @@ class InspectorView : FxmlView<InspectorViewModel>, Initializable {
     private lateinit var boxBookFields: VBox
 
     @FXML
-    private lateinit var txtBookTitle: AiTextField
-
-    @FXML
-    private lateinit var lstBookTitleAppendix: AiTextFieldList
-
-    @FXML
     private lateinit var txtBookAuthor: TextField
-
-    @FXML
-    private lateinit var txtBookCopyright: TextField
 
     @FXML
     private lateinit var txaBookContentPrompt: AiPromptArea
@@ -140,44 +128,13 @@ class InspectorView : FxmlView<InspectorViewModel>, Initializable {
         showExactly(boxBookFields, viewModel.bookAvailable)
         showExactly(boxBookEmpty, viewModel.bookAvailable.not())
 
-        txtBookTitle.text.bindBidirectional(viewModel.title)
-        txtBookTitle.promptText.value = messages.getString(TITLE_PROMPT_KEY)
-
         txtBookAuthor.textProperty().bindBidirectional(viewModel.author)
         txtBookAuthor.promptText = messages.getString(AUTHOR_PROMPT_KEY)
-
-        txtBookCopyright.textProperty().bindBidirectional(viewModel.copyright)
-        txtBookCopyright.promptText = messages.getString(COPYRIGHT_PROMPT_KEY)
 
         txaBookContentPrompt.text.bindBidirectional(viewModel.contentPrompt)
         txaBookContentPrompt.maxCharacters.bind(viewModel.maxContentPromptCharacters)
         txaBookStylePrompt.text.bindBidirectional(viewModel.stylePrompt)
         txaBookStylePrompt.maxCharacters.bind(viewModel.maxStylePromptCharacters)
-
-        // The list holds title lines, which it does not know by itself, so it is told here what an
-        // empty list means and what adding and removing do.
-        lstBookTitleAppendix.entries.set(viewModel.titleAppendix)
-        lstBookTitleAppendix.promptText.value = messages.getString(APPENDIX_PROMPT_KEY)
-        lstBookTitleAppendix.emptyText.value = messages.getString(APPENDIX_EMPTY_KEY)
-        lstBookTitleAppendix.addTooltip.value = messages.getString(ADD_TOOLTIP_KEY)
-        lstBookTitleAppendix.deleteTooltip.value = messages.getString(REMOVE_TOOLTIP_KEY)
-        lstBookTitleAppendix.setOnAddEntry { event ->
-            event.consume()
-            viewModel.addTitleAppendix()
-        }
-        lstBookTitleAppendix.setOnDeleteEntry { event ->
-            event.consume()
-            viewModel.removeTitleAppendix(event.index)
-        }
-
-        viewModel.confirmRemoveTitleAppendix = { line ->
-            AiGhostDialog.showWarningConfirm(
-                messages.getString(REMOVE_TITLE_KEY),
-                messages.getString(REMOVE_HEADER_KEY),
-                MessageFormat.format(messages.getString(REMOVE_CONTENT_KEY), line),
-                lstBookTitleAppendix.scene?.window
-            )
-        }
     }
 
     private fun bindChapterSection() {
@@ -233,35 +190,8 @@ class InspectorView : FxmlView<InspectorViewModel>, Initializable {
     }
 
     private companion object {
-        /** Key of the hint shown in the empty title field inside the resource bundle. */
-        const val TITLE_PROMPT_KEY: String = "component.inspector.book.title.prompt"
-
         /** Key of the hint shown in the empty author field inside the resource bundle. */
         const val AUTHOR_PROMPT_KEY: String = "component.inspector.book.author.prompt"
-
-        /** Key of the hint shown in the empty copyright field inside the resource bundle. */
-        const val COPYRIGHT_PROMPT_KEY: String = "component.inspector.book.copyright.prompt"
-
-        /** Key of the hint shown in an empty title line inside the resource bundle. */
-        const val APPENDIX_PROMPT_KEY: String = "component.inspector.book.titleAppendix.prompt"
-
-        /** Key of the text shown while no title line exists inside the resource bundle. */
-        const val APPENDIX_EMPTY_KEY: String = "component.inspector.book.titleAppendix.empty"
-
-        /** Key of the tooltip of the button adding a title line inside the resource bundle. */
-        const val ADD_TOOLTIP_KEY: String = "component.inspector.book.titleAppendix.add.tooltip"
-
-        /** Key of the tooltip of the button removing a title line inside the resource bundle. */
-        const val REMOVE_TOOLTIP_KEY: String = "component.inspector.book.titleAppendix.remove.tooltip"
-
-        /** Key of the title of the remove question inside the resource bundle. */
-        const val REMOVE_TITLE_KEY: String = "component.inspector.book.titleAppendix.remove.title"
-
-        /** Key of the headline of the remove question inside the resource bundle. */
-        const val REMOVE_HEADER_KEY: String = "component.inspector.book.titleAppendix.remove.header"
-
-        /** Key of the text of the remove question inside the resource bundle. */
-        const val REMOVE_CONTENT_KEY: String = "component.inspector.book.titleAppendix.remove.content"
 
         /** Key of the hint shown in the empty chapter name field inside the resource bundle. */
         const val CHAPTER_NAME_PROMPT_KEY: String = "component.inspector.chapter.name.prompt"

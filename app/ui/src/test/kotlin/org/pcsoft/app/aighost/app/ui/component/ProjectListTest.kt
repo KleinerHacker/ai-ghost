@@ -163,33 +163,26 @@ class ProjectListTest : ApplicationTest() {
      */
     @Test
     fun listsEveryChapterOfTheBoundProject() {
-        setProject(
-            project(
-                Book(title = "My Novel",
-                    chapters = listOf(
-                        Chapter("first", "The First Part"),
-                        Chapter("second", "The Second Part")
-                    )
-                )
-            )
-        )
+        val first = Chapter("first")
+        val second = Chapter("second")
+        setProject(project(Book(chapters = listOf(first, second))))
 
         assertEquals(
             listOf(
-                ProjectListItem.ChapterItem(Chapter("first", "The First Part")),
-                ProjectListItem.ChapterItem(Chapter("second", "The Second Part"))
+                ProjectListItem.ChapterItem(first),
+                ProjectListItem.ChapterItem(second)
             ),
             chaptersItem().children.map { it.value }
         )
     }
 
     /**
-     * Use case: a chapter is shown by the name the user gave it, because its printed heading may
-     * still be empty while the chapter is only outlined.
+     * Use case: a chapter is shown by the name the user gave it, since no printed heading lives on the
+     * model anymore.
      */
     @Test
-    fun labelsAChapterByItsNameNotByItsTitle() {
-        setProject(project(Book(title = "My Novel", chapters = listOf(Chapter("draft-01", "The First Part")))))
+    fun labelsAChapterByItsName() {
+        setProject(project(Book(chapters = listOf(Chapter("draft-01")))))
 
         val chapterItem = chaptersItem().children.single()
         val cell = tree.lookupAll(".tree-cell")
@@ -206,11 +199,11 @@ class ProjectListTest : ApplicationTest() {
      */
     @Test
     fun handsOnPrologEpilogAndBlurbOfTheBoundProject() {
-        val prolog = Prolog("Before It All")
-        val epilog = Epilog("After It All")
+        val prolog = Prolog(included = true)
+        val epilog = Epilog(included = true)
         val blurb = Blurb(paragraph = listOf("A gripping tale."))
 
-        setProject(project(Book(title = "My Novel", prolog = prolog, epilog = epilog, blurb = blurb)))
+        setProject(project(Book(prolog = prolog, epilog = epilog, blurb = blurb)))
 
         assertEquals(
             listOf(
@@ -231,16 +224,17 @@ class ProjectListTest : ApplicationTest() {
      */
     @Test
     fun reportsTheSelectedChapter() {
-        setProject(project(Book(title = "My Novel", chapters = listOf(Chapter("first", "The First Part")))))
+        val chapter = Chapter("first")
+        setProject(project(Book(chapters = listOf(chapter))))
 
         val reported = mutableListOf<ProjectListItem?>()
         projectList.selectedItem.addListener { _, _, new -> reported += new }
 
         interact { tree.selectionModel.select(chaptersItem().children.single()) }
 
-        assertEquals(listOf(ProjectListItem.ChapterItem(Chapter("first", "The First Part"))), reported)
+        assertEquals(listOf(ProjectListItem.ChapterItem(chapter)), reported)
         assertEquals(
-            ProjectListItem.ChapterItem(Chapter("first", "The First Part")),
+            ProjectListItem.ChapterItem(chapter),
             projectList.selectedItem.value
         )
     }
@@ -273,14 +267,15 @@ class ProjectListTest : ApplicationTest() {
      */
     @Test
     fun clearsTheSelectionWhenAnotherProjectIsBound() {
-        setProject(project(Book(title = "My Novel", chapters = listOf(Chapter("first", "The First Part")))))
+        setProject(project(Book(chapters = listOf(Chapter("first")))))
         interact { tree.selectionModel.select(chaptersItem().children.single()) }
 
-        setProject(project(Book(title = "Another Novel", chapters = listOf(Chapter("other", "Another Part")))))
+        val other = Chapter("other")
+        setProject(project(Book(chapters = listOf(other))))
 
         assertNull(projectList.selectedItem.value)
         assertEquals(
-            listOf(ProjectListItem.ChapterItem(Chapter("other", "Another Part"))),
+            listOf(ProjectListItem.ChapterItem(other)),
             chaptersItem().children.map { it.value }
         )
     }
@@ -291,7 +286,7 @@ class ProjectListTest : ApplicationTest() {
      */
     @Test
     fun emptiesTheChaptersBranchForAFreshProject() {
-        setProject(project(Book(title = "My Novel", chapters = listOf(Chapter("first", "The First Part")))))
+        setProject(project(Book(chapters = listOf(Chapter("first")))))
 
         setProject(Project())
 

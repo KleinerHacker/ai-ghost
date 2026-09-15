@@ -13,23 +13,18 @@
 package org.pcsoft.app.aighost.model.project.book
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 /**
  * The copyright page of a [org.pcsoft.app.aighost.model.project.Project]'s book.
  *
- * It carries the copyright notice and any further lines printed below it. Whether the page belongs
- * to the book is a switch of its own; the text is kept no matter how that switch stands.
+ * Whether the page belongs to the book is a switch of its own. The copyright notice and the further
+ * lines that used to sit on this class moved to the simPlay `Document` of
+ * [org.pcsoft.app.aighost.model.project.book.Book] (IP-36/37/38); the copyright page contributes to
+ * that document through its anchor instead of carrying text fields of its own.
  *
- * @property copyright The copyright notice, prefilled with the year the project was created.
- * @property copyrightAppendix Further lines printed below the copyright notice, empty by default.
  * @property included Whether the copyright page is printed in the book, true by default.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Copyright(
-    var copyright: String = "Copyright " + LocalDate.now().format(DateTimeFormatter.ISO_DATE),
-    var copyrightAppendix: List<String> = emptyList(),
-
     var included: Boolean = true
 )

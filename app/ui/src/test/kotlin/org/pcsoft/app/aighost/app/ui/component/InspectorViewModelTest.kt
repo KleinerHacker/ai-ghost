@@ -22,7 +22,6 @@ import org.pcsoft.app.aighost.model.project.Project
 import org.pcsoft.app.aighost.model.project.book.Blurb
 import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.book.Chapter
-import org.pcsoft.app.aighost.model.project.book.Copyright
 import org.pcsoft.app.aighost.model.project.book.Epilog
 import org.pcsoft.app.aighost.model.project.book.Prolog
 import org.pcsoft.app.aighost.model.project.common.AIPrompt
@@ -53,21 +52,15 @@ class InspectorViewModelTest {
     @Test
     fun boundProjectFillsTheBookSection() {
         val book = Book(
-            title = "The Silent House",
-            titleAppendix = listOf("A ghost story"),
-            prompts = AIPrompt(contentPrompt = "A house nobody lives in", stylePrompt = "Dark and quiet"),
-            copyright = Copyright(copyright = "(c) 2026 Jane Doe")
+            prompts = AIPrompt(contentPrompt = "A house nobody lives in", stylePrompt = "Dark and quiet")
         )
 
         viewModel.bindProject(projectPropertyOf(book))
 
         assertTrue(viewModel.bookAvailable.value, "the book section is still marked as empty")
-        assertEquals("The Silent House", viewModel.title.value)
-        assertEquals(listOf("A ghost story"), viewModel.titleAppendix)
         assertEquals("A house nobody lives in", viewModel.contentPrompt.value)
         assertEquals("Dark and quiet", viewModel.stylePrompt.value)
         assertEquals("Jane Doe", viewModel.author.value)
-        assertEquals("(c) 2026 Jane Doe", viewModel.copyright.value)
     }
 
     /**
@@ -80,17 +73,13 @@ class InspectorViewModelTest {
         val project = projectPropertyOf(book)
         viewModel.bindProject(project)
 
-        viewModel.title.value = "The Silent House"
         viewModel.contentPrompt.value = "A house nobody lives in"
         viewModel.stylePrompt.value = "Dark and quiet"
         viewModel.author.value = "John Smith"
-        viewModel.copyright.value = "(c) 2026 John Smith"
 
-        assertEquals("The Silent House", book.title)
         assertEquals("A house nobody lives in", book.prompts.contentPrompt)
         assertEquals("Dark and quiet", book.prompts.stylePrompt)
         assertEquals("John Smith", project.metaProperty.author)
-        assertEquals("(c) 2026 John Smith", book.copyright.copyright)
     }
 
     /**
@@ -100,10 +89,8 @@ class InspectorViewModelTest {
     @Test
     fun withoutProjectTheBookSectionIsEmpty() {
         assertFalse(viewModel.bookAvailable.value, "the book section is not marked as empty")
-        assertEquals("", viewModel.title.value)
         assertEquals("", viewModel.author.value)
-        assertEquals("", viewModel.copyright.value)
-        assertTrue(viewModel.titleAppendix.isEmpty())
+        assertEquals("", viewModel.contentPrompt.value)
     }
 
     /**
@@ -112,14 +99,14 @@ class InspectorViewModelTest {
      */
     @Test
     fun closedProjectEmptiesTheBookSection() {
-        val book = Book(title = "The Silent House")
+        val book = Book(prompts = AIPrompt(contentPrompt = "A house nobody lives in"))
         viewModel.bindProject(projectPropertyOf(book))
 
         viewModel.bindProject(null)
 
         assertFalse(viewModel.bookAvailable.value)
-        assertEquals("", viewModel.title.value)
-        assertEquals("The Silent House", book.title)
+        assertEquals("", viewModel.contentPrompt.value)
+        assertEquals("A house nobody lives in", book.prompts.contentPrompt)
     }
 
     /**
@@ -130,7 +117,6 @@ class InspectorViewModelTest {
     fun pickedChapterFillsTheChapterSection() {
         val chapter = Chapter(
             name = "Chapter one",
-            title = "The arrival",
             prompts = AIPrompt(contentPrompt = "Tell how it began", stylePrompt = "Slow and quiet")
         )
         val selection = SimpleObjectProperty<ProjectListItem?>(ProjectListItem.ChapterItem(chapter))
@@ -148,7 +134,7 @@ class InspectorViewModelTest {
      */
     @Test
     fun writtenChapterNameReachesTheChapter() {
-        val chapter = Chapter(name = "Chapter one", title = "The arrival")
+        val chapter = Chapter(name = "Chapter one")
         val selection = SimpleObjectProperty<ProjectListItem?>(ProjectListItem.ChapterItem(chapter))
         viewModel.bindSelection(selection)
 
@@ -224,8 +210,8 @@ class InspectorViewModelTest {
      */
     @Test
     fun switchesTheChapterSectionToTheNewlyPickedChapter() {
-        val first = Chapter(name = "Chapter one", title = "The arrival")
-        val second = Chapter(name = "Chapter two", title = "The departure")
+        val first = Chapter(name = "Chapter one")
+        val second = Chapter(name = "Chapter two")
         val selection = SimpleObjectProperty<ProjectListItem?>(ProjectListItem.ChapterItem(first))
         viewModel.bindSelection(selection)
 

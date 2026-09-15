@@ -2,23 +2,30 @@
 
 ## [Unreleased]
 
-* Editor centre is now a writing surface instead of a placeholder: picking the prolog, a chapter, the
-  epilog or the blurb in the project tree opens its text on a sheet that already carries the book's
-  typography, margins and page structure, with the heading, its further lines and every paragraph as
-  its own text block; every keystroke is taken straight into the project. The title page and the
-  copyright page are shown on the sheet as they will print but stay read only. A design change in the
-  Inspector re-lays the sheet at once without moving the caret, and every text change is undone and
-  redone from the tool bar, with consecutive typing in one block falling together into a single step
+* Book, its prolog, its chapters, its epilog and its copyright page no longer carry a heading, further
+  heading lines or flowing text of their own: that text is moving into the manuscript's document model
+  (coming with a follow-up feature) and is not yet editable through the project tree or the Inspector.
+  Picking the prolog, a chapter or the epilog on the writing surface currently shows nothing; picking
+  the blurb, the title page or the copyright page still works as before, the latter two now showing
+  only the author name where they used to show the title, its further lines and the copyright notice.
+  A chapter now carries a stable identity of its own behind the scenes, invisible to the user
+
+* Editor centre is now a writing surface instead of a placeholder: picking the blurb in the project
+  tree opens its text on a sheet that already carries the book's typography, margins and page
+  structure, with every paragraph as its own text block; every keystroke is taken straight into the
+  project. The title page and the copyright page are shown on the sheet as they will print but stay
+  read only. A design change in the Inspector re-lays the sheet at once without moving the caret, and
+  every text change is undone and redone from the tool bar, with consecutive typing in one block
+  falling together into a single step
 
 * Project tree gains a "Title Page" and a "Copyright Page" node ahead of the prolog, so the front
   matter can be opened on the writing surface like every other part
 
 * Editor gains an Inspector on the right of the manuscript, next to the project tree: a "Book"
-  section holds the title, its title lines, the author, the copyright notice and both prompts of the
-  manuscript, and a "Chapter" section shows the name and both prompts of whatever chapter is picked
-  in the project tree, or the prompt of the blurb once it is picked; either section shows a short
-  explanation instead of fields while nothing matching is picked, and both can be collapsed and
-  expanded on their own
+  section holds the author and both prompts of the manuscript, and a "Chapter" section shows the name
+  and both prompts of whatever chapter is picked in the project tree, or the prompt of the blurb once
+  it is picked; either section shows a short explanation instead of fields while nothing matching is
+  picked, and both can be collapsed and expanded on their own
 
 * Inspector's "Chapter" section gains a "Generate chapter" AI button; pressing it does nothing yet -
   the actual generation is coming with a future feature

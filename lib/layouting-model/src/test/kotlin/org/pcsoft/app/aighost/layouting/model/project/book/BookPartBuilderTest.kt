@@ -12,7 +12,6 @@
 
 package org.pcsoft.app.aighost.layouting.model.project.book
 
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.model.common.Alignment
@@ -22,12 +21,13 @@ import org.pcsoft.app.aighost.model.project.book.Chapter
 import org.pcsoft.app.aighost.model.project.book.Epilog
 import org.pcsoft.app.aighost.model.project.book.Prolog
 import org.pcsoft.app.aighost.model.project.design.ChapterPageDesign
-import org.pcsoft.framework.simplay.engine.model.FontStyle
-import org.pcsoft.framework.simplay.engine.model.FontWeight
-import org.pcsoft.framework.simplay.engine.model.TextAlignment
 
 /**
  * Developer tests for the blocks of a written part, [BookPartBuilder].
+ *
+ * IP-36 removed the heading and the paragraphs from every book part - that text now lives only in the
+ * book's simPlay `Document` (IP-37/IP-38) - so this builder gives no block at all until IP-38 rebuilds
+ * it around the part's anchor in that document.
  */
 class BookPartBuilderTest {
 
@@ -49,120 +49,24 @@ class BookPartBuilderTest {
         )
     )
 
-    private fun chapter() = Chapter(
-        name = "First",
-        title = "The Arrival",
-        titleAppendix = listOf("In which the ship comes in"),
-        paragraph = listOf("The harbour was quiet.", "Nobody was waiting.")
-    )
-
     /**
-     * Use case: a chapter is built into its heading, its further heading line and its paragraphs, in
-     * exactly that order.
+     * Use case: a chapter is built, so it gives no block at all - its text no longer lives on the
+     * model - until IP-38 reads it from the anchor of the book's `Document`.
      */
     @Test
-    fun aPartIsHeadingAppendixAndParagraphs() {
-        val blocks = BookPartBuilder.build(chapter(), pageDesign)
+    fun aChapterGivesNoBlockUntilItsAnchorIsResolved() {
+        val chapter = Chapter(name = "First")
 
-        assertEquals(
-            listOf(
-                "The Arrival",
-                "In which the ship comes in",
-                "The harbour was quiet.",
-                "Nobody was waiting."
-            ),
-            blocks.map { it.toString() }
-        )
+        assertTrue(BookPartBuilder.build(chapter, pageDesign).isEmpty())
     }
 
     /**
-     * Use case: the heading is styled by the heading style and the body by the text style, so a
-     * heading and a paragraph never end up looking alike by accident.
+     * Use case: a prolog and an epilog carry the same shape as a chapter, so both give no block
+     * either, for the same reason.
      */
     @Test
-    fun theHeadingAndTheBodyComeFromDifferentStyles() {
-        val blocks = BookPartBuilder.build(chapter(), pageDesign)
-
-        assertEquals("Garamond", blocks[0].style.font.family)
-        assertEquals(20.0, blocks[0].style.font.size)
-        assertEquals(FontWeight.BOLD, blocks[0].style.font.weight)
-        assertEquals(TextAlignment.CENTER, blocks[0].style.alignment)
-        assertEquals(1.3, blocks[0].style.lineSpacing.factor)
-
-        assertEquals("Garamond", blocks[1].style.font.family)
-        assertEquals(14.0, blocks[1].style.font.size)
-        assertEquals(FontStyle.ITALIC, blocks[1].style.font.style)
-
-        assertTrue(blocks.drop(2).all { it.style.font.family == "Baskerville" })
-        assertTrue(blocks.drop(2).all { it.style.font.size == 11.0 })
-        assertTrue(blocks.drop(2).all { it.style.alignment == TextAlignment.JUSTIFY })
-        assertTrue(blocks.drop(2).all { it.style.lineSpacing.factor == 1.6 })
-    }
-
-    /**
-     * Use case: a part without a further heading line is built as well - it is then just its heading
-     * and its paragraphs.
-     */
-    @Test
-    fun withoutAFurtherHeadingLineThePartIsHeadingAndParagraphs() {
-        val blocks = BookPartBuilder.build(chapter().copy(titleAppendix = emptyList()), pageDesign)
-
-        assertEquals(
-            listOf("The Arrival", "The harbour was quiet.", "Nobody was waiting."),
-            blocks.map { it.toString() }
-        )
-    }
-
-    /**
-     * Use case: a part whose heading was not written yet is built without it, so its further heading
-     * line comes first.
-     */
-    @Test
-    fun withoutAHeadingTheFurtherLineComesFirst() {
-        val blocks = BookPartBuilder.build(chapter().copy(title = ""), pageDesign)
-
-        assertEquals("In which the ship comes in", blocks[0].toString())
-    }
-
-    /**
-     * Use case: the user pressed return twice and left a paragraph empty; unlike an empty heading it
-     * is kept, because it is part of what was written.
-     */
-    @Test
-    fun anEmptyParagraphIsKeptWhileAnEmptyHeadingIsNot() {
-        val part = chapter().copy(title = "  ", paragraph = listOf("First.", "", "Second."))
-
-        val blocks = BookPartBuilder.build(part, pageDesign)
-
-        assertEquals(
-            listOf("In which the ship comes in", "First.", "", "Second."),
-            blocks.map { it.toString() }
-        )
-    }
-
-    /**
-     * Use case: a prolog and an epilog carry the same shape as a chapter, so all three are built the
-     * very same way from the page design they are handed.
-     */
-    @Test
-    fun aPrologAndAnEpilogAreBuiltLikeAChapter() {
-        val prolog = Prolog(title = "Before", paragraph = listOf("It began earlier."))
-        val epilog = Epilog(title = "After", paragraph = listOf("It ended later."))
-
-        val fromProlog = BookPartBuilder.build(prolog, pageDesign)
-        val fromEpilog = BookPartBuilder.build(epilog, pageDesign)
-
-        assertEquals(listOf("Before", "It began earlier."), fromProlog.map { it.toString() })
-        assertEquals(listOf("After", "It ended later."), fromEpilog.map { it.toString() })
-        assertEquals(fromProlog.map { it.style }, fromEpilog.map { it.style })
-    }
-
-    /**
-     * Use case: a part that was only outlined carries neither heading nor text and gives no block at
-     * all.
-     */
-    @Test
-    fun anEmptyPartGivesNoBlock() {
+    fun aPrologAndAnEpilogGiveNoBlockEither() {
         assertTrue(BookPartBuilder.build(Prolog(), pageDesign).isEmpty())
+        assertTrue(BookPartBuilder.build(Epilog(), pageDesign).isEmpty())
     }
 }

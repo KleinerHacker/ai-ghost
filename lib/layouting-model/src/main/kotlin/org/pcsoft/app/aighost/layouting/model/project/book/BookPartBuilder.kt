@@ -12,7 +12,6 @@
 
 package org.pcsoft.app.aighost.layouting.model.project.book
 
-import org.pcsoft.app.aighost.layouting.model.common.toTextStyle
 import org.pcsoft.app.aighost.model.project.book.BookPart
 import org.pcsoft.app.aighost.model.project.design.BookPartPageDesign
 import org.pcsoft.framework.simplay.engine.model.TextBlock
@@ -20,39 +19,22 @@ import org.pcsoft.framework.simplay.engine.model.TextBlock
 /**
  * Builds the blocks of a written part - a prolog, a chapter or an epilog.
  *
- * All three carry the same shape, so all three are built here: the heading, the further heading lines
- * and the paragraphs. The heading is styled by the part's page design, the paragraphs by its text
- * style; the caller passes the page design that belongs to the part.
- *
- * An empty heading is left out, an empty paragraph is **not**: the user put it there and it keeps its
- * line on the page.
+ * IP-36 removed the heading and the paragraphs from [BookPart]: that text now lives only in the
+ * simPlay `Document` a book carries (IP-37/IP-38), addressed through the part's anchor. Until IP-38
+ * rebuilds this builder around that anchor, a written part contributes no block of its own here.
  */
 object BookPartBuilder {
 
     /**
      * Builds one written part.
      *
-     * @param part Part the heading and the paragraphs are taken from.
+     * @param part Part the blocks would be built from.
      * @param pageDesign Page design of the part - the styles of the heading, its further lines and the text.
-     * @return The blocks in the order they are set.
+     * @return Always empty until IP-38 rebuilds this method around the part's anchor in the book's
+     * `Document`.
      */
     fun build(part: BookPart, pageDesign: BookPartPageDesign): List<TextBlock> {
-        val blocks = ArrayList<TextBlock>()
-
-        if (part.title.isNotBlank()) {
-            blocks += TextBlock.of(part.title, pageDesign.titleStyle.toTextStyle())
-        }
-
-        val appendixStyle = pageDesign.titleAppendixStyle.toTextStyle()
-        part.titleAppendix.filter { it.isNotBlank() }.forEach { line ->
-            blocks += TextBlock.of(line, appendixStyle)
-        }
-
-        val textStyle = pageDesign.textStyle.toTextStyle()
-        part.paragraph.forEach { paragraph ->
-            blocks += TextBlock.of(paragraph, textStyle)
-        }
-
-        return blocks
+        // TODO(IP-38): read the part's blocks from the book's Document through its anchor id instead.
+        return emptyList()
     }
 }

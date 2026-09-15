@@ -12,12 +12,7 @@
 
 package org.pcsoft.app.aighost.fx.model.project.book
 
-import javafx.beans.property.ListProperty
-import javafx.beans.property.SimpleListProperty
 import javafx.beans.property.SimpleObjectProperty
-import javafx.beans.property.SimpleStringProperty
-import javafx.beans.property.StringProperty
-import javafx.collections.FXCollections
 import org.pcsoft.app.aighost.fx.model.internal.BeanFields
 import org.pcsoft.app.aighost.fx.model.project.common.AIPromptProperty
 import org.pcsoft.app.aighost.model.project.book.BookPart
@@ -44,27 +39,6 @@ abstract class BookPartProperty<T : BookPart?> internal constructor() : SimpleOb
     // registered inside this module only, so they stay behind the public surface of the part.
     internal val fields: BeanFields<BookPart> = BeanFields { fireValueChangedEvent() }
 
-    /** Heading of the part, as a property of its own. */
-    val titleProperty: StringProperty = SimpleStringProperty()
-
-    /** Heading of the part. */
-    var title: String?
-        get() = titleProperty.get()
-        set(value) {
-            titleProperty.set(value)
-        }
-
-    /** Further heading lines shown below the title, as a property of their own. */
-    val titleAppendixProperty: ListProperty<String> =
-        SimpleListProperty(FXCollections.observableArrayList())
-
-    /** Further heading lines shown below the title. */
-    var titleAppendix: List<String>
-        get() = titleAppendixProperty.get()
-        set(value) {
-            titleAppendixProperty.setAll(value)
-        }
-
     /** Prompts the text of the part is generated from, as a property of their own. */
     val promptsProperty: AIPromptProperty = AIPromptProperty()
 
@@ -75,22 +49,8 @@ abstract class BookPartProperty<T : BookPart?> internal constructor() : SimpleOb
             promptsProperty.set(value)
         }
 
-    /** Paragraphs of the part in their order, as a property of their own. */
-    val paragraphProperty: ListProperty<String> =
-        SimpleListProperty(FXCollections.observableArrayList())
-
-    /** Paragraphs of the part in their order. */
-    var paragraph: List<String>
-        get() = paragraphProperty.get()
-        set(value) {
-            paragraphProperty.setAll(value)
-        }
-
     init {
-        fields.string(titleProperty, "title")
-        fields.list(titleAppendixProperty, "titleAppendix")
         fields.model(promptsProperty, "prompts", promptsProperty::refresh)
-        fields.list(paragraphProperty, "paragraph")
 
         // The field properties belong to another object after every exchange, so they are tied to the
         // one this property carries now. A derived class registers its own fields before the first
@@ -99,7 +59,7 @@ abstract class BookPartProperty<T : BookPart?> internal constructor() : SimpleOb
     }
 
     /**
-     * Reads every field of the wrapped part again - and both prompts nested in it - and hands what
+     * Reads every field of the wrapped part again - and the prompts nested in it - and hands what
      * changed to the field properties, for a caller that wrote on the part past this model.
      */
     open fun refresh() = fields.refresh()

@@ -28,17 +28,17 @@ class ChapterPropertyOfTest {
 
     /**
      * Use case: a chapter is picked out of the project tree, so the property built for it already
-     * carries that chapter without any further step.
+     * carries that chapter - and its id - without any further step.
      */
     @Test
     fun buildsAPropertyAlreadyBoundToTheChapter() {
-        val chapter = Chapter(name = "Chapter one", title = "The arrival")
+        val chapter = Chapter(name = "Chapter one")
 
         val property = ChapterProperty.of(chapter)
 
         assertEquals(chapter, property.value)
         assertEquals("Chapter one", property.name)
-        assertEquals("The arrival", property.title)
+        assertEquals(chapter.id, property.id)
     }
 
     /**
@@ -47,7 +47,7 @@ class ChapterPropertyOfTest {
      */
     @Test
     fun writesThroughToTheWrappedChapter() {
-        val chapter = Chapter(name = "Chapter one", title = "The arrival")
+        val chapter = Chapter(name = "Chapter one")
 
         val property = ChapterProperty.of(chapter)
         property.name = "Chapter two"
@@ -61,8 +61,8 @@ class ChapterPropertyOfTest {
      */
     @Test
     fun buildsAnIndependentPropertyPerCall() {
-        val first = Chapter(name = "Chapter one", title = "The arrival")
-        val second = Chapter(name = "Chapter two", title = "The departure")
+        val first = Chapter(name = "Chapter one")
+        val second = Chapter(name = "Chapter two")
 
         val firstProperty = ChapterProperty.of(first)
         val secondProperty = ChapterProperty.of(second)
