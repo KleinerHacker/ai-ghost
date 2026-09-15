@@ -13,7 +13,7 @@
 import com.github.jk1.license.render.ReportRenderer
 
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "2.4.10" apply false
+    id("org.jetbrains.kotlin.jvm") version "2.4.20" apply false
     // Same version as the Kotlin compiler plugin above - the serialization plugin is versioned in
     // lock step with the Kotlin compiler it plugs into. Wired up in IP-37 (ai-ghost-model), for the
     // simPlay `Document` that is now embedded in `Book`.

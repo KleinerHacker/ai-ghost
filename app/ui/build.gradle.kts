@@ -56,7 +56,7 @@ dependencies {
     implementation("io.arrow-kt:arrow-core:2.1.2")
     implementation("org.apache.commons:commons-lang3:3.20.0")
 
-    implementation("org.controlsfx:controlsfx:11.2.4")
+    implementation("org.controlsfx:controlsfx:11.2.5")
     implementation("de.saxsys:mvvmfx:1.8.0")
 
     // The startup area finds its steps by scanning the package they live in, instead of a hand kept list.
@@ -64,7 +64,7 @@ dependencies {
 
     // The application logs against the SLF4J API only; Log4j 2 is the implementation behind it and
     // is bound through the SLF4J provider, so no code ever touches a Log4j type.
-    implementation("org.slf4j:slf4j-api:2.0.18")
+    implementation("org.slf4j:slf4j-api:2.0.19")
     runtimeOnly("org.apache.logging.log4j:log4j-core:${log4jVersion}")
     runtimeOnly("org.apache.logging.log4j:log4j-slf4j2-impl:${log4jVersion}")
 

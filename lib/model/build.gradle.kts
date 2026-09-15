@@ -49,7 +49,7 @@ dependencies {
     // `DocumentCodec`, not part of the public API.
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${kotlinxSerializationVersion}")
 
-    implementation("org.slf4j:slf4j-api:2.0.17")
+    implementation("org.slf4j:slf4j-api:2.0.19")
 }
 
 // The module descriptor is the only Java source, while the classes it exports are written in Kotlin.
