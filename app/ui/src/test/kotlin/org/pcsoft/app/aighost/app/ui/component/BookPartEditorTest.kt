@@ -55,12 +55,13 @@ import java.util.Locale
 import java.util.ResourceBundle
 
 /**
- * Developer tests for [BookPartEditor] - binding, typing on the sheet, undo and the read-only front
- * matter, all headless.
+ * Developer tests for [BookPartEditor] - binding, typing on the sheet, undo/redo of both text and
+ * structural changes (IP-33), and the read-only front matter, all headless.
  *
- * Splitting, merging and reordering a paragraph by key are not covered here: `PaperSheetView`'s own
- * editing turns a line break into a space and never creates a new block, so those use cases only exist
- * once IP-32 wires its own key handlers over the sheet.
+ * Splitting, merging and reordering a paragraph by key are covered here through the sheet's context
+ * menu ([BookPartEditorView.buildContextMenu]) instead of firing the real `Enter`/`Ctrl+Shift+Up`/
+ * `Ctrl+Shift+Down` key combination - the menu items call the exact same `internal` view model methods
+ * a key press does, without depending on the platform's native key synthesis.
  *
  * Every typed continuation here is a plain run of letters with no symbol and no space, extending the
  * paragraph's last word instead of starting a new one. simPlay's `TextBlock`/`DocumentEditor` currently
@@ -155,6 +156,10 @@ class BookPartEditorTest : ApplicationTest() {
     private fun blockText(pageId: String, index: Int): String? =
         sheet.document?.pages?.firstOrNull { it.id == pageId }?.blocks?.getOrNull(index)?.toString()
 
+    /** Every block of the page whose id is [pageId], read straight off the book's stored `Document`. */
+    private fun storedBlocks(pageId: String): List<String> =
+        projectModel.value.book.document.pages.single { it.id == pageId }.blocks.map { it.toString() }
+
     /**
      * The whole document shown by the sheet flattens every page's blocks into one sequence the caret
      * moves through, so a page-local block index must be translated into that global index before it
@@ -190,6 +195,19 @@ class BookPartEditorTest : ApplicationTest() {
             WaitForAsyncUtils.waitForFxEvents()
         }
     }
+
+    // Index of an item in the sheet's context menu built by BookPartEditorView.buildContextMenu -
+    // split, merge with previous, merge with next, remove, move up, move down, in that order (IP-32).
+    // Firing the MenuItem calls the same internal view model method a key press or a real click would.
+    private fun fireContextMenuItem(index: Int) {
+        interact { sheet.contextMenu.items[index].fire() }
+        WaitForAsyncUtils.waitForFxEvents()
+    }
+
+    private fun fireSplit() = fireContextMenuItem(0)
+    private fun fireMergeWithNext() = fireContextMenuItem(2)
+    private fun fireMoveUp() = fireContextMenuItem(4)
+    private fun fireMoveDown() = fireContextMenuItem(5)
 
     /**
      * Use case: nothing is picked yet, so the sheet already shows the whole book - since IP-39 it is
@@ -278,6 +296,31 @@ class BookPartEditorTest : ApplicationTest() {
     }
 
     /**
+     * Use case: the user redoes a text change undone right before, so the typed text reappears in the
+     * model exactly as it was typed, and the redo history is empty again afterwards (IP-33).
+     */
+    @Test
+    fun redoesATextChange() {
+        select(ProjectListItem.BlurbItem(blurb))
+        interact {
+            sheet.requestFocus()
+            sheet.caretModel.moveToEndOfBlock(globalBlockIndex("blurb", 0))
+        }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        typeSlowly("More")
+        interact { undoStack.undo() }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        interact { undoStack.redo() }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        assertEquals(listOf("The first paragraphMore"), blurb.paragraph, "redo must bring the typed text back")
+        assertTrue(undoStack.canUndoProperty.get(), "the redone change must be undoable again")
+        assertFalse(undoStack.canRedoProperty.get(), "nothing must remain to redo once it was replayed")
+    }
+
+    /**
      * Use case: a design value changes while the blurb is open, so the sheet is rebuilt with the new
      * style and the caret keeps its linear place, since restyling never changes the text itself.
      */
@@ -348,6 +391,173 @@ class BookPartEditorTest : ApplicationTest() {
 
         assertEquals("\${blurb}The first paragraphXYZ", blockText("blurb", 0))
         assertEquals(caretBefore + 3, sheet.caretModel.position, "the caret must sit right after the last character typed")
+    }
+
+    /**
+     * Use case: the user splits a paragraph on the sheet, so the block is cut in two and the change is
+     * one single undo step that undo/redo replays exactly (IP-32/IP-33). The exact linear caret offset
+     * [DocumentStructureUndoEntry] hands back is already proven, against a mocked callback, by
+     * `DocumentStructureUndoEntryTest`; a caret sitting at the very end of a page's last block is a
+     * boundary `CaretModel` itself may resolve onto the following page, so this test does not read the
+     * caret back at all - it proves the wiring around it instead: the whole book `Document` really is
+     * swapped, on every one of split, undo and redo.
+     *
+     * The split happens right at the end of the typed text - the same caret position every other test
+     * here types into - so it needs no extra, ambiguous caret arithmetic of its own: the block is cut
+     * into itself and a trailing empty block, which is exactly as real a structural change as a mid-word
+     * split for undo/redo purposes.
+     */
+    @Test
+    fun splitPushesOneUndoStepAndRestoresStructureOnUndoRedo() {
+        select(ProjectListItem.ChapterItem(chapter))
+        val anchorId = chapter.id.toString()
+        interact {
+            sheet.requestFocus()
+            sheet.caretModel.moveToEndOfBlock(globalBlockIndex(anchorId, 0))
+        }
+        WaitForAsyncUtils.waitForFxEvents()
+        typeSlowly("HelloWorld")
+        val countBeforeSplit = undoStack.undoEntries.size
+
+        fireSplit()
+
+        assertEquals(2, storedBlocks(anchorId).size, "the split must create a second block")
+        assertEquals(countBeforeSplit + 1, undoStack.undoEntries.size, "the split must push exactly one undo entry")
+
+        interact { undoStack.undo() }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        assertEquals(listOf("\${$anchorId}HelloWorld"), storedBlocks(anchorId), "undo must merge the split back into one block")
+
+        interact { undoStack.redo() }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        assertEquals(2, storedBlocks(anchorId).size, "redo must split the block again")
+    }
+
+    /**
+     * Use case: the user merges two blocks of a paragraph back together on the sheet, so the change is
+     * one single undo step and undo/redo replays the block count exactly (IP-32/IP-33).
+     */
+    @Test
+    fun mergePushesOneUndoStepAndRestoresStructureOnUndoRedo() {
+        select(ProjectListItem.ChapterItem(chapter))
+        val anchorId = chapter.id.toString()
+        interact {
+            sheet.requestFocus()
+            sheet.caretModel.moveToEndOfBlock(globalBlockIndex(anchorId, 0))
+        }
+        WaitForAsyncUtils.waitForFxEvents()
+        typeSlowly("HelloWorld")
+        fireSplit()
+        assertEquals(2, storedBlocks(anchorId).size, "the fixture for this test must start out split in two")
+
+        // The split leaves the caret on the new, trailing empty block - moved back onto the first block
+        // so "merge with next" pulls the empty one back into it, undoing the split in effect.
+        interact { sheet.caretModel.moveToEndOfBlock(globalBlockIndex(anchorId, 0)) }
+        WaitForAsyncUtils.waitForFxEvents()
+        val countBeforeMerge = undoStack.undoEntries.size
+
+        fireMergeWithNext()
+
+        assertEquals(1, storedBlocks(anchorId).size, "the merge must combine both blocks back into one")
+        assertEquals(countBeforeMerge + 1, undoStack.undoEntries.size, "the merge must push exactly one undo entry")
+
+        interact { undoStack.undo() }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        assertEquals(2, storedBlocks(anchorId).size, "undo must restore both blocks split apart")
+
+        interact { undoStack.redo() }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        assertEquals(1, storedBlocks(anchorId).size, "redo must merge the blocks again")
+    }
+
+    /**
+     * Use case: the user moves a block of a paragraph on the sheet, so the change is one single undo
+     * step and undo/redo replays the block count exactly (IP-32/IP-33).
+     *
+     * `BookPartEditorController.moveTextBlock` never moves the block at index `0`, since it carries the
+     * page's `TextAnchor` - the fixture therefore needs a third block: the anchor block plus two further
+     * ones, built from two splits that are never followed by typing into the block a split just created.
+     * Typing into such a fresh, still-empty block turned out to be an upstream simPlay quirk of its own -
+     * PaperSheetView silently merges it back into its predecessor and drops the typed text, undoing the
+     * split in the process - so both trailing blocks are left empty here instead, and the exact block
+     * ordering `moveTextBlock` produces from that (up vs. down, which index swaps with which) is already
+     * proven, with no such UI quirk in the way, by `BookPartEditorControllerTest.movesATextBlockUpAndDownButNeverBlockZero`.
+     * This test proves only what that one cannot: that the view model really pushes the move as a single
+     * `DocumentStructureUndoEntry` and that undoing and redoing it does not lose or duplicate a block.
+     */
+    @Test
+    fun movePushesOneUndoStepAndRestoresBlockCountOnUndoRedo() {
+        select(ProjectListItem.ChapterItem(chapter))
+        val anchorId = chapter.id.toString()
+        interact {
+            sheet.requestFocus()
+            sheet.caretModel.moveToEndOfBlock(globalBlockIndex(anchorId, 0))
+        }
+        WaitForAsyncUtils.waitForFxEvents()
+        typeSlowly("HelloWorld")
+        fireSplit()
+        assertEquals(2, storedBlocks(anchorId).size, "the fixture for this test must start out split in two")
+
+        // Jumping back onto block 0 - not itself freshly split, and followed only by a menu action, the
+        // same pattern mergePushesOneUndoStepAndRestoresStructureOnUndoRedo already relies on - splits it
+        // again at its own end, giving a third block without ever typing into either empty one.
+        interact { sheet.caretModel.moveToEndOfBlock(globalBlockIndex(anchorId, 0)) }
+        WaitForAsyncUtils.waitForFxEvents()
+        fireSplit()
+        assertEquals(3, storedBlocks(anchorId).size, "the fixture for this test must end up split into three")
+
+        // The second split leaves the caret on the block it just created, at index 1 - a fresh block a
+        // split just created is not reliably resolvable by CaretModel for a following action right away
+        // (the same reason typing into one is avoided above), so it is explicitly navigated onto again,
+        // the same way every other structural test here always re-navigates before its next action
+        // instead of trusting a split's own caret restore for anything beyond showing the result.
+        interact { sheet.caretModel.moveIntoBlock(globalBlockIndex(anchorId, 1), 0) }
+        WaitForAsyncUtils.waitForFxEvents()
+        val countBeforeMove = undoStack.undoEntries.size
+
+        // Moving that block up would land on the immovable anchor block at index 0, so it is moved down.
+        fireMoveDown()
+
+        assertEquals(3, storedBlocks(anchorId).size, "moving a block must not lose or duplicate one")
+        assertEquals(countBeforeMove + 1, undoStack.undoEntries.size, "the move must push exactly one undo entry")
+
+        interact { undoStack.undo() }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        assertEquals(3, storedBlocks(anchorId).size, "undo must restore the original block count")
+
+        interact { undoStack.redo() }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        assertEquals(3, storedBlocks(anchorId).size, "redo must move the block again without losing one")
+    }
+
+    /**
+     * Use case: the surrounding window's undo history is cleared, as it is on every project switch
+     * (`MainWindowViewModel.newProject`/`openProject`), so neither an undo nor a redo can reach into a
+     * project that no longer applies (IP-33).
+     */
+    @Test
+    fun clearingTheUndoStackDiscardsUndoAndRedoHistory() {
+        select(ProjectListItem.BlurbItem(blurb))
+        interact {
+            sheet.requestFocus()
+            sheet.caretModel.moveToEndOfBlock(globalBlockIndex("blurb", 0))
+        }
+        WaitForAsyncUtils.waitForFxEvents()
+        typeSlowly("More")
+        interact { undoStack.undo() }
+        WaitForAsyncUtils.waitForFxEvents()
+        assertTrue(undoStack.canRedoProperty.get(), "the undone change must be redoable before the stack is cleared")
+
+        interact { undoStack.clear() }
+
+        assertFalse(undoStack.canUndoProperty.get(), "a cleared stack must have nothing left to undo")
+        assertFalse(undoStack.canRedoProperty.get(), "a cleared stack must have nothing left to redo")
     }
 
     /**

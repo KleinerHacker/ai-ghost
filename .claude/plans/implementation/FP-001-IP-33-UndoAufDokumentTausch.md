@@ -5,13 +5,11 @@
 * Feature Plan: `.claude/plans/features/FP-001-PaperWritingSurface.md`
 * Plan-ID im Feature Plan: IP-33
 * Status-Datei des Features: `.claude/plans/features/FP-001-PaperWritingSurface-status.md`
-* Stellt die Editor-Undo-Einträge aus IP-09/IP-10 auf simPlay um.
 
 ## Abhängigkeiten
 
-* Voraussetzung: IP-39 (vormals IP-31; IP-39 liefert das eine, dauerhafte `Document`)
+* Voraussetzung: IP-39 ✅
 * Blockiert: keinen weiteren Plan
-* Reihenfolge und Graph stehen in Abschnitt 8 des Feature Plans.
 
 ## Zu ladende Skills
 
@@ -19,48 +17,50 @@
 * `testing`
 * `project-docs`
 
-## Harte Einschränkung
+## Bestandsaufnahme (Code bereits geprüft)
 
-* Die Undo-Infrastruktur aus IP-09 (`UndoStack`, Tooltip, Verlaufs-Dropdown) bleibt unverändert.
-* Undo tauscht die `Document`-Instanz zurück; das Modell folgt daraus.
+* Struktureller Undo-Eintrag existiert bereits: `DocumentStructureUndoEntry` (IP-32),
+  Vorher-/Nachher-`Document` plus `PendingCaretTarget`, über `UndoStack.push(...)`.
+* Text-Undo läuft bereits über `undoStack.record(...)` auf der `StringProperty` je `PartTarget`,
+  Merge-Schlüssel `page.id to target`, Tipp-Pause aus `UndoStack.mergeTimeoutMillis`.
+* `handleDocumentChanged`/`propertyFor` lösen nach jeder Wiedergabe `pushWholeDocument()` aus, das
+  `Document` wird also bei jedem Undo/Redo neu aus dem Modell abgeleitet.
+* `UndoStack.clear()` ist bereits in `newProject()`/`openProject()` verdrahtet.
+* Nicht abgedeckt: kein Redo-Test, kein Test für den zusammengefassten Undo-Schritt über mehrere
+  Tastenanschläge, keine Undo/Redo-Tests für Split/Merge/Move auf Editor-Ebene (nur der isolierte
+  `DocumentStructureUndoEntryTest`).
 
 ## Aufgaben
 
-### 1. Textänderungs-Eintrag
+### 1. Text-Undo bestätigen, nicht neu bauen
 
-* `UndoEntry`-Variante für den `Document`-Tausch bei Tippen.
-* Merkt Vorher-/Nachher-`Document` und die `List<String>`-Absätze bzw. das Caret.
-* Merge-Schlüssel `(partId, blockIndex)` und Tipp-Pause aus `Preferences.Editor` beibehalten.
+* Keine neue `UndoEntry`-Variante für Tippen erstellen, bestehenden `record(...)`-Weg beibehalten.
+* Merge-Schlüssel `(page.id, target)` und Tipp-Pause aus `Preferences.Editor` als ausreichend werten.
+* Caret-Wiederherstellung nach Undo/Redo einer Textänderung im Test nachweisen.
 
-### 2. Struktureller Eintrag
+### 2. Struktur-Undo bestätigen
 
-* Ersatz für `ParagraphListUndoEntry`: Vorher-/Nachher-`Document` plus Caret-Ziel.
-* Über `UndoStack.push(...)`, nicht `record(...)`.
+* `DocumentStructureUndoEntry` und `applyStructuralChange` unverändert übernehmen.
+* Ableitung von `Book.chapters`-Reihenfolge aus den Ankern des gesetzten `Document` per Test prüfen.
 
-### 3. Wiedergabe
+### 3. Tests ergänzen (`BookPartEditorTest`, ggf. neue Testklasse)
 
-* Undo/Redo setzt das gemerkte `Document` auf `PaperSheetView`.
-* `Book.chapters`s Reihenfolge/Bestand aus den Ankern des gesetzten `Document` neu ableiten (kein
-  `List<String>`-Modell mehr, seit der TextAnchor-Abweichung, IP-36/IP-38).
-* Caret- und Fokus-Block aus dem Eintrag wiederherstellen.
+* Redo-Fall einer Textänderung ergänzen (Text und Caret wiederhergestellt).
+* Test: mehrere Tastenanschläge in Folge vor der Tipp-Pause ergeben einen Undo-Schritt.
+* Test: Split erzeugt einen Undo-Schritt, Undo/Redo stellt Text, Struktur und Caret wieder her.
+* Test: Merge/Move ebenso je ein Undo-Schritt mit korrekter Wiedergabe.
+* Test: Projektwechsel leert die Historie (`canUndoProperty`/`canRedoProperty` danach `false`).
 
-### 4. Aufräumen
+### 4. Abschluss
 
-* Bei `newProject()`/`openProject()` wird der Stack geleert (bestehendes Verhalten).
-* Keine `Document`-Referenz überlebt einen Projektwechsel.
-
-### 5. Tests
-
-* Headless: Tippen, Undo, Redo stellen Text und Caret her.
-* Absatz teilen/verbinden/umsortieren -> je ein Undo-Schritt, korrekt zurückgespielt.
-* Mehrere Tastenanschläge in Folge -> ein zusammengefasster Undo-Schritt bis zur Tipp-Pause.
-
-### 6. Abschluss
-
-* Build über Agent ausführen.
-* Dokumentation nach `project-docs` prüfen.
+* Build über Agent ausführen (`:app:ai-ghost-ui:build`).
+* Dokumentation nach `project-docs` prüfen (KDoc/CHANGELOG, falls Verhalten sich sichtbar ändert).
+* Feature-Status-Datei: IP-33 auf `COMPLETED` setzen, Fortschritt/Anmerkungen ergänzen.
+* Feature-Plan: IP-33-Zeile und Abschnittsüberschrift mit ✅ versehen.
+* Plandatei `.claude/plans/implementation/FP-001-IP-33-UndoAufDokumentTausch.md` per `git rm` entfernen.
 
 ## Ergebnis
 
-* Jede Text- und Strukturänderung ist über den `Document`-Tausch undo- und redo-fähig.
-* Die Undo-Infrastruktur aus IP-09 bleibt unangetastet.
+* Jede Text- und Strukturänderung bleibt über den bestehenden `Document`-Tausch-Mechanismus
+  undo- und redo-fähig, jetzt mit vollständiger Testabdeckung.
+* Keine Änderung an der Undo-Infrastruktur aus IP-09.
