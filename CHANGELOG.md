@@ -38,6 +38,10 @@
 * Inspector's "Chapter" section gains a "Generate chapter" AI button; pressing it does nothing yet -
   the actual generation is coming with a future feature
 
+* Writing surface gains a floating AI action bar - Rewrite, Expand, Shorten - next to the paragraph or
+  heading the mouse hovers or the edit caret sits in; half-transparent until the mouse moves onto it,
+  and pressing any of its buttons does nothing yet, the same as the "Generate chapter" AI button above
+
 * Inspector gains a third section, "Design", showing the appearance of the book title, the chapter
   heading, its further heading lines and the body text - family, size, weight, slant, alignment and
   line spacing for each; unlike the other two sections it stays filled as long as a project is open,

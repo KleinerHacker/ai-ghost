@@ -80,6 +80,15 @@ object AiGhostIcons {
     /** Icon for handing a text over to the AI, be it to write it or to improve its wording. */
     val aiAction: Image by lazy { load("ai-action") }
 
+    /** Icon for rewriting a paragraph or heading with AI. */
+    val rewrite: Image by lazy { load("rewrite") }
+
+    /** Icon for expanding a paragraph or heading with AI. */
+    val expand: Image by lazy { load("expand") }
+
+    /** Icon for shortening a paragraph or heading with AI. */
+    val shorten: Image by lazy { load("shorten") }
+
     /** Icon for adding another entry to a list the user builds up. */
     val add: Image by lazy { load("add") }
 
@@ -101,6 +110,36 @@ object AiGhostIcons {
      */
     @JvmStatic
     fun buttonAiAction(): ImageView = aiAction.toImageView()
+
+    /**
+     * Creates the button graphic for rewriting a paragraph or heading with AI, scaled to [MENU_ICON_SIZE].
+     *
+     * Referenced from FXML through `fx:factory`.
+     *
+     * @return a new image view showing [rewrite]
+     */
+    @JvmStatic
+    fun buttonRewrite(): ImageView = rewrite.toImageView()
+
+    /**
+     * Creates the button graphic for expanding a paragraph or heading with AI, scaled to [MENU_ICON_SIZE].
+     *
+     * Referenced from FXML through `fx:factory`.
+     *
+     * @return a new image view showing [expand]
+     */
+    @JvmStatic
+    fun buttonExpand(): ImageView = expand.toImageView()
+
+    /**
+     * Creates the button graphic for shortening a paragraph or heading with AI, scaled to [MENU_ICON_SIZE].
+     *
+     * Referenced from FXML through `fx:factory`.
+     *
+     * @return a new image view showing [shorten]
+     */
+    @JvmStatic
+    fun buttonShorten(): ImageView = shorten.toImageView()
 
     /**
      * Creates the button graphic for adding an entry, scaled to [MENU_ICON_SIZE].

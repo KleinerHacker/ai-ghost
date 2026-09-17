@@ -61,6 +61,7 @@ object AiGhostTheme {
         "/styles/component/split-pane.css",
         "/styles/component/editor.css",
         "/styles/component/book-part-editor.css",
+        "/styles/component/ai-action-bar.css",
         "/styles/component/prompt-area.css",
         "/styles/component/text-field.css",
         "/styles/component/text-field-list-item.css",

@@ -16,13 +16,35 @@
 <?import javafx.scene.control.ProgressIndicator?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.StackPane?>
+<?import org.pcsoft.app.aighost.app.ui.component.AiActionBar?>
+<?import org.pcsoft.framework.simplay.fx.FloatingOverlay?>
 <?import org.pcsoft.framework.simplay.fx.PaperSheetView?>
 <fx:root type="BorderPane" styleClass="book-part-editor" xmlns="http://javafx.com/javafx"
          xmlns:fx="http://javafx.com/fxml"
          fx:controller="org.pcsoft.app.aighost.app.ui.component.BookPartEditorView">
     <center>
         <StackPane>
-            <PaperSheetView fx:id="sheet"/>
+            <PaperSheetView fx:id="sheet">
+                <!--
+                  Two overlays instead of one, since a FloatingOverlay follows exactly one trigger:
+                  PARAGRAPH_HOVER shows the bar above a hovered paragraph in both writing and preview,
+                  CARET additionally shows it at the edit caret - and stays inert on its own in the
+                  preview's read-only mode (see FloatingOverlayTrigger.CARET), so no mode switch is
+                  needed here.
+                -->
+                <floatingOverlays>
+                    <FloatingOverlay trigger="PARAGRAPH_HOVER" anchor="TOP_CENTER" offsetY="-6.0">
+                        <content>
+                            <AiActionBar/>
+                        </content>
+                    </FloatingOverlay>
+                    <FloatingOverlay trigger="CARET" anchor="TOP_CENTER" offsetY="-6.0">
+                        <content>
+                            <AiActionBar/>
+                        </content>
+                    </FloatingOverlay>
+                </floatingOverlays>
+            </PaperSheetView>
             <Label fx:id="lblEmpty" styleClass="book-part-editor-empty" text="%component.bookPartEditor.empty"/>
             <ProgressIndicator fx:id="prgLoading" styleClass="book-part-editor-progress" maxWidth="64" maxHeight="64"/>
         </StackPane>

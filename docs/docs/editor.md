@@ -57,3 +57,13 @@ Each paragraph is its own block on the sheet, and can be reshaped without leavin
 
 Every one of these is undone and redone as its own step, exactly like a text change.
 
+## AI action bar
+
+A small, floating bar with three buttons - **Rewrite**, **Expand**, **Shorten** - appears above the
+paragraph or heading the mouse hovers, and above the one the edit caret currently sits in. It stays
+half-transparent until the mouse moves directly onto it, so it does not distract from reading, and
+moves along automatically as the sheet is scrolled or zoomed.
+
+None of its three buttons does anything yet; pressing one has no effect until a future feature
+connects the bar to an AI provider.
+

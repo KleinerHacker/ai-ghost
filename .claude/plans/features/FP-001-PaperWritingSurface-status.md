@@ -26,7 +26,7 @@ Status: IN_PROGRESS
 | IP-39 | PaperSheetView Dauerhaft Im Zentrum             | COMPLETED   |
 | IP-32 | Paragraph Structure Operations On Document     | NOT_STARTED |
 | IP-33 | Undo On Immutable Document Swap                | NOT_STARTED |
-| IP-18 | AI Actions On Paragraph And Heading            | NOT_STARTED |
+| IP-18 | AI Actions On Paragraph And Heading            | COMPLETED   |
 | IP-23 | Optional Book Parts In The Tree                | COMPLETED   |
 
 ## Abgelöste Pläne (simPlay-Abweichung)
@@ -62,7 +62,7 @@ nur seine reinen Funktionen und sein Sync-Muster gehen in IP-39 über.
 
 ## Gesamtfortschritt
 
-82 % (18 von 22 zählenden Plänen abgeschlossen; IP-31 zählt als abgeschlossen, aber sein Ergebnis ist
+86 % (19 von 22 zählenden Plänen abgeschlossen; IP-31 zählt als abgeschlossen, aber sein Ergebnis ist
 abgelöst und wurde von IP-39 neu erbracht)
 
 ## Anmerkungen
@@ -212,4 +212,28 @@ aufeinanderfolgende Objekte `equals()`-gleich, aber nicht dieselbe Instanz waren
 `Book()`) - jetzt ein referenz-idempotentes `rebind()` mit `InvalidationListener`, in `BeanFields.kt`
 und rund 20 Property-Modell-Klassen.
 
-Nächster Schritt: IP-32, IP-33 oder IP-18.
+IP-18 abgeschlossen: neue Komponente `AiActionBar` (`ui.component`, Component/View/ViewModel-Muster
+nach `ProjectList`) trägt drei Schaltflächen - Umschreiben, Ausbauen, Kürzen -, deren Klick je auf
+`TODO("AI action: …")` in `AiActionBarView` endet, direkt dort und nicht über einen Umweg durch
+`BookPartEditorView`, wie IP-19s `InspectorView.generatePart()` es schon vormacht. Zwei Instanzen der
+Leiste sitzen als Inhalt zweier `FloatingOverlay` auf `BookPartEditorView`s `PaperSheetView`: eine mit
+Trigger `PARAGRAPH_HOVER`, eine mit Trigger `CARET`. Kein Modus-Umschalten zwischen den beiden nötig -
+ein `CARET`-Overlay ist laut simPlay von sich aus inert, solange die Seite nicht `EDITABLE` ist, deckt
+die geplante "zusätzlich CARET im EDITABLE-Modus" also von allein ab. Deckkraftwechsel (halbtransparent
+außerhalb Hover, voll bei Hover) läuft über eine `FadeTransition` in `AiActionBarView`, nicht über CSS,
+da JavaFX-CSS keine Übergänge kennt - `styles/component/ai-action-bar.css` liefert nur die feste Optik
+der Leiste selbst. Lebenszyklus: kein globaler Listener, die Leiste registriert nichts außerhalb ihrer
+selbst, `fx-component-lifecycle`s Muster greift folglich nicht.
+
+Icons: `rewrite@32.png`, `expand@32.png`, `shorten@32.png` (flache, einfarbige Glyphen im Blauton der
+übrigen Werkzeugleisten-Icons wie `ai-action@32`/`undo@32`/`redo@32`) über den `icon-creator`-Agenten
+erzeugt, in `AiGhostIcons` registriert; die Schaltflächen sind icon-only, ihre Bedeutung kommt aus dem
+Tooltip, kein Textlabel mehr - die zuvor angelegten `.label`-Bundle-Keys wurden dafür wieder entfernt.
+Kein `-dark`-Satz: Abweichend vom `icons`-Skill folgt die Leiste damit der bestehenden Konvention der
+übrigen Werkzeugleisten-Icons (`save`/`undo`/`redo`/`ai-action`), die ebenfalls nur eine Variante führen
+und nicht der zweifachen Dialog-Icon-Konvention (`error`/`warning`), da sie auf derselben neutralen
+Button-Fläche sitzen, nicht auf einer farbigen. Ebenso nur `@32` gespeichert, keine zusätzliche `@16`-
+Datei - deckt sich mit jedem bestehenden Werkzeugleisten-Icon, `AiGhostIcons` skaliert beim Anzeigen
+selbst auf `MENU_ICON_SIZE`.
+
+Nächster Schritt: IP-32 oder IP-33.

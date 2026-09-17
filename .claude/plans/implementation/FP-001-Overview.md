@@ -46,7 +46,7 @@
 | IP-39 ✅ | PaperSheetView dauerhaft im Zentrum | (Datei entfernt) | IP-38, IP-09 |
 | IP-32 | Absatz-Operationen auf dem Dokument | `FP-001-IP-32-AbsatzOperationenAufDokument.md` | IP-39 |
 | IP-33 | Undo auf dem unveränderlichen Dokument-Tausch | `FP-001-IP-33-UndoAufDokumentTausch.md` | IP-39 |
-| IP-18 | KI-Schaltflächen an Absatz und Überschrift | `FP-001-IP-18-AiAktionenAmAbsatz.md` | IP-39 |
+| IP-18 ✅ | KI-Schaltflächen an Absatz und Überschrift | (Datei entfernt) | IP-39 |
 | IP-23 | Optionale Teile im Projektbaum | `FP-001-IP-23-OptionaleTeileImBaum.md` | IP-39, IP-24, IP-35 |
 
 ## Abgeschlossene Pläne
@@ -66,10 +66,13 @@
 * IP-38 – Buch-Dokument als alleinige Basis. Plandatei entfernt.
 * IP-39 – PaperSheetView dauerhaft im Zentrum. Werkzeugleisten-Umschalter ohne Icon (Tooling-Blocker),
   Splitter-Positionen/Inspector-Einklappzustand nicht umgesetzt (offene TODOs). Plandatei entfernt.
+* IP-18 – KI-Schaltflächen an Absatz und Überschrift. Neue Komponente `AiActionBar`, icon-only mit
+  Tooltip (`rewrite`/`expand`/`shorten`); zwei `FloatingOverlay`-Instanzen (`PARAGRAPH_HOVER`, `CARET`)
+  statt einer mit umschaltendem Trigger; `TODO`-Rümpfe sitzen direkt in `AiActionBarView`. Plandatei
+  entfernt.
 
 ## Startbereit (Voraussetzungen erfüllt)
 
 * IP-32 – Absatz-Operationen auf dem Dokument (Voraussetzung IP-39 ✅)
 * IP-33 – Undo auf dem unveränderlichen Dokument-Tausch (Voraussetzung IP-39 ✅)
-* IP-18 – KI-Schaltflächen an Absatz und Überschrift (Voraussetzung IP-39 ✅)
 * IP-23 – Optionale Teile im Projektbaum (Voraussetzungen IP-39 ✅, IP-24 ✅, IP-35 ✅)

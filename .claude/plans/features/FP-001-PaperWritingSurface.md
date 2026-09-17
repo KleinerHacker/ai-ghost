@@ -309,8 +309,8 @@ bleiben in Kraft (ihre Bausteine werden von IP-36 bis IP-39 weiterverwendet, nic
 abgeschlossen, aber sein Ergebnis - das `Document` je Baumauswahl auszutauschen - ist mit der zweiten
 Abweichung abgelöst; seine reinen Funktionen (`splitParagraph` und Geschwister) bleiben nutzbar. IP-15
 und IP-16 sind vollständig abgelöst und in IP-39 aufgegangen (siehe „Abgelöste Pläne (TextAnchor)“).
-IP-32, IP-33 und IP-18 bleiben offen, mit angepassten Abhängigkeiten. IP-23 ist abgeschlossen. IP-36
-bis IP-39 sind neu.
+IP-32 und IP-33 bleiben offen, mit angepassten Abhängigkeiten. IP-18 ist abgeschlossen. IP-23 ist
+abgeschlossen. IP-36 bis IP-39 sind neu.
 Die Pläne IP-03, IP-04, IP-05, IP-06, IP-07, IP-08, IP-10, IP-11, IP-22, IP-25 und IP-26 sind aus der
 ersten Abweichung abgelöst (siehe „Abgelöste Pläne (simPlay)“).
 
@@ -336,7 +336,7 @@ ersten Abweichung abgelöst (siehe „Abgelöste Pläne (simPlay)“).
 | IP-39 | PaperSheetView Dauerhaft Im Zentrum ✅          | Ein `Document`, immer sichtbar; Baumauswahl navigiert über `TextAnchor`      | IP-38, IP-09          |
 | IP-32 | Paragraph Structure Operations On Document     | Absätze teilen, verbinden, löschen, umsortieren, ankerfest                  | IP-39                 |
 | IP-33 | Undo On Immutable Document Swap                | Undo-Einträge auf den `Document`-Tausch umstellen                          | IP-39                 |
-| IP-18 | AI Actions On Paragraph And Heading            | Schwebende KI-Leiste über `FloatingOverlay`; Schaltflächen mit `TODO(...)`   | IP-39                 |
+| IP-18 | AI Actions On Paragraph And Heading ✅          | Schwebende KI-Leiste über `FloatingOverlay`; Schaltflächen mit `TODO(...)`   | IP-39                 |
 | IP-23 | Optional Book Parts In The Tree ✅              | Kontrollkästchen schaltet Prolog, Epilog und Klappentext ins Buch, `PaperSheetView.pageModes` sofort | IP-39, IP-24, IP-35 |
 
 ### Abgelöste Pläne (TextAnchor)
@@ -709,9 +709,9 @@ IP-09/IP-10 bleiben. Das "Modell", das nach einem Undo/Redo neu abgeleitet wird,
 `Book.chapters`s Reihenfolge/Bestand aus den Ankern des wiederhergestellten `Document`, nicht mehr
 `List<String>`-Absätze je Teil.
 
-### IP-18: AI Actions On Paragraph And Heading
+### IP-18: AI Actions On Paragraph And Heading ✅
 
-Plan: `FP-001-IP-18-AiAktionenAmAbsatz.md`
+Plan: `FP-001-IP-18-AiAktionenAmAbsatz.md` (abgeschlossen, entfernt)
 
 Die schwebende Leiste wird als simPlay-`FloatingOverlay` gebaut (Trigger `PARAGRAPH_HOVER`, im
 `EDITABLE`-Modus zusätzlich `CARET`), sodass simPlay das Anzeigen, Positionieren und Verbergen
@@ -719,6 +719,32 @@ Die schwebende Leiste wird als simPlay-`FloatingOverlay` gebaut (Trigger `PARAGR
 jede per FXML `onAction` an eine parameterlose `*View`-Methode mit Rumpf `TODO("AI action: …")`. Keine
 Verdrahtung an den Port aus IP-17, kein Stub, kein Provider. Voraussetzung ist jetzt IP-39 statt IP-31,
 inhaltlich unverändert.
+
+**Abweichungen bei der Umsetzung:**
+
+* Neue Komponente `AiActionBar` (`ui.component`, Component/View/ViewModel-Muster nach `ProjectList`)
+  trägt die drei Schaltflächen; `AiActionBarViewModel` bleibt bewusst leer, da die Leiste kein Modell
+  besitzt und nichts zu binden ist - sie existiert nur, damit die Komponente demselben Muster wie jede
+  andere unter `ui.component` folgt.
+* **Zwei `FloatingOverlay`-Instanzen statt einer mit umschaltendem Trigger:** Ein Overlay folgt genau
+  einem `FloatingOverlayTrigger`, deshalb sitzt je eine `AiActionBar`-Instanz auf `PARAGRAPH_HOVER` und
+  eine auf `CARET` in `BookPartEditorView.fxml`. Kein Umschalten zwischen den beiden war nötig - laut
+  simPlay-Quelltext (`FloatingOverlayTrigger.CARET`-KDoc) ist ein `CARET`-Overlay von sich aus inert,
+  solange die Seite nicht `EDITABLE` ist; "zusätzlich CARET im EDITABLE-Modus" ergibt sich damit ohne
+  Zutun dieses Plans.
+* **`TODO`-Rümpfe sitzen direkt in `AiActionBarView`, nicht in `BookPartEditorView`.** Der Plansatz "per
+  FXML `onAction` an eine parameterlose `*View`-Methode gebunden" trifft exakt auf die View zu, deren
+  FXML die Schaltfläche selbst enthält - dieselbe Route, die IP-19s `InspectorView.generatePart()` schon
+  vormacht. Ein Bubbeln der drei Aktionen über eigene `EventType`s bis nach `BookPartEditorView` hätte
+  nur zusätzlichen Code ohne zusätzlichen Nutzen bedeutet, da beide Overlay-Instanzen ohnehin dieselbe
+  `TODO`-Meldung auslösen sollen.
+* Deckkraftwechsel läuft über eine `FadeTransition` in `AiActionBarView` (JavaFX-CSS kennt keine
+  Übergänge); `styles/component/ai-action-bar.css` liefert nur die feste Optik der Leiste.
+* Die drei Schaltflächen sind icon-only (`rewrite`/`expand`/`shorten`, über `icon-creator` erzeugt und
+  in `AiGhostIcons` registriert), ihre Bedeutung kommt aus dem Tooltip, kein Textlabel - kompakter für
+  eine schwebende Leiste als eine Wort-Beschriftung je Knopf. Nur `@32` gespeichert und keine
+  `-dark`-Variante, wie jedes andere Werkzeugleisten-Icon (`save`/`undo`/`redo`/`ai-action`); die
+  zweifache Variante bleibt den Dialog-Icons (`error`/`warning`) auf farbiger Fläche vorbehalten.
 
 ### IP-35: Page Numbering And Page Modes On simPlay 0.3.0 ✅
 
@@ -784,7 +810,7 @@ gleichzeitig zeigt.
 IP-24✅ ─┬─> IP-36✅ (mit IP-02✅) ──> IP-37✅ (mit IP-29✅) ──> IP-38✅ (mit IP-30✅, IP-34✅) ──> IP-39✅ (mit IP-09✅)
         │                                                                                   ├─> IP-32
 IP-29✅ ─┴─> IP-30✅ (mit IP-02✅, IP-24✅) ─┬─> IP-35✅                                       ├─> IP-33
-        └─> IP-34✅                        │                                                 ├─> IP-18
+        └─> IP-34✅                        │                                                 ├─> IP-18✅
                                            └───────────────────────────────────────────────> IP-23✅ (mit IP-24✅, IP-35✅)
 IP-02✅ ──> IP-13✅, IP-14✅
 IP-12✅ ──> IP-13✅, IP-19✅
@@ -801,8 +827,8 @@ unverändert an IP-30 hängt. IP-29, IP-30 und IP-34 bleiben der unveränderte U
 Abweichung, deren Bausteine IP-38 weiterverwendet.
 
 Abgeschlossen und unberührt: **IP-01** ✅ (teilweise abgelöst), **IP-02** ✅, **IP-24** ✅,
-**IP-09** ✅, **IP-12** ✅, **IP-13** ✅, **IP-14** ✅, **IP-17** ✅, **IP-19** ✅, **IP-29** ✅,
-**IP-30** ✅, **IP-34** ✅, **IP-35** ✅. Abgeschlossen, mit `PageMode` auf `PaperSheetView` statt im
+**IP-09** ✅, **IP-12** ✅, **IP-13** ✅, **IP-14** ✅, **IP-17** ✅, **IP-18** ✅, **IP-19** ✅,
+**IP-29** ✅, **IP-30** ✅, **IP-34** ✅, **IP-35** ✅. Abgeschlossen, mit `PageMode` auf `PaperSheetView` statt im
 Engine-Modell verdrahtet: **IP-23** ✅ (Abschnitt 7). Abgeschlossen, Ergebnis durch die zweite Abweichung abgelöst:
 **IP-31** ✅ (Grundfunktionen bleiben nutzbar, siehe IP-32/IP-39). Vollständig abgelöst, keine Datei
 mehr: **IP-15**, **IP-16** (siehe Abschnitt 6).

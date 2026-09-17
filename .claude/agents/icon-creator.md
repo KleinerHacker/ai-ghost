@@ -7,8 +7,10 @@ effort: low
 
 tools:
   - Read
+  - Write
   - Glob
   - Grep
+  - Bash
 
 skill:
   - Icons

@@ -65,6 +65,7 @@ opened once the user accepts it. Both documents are written with Jackson.
 | Editor split into project tree, writing surface and inspector | Implemented |
 | Writing surface: book parts and front matter written on the paginated sheet | Implemented |
 | Writing surface: split, merge, move and cross-paragraph caret navigation | Planned |
+| Writing surface: floating AI action bar (Rewrite/Expand/Shorten) over the focused paragraph or heading; buttons not wired yet | Implemented |
 | Inspector with collapsible Book, Chapter and Design sections | Implemented |
 | Project settings dialog: page format and blank pages (Design section) | Implemented |
 | Live typography editing of title, chapter heading and body text in the Inspector | Implemented |
