@@ -49,7 +49,7 @@ class BlurbPageDesignProperty internal constructor() : SimpleObjectProperty<Blur
 
         // The field properties belong to another object after every exchange, so they are tied to the
         // one this property carries now.
-        addListener { _, _, newValue -> fields.rebind(newValue) }
+        addListener { fields.rebind(get()) }
         fields.rebind(get())
     }
 

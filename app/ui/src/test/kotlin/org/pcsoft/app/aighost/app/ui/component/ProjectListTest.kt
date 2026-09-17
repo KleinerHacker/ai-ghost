@@ -14,10 +14,12 @@ package org.pcsoft.app.aighost.app.ui.component
 
 import de.saxsys.mvvmfx.MvvmFX
 import javafx.scene.Scene
+import javafx.scene.control.CheckBox
 import javafx.scene.control.TreeItem
 import javafx.scene.control.TreeView
 import javafx.stage.Stage
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -292,5 +294,59 @@ class ProjectListTest : ApplicationTest() {
 
         assertEquals(emptyList<ProjectListItem>(), chaptersItem().children.map { it.value })
         assertEquals(6, tree.root.children.size)
+    }
+
+    private fun cellFor(item: TreeItem<ProjectListItem>): ProjectListCell =
+        tree.lookupAll(".tree-cell").filterIsInstance<ProjectListCell>().first { it.treeItem === item }
+
+    private fun checkBoxOf(item: TreeItem<ProjectListItem>): CheckBox =
+        cellFor(item).graphic!!.lookup(".check-box") as CheckBox
+
+    /**
+     * Use case: the project carries an included prolog, so the checkbox next to its icon shows
+     * checked instead of the neutral, unchecked default.
+     */
+    @Test
+    fun showsACheckedCheckboxForAnIncludedProlog() {
+        setProject(project(Book(prolog = Prolog(included = true))))
+
+        val prologItem = tree.root.children[2]
+        assertTrue(checkBoxOf(prologItem).isSelected)
+    }
+
+    /**
+     * Use case: the project carries an epilog that was never switched on, so its checkbox shows
+     * unchecked.
+     */
+    @Test
+    fun showsAnUncheckedCheckboxForAnExcludedEpilog() {
+        setProject(project(Book()))
+
+        val epilogItem = tree.root.children[4]
+        assertFalse(checkBoxOf(epilogItem).isSelected)
+    }
+
+    /**
+     * Use case: the user clicks the blurb's checkbox, so the switch reaches the model right away.
+     */
+    @Test
+    fun togglingTheCheckboxSwitchesInclusionInTheModel() {
+        setProject(project(Book()))
+        val blurbItem = tree.root.children.last()
+
+        interact { checkBoxOf(blurbItem).fire() }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        assertTrue(projectModel.value.book.blurb.included)
+        assertTrue(checkBoxOf(blurbItem).isSelected)
+    }
+
+    /**
+     * Use case: a structural node - the chapters branch - carries no switch of its own, so its graphic
+     * is the plain chapter icon instead of a checkbox.
+     */
+    @Test
+    fun showsNoCheckboxForAStructuralNode() {
+        assertNull(cellFor(chaptersItem()).graphic!!.lookup(".check-box"))
     }
 }

@@ -121,6 +121,11 @@
 * Entries inside a project document carry the `.json` extension, so the content is recognizable in
   any archive tool
 
+* Project tree gains a checkbox on the prolog, the epilog and the blurb: switching it off keeps the
+  part's text exactly as written but leaves it out of the finished book, shown greyed out and locked
+  on the writing surface until it is switched back on; the switch is undone and redone like any other
+  change
+
 * Menu "open recent project" shows each entry on two lines - the file name, and below it in
   smaller type the folder the project sits in, so two projects of the same name are told apart
 

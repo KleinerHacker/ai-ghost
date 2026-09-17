@@ -100,8 +100,7 @@ Fehlt: die simPlay-Anbindung (Repository, Abhängigkeit, Lizenz-Allowlist, CI-To
 des Übersetzers auf das simPlay-Rohmodell; die Schreibfläche und die Vorschau auf `PaperSheetView`;
 die Absatz-Operationen auf dem simPlay-Dokument; Undo auf dem unveränderlichen Dokument-Tausch; der
 Fingerabdruck auf der simPlay-Messung; die Editor-Aufteilung und das Baum-Routing (IP-15); der
-Schreib-/Vorschau-Umschalter (IP-16); die schwebende KI-Leiste (IP-18); das Kontrollkästchen im
-Projektbaum (IP-23).
+Schreib-/Vorschau-Umschalter (IP-16); die schwebende KI-Leiste (IP-18).
 
 ## 3. Zielzustand
 
@@ -310,7 +309,8 @@ bleiben in Kraft (ihre Bausteine werden von IP-36 bis IP-39 weiterverwendet, nic
 abgeschlossen, aber sein Ergebnis - das `Document` je Baumauswahl auszutauschen - ist mit der zweiten
 Abweichung abgelöst; seine reinen Funktionen (`splitParagraph` und Geschwister) bleiben nutzbar. IP-15
 und IP-16 sind vollständig abgelöst und in IP-39 aufgegangen (siehe „Abgelöste Pläne (TextAnchor)“).
-IP-32, IP-33, IP-18 und IP-23 bleiben offen, mit angepassten Abhängigkeiten. IP-36 bis IP-39 sind neu.
+IP-32, IP-33 und IP-18 bleiben offen, mit angepassten Abhängigkeiten. IP-23 ist abgeschlossen. IP-36
+bis IP-39 sind neu.
 Die Pläne IP-03, IP-04, IP-05, IP-06, IP-07, IP-08, IP-10, IP-11, IP-22, IP-25 und IP-26 sind aus der
 ersten Abweichung abgelöst (siehe „Abgelöste Pläne (simPlay)“).
 
@@ -337,7 +337,7 @@ ersten Abweichung abgelöst (siehe „Abgelöste Pläne (simPlay)“).
 | IP-32 | Paragraph Structure Operations On Document     | Absätze teilen, verbinden, löschen, umsortieren, ankerfest                  | IP-39                 |
 | IP-33 | Undo On Immutable Document Swap                | Undo-Einträge auf den `Document`-Tausch umstellen                          | IP-39                 |
 | IP-18 | AI Actions On Paragraph And Heading            | Schwebende KI-Leiste über `FloatingOverlay`; Schaltflächen mit `TODO(...)`   | IP-39                 |
-| IP-23 | Optional Book Parts In The Tree               | Kontrollkästchen schaltet Prolog, Epilog und Klappentext ins Buch, `PageMode` sofort | IP-39, IP-24, IP-35 |
+| IP-23 | Optional Book Parts In The Tree ✅              | Kontrollkästchen schaltet Prolog, Epilog und Klappentext ins Buch, `PaperSheetView.pageModes` sofort | IP-39, IP-24, IP-35 |
 
 ### Abgelöste Pläne (TextAnchor)
 
@@ -739,16 +739,44 @@ gesonderte Vorschau abzuwarten. Gespiegelte Ränder, Leerseiten und die Klappent
 weiterhin offen. `PaperSheetMode` wurde mit simPlay 0.3.0 zugleich umbenannt (`READONLY` →
 `SELECTABLE`), in `BookPartEditorViewModel` und seinem Test nachgezogen.
 
-### IP-23: Optional Book Parts In The Tree
+### IP-23: Optional Book Parts In The Tree ✅
 
-Plan: `FP-001-IP-23-OptionaleTeileImBaum.md`
+Plan: `FP-001-IP-23-OptionaleTeileImBaum.md` (abgeschlossen, entfernt)
 
 Der eine Plan, der den Projektbaum ändert, und bewusst eng: Struktur und `selectedItem`-API bleiben,
-ein Kontrollkästchen wird auf genau drei Knoten hinzugefügt. `CheckBoxTreeItem` wendet seinen Haken
-standardmäßig auf den Teilbaum an, was eingeschränkt werden muss. Das Ausgrauen zieht sofort nach.
-**Nicht mehr aufgeschoben:** `PageMode.DISABLED`/`null` für einen ausgeschalteten Teil wird von diesem
-Plan direkt verdrahtet - die frühere Vertagung auf eine künftige Buchvorschau entfällt, weil IP-39 alle
-Seiten ohnehin immer gleichzeitig zeigt.
+ein Kontrollkästchen wird auf genau drei Knoten hinzugefügt. Das Ausgrauen zieht sofort nach.
+**Nicht mehr aufgeschoben:** eine ausgeschaltete Seite wird von diesem Plan direkt verdrahtet - die
+frühere Vertagung auf eine künftige Buchvorschau entfällt, weil IP-39 alle Seiten ohnehin immer
+gleichzeitig zeigt.
+
+**Abweichungen bei der Umsetzung:**
+
+* `CheckBoxTreeItem` (das Standard-JavaFX-Kontrollkästchen mit automatischer Teilbaum-Vererbung) wird
+  nicht verwendet: `ProjectListCell` baut für Prolog, Epilog und Klappentext eine eigene, schlichte
+  `CheckBox` in ihrem `graphic`, gelesen und geschrieben über neue Methoden auf
+  `ProjectListViewModel` (`setPrologIncluded`/`setEpilogIncluded`/`setBlurbIncluded`). Da diese drei
+  Knoten ohnehin keine Kindknoten tragen, entfällt das im Plan benannte Problem der Haken-Vererbung
+  strukturell - `CheckBoxTreeItem`s Zusatzverhalten wäre ungenutzt geblieben.
+* **`PageMode.DISABLED` sitzt nicht im Engine-Modell, sondern auf `PaperSheetView`.** Die Recherche zu
+  simPlay 0.4.0 ergab: `Page`/`FlowPage`/`SinglePage` im Rohmodell (`simplay-engine`) tragen kein
+  `PageMode`-Feld; `PageMode` ist ein rein UI-seitiges, transientes Konzept in `simplay-common`/
+  `simplay-fx`, erreichbar über `PaperSheetView.pageModes: Map<String, PageMode>`. `BookPartEditorViewModel`
+  pflegt diese Map (Seiten-`id` `"prolog"`/`"epilog"`/`"blurb"` → `PageMode.DISABLED`, wenn
+  `included == false`) über einen Listener auf `BookProperty.prologProperty`/`epilogProperty`/
+  `blurbProperty` und wendet sie nach jedem `pushWholeDocument()` erneut an, da `pageModes` bei jedem
+  von außen zugewiesenen `document` geleert wird. `BookDocumentBuilder` selbst bleibt unverändert -
+  eine ausgeschaltete Seite existiert weiter im `Document`, nur ihr Interaktionsmodus ändert sich.
+* **Nebenbei gefunden und behoben:** `lib/fx-model`s `BeanFields` band ein verschachteltes
+  Property-Modell über einen `ChangeListener` an das jeweils gekapselte Objekt; JavaFX unterdrückt
+  dessen Benachrichtigung, wenn zwei aufeinanderfolgende Objekte `equals()`-gleich sind - was bei
+  frisch angelegten Kotlin-`data class`-Standardobjekten (zwei `Book()` etwa) regelmäßig zutrifft, ohne
+  dieselbe Instanz zu sein. Betroffene Modelle blieben dann an ein verwaistes Objekt gebunden. Behoben
+  in `BeanFields.kt` (jetzt `InvalidationListener`, dazu referenz-idempotentes `rebind()`) und allen
+  ~20 Property-Modell-Klassen, die den Listener registrieren - Ursache für einen sonst stillen
+  Checkbox-Toggle-Fehler beim Testen von IP-23, betrifft aber jede FX-Modell-Bindung im Projekt.
+* Vor der Umsetzung wurde `simplayVersion` von `0.3.2` auf `0.4.0` gehoben (einzige Breaking Change:
+  Paket-Umzug von `LineBreakerStrategy`/`WordBreakerStrategy` nach `...engine.strategy`, im Repo
+  ungenutzt, keine Codeänderung nötig).
 
 ## 8. Abhängigkeitsgraph
 
@@ -757,7 +785,7 @@ IP-24✅ ─┬─> IP-36✅ (mit IP-02✅) ──> IP-37✅ (mit IP-29✅) ─�
         │                                                                                   ├─> IP-32
 IP-29✅ ─┴─> IP-30✅ (mit IP-02✅, IP-24✅) ─┬─> IP-35✅                                       ├─> IP-33
         └─> IP-34✅                        │                                                 ├─> IP-18
-                                           └───────────────────────────────────────────────> IP-23 (mit IP-24✅, IP-35✅)
+                                           └───────────────────────────────────────────────> IP-23✅ (mit IP-24✅, IP-35✅)
 IP-02✅ ──> IP-13✅, IP-14✅
 IP-12✅ ──> IP-13✅, IP-19✅
 IP-17✅  (Port bleibt für spätere Wiederverwendung; nicht verdrahtet)
@@ -774,7 +802,8 @@ Abweichung, deren Bausteine IP-38 weiterverwendet.
 
 Abgeschlossen und unberührt: **IP-01** ✅ (teilweise abgelöst), **IP-02** ✅, **IP-24** ✅,
 **IP-09** ✅, **IP-12** ✅, **IP-13** ✅, **IP-14** ✅, **IP-17** ✅, **IP-19** ✅, **IP-29** ✅,
-**IP-30** ✅, **IP-34** ✅, **IP-35** ✅. Abgeschlossen, Ergebnis durch die zweite Abweichung abgelöst:
+**IP-30** ✅, **IP-34** ✅, **IP-35** ✅. Abgeschlossen, mit `PageMode` auf `PaperSheetView` statt im
+Engine-Modell verdrahtet: **IP-23** ✅ (Abschnitt 7). Abgeschlossen, Ergebnis durch die zweite Abweichung abgelöst:
 **IP-31** ✅ (Grundfunktionen bleiben nutzbar, siehe IP-32/IP-39). Vollständig abgelöst, keine Datei
 mehr: **IP-15**, **IP-16** (siehe Abschnitt 6).
 
@@ -789,10 +818,10 @@ mehr: **IP-15**, **IP-16** (siehe Abschnitt 6).
   weiter nicht vorgesehen. **Der Nutzer fügt diese Politik nachträglich in simPlay ein.**
   Seitennummerierung (`Document.numbering`, `excludedPageIds`, `PageCountingMode`) ist seit 0.3.0
   vorhanden und von IP-35 verdrahtet, nicht mehr als Zwischenlösung. Inaktive Seiten eines
-  ausgeschalteten Teils (`PageMode.DISABLED`) sind ebenfalls seit 0.3.0 vorhanden und werden jetzt
-  direkt von IP-23 verdrahtet, da IP-39 alle Seiten ohnehin gleichzeitig zeigt - die frühere Vertagung
-  auf eine gesonderte Buchvorschau entfällt. Betroffene Abschnitte des Zielzustands stehen weiterhin
-  unter dem Vorbehalt des verbleibenden Rests.
+  ausgeschalteten Teils sind seit IP-23 ✅ verdrahtet - nicht über ein Feld im Engine-Modell (`PageMode`
+  existiert dort nicht), sondern über `PaperSheetView.pageModes` (`simplay-common`/`simplay-fx`), das
+  `BookPartEditorViewModel` je Seiten-`id` pflegt. Betroffene Abschnitte des Zielzustands stehen
+  weiterhin unter dem Vorbehalt des verbleibenden Rests.
 * **`TextAnchor` ist zum Zeitpunkt dieser Planänderung nicht freigegeben (simPlay 0.3.1 steht noch
   aus).** Diese Abweichung setzt voraus, dass ein Anker eine Textstelle über beliebige Einfügungen,
   Löschungen und Verschiebungen davor hinweg wiederfindet, dass ihm eine Rolle beigegeben werden kann

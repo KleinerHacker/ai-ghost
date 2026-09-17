@@ -12,10 +12,14 @@
 
 package org.pcsoft.app.aighost.app.ui.component
 
+import javafx.scene.control.CheckBox
 import javafx.scene.control.ContextMenu
 import javafx.scene.control.MenuItem
 import javafx.scene.control.TextInputDialog
+import javafx.scene.control.Tooltip
 import javafx.scene.control.TreeCell
+import javafx.scene.image.ImageView
+import javafx.scene.layout.HBox
 import org.pcsoft.app.aighost.app.AiGhostIcons
 import org.pcsoft.app.aighost.app.ui.AiGhostDialog
 import org.pcsoft.app.aighost.model.project.book.Chapter
@@ -30,7 +34,9 @@ import java.util.*
  *
  * Adding, renaming and removing a chapter (IP-38) is carried out here, in the one place that already
  * shows the tree and can ask the user - [viewModel] only ever changes the manuscript once it is told
- * to, unconditionally.
+ * to, unconditionally. Toggling whether the prolog, the epilog or the blurb belongs to the finished
+ * book (IP-23) works the same way: the checkbox next to their icon asks [viewModel] to flip the switch
+ * unconditionally, since nothing is lost by leaving a part out - its text stays where it is.
  *
  * @property messages the bundle the view was loaded with, so a cell speaks the same language as the
  *   FXML around it
@@ -67,11 +73,16 @@ internal class ProjectListCell(
             is ProjectListItem.Root -> null
             is ProjectListItem.TitlePageItem -> null
             is ProjectListItem.CopyrightPageItem -> null
-            is ProjectListItem.PrologItem -> AiGhostIcons.treeProlog()
+            is ProjectListItem.PrologItem ->
+                includedGraphic(item.prolog?.included == true, AiGhostIcons.treeProlog(), viewModel::setPrologIncluded)
+
             is ProjectListItem.Chapters -> AiGhostIcons.treeChapter()
             is ProjectListItem.ChapterItem -> AiGhostIcons.treeChapter()
-            is ProjectListItem.EpilogItem -> AiGhostIcons.treeEpilog()
-            is ProjectListItem.BlurbItem -> AiGhostIcons.treeBlurb()
+            is ProjectListItem.EpilogItem ->
+                includedGraphic(item.epilog?.included == true, AiGhostIcons.treeEpilog(), viewModel::setEpilogIncluded)
+
+            is ProjectListItem.BlurbItem ->
+                includedGraphic(item.blurb?.included == true, AiGhostIcons.treeBlurb(), viewModel::setBlurbIncluded)
         }
 
         contextMenu = when (item) {
@@ -89,6 +100,18 @@ internal class ProjectListCell(
             is ProjectListItem.EpilogItem -> null
             is ProjectListItem.BlurbItem -> null
         }
+    }
+
+    // Built fresh on every call, the same as the icon and the context menu items above: the cell is
+    // recycled across items by the tree's virtual flow, so a checkbox bound to the previous item would
+    // otherwise linger and report a toggle for a node that is no longer shown here.
+    private fun includedGraphic(included: Boolean, icon: ImageView, onToggle: (Boolean) -> Unit): HBox {
+        val checkBox = CheckBox().apply {
+            isSelected = included
+            tooltip = Tooltip(messages.getString("component.projectList.checkbox.included.tooltip"))
+            selectedProperty().addListener { _, _, newValue -> onToggle(newValue) }
+        }
+        return HBox(checkBox, icon).apply { styleClass += "tree-cell-part" }
     }
 
     private fun addChapterItem(): MenuItem =

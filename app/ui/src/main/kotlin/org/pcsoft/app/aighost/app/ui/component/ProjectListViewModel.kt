@@ -13,6 +13,8 @@
 package org.pcsoft.app.aighost.app.ui.component
 
 import de.saxsys.mvvmfx.ViewModel
+import javafx.beans.InvalidationListener
+import javafx.beans.property.BooleanProperty
 import javafx.beans.value.ChangeListener
 import javafx.beans.property.ReadOnlyListProperty
 import javafx.beans.property.ReadOnlyListWrapper
@@ -20,7 +22,9 @@ import javafx.beans.property.ReadOnlyObjectProperty
 import javafx.beans.property.ReadOnlyObjectWrapper
 import javafx.collections.FXCollections
 import org.pcsoft.app.aighost.app.Messages
+import org.pcsoft.app.aighost.app.undo.UndoStack
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
+import org.pcsoft.app.aighost.fx.model.project.book.BookProperty
 import org.pcsoft.app.aighost.fx.model.project.book.ChapterProperty
 import org.pcsoft.app.aighost.layouting.model.common.toPageLayout
 import org.pcsoft.app.aighost.layouting.model.common.toTextStyle
@@ -52,6 +56,13 @@ import org.pcsoft.framework.simplay.engine.model.FlowPage
  * neither ever names a page or an anchor the other does not know about. Whether removing a chapter
  * needs the user's confirmation first is a question of [ProjectListCell], which shows the tree - this
  * view model carries out the removal once it is asked to, unconditionally.
+ *
+ * [setPrologIncluded], [setEpilogIncluded] and [setBlurbIncluded] (IP-23) switch whether that part
+ * belongs to the finished book, without touching its text. Whichever field property of the book model
+ * changes it - the tree's own checkbox today, a further control elsewhere later - [prolog], [epilog]
+ * and [blurb] pick the change up through a listener on the matching `*Property` of [BookProperty] and
+ * hand out a fresh copy, so [ProjectListCell] always renders the current switch even when it was
+ * flipped somewhere else. [bindUndoStack] hands over the undo history the switch is recorded into.
  */
 class ProjectListViewModel : ViewModel {
 
@@ -69,6 +80,22 @@ class ProjectListViewModel : ViewModel {
     // released again when another model takes its place.
     private var project: ProjectProperty? = null
     private val projectListener = ChangeListener<Project> { _, _, newValue -> onProjectChanged(newValue) }
+
+    // The book of the followed project, kept only to remove the three listeners below again when the
+    // tree is rebound - BookProperty itself never changes for the life of a ProjectProperty.
+    private var boundBook: BookProperty? = null
+
+    // A field property of BookPartProperty reports every change of the part it wraps as an
+    // invalidation of itself (BeanFields.fireEvent), regardless of whether the wrapped object was
+    // replaced or only mutated in place - so these three listeners are told about every toggle no
+    // matter where it came from, and always hand out a fresh copy of the part, since the wrapper
+    // properties below only notify their own listeners on a genuine reference change.
+    private val prologListener = InvalidationListener { prologWrapper.value = project?.bookProperty?.prolog?.copy() }
+    private val epilogListener = InvalidationListener { epilogWrapper.value = project?.bookProperty?.epilog?.copy() }
+    private val blurbListener = InvalidationListener { blurbWrapper.value = project?.bookProperty?.blurb?.copy() }
+
+    // The undo history of the open project, absent until the surrounding window hands it over.
+    private var undoStack: UndoStack? = null
 
     /** Chapters of the open project in the order the user arranged them, empty without a project. */
     val chapters: ReadOnlyListProperty<Chapter> get() = chaptersWrapper.readOnlyProperty
@@ -92,10 +119,30 @@ class ProjectListViewModel : ViewModel {
      */
     internal fun bind(project: ProjectProperty) {
         this.project?.removeListener(projectListener)
+        boundBook?.prologProperty?.removeListener(prologListener)
+        boundBook?.epilogProperty?.removeListener(epilogListener)
+        boundBook?.blurbProperty?.removeListener(blurbListener)
+
         this.project = project
         project.addListener(projectListener)
 
+        boundBook = project.bookProperty.also {
+            it.prologProperty.addListener(prologListener)
+            it.epilogProperty.addListener(epilogListener)
+            it.blurbProperty.addListener(blurbListener)
+        }
+
         onProjectChanged(project.value)
+    }
+
+    /**
+     * Hands the undo history of the open project over, so a switch toggled through [setPrologIncluded],
+     * [setEpilogIncluded] or [setBlurbIncluded] is recorded into it.
+     *
+     * @param undoStack the one undo history of the surrounding window
+     */
+    internal fun bindUndoStack(undoStack: UndoStack) {
+        this.undoStack = undoStack
     }
 
     /**
@@ -173,6 +220,43 @@ class ProjectListViewModel : ViewModel {
         // The plain Chapter the property just wrote into is the same instance the list already holds,
         // so a re-set is enough to tell every listener - the tree cell included - to read it again.
         chaptersWrapper[index] = chapter
+    }
+
+    /**
+     * Switches whether the prolog belongs to the finished book, without touching its text.
+     *
+     * @param included `true` to include the prolog, `false` to leave it out
+     */
+    fun setPrologIncluded(included: Boolean) =
+        toggleIncluded(project?.bookProperty?.prologProperty?.includedProperty, included)
+
+    /**
+     * Switches whether the epilog belongs to the finished book, without touching its text.
+     *
+     * @param included `true` to include the epilog, `false` to leave it out
+     */
+    fun setEpilogIncluded(included: Boolean) =
+        toggleIncluded(project?.bookProperty?.epilogProperty?.includedProperty, included)
+
+    /**
+     * Switches whether the blurb belongs to the finished book, without touching its text.
+     *
+     * @param included `true` to include the blurb, `false` to leave it out
+     */
+    fun setBlurbIncluded(included: Boolean) =
+        toggleIncluded(project?.bookProperty?.blurbProperty?.includedProperty, included)
+
+    // Writes the switch through its field property - which mutates the part already sitting in the
+    // book model in place and reports the change through prologListener/epilogListener/blurbListener -
+    // and records it as one undo entry; a call that would not change anything is dropped so it does
+    // not clutter the history.
+    private fun toggleIncluded(includedProperty: BooleanProperty?, included: Boolean) {
+        includedProperty ?: return
+        val old = includedProperty.value
+        if (old == included) return
+
+        includedProperty.value = included
+        undoStack?.record(Messages["component.projectList.undo.toggleIncluded"], includedProperty, old, included)
     }
 
     private fun onProjectChanged(project: Project?) {

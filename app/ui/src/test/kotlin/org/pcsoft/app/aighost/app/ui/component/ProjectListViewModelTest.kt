@@ -15,18 +15,22 @@ package org.pcsoft.app.aighost.app.ui.component
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.pcsoft.app.aighost.app.undo.UndoStack
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
 import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.FontData
 import org.pcsoft.app.aighost.model.common.StyleData
 import org.pcsoft.app.aighost.model.project.Project
 import org.pcsoft.app.aighost.model.project.book.Chapter
+import org.pcsoft.app.aighost.model.project.book.Epilog
 import org.pcsoft.app.aighost.model.project.design.ChapterPageDesign
 import org.pcsoft.app.aighost.model.project.design.Design
 
 /**
- * Developer tests for [ProjectListViewModel]'s chapter management: [ProjectListViewModel.addChapter],
- * [ProjectListViewModel.removeChapter] and [ProjectListViewModel.renameChapter] (IP-38).
+ * Developer tests for [ProjectListViewModel]'s chapter management ([ProjectListViewModel.addChapter],
+ * [ProjectListViewModel.removeChapter], [ProjectListViewModel.renameChapter], IP-38) and its prolog,
+ * epilog and blurb inclusion switch ([ProjectListViewModel.setPrologIncluded],
+ * [ProjectListViewModel.setEpilogIncluded], [ProjectListViewModel.setBlurbIncluded], IP-23).
  *
  * Whether removing a chapter needs the user's confirmation first is [ProjectListCell]'s concern, not
  * this view model's - every method here is proven to carry out its change unconditionally, the moment
@@ -146,5 +150,123 @@ class ProjectListViewModelTest {
         withoutProject.renameChapter(Chapter("first"), "Renamed")
 
         assertTrue(withoutProject.chapters.isEmpty())
+    }
+
+    /**
+     * Use case: the user switches the prolog on, so the model field is flipped and the property this
+     * view model hands out to the tree reports the same, current switch.
+     */
+    @Test
+    fun switchesThePrologOnAndReportsIt() {
+        assertFalse(project.value.book.prolog.included)
+
+        viewModel.setPrologIncluded(true)
+
+        assertTrue(project.value.book.prolog.included)
+        assertEquals(true, viewModel.prolog.value?.included)
+    }
+
+    /**
+     * Use case: the user switches an already included epilog off again, so the model field returns to
+     * `false`.
+     */
+    @Test
+    fun switchesTheEpilogOff() {
+        project.bookProperty.epilog = Epilog(included = true)
+
+        viewModel.setEpilogIncluded(false)
+
+        assertFalse(project.value.book.epilog.included)
+        assertEquals(false, viewModel.epilog.value?.included)
+    }
+
+    /**
+     * Use case: the blurb switch is flipped, so only the blurb changes - the prolog and the epilog
+     * stay exactly as they were.
+     */
+    @Test
+    fun switchesTheBlurbWithoutTouchingTheOtherParts() {
+        viewModel.setBlurbIncluded(true)
+
+        assertTrue(project.value.book.blurb.included)
+        assertFalse(project.value.book.prolog.included)
+        assertFalse(project.value.book.epilog.included)
+    }
+
+    /**
+     * Use case: the switch is set to the value it already carries, so nothing changes and no undo
+     * entry is pushed for a call that would not have done anything.
+     */
+    @Test
+    fun settingTheSameValueAgainIsANoOp() {
+        val stack = UndoStack()
+        viewModel.bindUndoStack(stack)
+
+        viewModel.setPrologIncluded(false)
+
+        assertFalse(stack.canUndoProperty.get(), "no-op toggle must not be recorded")
+    }
+
+    /**
+     * Use case: something other than the tree flips the switch directly on the book's property model -
+     * the way a future inspector control would - so the tree's own property still picks the change up
+     * and hands out the part's current state.
+     */
+    @Test
+    fun followsASwitchToggledSomewhereElse() {
+        project.bookProperty.prologProperty.includedProperty.value = true
+
+        assertEquals(true, viewModel.prolog.value?.included)
+    }
+
+    /**
+     * Use case: no project is open, so switching a part's inclusion is simply a no-op instead of
+     * failing.
+     */
+    @Test
+    fun inclusionSwitchingIsANoOpWithoutAProject() {
+        val withoutProject = ProjectListViewModel()
+
+        withoutProject.setPrologIncluded(true)
+        withoutProject.setEpilogIncluded(true)
+        withoutProject.setBlurbIncluded(true)
+
+        assertNull(withoutProject.prolog.value)
+        assertNull(withoutProject.epilog.value)
+        assertNull(withoutProject.blurb.value)
+    }
+
+    /**
+     * Use case: the user toggles the prolog switch and then undoes it, so the switch reverts to what
+     * it was before, the same way a text edit can be undone.
+     */
+    @Test
+    fun undoesAToggleOfTheProlog() {
+        val stack = UndoStack()
+        viewModel.bindUndoStack(stack)
+
+        viewModel.setPrologIncluded(true)
+        assertTrue(project.value.book.prolog.included)
+
+        stack.undo()
+
+        assertFalse(project.value.book.prolog.included)
+        assertEquals(false, viewModel.prolog.value?.included)
+    }
+
+    /**
+     * Use case: an undone toggle of the blurb switch is redone, so it is switched on again.
+     */
+    @Test
+    fun redoesAToggleOfTheBlurb() {
+        val stack = UndoStack()
+        viewModel.bindUndoStack(stack)
+
+        viewModel.setBlurbIncluded(true)
+        stack.undo()
+        stack.redo()
+
+        assertTrue(project.value.book.blurb.included)
+        assertEquals(true, viewModel.blurb.value?.included)
     }
 }

@@ -55,7 +55,7 @@ abstract class BookPartProperty<T : BookPart?> internal constructor() : SimpleOb
         // The field properties belong to another object after every exchange, so they are tied to the
         // one this property carries now. A derived class registers its own fields before the first
         // part arrives, so they are rebound along with the shared ones.
-        addListener { _, _, newValue -> fields.rebind(newValue) }
+        addListener { fields.rebind(get()) }
     }
 
     /**

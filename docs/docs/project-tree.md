@@ -47,6 +47,14 @@ Right-clicking `Chapter` or a chapter node opens a menu:
 * **Delete Chapter** (on a chapter node) removes the chapter and its text; since that text cannot be
   brought back, a confirmation is asked for first.
 
+## Including or excluding a part
+
+`Prolog`, `Epilog` and `Blurb` each carry a checkbox next to their icon. It switches whether that part
+belongs to the finished book, without touching its text: switching it off leaves the written text
+exactly where it is, only marking its page on the writing surface as inactive - greyed out, with
+neither selection, caret nor editing - until it is switched back on. The switch is recorded in the
+undo history like any other change.
+
 ## Language
 
 The node labels follow the language of the user interface: in German the tree reads `Projekt`,

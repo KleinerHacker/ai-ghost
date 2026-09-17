@@ -27,7 +27,7 @@ Status: IN_PROGRESS
 | IP-32 | Paragraph Structure Operations On Document     | NOT_STARTED |
 | IP-33 | Undo On Immutable Document Swap                | NOT_STARTED |
 | IP-18 | AI Actions On Paragraph And Heading            | NOT_STARTED |
-| IP-23 | Optional Book Parts In The Tree                | NOT_STARTED |
+| IP-23 | Optional Book Parts In The Tree                | COMPLETED   |
 
 ## Abgelöste Pläne (simPlay-Abweichung)
 
@@ -62,7 +62,7 @@ nur seine reinen Funktionen und sein Sync-Muster gehen in IP-39 über.
 
 ## Gesamtfortschritt
 
-77 % (17 von 22 zählenden Plänen abgeschlossen; IP-31 zählt als abgeschlossen, aber sein Ergebnis ist
+82 % (18 von 22 zählenden Plänen abgeschlossen; IP-31 zählt als abgeschlossen, aber sein Ergebnis ist
 abgelöst und wurde von IP-39 neu erbracht)
 
 ## Anmerkungen
@@ -194,4 +194,22 @@ langen Buches wurden mangels Testprojekt nicht real gemessen. `Editor.inspectorC
 Modell bereit, ist aber nicht an die Oberfläche angebunden; Splitter-Positionen werden nicht gemerkt -
 beides bleibt offenes TODO, da `Inspector`/`EditorView` noch keinen Gesamt-Einklappmechanismus besitzen.
 
-Nächster Schritt: IP-32, IP-33, IP-18 oder IP-23 (alle jetzt durch IP-39 freigegeben).
+IP-23 abgeschlossen: Checkbox auf Prolog-, Epilog- und Klappentext-Knoten (`ProjectListCell`,
+Zustand/Schreiben über `ProjectListViewModel.set{Prolog,Epilog,Blurb}Included`, undo-fähig über
+`UndoStack.record` auf der jeweiligen `includedProperty`). Abweichung vom Plan: kein
+`CheckBoxTreeItem` (dessen automatische Teilbaum-Vererbung ungenutzt geblieben wäre, da die drei
+Knoten keine Kinder tragen), sondern eine schlichte `CheckBox` im Zellen-`graphic`. Wichtigere
+Abweichung: `PageMode.DISABLED` sitzt nicht im simPlay-Engine-Modell (`Page` trägt kein solches Feld),
+sondern ist ein transientes UI-Konzept auf `PaperSheetView.pageModes: Map<String, PageMode>`
+(`simplay-common`/`simplay-fx`) - `BookPartEditorViewModel` pflegt diese Map je Seiten-`id`, reagiert
+auf einen Listener auf `BookProperty.prologProperty`/`epilogProperty`/`blurbProperty` und wendet sie
+nach jedem `pushWholeDocument()` erneut an, da `pageModes` bei jedem von außen zugewiesenen `document`
+geleert wird. `BookDocumentBuilder` blieb unverändert. Vor der Umsetzung `simplayVersion` auf `0.4.0`
+gehoben (einzige Breaking Change ohne Codebezug). Beim Testen zusätzlich einen stillen Bug in
+`lib/fx-model`s `BeanFields` gefunden und behoben: der `ChangeListener`, der ein verschachteltes
+Property-Modell an sein gekapseltes Objekt band, wurde von JavaFX unterdrückt, wenn zwei
+aufeinanderfolgende Objekte `equals()`-gleich, aber nicht dieselbe Instanz waren (z. B. zwei frische
+`Book()`) - jetzt ein referenz-idempotentes `rebind()` mit `InvalidationListener`, in `BeanFields.kt`
+und rund 20 Property-Modell-Klassen.
+
+Nächster Schritt: IP-32, IP-33 oder IP-18.

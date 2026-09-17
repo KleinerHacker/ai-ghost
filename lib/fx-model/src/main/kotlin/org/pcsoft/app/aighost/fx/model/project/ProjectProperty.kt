@@ -98,8 +98,8 @@ class ProjectProperty(project: Project) : SimpleObjectProperty<Project>(project)
         // The properties of the parts belong to another object after every exchange, so they are tied
         // to the one this property carries now. The constructor of the base class stored the project
         // without announcing it, so they are tied to it right here as well.
-        addListener { _, _, newValue ->
-            fields.rebind(newValue)
+        addListener {
+            fields.rebind(get())
             refreshAttachedParts()
         }
         fields.rebind(get())

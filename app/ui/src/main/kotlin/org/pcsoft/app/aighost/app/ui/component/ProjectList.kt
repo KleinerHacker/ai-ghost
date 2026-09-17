@@ -15,12 +15,14 @@ package org.pcsoft.app.aighost.app.ui.component
 import de.saxsys.mvvmfx.FluentViewLoader
 import javafx.beans.property.ReadOnlyObjectProperty
 import javafx.scene.layout.BorderPane
+import org.pcsoft.app.aighost.app.undo.UndoStack
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
 
 /**
  * Shows the open project as a tree: prolog, chapters, epilog and blurb below the project itself.
  *
  * The component owns no data of its own. [bindProject] hands it the property model of the project,
+ * [bindUndoStack] the undo history a toggled prolog, epilog or blurb switch (IP-23) is recorded into,
  * and [selectedItem] reports every change of the selection back, so the surrounding window decides
  * what to open.
  */
@@ -43,6 +45,13 @@ class ProjectList : BorderPane() {
      * @param project the project model of the surrounding window
      */
     fun bindProject(project: ProjectProperty) = viewModel.bind(project)
+
+    /**
+     * Hands the undo history of the open project to the tree.
+     *
+     * @param undoStack the one undo history of the surrounding window
+     */
+    fun bindUndoStack(undoStack: UndoStack) = viewModel.bindUndoStack(undoStack)
 
     /** The node the user picked in the tree, absent while nothing is selected. */
     val selectedItem: ReadOnlyObjectProperty<ProjectListItem?> by viewModel::selectedItem

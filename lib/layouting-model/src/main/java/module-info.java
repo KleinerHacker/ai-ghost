@@ -10,6 +10,7 @@
  * See the License for the specific language governing permissions and limitations.
  */
 
+@SuppressWarnings("requires-transitive-automatic")
 module org.pcsoft.app.aighost.layouting.model {
     requires kotlin.stdlib;
 

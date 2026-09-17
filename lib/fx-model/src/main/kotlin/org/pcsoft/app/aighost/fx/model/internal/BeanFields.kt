@@ -61,6 +61,17 @@ internal class BeanFields<B : Any>(private val fireEvent: () -> Unit) {
     // alignment is not reported as a change of its own.
     private var aligning = false
 
+    // The object every binder is tied to right now, and whether [rebind] ran at all yet - `null` is a
+    // legitimate wrapped object of its own (no object at all), so a flag is needed to tell that apart
+    // from "never bound". Tracked by reference, not by equality: two structurally equal objects - two
+    // freshly created default parts, for instance - are still a genuine exchange the fields must retie
+    // themselves to, while the repeated [rebind] calls a nested field's own change triggers - every
+    // field this model reports as changed reaches every listener above it, [rebind] included, since the
+    // trigger for it is an `InvalidationListener` that cannot tell a real exchange from a report of a
+    // field mutated in place - must stay a no-op instead of rebuilding every field's adapter again.
+    private var isBound = false
+    private var boundTo: B? = null
+
     /**
      * Ties [property] to the text field named [name] of the wrapped object.
      *
@@ -200,9 +211,15 @@ internal class BeanFields<B : Any>(private val fireEvent: () -> Unit) {
      *
      * @param bean The object the model wraps now, or `null` when it wraps none.
      */
-    fun rebind(bean: B?) = aligned {
-        for (binder in binders) {
-            binder(bean)
+    fun rebind(bean: B?) {
+        if (isBound && boundTo === bean) return
+        isBound = true
+        boundTo = bean
+
+        aligned {
+            for (binder in binders) {
+                binder(bean)
+            }
         }
     }
 

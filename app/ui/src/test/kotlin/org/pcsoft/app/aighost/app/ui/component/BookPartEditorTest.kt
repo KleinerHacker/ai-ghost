@@ -20,6 +20,7 @@ import javafx.scene.input.KeyEvent
 import javafx.stage.Stage
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -47,6 +48,7 @@ import org.pcsoft.app.aighost.model.project.design.TitlePageDesign
 import org.pcsoft.app.aighost.model.project.meta.Meta
 import org.pcsoft.framework.simplay.fx.PaperSheetMode
 import org.pcsoft.framework.simplay.fx.PaperSheetView
+import org.pcsoft.framework.simplay.uicommon.PageMode
 import org.testfx.framework.junit5.ApplicationTest
 import org.testfx.util.WaitForAsyncUtils
 import java.util.Locale
@@ -390,5 +392,65 @@ class BookPartEditorTest : ApplicationTest() {
         // Same document, same anchor, so the deterministic linear caret position matches, without
         // depending on a way to read the anchor id back off the caret.
         assertEquals(positionAfterNavigating, freshSheet.caretModel.position)
+    }
+
+    /**
+     * Use case: the project is opened with the epilog switched off (IP-23), so its page is marked
+     * [PageMode.DISABLED] on the real sheet right from the start, without a tree pick being needed
+     * first - `project()`'s epilog carries no `included = true`, unlike its prolog and blurb.
+     */
+    @Test
+    fun marksASwitchedOffPartDisabledAsSoonAsTheProjectIsShown() {
+        WaitForAsyncUtils.waitForFxEvents()
+
+        assertEquals(PageMode.DISABLED, sheet.pageModes["epilog"])
+        assertFalse(sheet.pageModes.containsKey("prolog"), "an included part must carry no override")
+        assertFalse(sheet.pageModes.containsKey("blurb"), "an included part must carry no override")
+    }
+
+    /**
+     * Use case: the user switches the epilog on, so its page immediately stops being disabled -
+     * without the sheet being rebuilt, since the switch alone drives `PaperSheetView.pageModes`.
+     */
+    @Test
+    fun clearsTheDisabledPageModeAsSoonAsThePartIsSwitchedOn() {
+        WaitForAsyncUtils.waitForFxEvents()
+
+        interact { projectModel.bookProperty.epilogProperty.includedProperty.value = true }
+
+        assertFalse(sheet.pageModes.containsKey("epilog"))
+    }
+
+    /**
+     * Use case: the user switches the prolog off, so its page is disabled on the sheet, the anchor
+     * seed already on it staying exactly where it is.
+     */
+    @Test
+    fun disablesAPartAsSoonAsItIsSwitchedOff() {
+        WaitForAsyncUtils.waitForFxEvents()
+        val textBefore = blockText("prolog", 0)
+
+        interact { projectModel.bookProperty.prologProperty.includedProperty.value = false }
+
+        assertEquals(PageMode.DISABLED, sheet.pageModes["prolog"])
+        assertEquals(textBefore, blockText("prolog", 0), "switching a part off must not touch its text")
+    }
+
+    /**
+     * Use case: a design change rebuilds the whole document from the model, so the switched-off
+     * epilog's page mode override survives the rebuild instead of being lost with the fresh document
+     * `PaperSheetView.pageModes` would otherwise be cleared for.
+     */
+    @Test
+    fun keepsTheDisabledPageModeAcrossADesignChange() {
+        WaitForAsyncUtils.waitForFxEvents()
+
+        interact {
+            projectModel.value.design.blurbPage = BlurbPageDesign(style(size = 16))
+            projectModel.designProperty.refresh()
+        }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        assertEquals(PageMode.DISABLED, sheet.pageModes["epilog"])
     }
 }

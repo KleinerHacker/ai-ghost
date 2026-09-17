@@ -31,11 +31,13 @@ import org.pcsoft.app.aighost.app.controller.PartMode
 import org.pcsoft.app.aighost.app.controller.PartTarget
 import org.pcsoft.app.aighost.app.undo.UndoStack
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
+import org.pcsoft.app.aighost.fx.model.project.book.BookProperty
 import org.pcsoft.app.aighost.layouting.model.project.DocumentStyleRefresher
 import org.pcsoft.app.aighost.model.pref.WritingMode
 import org.pcsoft.framework.simplay.engine.model.Document
 import org.pcsoft.framework.simplay.fx.PaperSheetMode
 import org.pcsoft.framework.simplay.fx.PaperSheetView
+import org.pcsoft.framework.simplay.uicommon.PageMode
 
 /**
  * View model of [BookPartEditor].
@@ -69,6 +71,15 @@ import org.pcsoft.framework.simplay.fx.PaperSheetView
  * two of `PaperSheetView`'s blocks on its own; this view model detects that (a page's block count no
  * longer matches its targets) and rejects it by rebuilding the whole document from the untouched
  * model, rather than guessing which paragraph the merged text belongs to.
+ *
+ * A switched-off prolog, epilog or blurb (IP-23) still gets a page from [BookPartEditorController], so
+ * its anchor keeps working - [applyPageModes] is what actually keeps it visibly inactive, through
+ * [PaperSheetView.pageModes], a purely transient, view-side switch simPlay never persists into
+ * `Document`. That map is cleared whenever [PaperSheetView.document] is reloaded from outside, which
+ * [pushWholeDocument] does on every project bind and every design change, so [applyPageModes] runs
+ * again right after; a toggle of the switch itself, reported through a listener on
+ * [BookProperty.prologProperty], [BookProperty.epilogProperty] and [BookProperty.blurbProperty], reapplies
+ * it on its own without rebuilding the document.
  *
  * The component follows only models handed to it and registers nothing in a global registry, so the
  * `showingBinding` pattern of `fx-component-lifecycle` does not apply here, the same as for
@@ -116,6 +127,15 @@ class BookPartEditorViewModel : ViewModel {
     private val designListener = InvalidationListener { pushWholeDocument() }
     private var boundDesign: Observable? = null
 
+    // The book of the bound project, kept only to remove includedListener again when the project is
+    // rebound - BookProperty itself never changes for the life of a ProjectProperty.
+    private var boundBook: BookProperty? = null
+
+    // A field property of BookPartProperty reports every change of the part it wraps as an
+    // invalidation of itself, no matter whether the switch was flipped from the project tree or from
+    // somewhere else, so this alone keeps the sheet's page modes in step with the model.
+    private val includedListener = InvalidationListener { applyPageModes() }
+
     private val selectionListener =
         ChangeListener<ProjectListItem?> { _, _, newValue -> onSelectionChanged(newValue) }
     private var boundSelection: ObservableValue<ProjectListItem?>? = null
@@ -161,8 +181,17 @@ class BookPartEditorViewModel : ViewModel {
      */
     internal fun bindProject(project: ProjectProperty?) {
         boundDesign?.removeListener(designListener)
+        boundBook?.prologProperty?.removeListener(includedListener)
+        boundBook?.epilogProperty?.removeListener(includedListener)
+        boundBook?.blurbProperty?.removeListener(includedListener)
+
         this.project = project
         boundDesign = project?.designProperty?.also { it.addListener(designListener) }
+        boundBook = project?.bookProperty?.also {
+            it.prologProperty.addListener(includedListener)
+            it.epilogProperty.addListener(includedListener)
+            it.blurbProperty.addListener(includedListener)
+        }
 
         if (project == null || !::paperSheetView.isInitialized) {
             pushWholeDocument()
@@ -225,6 +254,10 @@ class BookPartEditorViewModel : ViewModel {
     internal fun release() {
         boundDesign?.removeListener(designListener)
         boundDesign = null
+        boundBook?.prologProperty?.removeListener(includedListener)
+        boundBook?.epilogProperty?.removeListener(includedListener)
+        boundBook?.blurbProperty?.removeListener(includedListener)
+        boundBook = null
         boundSelection?.removeListener(selectionListener)
         boundSelection = null
         if (::paperSheetView.isInitialized) {
@@ -352,5 +385,22 @@ class BookPartEditorViewModel : ViewModel {
             applyingDocument = false
         }
         paperSheetView.caretModel.moveTo(caretBefore)
+        // document was just reloaded from outside, which clears PaperSheetView.pageModes - reapplied
+        // here so a switched-off part stays visibly inactive without a second call from the caller.
+        applyPageModes()
+    }
+
+    // Keeps a switched-off prolog, epilog or blurb visibly inactive on the sheet through
+    // PaperSheetView.pageModes, without rebuilding the document: the page itself keeps existing (and
+    // keeps its anchor), only its interaction mode changes.
+    private fun applyPageModes() {
+        if (!::paperSheetView.isInitialized) return
+        val book = project?.value?.book ?: return
+
+        paperSheetView.pageModes = buildMap {
+            if (!book.prolog.included) put("prolog", PageMode.DISABLED)
+            if (!book.epilog.included) put("epilog", PageMode.DISABLED)
+            if (!book.blurb.included) put("blurb", PageMode.DISABLED)
+        }
     }
 }
