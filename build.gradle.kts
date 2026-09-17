@@ -41,7 +41,7 @@ val junitVersion = "6.1.3"
 // 0.4.0 moves LineBreakerStrategy/WordBreakerStrategy and their implementations from
 // org.pcsoft.framework.simplay.engine to org.pcsoft.framework.simplay.engine.strategy (breaking);
 // ai-ghost references neither directly, so no source change was needed for the move.
-val simplayVersion by extra("0.4.0")
+val simplayVersion by extra("0.4.1")
 
 // The UI module shipping the distribution; the licence report and the API docs are taken from it.
 val uiProject = ":app:ai-ghost-ui"
