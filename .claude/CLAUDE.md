@@ -40,6 +40,10 @@
 
 * NEVER decompile or reflect on a third-party class
   * If this is required, ask the user first
+* NEVER search the local system for third-party dependencies (Gradle/Maven caches, JARs,
+  extracted sources, `javap` dumps) to learn their API
+  * ALWAYS use the linked documentation instead, see `external-docs.md`
+  * If the linked documentation does not cover what is needed, ask the user first
 
 ## Console / CLI Output
 

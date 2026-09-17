@@ -50,8 +50,10 @@ Each paragraph is its own block on the sheet, and can be reshaped without leavin
 * **Enter** splits the paragraph at the caret into two.
 * **Backspace** at the very start of a paragraph merges it into the one before it; **Delete** at the
   very end merges it with the one after it.
-* **Ctrl+Shift+Up** and **Ctrl+Shift+Down** move the whole paragraph one place up or down; the same two
-  actions are on the paragraph's right-click menu, next to *Remove block*.
+* **Ctrl+Shift+Up** and **Ctrl+Shift+Down** move the whole paragraph one place up or down. The
+  paragraph's right-click menu offers the same actions - *Split paragraph*, *Merge with previous
+  paragraph*, *Merge with next paragraph*, *Remove paragraph*, *Move paragraph up* and *Move paragraph
+  down*.
 * **Up** and **Down** move the caret into the paragraph above or below once it sits on the first or the
   last line of the current one - the same way they would in a single, book-length page.
 

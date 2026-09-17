@@ -38,6 +38,11 @@
 * Inspector's "Chapter" section gains a "Generate chapter" AI button; pressing it does nothing yet -
   the actual generation is coming with a future feature
 
+* Writing surface gains paragraph structure editing: Enter splits a paragraph at the caret, Backspace
+  at its very start or Delete at its very end merges it with the neighbouring one, and Ctrl+Shift+Up /
+  Ctrl+Shift+Down moves it up or down - the same actions are also on the paragraph's right-click menu.
+  Every one of them is undone and redone as its own step
+
 * Writing surface gains a floating AI action bar - Rewrite, Expand, Shorten - next to the paragraph or
   heading the mouse hovers or the edit caret sits in; half-transparent until the mouse moves onto it,
   and pressing any of its buttons does nothing yet, the same as the "Generate chapter" AI button above

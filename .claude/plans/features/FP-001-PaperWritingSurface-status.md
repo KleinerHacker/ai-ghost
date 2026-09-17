@@ -24,7 +24,7 @@ Status: IN_PROGRESS
 | IP-37 | Dokument-Persistenz Und Migration               | COMPLETED   |
 | IP-38 | Buch-Dokument Als Alleinige Basis               | COMPLETED   |
 | IP-39 | PaperSheetView Dauerhaft Im Zentrum             | COMPLETED   |
-| IP-32 | Paragraph Structure Operations On Document     | NOT_STARTED |
+| IP-32 | Paragraph Structure Operations On Document     | COMPLETED   |
 | IP-33 | Undo On Immutable Document Swap                | NOT_STARTED |
 | IP-18 | AI Actions On Paragraph And Heading            | COMPLETED   |
 | IP-23 | Optional Book Parts In The Tree                | COMPLETED   |
@@ -62,7 +62,7 @@ nur seine reinen Funktionen und sein Sync-Muster gehen in IP-39 über.
 
 ## Gesamtfortschritt
 
-86 % (19 von 22 zählenden Plänen abgeschlossen; IP-31 zählt als abgeschlossen, aber sein Ergebnis ist
+91 % (20 von 22 zählenden Plänen abgeschlossen; IP-31 zählt als abgeschlossen, aber sein Ergebnis ist
 abgelöst und wurde von IP-39 neu erbracht)
 
 ## Anmerkungen
@@ -236,4 +236,19 @@ Button-Fläche sitzen, nicht auf einer farbigen. Ebenso nur `@32` gespeichert, k
 Datei - deckt sich mit jedem bestehenden Werkzeugleisten-Icon, `AiGhostIcons` skaliert beim Anzeigen
 selbst auf `MENU_ICON_SIZE`.
 
-Nächster Schritt: IP-32 oder IP-33.
+IP-32 abgeschlossen: `BookPartEditorController` bekam `splitTextBlock`/`removeTextBlock`/
+`moveTextBlock`/`mergeTextBlock` auf `TextBlock`-Listen einer `Page` sowie `applyParagraphOperation`
+als Transaktionsebene; Block `0` (trägt den `${anchorId}`-Marker) ist für Remove/Move-nach-oben
+gesperrt. Recherche in der simPlay-Doku ergab, dass Backspace/Delete-Verschmelzung und zeilen-/
+ankerübergreifende Pfeil-hoch/runter-Navigation im `EDITABLE`-Modus bereits nativ vorhanden sind -
+`BookPartEditorViewModel.handleDocumentChanged()` akzeptiert eine native Verschmelzung jetzt
+(`pageKeepsAnchor()`-Prüfung) statt sie pauschal zu verwerfen, und es gibt keinen eigenen
+Navigations-Code. Nur Enter (Split) und Strg+Umschalt+Pfeil hoch/runter (Move) bekamen einen
+`KEY_PRESSED`-Eventfilter. Neuer `PendingCaretTarget` (Ankerid + seitenlokaler Index, Umrechnung auf
+den dokumentweiten `CaretModel.moveIntoBlock`-Index erst beim Konsumieren) und
+`DocumentStructureUndoEntry` (Vorher-/Nachher-`Document` plus Caret-Ziel, ein `UndoStack.push` je
+Operation). Kontextmenü auf `PaperSheetView` mit sechs Einträgen (Teilen, zweimal Verbinden, Entfernen,
+zweimal Verschieben), Texte über den `translator`-Agenten übersetzt. Build und Tests grün
+(`:app:ai-ghost-ui:build`).
+
+Nächster Schritt: IP-33.

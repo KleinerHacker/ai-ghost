@@ -309,7 +309,7 @@ bleiben in Kraft (ihre Bausteine werden von IP-36 bis IP-39 weiterverwendet, nic
 abgeschlossen, aber sein Ergebnis - das `Document` je Baumauswahl auszutauschen - ist mit der zweiten
 Abweichung abgelöst; seine reinen Funktionen (`splitParagraph` und Geschwister) bleiben nutzbar. IP-15
 und IP-16 sind vollständig abgelöst und in IP-39 aufgegangen (siehe „Abgelöste Pläne (TextAnchor)“).
-IP-32 und IP-33 bleiben offen, mit angepassten Abhängigkeiten. IP-18 ist abgeschlossen. IP-23 ist
+IP-32 ist abgeschlossen. IP-33 bleibt offen, mit angepassten Abhängigkeiten. IP-18 ist abgeschlossen. IP-23 ist
 abgeschlossen. IP-36 bis IP-39 sind neu.
 Die Pläne IP-03, IP-04, IP-05, IP-06, IP-07, IP-08, IP-10, IP-11, IP-22, IP-25 und IP-26 sind aus der
 ersten Abweichung abgelöst (siehe „Abgelöste Pläne (simPlay)“).
@@ -334,7 +334,7 @@ ersten Abweichung abgelöst (siehe „Abgelöste Pläne (simPlay)“).
 | IP-37 | Dokument-Persistenz Und Migration ✅ (ohne Migration) | `Book.document: Document` speicherbar machen; Migration bewusst nicht gebaut | IP-36, IP-29           |
 | IP-38 | Buch-Dokument Als Alleinige Basis ✅            | `BookDocumentBuilder` einzige Bauquelle; Anker statt Index; Stil-Auffrischung | IP-37, IP-30, IP-34   |
 | IP-39 | PaperSheetView Dauerhaft Im Zentrum ✅          | Ein `Document`, immer sichtbar; Baumauswahl navigiert über `TextAnchor`      | IP-38, IP-09          |
-| IP-32 | Paragraph Structure Operations On Document     | Absätze teilen, verbinden, löschen, umsortieren, ankerfest                  | IP-39                 |
+| IP-32 | Paragraph Structure Operations On Document ✅  | Absätze teilen, verbinden, löschen, umsortieren, ankerfest                  | IP-39                 |
 | IP-33 | Undo On Immutable Document Swap                | Undo-Einträge auf den `Document`-Tausch umstellen                          | IP-39                 |
 | IP-18 | AI Actions On Paragraph And Heading ✅          | Schwebende KI-Leiste über `FloatingOverlay`; Schaltflächen mit `TODO(...)`   | IP-39                 |
 | IP-23 | Optional Book Parts In The Tree ✅              | Kontrollkästchen schaltet Prolog, Epilog und Klappentext ins Buch, `PaperSheetView.pageModes` sofort | IP-39, IP-24, IP-35 |
@@ -684,19 +684,40 @@ erste Dokumentaufbau nach dem Öffnen wird um einen `Platform.runLater`-Takt ver
 
 **Abhängigkeiten:** IP-38 (das eine, dauerhafte `Document` existiert und trägt Anker), IP-09 (Undo).
 
-### IP-32: Paragraph Structure Operations On Document
+### IP-32: Paragraph Structure Operations On Document ✅
 
-Plan: `FP-001-IP-32-AbsatzOperationenAufDokument.md`
+Plan: `FP-001-IP-32-AbsatzOperationenAufDokument.md` (abgeschlossen, entfernt)
 
 Teilen, Verbinden, Löschen und Umsortieren sind Operationen auf der `TextBlock`-Liste einer `Page` des
 einen, ganzen `Book.document`; das Ergebnis ist ein neues `Document`. `CaretModel` adressiert Blöcke,
 Wörter und Symbole. Enter teilt, Backspace am Blockanfang verbindet, Strg+Umschalt+Pfeil sortiert um –
 als eigene Tastenhandler über der Komponente, da ein Block ein Absatz ist, kein mehrzeiliges Feld.
-**Neu durch die TextAnchor-Abweichung:** Keine Operation überschreitet die Grenze eines `TextAnchor` -
-ein Merge am Kapitelanfang darf nicht in den letzten Absatz des vorigen Kapitels hineinlaufen, ein
-Löschen darf den letzten Absatz eines Kapitels nicht mit dem Kapitel selbst verwechseln. Das Anlegen
-und Entfernen eines ganzen Kapitels bleibt eine Operation des Projektbaums (IP-38/IP-39), keine
-Absatz-Operation.
+Keine Operation überschreitet die Grenze eines `TextAnchor` - ein Merge am Kapitelanfang darf nicht in
+den letzten Absatz des vorigen Kapitels hineinlaufen, ein Löschen darf den letzten Absatz eines
+Kapitels nicht mit dem Kapitel selbst verwechseln. Das Anlegen und Entfernen eines ganzen Kapitels
+bleibt eine Operation des Projektbaums (IP-38/IP-39), keine Absatz-Operation.
+
+**Abweichungen bei der Umsetzung:**
+
+* **Backspace/Delete bekamen keinen eigenen Tastenhandler.** Recherche in der simPlay-Doku
+  (`fx/paper-sheet-component.md`) ergab: im `EDITABLE`-Modus verschmilzt `PaperSheetView` zwei Blöcke
+  bereits selbständig, wenn ein natives Backspace/Delete eine Blockgrenze überschreitet.
+  `BookPartEditorViewModel.handleDocumentChanged()` akzeptiert diese Verschmelzung jetzt (statt sie wie
+  vor IP-32 pauschal zu verwerfen), solange die Seite laut `pageKeepsAnchor()` ihren `TextAnchor`
+  behält; nur eine echte Ankergrenzverletzung wird weiterhin durch Neuaufbau des ganzen Dokuments
+  verworfen. `mergeTextBlock` existiert zusätzlich als reine Funktion, aber nur für den expliziten
+  "Verbinden"-Menüpunkt, nicht für die Taste.
+* **Pfeil hoch/runter bekam ebenfalls keinen eigenen Code.** `CaretModel.position` ist laut Doku ein
+  linearer Offset über das gesamte Dokument; `EDITABLE`-Modus navigiert damit bereits zeilen- und
+  ankerübergreifend nativ. Nur Enter (kein natives Äquivalent) und Strg+Umschalt+Pfeil hoch/runter
+  (Move) bekamen einen `KEY_PRESSED`-Eventfilter auf `PaperSheetView`.
+* **`PendingCaretTarget`** speichert Ankerid + seitenlokalen Blockindex statt eines dokumentweiten
+  Index direkt; die Umrechnung in den von `CaretModel.moveIntoBlock` erwarteten dokumentweiten Index
+  passiert erst beim Konsumieren gegen das frisch aufgebaute `Document`
+  (`BookPartEditorController.documentBlockIndex`).
+* Kontextmenü trägt zusätzlich "Teilen" sowie "Mit vorherigem/nächstem Absatz verbinden" (nicht nur
+  Verschieben/Entfernen wie ursprünglich in `docs/docs/editor.md` beschrieben), da alle sechs
+  Operationen über dieselben `perform*`-Methoden des ViewModels laufen.
 
 ### IP-33: Undo On Immutable Document Swap
 
@@ -808,7 +829,7 @@ gleichzeitig zeigt.
 
 ```text
 IP-24✅ ─┬─> IP-36✅ (mit IP-02✅) ──> IP-37✅ (mit IP-29✅) ──> IP-38✅ (mit IP-30✅, IP-34✅) ──> IP-39✅ (mit IP-09✅)
-        │                                                                                   ├─> IP-32
+        │                                                                                   ├─> IP-32✅
 IP-29✅ ─┴─> IP-30✅ (mit IP-02✅, IP-24✅) ─┬─> IP-35✅                                       ├─> IP-33
         └─> IP-34✅                        │                                                 ├─> IP-18✅
                                            └───────────────────────────────────────────────> IP-23✅ (mit IP-24✅, IP-35✅)
@@ -828,7 +849,7 @@ Abweichung, deren Bausteine IP-38 weiterverwendet.
 
 Abgeschlossen und unberührt: **IP-01** ✅ (teilweise abgelöst), **IP-02** ✅, **IP-24** ✅,
 **IP-09** ✅, **IP-12** ✅, **IP-13** ✅, **IP-14** ✅, **IP-17** ✅, **IP-18** ✅, **IP-19** ✅,
-**IP-29** ✅, **IP-30** ✅, **IP-34** ✅, **IP-35** ✅. Abgeschlossen, mit `PageMode` auf `PaperSheetView` statt im
+**IP-29** ✅, **IP-30** ✅, **IP-32** ✅, **IP-34** ✅, **IP-35** ✅. Abgeschlossen, mit `PageMode` auf `PaperSheetView` statt im
 Engine-Modell verdrahtet: **IP-23** ✅ (Abschnitt 7). Abgeschlossen, Ergebnis durch die zweite Abweichung abgelöst:
 **IP-31** ✅ (Grundfunktionen bleiben nutzbar, siehe IP-32/IP-39). Vollständig abgelöst, keine Datei
 mehr: **IP-15**, **IP-16** (siehe Abschnitt 6).

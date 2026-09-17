@@ -346,82 +346,219 @@ class BookPartEditorControllerTest {
         assertFalse(project.value.book.document.pages.single { it.id == "prolog" }.blocks.map { it.toString() }.contains("Ignored."))
     }
 
+    private val style get() = design.chapterPage.textStyle.toTextStyle()
+
     /**
-     * Use case: splitting in the middle of a paragraph yields two paragraphs whose concatenation
-     * reconstructs the original text exactly - the character-range round trip IP-32 relies on.
+     * Use case: splitting in the middle of a block yields two blocks whose text concatenates back to
+     * the original - the character-range round trip IP-32 relies on.
      */
     @Test
-    fun splitsAParagraphAtTheGivenOffset() {
-        val result = BookPartEditorController.splitParagraph(listOf("Once upon a time."), 0, 10)
+    fun splitsATextBlockAtTheGivenOffset() {
+        val blocks = listOf(TextBlock.of("Once upon a time.", style))
 
-        assertEquals(listOf("Once upon ", "a time."), result)
-        assertEquals("Once upon a time.", result[0] + result[1])
+        val result = BookPartEditorController.splitTextBlock(blocks, 0, 10, style)!!
+
+        assertEquals(listOf("Once upon ", "a time."), result.map { it.toString() })
     }
 
     /**
-     * Use case: splitting at offset zero or at the paragraph's own length yields an empty first or
-     * second half instead of merging back with a neighbour.
+     * Use case: a block carrying an anchor token at its very start keeps that token on the first half
+     * of the split, so block `0` of a page never loses its `TextAnchor`.
      */
     @Test
-    fun splitsAtTheParagraphBoundaryWithoutMerging() {
-        assertEquals(listOf("", "Text"), BookPartEditorController.splitParagraph(listOf("Text"), 0, 0))
-        assertEquals(listOf("Text", ""), BookPartEditorController.splitParagraph(listOf("Text"), 0, 4))
+    fun splittingAnAnchoredBlockKeepsTheAnchorOnTheFirstHalf() {
+        val blocks = listOf(TextBlock.of("\${prolog}It was a dark night.", style))
+
+        val result = BookPartEditorController.splitTextBlock(blocks, 0, 8, style)!!
+
+        assertEquals("\${prolog}It was a", result[0].toString())
+        assertEquals(" dark night.", result[1].toString())
     }
 
     /**
-     * Use case: merging a paragraph with its previous or its next neighbour concatenates the two texts
-     * and removes the other paragraph from the list.
+     * Use case: splitting at offset zero or at the block's own length yields an empty first or second
+     * half instead of merging back with a neighbour.
      */
     @Test
-    fun mergesAParagraphWithEitherNeighbour() {
-        val paragraphs = listOf("First.", "Second.", "Third.")
+    fun splitsAtTheBlockBoundaryWithoutMerging() {
+        val blocks = listOf(TextBlock.of("Text", style))
+
+        assertEquals(listOf("", "Text"), BookPartEditorController.splitTextBlock(blocks, 0, 0, style)!!.map { it.toString() })
+        assertEquals(listOf("Text", ""), BookPartEditorController.splitTextBlock(blocks, 0, 4, style)!!.map { it.toString() })
+    }
+
+    /**
+     * Use case: an out-of-range block index rejects the split instead of throwing.
+     */
+    @Test
+    fun splittingAnOutOfRangeBlockIndexIsRejected() {
+        assertNull(BookPartEditorController.splitTextBlock(listOf(TextBlock.of("Text", style)), 5, 0, style))
+    }
+
+    /**
+     * Use case: merging a block with its previous or its next neighbour concatenates the two texts and
+     * removes the other block from the list.
+     */
+    @Test
+    fun mergesATextBlockWithEitherNeighbour() {
+        val blocks = listOf(TextBlock.of("First.", style), TextBlock.of("Second.", style), TextBlock.of("Third.", style))
 
         assertEquals(
             listOf("First.Second.", "Third."),
-            BookPartEditorController.mergeParagraph(paragraphs, 1, withPrevious = true)
+            BookPartEditorController.mergeTextBlock(blocks, 1, withPrevious = true)!!.map { it.toString() }
         )
         assertEquals(
             listOf("First.", "Second.Third."),
-            BookPartEditorController.mergeParagraph(paragraphs, 1, withPrevious = false)
+            BookPartEditorController.mergeTextBlock(blocks, 1, withPrevious = false)!!.map { it.toString() }
         )
     }
 
     /**
-     * Use case: merging at the very first or the very last paragraph has no such neighbour, so nothing
+     * Use case: merging block `0` with its next neighbour keeps the anchor token at the front of the
+     * merged block, still at position `0`.
+     */
+    @Test
+    fun mergingTheAnchoredBlockWithItsNextNeighbourKeepsTheAnchor() {
+        val blocks = listOf(TextBlock.of("\${prolog}First.", style), TextBlock.of("Second.", style))
+
+        val result = BookPartEditorController.mergeTextBlock(blocks, 0, withPrevious = false)!!
+
+        assertEquals(listOf("\${prolog}First.Second."), result.map { it.toString() })
+    }
+
+    /**
+     * Use case: merging at the very first or the very last block has no such neighbour, so nothing
      * happens.
      */
     @Test
     fun mergingAtTheOuterEdgesIsANoOp() {
-        val paragraphs = listOf("First.", "Second.")
+        val blocks = listOf(TextBlock.of("First.", style), TextBlock.of("Second.", style))
 
-        assertNull(BookPartEditorController.mergeParagraph(paragraphs, 0, withPrevious = true))
-        assertNull(BookPartEditorController.mergeParagraph(paragraphs, 1, withPrevious = false))
+        assertNull(BookPartEditorController.mergeTextBlock(blocks, 0, withPrevious = true))
+        assertNull(BookPartEditorController.mergeTextBlock(blocks, 1, withPrevious = false))
     }
 
     /**
-     * Use case: removing a paragraph drops it from the list, but the only remaining paragraph of a
-     * part is never removed, so there is always somewhere left to type.
+     * Use case: removing a block drops it from the list, but never the block at position `0`, which
+     * carries the page's anchor, and never the last block left.
      */
     @Test
-    fun removesAParagraphButKeepsTheLastOne() {
+    fun removesATextBlockButKeepsBlockZeroAndTheLastOne() {
+        val blocks = listOf(TextBlock.of("\${prolog}", style), TextBlock.of("Second.", style), TextBlock.of("Third.", style))
+
         assertEquals(
-            listOf("First.", "Third."),
-            BookPartEditorController.removeParagraph(listOf("First.", "Second.", "Third."), 1)
+            listOf("\${prolog}", "Third."),
+            BookPartEditorController.removeTextBlock(blocks, 1)!!.map { it.toString() }
         )
-        assertNull(BookPartEditorController.removeParagraph(listOf("Only one."), 0))
+        assertNull(BookPartEditorController.removeTextBlock(blocks, 0))
+        assertNull(BookPartEditorController.removeTextBlock(listOf(TextBlock.of("Only one.", style)), 0))
     }
 
     /**
-     * Use case: moving a paragraph up or down swaps it with its neighbour; moving it past the start or
-     * the end of the list is a no-op.
+     * Use case: moving a block up or down swaps it with its neighbour; moving it past the start or the
+     * end of the list, or moving the anchored block `0` at all, is a no-op.
      */
     @Test
-    fun movesAParagraphUpAndDown() {
-        val paragraphs = listOf("First.", "Second.", "Third.")
+    fun movesATextBlockUpAndDownButNeverBlockZero() {
+        val blocks = listOf(TextBlock.of("\${prolog}", style), TextBlock.of("Second.", style), TextBlock.of("Third.", style))
 
-        assertEquals(listOf("Second.", "First.", "Third."), BookPartEditorController.moveParagraph(paragraphs, 1, up = true))
-        assertEquals(listOf("First.", "Third.", "Second."), BookPartEditorController.moveParagraph(paragraphs, 1, up = false))
-        assertNull(BookPartEditorController.moveParagraph(paragraphs, 0, up = true))
-        assertNull(BookPartEditorController.moveParagraph(paragraphs, 2, up = false))
+        assertEquals(
+            listOf("\${prolog}", "Third.", "Second."),
+            BookPartEditorController.moveTextBlock(blocks, 1, up = false)!!.map { it.toString() }
+        )
+        assertNull(BookPartEditorController.moveTextBlock(blocks, 1, up = true))
+        assertNull(BookPartEditorController.moveTextBlock(blocks, 2, up = false))
+        assertNull(BookPartEditorController.moveTextBlock(blocks, 0, up = false))
+    }
+
+    /**
+     * Use case: a structural operation is applied to the named anchor's page as one transaction,
+     * producing a new [Document] with only that page replaced.
+     */
+    @Test
+    fun appliesAParagraphOperationToTheNamedAnchorsPage() {
+        val document = Document(
+            pages = listOf(
+                FlowPage(design.pageFormat.toPageLayout(), listOf(TextBlock.of("\${prolog}Text.", style)), id = "prolog")
+            )
+        )
+
+        val result = BookPartEditorController.applyParagraphOperation(document, "prolog") { blocks ->
+            BookPartEditorController.splitTextBlock(blocks, 0, 9, style)
+        }!!
+
+        assertEquals(2, result.pages.single { it.id == "prolog" }.blocks.size)
+    }
+
+    /**
+     * Use case: an unknown anchor id, or an operation that rejects the change (a boundary hit), leaves
+     * the whole transaction as `null` instead of a partially applied document.
+     */
+    @Test
+    fun rejectsTheWholeTransactionOnAnUnknownAnchorOrARejectedOperation() {
+        val document = Document(
+            pages = listOf(FlowPage(design.pageFormat.toPageLayout(), listOf(TextBlock.of("\${prolog}", style)), id = "prolog"))
+        )
+
+        assertNull(BookPartEditorController.applyParagraphOperation(document, "unknown") { it })
+        assertNull(BookPartEditorController.applyParagraphOperation(document, "prolog") { blocks ->
+            BookPartEditorController.removeTextBlock(blocks, 0)
+        })
+    }
+
+    /**
+     * Use case: a page's block still starts with its anchor token after an edit, so a native
+     * `Backspace`/`Delete` merge may be accepted; a block `0` overwritten without it is rejected.
+     */
+    @Test
+    fun detectsWhetherAPageStillKeepsItsAnchor() {
+        val kept = FlowPage(design.pageFormat.toPageLayout(), listOf(TextBlock.of("\${prolog}Text.", style)), id = "prolog")
+        val lost = FlowPage(design.pageFormat.toPageLayout(), listOf(TextBlock.of("Text.", style)), id = "prolog")
+        val empty = FlowPage(design.pageFormat.toPageLayout(), emptyList(), id = "prolog")
+
+        assertTrue(BookPartEditorController.pageKeepsAnchor(kept))
+        assertFalse(BookPartEditorController.pageKeepsAnchor(lost))
+        assertFalse(BookPartEditorController.pageKeepsAnchor(empty))
+    }
+
+    /**
+     * Use case: the document-wide block ordinal `CaretModel.moveIntoBlock` expects sums the block
+     * counts of every page before the target one, plus the page-local index.
+     */
+    @Test
+    fun resolvesTheDocumentWideBlockIndexAcrossPages() {
+        val document = Document(
+            pages = listOf(
+                FlowPage(design.pageFormat.toPageLayout(), listOf(TextBlock.of("A", style), TextBlock.of("B", style)), id = "prolog"),
+                FlowPage(design.pageFormat.toPageLayout(), listOf(TextBlock.of("C", style)), id = "epilog"),
+            )
+        )
+
+        assertEquals(0, BookPartEditorController.documentBlockIndex(document, "prolog", 0))
+        assertEquals(1, BookPartEditorController.documentBlockIndex(document, "prolog", 1))
+        assertEquals(2, BookPartEditorController.documentBlockIndex(document, "epilog", 0))
+        assertNull(BookPartEditorController.documentBlockIndex(document, "unknown", 0))
+    }
+
+    /**
+     * Use case: the character offset of a block relative to the document's linear position excludes
+     * the zero-width anchor token of an earlier block, the same way `CaretModel.position` counts.
+     */
+    @Test
+    fun resolvesTheBlockLocalCharOffsetExcludingAnchors() {
+        val second = TextBlock.of("Second.", style)
+        val document = Document(
+            pages = listOf(
+                FlowPage(
+                    design.pageFormat.toPageLayout(),
+                    listOf(TextBlock.of("\${prolog}First.", style), second),
+                    id = "prolog"
+                )
+            )
+        )
+
+        // "First." counts as 6 characters (the anchor counts as none), so position 9 is 3 characters
+        // into "Second.".
+        assertEquals(3, BookPartEditorController.blockLocalCharOffset(document, second, 9))
     }
 }

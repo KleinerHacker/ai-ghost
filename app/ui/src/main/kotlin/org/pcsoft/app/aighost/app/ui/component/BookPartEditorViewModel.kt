@@ -24,11 +24,12 @@ import javafx.beans.property.SimpleStringProperty
 import javafx.beans.property.StringProperty
 import javafx.beans.value.ChangeListener
 import javafx.beans.value.ObservableValue
+import javafx.event.EventHandler
+import javafx.scene.input.KeyCode
+import javafx.scene.input.KeyEvent
 import org.pcsoft.app.aighost.app.Messages
-import org.pcsoft.app.aighost.app.controller.BookPartEditorController
-import org.pcsoft.app.aighost.app.controller.IoController
-import org.pcsoft.app.aighost.app.controller.PartMode
-import org.pcsoft.app.aighost.app.controller.PartTarget
+import org.pcsoft.app.aighost.app.controller.*
+import org.pcsoft.app.aighost.app.undo.DocumentStructureUndoEntry
 import org.pcsoft.app.aighost.app.undo.UndoStack
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
 import org.pcsoft.app.aighost.fx.model.project.book.BookProperty
@@ -65,12 +66,18 @@ import org.pcsoft.framework.simplay.uicommon.PageMode
  * text itself. Typing itself never triggers a rebuild, so `simplay-engine.measure` only runs once per
  * project open or design change, not per keystroke.
  *
- * Splitting, merging, removing and reordering a paragraph is not attempted here: `PaperSheetView`'s
- * own editing turns a line break into a space and never creates a new block, so that stays IP-32's
- * job, wired as key handlers of its own. A delete reaching across a paragraph boundary can still merge
- * two of `PaperSheetView`'s blocks on its own; this view model detects that (a page's block count no
- * longer matches its targets) and rejects it by rebuilding the whole document from the untouched
- * model, rather than guessing which paragraph the merged text belongs to.
+ * Splitting, removing and reordering a paragraph (IP-32) is handled here through
+ * [BookPartEditorController.splitTextBlock]/[BookPartEditorController.removeTextBlock]/
+ * [BookPartEditorController.moveTextBlock], wired as the `Enter` and `Ctrl+Shift+Up`/`Ctrl+Shift+Down`
+ * key filter [onKeyPressed] and the context menu of [BookPartEditorView]; every one of them is one
+ * [DocumentStructureUndoEntry] on [undoStack]. Merging two blocks has no key filter of its own:
+ * `PaperSheetView` already merges two blocks by itself when a native `Backspace`/`Delete` reaches
+ * across their boundary, in `EDITABLE` mode. [handleDocumentChanged] accepts that merge - rebuilding
+ * only the affected page's [targets] - as long as [BookPartEditorController.pageKeepsAnchor] still
+ * holds for the page afterwards; a merge that would have swallowed the page's `TextAnchor` is rejected
+ * by rebuilding the whole document from the untouched model instead, the same way a shrunk block count
+ * on the `blurb` page (whose paragraphs are addressed by [PartTarget.Paragraph], not by an anchor) is
+ * still rejected outright.
  *
  * A switched-off prolog, epilog or blurb (IP-23) still gets a page from [BookPartEditorController], so
  * its anchor keeps working - [applyPageModes] is what actually keeps it visibly inactive, through
@@ -124,6 +131,10 @@ class BookPartEditorViewModel : ViewModel {
     // write the model twice.
     private var writingTarget = false
 
+    // Set by a structural operation (split, remove, move) right before its Document reaches the sheet,
+    // consumed once by pushWholeDocument() in place of its ordinary linear-position restore - IP-32.
+    private var pendingCaretTarget: PendingCaretTarget? = null
+
     private val designListener = InvalidationListener { pushWholeDocument() }
     private var boundDesign: Observable? = null
 
@@ -143,6 +154,11 @@ class BookPartEditorViewModel : ViewModel {
     private val documentListener =
         ChangeListener<Document?> { _, _, newValue -> handleDocumentChanged(newValue) }
 
+    // IP-32: Enter (split) and Ctrl+Shift+Up/Down (move) have no native equivalent in EDITABLE mode and
+    // are intercepted here, as an event filter so they are consumed before PaperSheetView's own
+    // handling ever sees them; every other key - Backspace, Delete, the arrows - is left untouched.
+    private val keyPressedFilter = EventHandler<KeyEvent> { onKeyPressed(it) }
+
     /**
      * Hands the sheet of the component over, once, and starts listening to it.
      *
@@ -153,6 +169,7 @@ class BookPartEditorViewModel : ViewModel {
         writingMode.value = IoController.preferences.editorProperty.writingMode
         paperSheetView.mode = writingMode.value.toPaperSheetMode()
         paperSheetView.documentProperty.addListener(documentListener)
+        paperSheetView.addEventFilter(KeyEvent.KEY_PRESSED, keyPressedFilter)
     }
 
     /**
@@ -262,6 +279,7 @@ class BookPartEditorViewModel : ViewModel {
         boundSelection = null
         if (::paperSheetView.isInitialized) {
             paperSheetView.documentProperty.removeListener(documentListener)
+            paperSheetView.removeEventFilter(KeyEvent.KEY_PRESSED, keyPressedFilter)
         }
         targetProperties.clear()
         targets = emptyMap()
@@ -283,10 +301,173 @@ class BookPartEditorViewModel : ViewModel {
         IoController.preferences.editorProperty.lastAnchorId = resolution.anchorId
     }
 
+    // IP-32: Enter (without Shift) splits the current block, Ctrl+Shift+Up/Down moves it. Every other
+    // key - Backspace, Delete, the plain arrows - is left to PaperSheetView's own EDITABLE handling,
+    // which already covers character insertion, deletion, cross-block merging and linear line
+    // navigation on its own.
+    private fun onKeyPressed(event: KeyEvent) {
+        if (!::paperSheetView.isInitialized || paperSheetView.mode != PaperSheetMode.EDITABLE) return
+
+        when {
+            event.code == KeyCode.ENTER && !event.isShiftDown -> {
+                if (performSplit()) event.consume()
+            }
+
+            event.code == KeyCode.UP && event.isControlDown && event.isShiftDown -> {
+                if (performMove(up = true)) event.consume()
+            }
+
+            event.code == KeyCode.DOWN && event.isControlDown && event.isShiftDown -> {
+                if (performMove(up = false)) event.consume()
+            }
+        }
+    }
+
+    // The anchor id and page-local block index of the block the caret currently sits in, resolved
+    // against the sheet's own document (never a cached one), or null while nothing usable is picked.
+    private fun currentBlock(): Triple<Document, String, Int>? {
+        val document = paperSheetView.document ?: return null
+        val block = paperSheetView.caretModel.currentTextBlock ?: return null
+        val page = paperSheetView.caretModel.currentPage ?: return null
+        val blockIndex = page.blocks.indexOfFirst { it === block }
+        if (blockIndex < 0) return null
+        return Triple(document, page.id, blockIndex)
+    }
+
+    /**
+     * Splits the block the caret currently sits in, at the caret's position - the context menu's
+     * "split" command and `Enter` both call this.
+     *
+     * @return `true` when the split was applied, `false` when there was nothing to split (a boundary
+     * was hit, or nothing usable is picked)
+     */
+    internal fun performSplit(): Boolean {
+        val (document, anchorId, blockIndex) = currentBlock() ?: return false
+        val block = document.pages.first { it.id == anchorId }.blocks[blockIndex]
+        val offset = BookPartEditorController.blockLocalCharOffset(document, block, paperSheetView.caretModel.position)
+
+        val after = BookPartEditorController.applyParagraphOperation(document, anchorId) {
+            BookPartEditorController.splitTextBlock(it, blockIndex, offset, block.style)
+        } ?: return false
+
+        applyStructuralChange(
+            Messages["component.bookPartEditor.undo.split"],
+            document,
+            after,
+            PendingCaretTarget(anchorId, blockIndex, offset),
+            PendingCaretTarget(anchorId, blockIndex + 1, 0),
+        )
+        return true
+    }
+
+    /**
+     * Removes the block the caret currently sits in - the context menu's "remove" command calls this.
+     *
+     * @return `true` when the removal was applied, `false` when there was nothing to remove (a
+     * boundary was hit, or nothing usable is picked)
+     */
+    internal fun performRemove(): Boolean {
+        val (document, anchorId, blockIndex) = currentBlock() ?: return false
+
+        val after = BookPartEditorController.applyParagraphOperation(document, anchorId) {
+            BookPartEditorController.removeTextBlock(it, blockIndex)
+        } ?: return false
+
+        val landingIndex = (blockIndex - 1).coerceAtLeast(0)
+        applyStructuralChange(
+            Messages["component.bookPartEditor.undo.remove"],
+            document,
+            after,
+            PendingCaretTarget(anchorId, blockIndex, 0),
+            PendingCaretTarget(anchorId, landingIndex, 0),
+        )
+        return true
+    }
+
+    /**
+     * Merges the block the caret currently sits in with a neighbour - the context menu's "merge with
+     * previous"/"merge with next" commands call this; a keyboard `Backspace`/`Delete` across a block
+     * boundary is handled natively by `PaperSheetView` itself and never reaches here.
+     *
+     * @param withPrevious `true` to merge with the block before it, `false` for the one after it
+     * @return `true` when the merge was applied, `false` when there was no such neighbour, or nothing
+     * usable is picked
+     */
+    internal fun performMerge(withPrevious: Boolean): Boolean {
+        val (document, anchorId, blockIndex) = currentBlock() ?: return false
+
+        val after = BookPartEditorController.applyParagraphOperation(document, anchorId) {
+            BookPartEditorController.mergeTextBlock(it, blockIndex, withPrevious)
+        } ?: return false
+
+        val landingIndex = if (withPrevious) blockIndex - 1 else blockIndex
+        applyStructuralChange(
+            Messages["component.bookPartEditor.undo.merge"],
+            document,
+            after,
+            PendingCaretTarget(anchorId, blockIndex, 0),
+            PendingCaretTarget(anchorId, landingIndex, 0),
+        )
+        return true
+    }
+
+    /**
+     * Moves the block the caret currently sits in one position towards the start or the end of its
+     * page - the context menu's "move up"/"move down" commands and `Ctrl+Shift+Up`/`Ctrl+Shift+Down`
+     * both call this.
+     *
+     * @param up `true` to move it towards the start, `false` towards the end
+     * @return `true` when the move was applied, `false` when it already sits at that end, or nothing
+     * usable is picked
+     */
+    internal fun performMove(up: Boolean): Boolean {
+        val (document, anchorId, blockIndex) = currentBlock() ?: return false
+
+        val after = BookPartEditorController.applyParagraphOperation(document, anchorId) {
+            BookPartEditorController.moveTextBlock(it, blockIndex, up)
+        } ?: return false
+
+        val landingIndex = if (up) blockIndex - 1 else blockIndex + 1
+        applyStructuralChange(
+            Messages["component.bookPartEditor.undo.move"],
+            document,
+            after,
+            PendingCaretTarget(anchorId, blockIndex, 0),
+            PendingCaretTarget(anchorId, landingIndex, 0),
+        )
+        return true
+    }
+
+    // Pushes one structural change onto the undo history and applies it - IP-32. Every entry stores
+    // the whole book Document before and after, never a diff, the same way ParagraphListUndoEntry
+    // stores the whole paragraph list.
+    private fun applyStructuralChange(
+        label: String,
+        before: Document,
+        after: Document,
+        caretBefore: PendingCaretTarget,
+        caretAfter: PendingCaretTarget,
+    ) {
+        undoStack?.push(
+            DocumentStructureUndoEntry(label, before, after, caretBefore, caretAfter, ::restoreStructuralState)
+        )
+        restoreStructuralState(after, caretAfter)
+    }
+
+    // Applied by a fresh structural change and replayed by DocumentStructureUndoEntry's undo()/redo().
+    private fun restoreStructuralState(document: Document, caretTarget: PendingCaretTarget) {
+        val projectProperty = project ?: return
+        projectProperty.bookProperty.document = document
+        pendingCaretTarget = caretTarget
+        pushWholeDocument()
+    }
+
     // Reads back what PaperSheetView's own editing changed and writes the differing blocks into the
-    // model; a page whose block count no longer matches its targets means a delete merged two blocks
-    // across their boundary, a structural change this plan does not attempt - it is rejected by
-    // rebuilding the whole document from the untouched model.
+    // model. A page whose block count shrank means a native Backspace/Delete merged two blocks across
+    // their boundary; that merge is accepted - only that page's targets are rebuilt - as long as the
+    // page still keeps its anchor, and rejected by rebuilding the whole document from the untouched
+    // model otherwise (also the only path left for the blurb page, whose Paragraph targets have no
+    // anchor to check).
     private fun handleDocumentChanged(document: Document?) {
         if (applyingDocument) return
         val projectProperty = project ?: return
@@ -295,9 +476,18 @@ class BookPartEditorViewModel : ViewModel {
 
         for (page in document?.pages.orEmpty()) {
             val pageTargets = targets[page.id] ?: continue
+
             if (page.blocks.size < pageTargets.size) {
-                pushWholeDocument()
-                return
+                val isAnchorPage = pageTargets.firstOrNull() is PartTarget.AnchorBlock
+                if (!isAnchorPage || !BookPartEditorController.pageKeepsAnchor(page)) {
+                    pushWholeDocument()
+                    return
+                }
+
+                projectProperty.bookProperty.document = document
+                targets = targets + (page.id to BookPartEditorController.targetsOfPage(page, design, proj.meta))
+                targetProperties.keys.removeIf { it is PartTarget.AnchorBlock && it.anchorId == page.id }
+                continue
             }
 
             writingTarget = true
@@ -342,9 +532,11 @@ class BookPartEditorViewModel : ViewModel {
         }
 
     // Rebuilds the whole-book document from the model and hands it to the sheet, without the
-    // document-change event of the assignment itself being taken for an edit, and restores the
-    // caret's linear position afterwards - a rebuild never changes the text, only the style, so the
-    // same linear offset still names the same character.
+    // document-change event of the assignment itself being taken for an edit. A pending caret target
+    // set by a structural operation (IP-32) takes precedence over the ordinary restore of the caret's
+    // linear position - a rebuild never changes the text on its own, only the style, so the same
+    // linear offset still names the same character, but a structural change just moved the text
+    // itself, so the linear offset would name the wrong one.
     private fun pushWholeDocument() {
         val projectProperty = this.project
         val project = projectProperty?.value
@@ -354,6 +546,7 @@ class BookPartEditorViewModel : ViewModel {
         if (projectProperty == null || project == null || design == null) {
             targets = emptyMap()
             targetProperties.clear()
+            pendingCaretTarget = null
             if (::paperSheetView.isInitialized) {
                 applyingDocument = true
                 try {
@@ -377,6 +570,8 @@ class BookPartEditorViewModel : ViewModel {
 
         if (!::paperSheetView.isInitialized) return
 
+        val pending = pendingCaretTarget
+        pendingCaretTarget = null
         val caretBefore = paperSheetView.caretModel.position
         applyingDocument = true
         try {
@@ -384,7 +579,15 @@ class BookPartEditorViewModel : ViewModel {
         } finally {
             applyingDocument = false
         }
-        paperSheetView.caretModel.moveTo(caretBefore)
+
+        val pendingIndex = pending?.let {
+            BookPartEditorController.documentBlockIndex(plan.document, it.anchorId, it.blockIndex)
+        }
+        if (pending != null && pendingIndex != null) {
+            paperSheetView.caretModel.moveIntoBlock(pendingIndex, pending.charOffset)
+        } else {
+            paperSheetView.caretModel.moveTo(caretBefore)
+        }
         // document was just reloaded from outside, which clears PaperSheetView.pageModes - reapplied
         // here so a switched-off part stays visibly inactive without a second call from the caller.
         applyPageModes()

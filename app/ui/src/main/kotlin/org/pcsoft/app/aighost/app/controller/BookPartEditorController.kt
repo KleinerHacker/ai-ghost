@@ -25,6 +25,8 @@ import org.pcsoft.framework.simplay.engine.model.FlowPage
 import org.pcsoft.framework.simplay.engine.model.Page
 import org.pcsoft.framework.simplay.engine.model.SinglePage
 import org.pcsoft.framework.simplay.engine.model.TextBlock
+import org.pcsoft.framework.simplay.engine.model.TextStyle
+import org.pcsoft.framework.simplay.engine.model.charCount
 
 /**
  * The domain logic of the book's writing surface, kept out of its view model.
@@ -189,83 +191,183 @@ object BookPartEditorController {
         is SinglePage -> copy(blocks = blocks)
     }
 
+    /** Matches the `${anchorId}` token `BookPartBuilder` embeds at the very start of a page's block 0. */
+    private val ANCHOR_PREFIX = Regex("^\\$\\{[^}]*}")
+
     /**
-     * Splits the paragraph at [index] into two, at [charOffset].
+     * Splits the block at [index] of [blocks] into two, at the anchor-excluding character [charOffset].
      *
-     * Not called by this plan; kept for IP-32, which wires it to a key handler of its own.
+     * An anchor token at the very start of [blocks]\[0\] is kept on the first half, so block `0` never
+     * loses its `TextAnchor`.
      *
-     * @param paragraphs the paragraph list to split in
-     * @param index the paragraph to split
-     * @param charOffset the character offset the split falls at; `0` and the paragraph's own length
-     * are valid and yield an empty first or second half
-     * @return the paragraph list with the split applied
+     * @param blocks the block list of one page to split in
+     * @param index the block to split
+     * @param charOffset the character offset the split falls at, counted like `CaretModel.position`
+     * (a `TextAnchor` counts as zero characters); `0` and the block's own length are valid and yield an
+     * empty first or second half
+     * @param style the style both halves are built with
+     * @return the block list with the split applied, or `null` when [index] is out of range
      */
-    fun splitParagraph(paragraphs: List<String>, index: Int, charOffset: Int): List<String> {
-        val text = paragraphs[index]
+    fun splitTextBlock(blocks: List<TextBlock>, index: Int, charOffset: Int, style: TextStyle): List<TextBlock>? {
+        if (index !in blocks.indices) return null
+
+        val raw = blocks[index].toString()
+        val anchorPrefix = ANCHOR_PREFIX.find(raw)?.value.orEmpty()
+        val text = raw.removePrefix(anchorPrefix)
         val offset = charOffset.coerceIn(0, text.length)
-        val result = paragraphs.toMutableList()
-        result[index] = text.substring(0, offset)
-        result.add(index + 1, text.substring(offset))
+
+        val result = blocks.toMutableList()
+        result[index] = TextBlock.of(anchorPrefix + text.substring(0, offset), style)
+        result.add(index + 1, TextBlock.of(text.substring(offset), style))
         return result
     }
 
     /**
-     * Merges the paragraph at [index] with a neighbour.
+     * Removes the block at [index] of [blocks], keeping at least one block and never the one at
+     * position `0`, which carries the page's `TextAnchor`.
      *
-     * Not called by this plan; kept for IP-32, which wires it to a key handler of its own.
-     *
-     * @param paragraphs the paragraph list to merge in
-     * @param index the paragraph the merge was requested from
-     * @param withPrevious `true` to merge with the paragraph before it, `false` for the one after it
-     * @return the paragraph list with the merge applied, or `null` when [index] has no such neighbour
+     * @param blocks the block list of one page to remove from
+     * @param index the block to remove
+     * @return the block list without that block, or `null` when [index] is `0`, out of range, or the
+     * only block left
      */
-    fun mergeParagraph(paragraphs: List<String>, index: Int, withPrevious: Boolean): List<String>? {
-        val otherIndex = if (withPrevious) index - 1 else index + 1
-        if (otherIndex !in paragraphs.indices) return null
-
-        val firstIndex = if (withPrevious) otherIndex else index
-        val secondIndex = if (withPrevious) index else otherIndex
-        val result = paragraphs.toMutableList()
-        result[firstIndex] = paragraphs[firstIndex] + paragraphs[secondIndex]
-        result.removeAt(secondIndex)
-        return result
-    }
-
-    /**
-     * Removes the paragraph at [index], keeping at least one paragraph.
-     *
-     * Not called by this plan; kept for IP-32, which wires it to a key handler of its own.
-     *
-     * @param paragraphs the paragraph list to remove from
-     * @param index the paragraph to remove
-     * @return the paragraph list without that paragraph, or `null` when it is the only one left
-     */
-    fun removeParagraph(paragraphs: List<String>, index: Int): List<String>? {
-        if (paragraphs.size <= 1) return null
-        val result = paragraphs.toMutableList()
+    fun removeTextBlock(blocks: List<TextBlock>, index: Int): List<TextBlock>? {
+        if (index !in blocks.indices || index == 0 || blocks.size <= 1) return null
+        val result = blocks.toMutableList()
         result.removeAt(index)
         return result
     }
 
     /**
-     * Moves the paragraph at [index] one position towards the start or the end of the part.
+     * Moves the block at [index] of [blocks] one position towards the start or the end of the page.
      *
-     * Not called by this plan; kept for IP-32, which wires it to a key handler of its own.
+     * The block at position `0`, which carries the page's `TextAnchor`, may never move and nothing may
+     * move into position `0` in its place.
      *
-     * @param paragraphs the paragraph list to move in
-     * @param index the paragraph to move
+     * @param blocks the block list of one page to move in
+     * @param index the block to move
      * @param up `true` to move it towards the start, `false` towards the end
-     * @return the paragraph list with the move applied, or `null` when [index] already sits at that end
+     * @return the block list with the move applied, or `null` when the move is not possible
      */
-    fun moveParagraph(paragraphs: List<String>, index: Int, up: Boolean): List<String>? {
+    fun moveTextBlock(blocks: List<TextBlock>, index: Int, up: Boolean): List<TextBlock>? {
+        if (index !in blocks.indices || index == 0) return null
         val otherIndex = if (up) index - 1 else index + 1
-        if (otherIndex !in paragraphs.indices) return null
+        if (otherIndex !in blocks.indices || otherIndex == 0) return null
 
-        val result = paragraphs.toMutableList()
+        val result = blocks.toMutableList()
         val moved = result.removeAt(index)
         result.add(otherIndex, moved)
         return result
     }
+
+    /**
+     * Applies a structural block operation to the page of [document] whose id is [anchorId], as one
+     * transaction.
+     *
+     * [document] MUST be read fresh right before this call, never from a reference cached earlier (a
+     * key press, say) - an AI rewrite (IP-18) may have replaced it in between.
+     *
+     * @param document the document to read the page from, read at call time
+     * @param anchorId the anchor id of the page to operate on
+     * @param op the block operation to apply to that page's block list; `null` means the operation was
+     * rejected (a boundary was hit) and the whole transaction is abandoned
+     * @return the document with the page replaced, or `null` when the page does not exist or [op]
+     * rejected the operation
+     */
+    fun applyParagraphOperation(
+        document: Document,
+        anchorId: String,
+        op: (List<TextBlock>) -> List<TextBlock>?,
+    ): Document? {
+        val pageIndex = document.pages.indexOfFirst { it.id == anchorId }
+        if (pageIndex < 0) return null
+
+        val page = document.pages[pageIndex]
+        val newBlocks = op(page.blocks) ?: return null
+
+        val newPages = document.pages.toMutableList().apply { this[pageIndex] = page.withBlocks(newBlocks) }
+        return document.copy(pages = newPages)
+    }
+
+    /**
+     * Merges the block at [index] of [blocks] with a neighbour, for the context menu's explicit
+     * "merge" commands - a keyboard `Backspace`/`Delete` across a block boundary already merges blocks
+     * through `PaperSheetView` itself and never calls this.
+     *
+     * The merged text is rebuilt through [TextBlock.of] from the concatenation of both blocks'
+     * [TextBlock.toString], so an anchor token at the very start of [blocks]\[0\] survives whichever
+     * side of the merge it sits on.
+     *
+     * @param blocks the block list of one page to merge in
+     * @param index the block the merge was requested from
+     * @param withPrevious `true` to merge with the block before it, `false` for the one after it
+     * @return the block list with the merge applied, or `null` when [index] has no such neighbour
+     */
+    fun mergeTextBlock(blocks: List<TextBlock>, index: Int, withPrevious: Boolean): List<TextBlock>? {
+        if (index !in blocks.indices) return null
+        val otherIndex = if (withPrevious) index - 1 else index + 1
+        if (otherIndex !in blocks.indices) return null
+
+        val firstIndex = minOf(index, otherIndex)
+        val secondIndex = maxOf(index, otherIndex)
+        val merged = TextBlock.of(blocks[firstIndex].toString() + blocks[secondIndex].toString(), blocks[firstIndex].style)
+
+        val result = blocks.toMutableList()
+        result[firstIndex] = merged
+        result.removeAt(secondIndex)
+        return result
+    }
+
+    /** Whether [page] still starts with its `${id}`-anchor token, checked after a native structural edit. */
+    fun pageKeepsAnchor(page: Page): Boolean =
+        page.blocks.isNotEmpty() && ANCHOR_PREFIX.containsMatchIn(page.blocks.first().toString())
+
+    /**
+     * The document-wide, zero-based block ordinal `CaretModel.moveIntoBlock` expects for the block at
+     * [pageLocalIndex] of the page whose id is [anchorId] - `CaretModel` addresses blocks across the
+     * whole document, not per page.
+     *
+     * @param document the document to resolve the ordinal against, read at call time
+     * @param anchorId the anchor id of the target page
+     * @param pageLocalIndex the block's index within that page's own block list
+     * @return the document-wide block ordinal, or `null` when [anchorId] does not resolve to a page
+     */
+    fun documentBlockIndex(document: Document, anchorId: String, pageLocalIndex: Int): Int? {
+        var count = 0
+        for (page in document.pages) {
+            if (page.id == anchorId) return count + pageLocalIndex
+            count += page.blocks.size
+        }
+        return null
+    }
+
+    /**
+     * The character offset of [block] within [document], counted the same way `CaretModel.position`
+     * counts (a `TextAnchor` is zero characters), relative to the start of [block] itself rather than
+     * the whole document.
+     *
+     * @param document the document [block] belongs to
+     * @param block the block to resolve [position] against, matched by reference
+     * @param position the document-wide linear caret position
+     * @return the character offset within [block], clamped to zero
+     */
+    fun blockLocalCharOffset(document: Document, block: TextBlock, position: Int): Int {
+        var counted = 0
+        for (page in document.pages) {
+            for (candidate in page.blocks) {
+                if (candidate === block) return (position - counted).coerceAtLeast(0)
+                counted += candidate.charCount()
+            }
+        }
+        return 0
+    }
+
+    /**
+     * The targets of every block of [page], in block order - the public entry point [targetsOf] uses
+     * internally, exposed for a caller that must rebuild a single page's targets after a native
+     * structural edit (a `Backspace`/`Delete` merge) instead of the whole document.
+     */
+    fun targetsOfPage(page: Page, design: Design, meta: Meta): List<PartTarget> = targetsOf(page, design, meta)
 
     /**
      * The resolved part behind a picked project tree node.
