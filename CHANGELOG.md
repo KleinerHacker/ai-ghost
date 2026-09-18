@@ -2,190 +2,56 @@
 
 ## [Unreleased]
 
-* Book, its prolog, its chapters, its epilog, its title page and its copyright page no longer carry a
-  heading, further heading lines or flowing text of their own as separate fields: that text now lives
-  in the manuscript's own document model. A chapter carries a stable identity of its own behind the
-  scenes, invisible to the user, that survives a rename
+## [0.0.1]
 
-* Project tree gains chapter management: "Add Chapter" on the chapters branch or on a chapter creates
-  a new, empty chapter ready to write; a chapter's own menu also offers "Rename Chapter" and "Delete
-  Chapter", the latter asking for confirmation first, since the chapter's text is removed with it and
-  cannot be brought back
+* Editor centre is a writing surface showing the whole book as one continuous, typeset sheet;
+  picking a part in the project tree - title page, copyright page, prolog, a chapter, the epilog or
+  the blurb - jumps to its place on that sheet instead of opening a document of its own, and every
+  part is written on directly. A tool bar above it offers a read-only "Preview" toggle, and a small
+  label above every page names the book part that begins there
 
-* Editor centre is now a writing surface instead of a placeholder, always showing the whole book as one
-  sheet that already carries its typography, margins and page structure; picking a part in the project
-  tree - the title page, the copyright page, the prolog, a chapter, the epilog or the blurb - jumps to
-  its place on that same sheet instead of opening a document of its own, and every one of them,
-  including the title page and the copyright page, is written on directly, with every keystroke taken
-  straight into the project. A design change in the Inspector re-lays the sheet at once without moving
-  the caret, and every text change is undone and redone from the tool bar, with consecutive typing in
-  one block falling together into a single step
+* Project tree manages the book's structure: "Add/Rename/Delete Chapter", a "Title Page" and
+  "Copyright Page" node ahead of the prolog, and a checkbox on the prolog, the epilog and the blurb
+  to leave that part out of the finished book without losing its text
 
-* Project tree gains a "Title Page" and a "Copyright Page" node ahead of the prolog, so the front
-  matter can be opened on the writing surface like every other part
+* Writing surface supports paragraph-level editing - split, merge and reorder a paragraph with
+  keyboard shortcuts or its right-click menu - and full Undo/Redo from the Edit menu and tool bar,
+  with a dropdown history and consecutive typing collapsed into a single step
 
-* Editor gains a tool bar above the writing surface with a "Preview" toggle, switching the whole sheet
-  between writing and a read-only preview of the printed page; the position last written at and the
-  chosen mode are both remembered and restored the next time the project is opened. Opening a long book
-  for the first time shows a brief loading indicator while it is laid out
+* Editor gains an Inspector next to the project tree with "Book", "Chapter" and "Design" sections
+  (author and prompts, chapter name and prompts, and typography of title/heading/body text); AI
+  action buttons - "Generate chapter" and a floating Rewrite/Expand/Shorten bar on the writing
+  surface - are present but not yet wired to generation
 
-* Editor gains an Inspector on the right of the manuscript, next to the project tree: a "Book"
-  section holds the author and both prompts of the manuscript, and a "Chapter" section shows the name
-  and both prompts of whatever chapter is picked in the project tree, or the prompt of the blurb once
-  it is picked; either section shows a short explanation instead of fields while nothing matching is
-  picked, and both can be collapsed and expanded on their own
+* Project Settings dialog (File menu and tool bar) configures page size, margins and blank leading/
+  trailing pages under a *Design* section; further *General* and per-part *Design* sections are
+  placeholders for now
 
-* Inspector's "Chapter" section gains a "Generate chapter" AI button; pressing it does nothing yet -
-  the actual generation is coming with a future feature
+* Book project file format: one document holding project data, manuscript design and manuscript
+  side by side, tolerant of parts written by a newer version and parts it doesn't yet know, with
+  corrupt or incomplete files reported instead of silently opened or discarded
 
-* Writing surface shows a small label above every page, naming the book part that begins there - the
-  title page, the copyright page, the prolog, a chapter (with its number and name) the epilog or the
-  blurb - for orientation while scrolling, even before that part carries any text
+* Project records the fonts it was written with and warns if a font is missing or renders
+  differently when opened elsewhere, naming the affected elements and the substitute font used
 
-* Writing surface gains paragraph structure editing: Enter splits a paragraph at the caret, Backspace
-  at its very start or Delete at its very end merges it with the neighbouring one, and Ctrl+Shift+Up /
-  Ctrl+Shift+Down moves it up or down - the same actions are also on the paragraph's right-click menu.
-  Every one of them is undone and redone as its own step
+* Preferences moved from JSON (`preferences.json`) to grouped YAML (`preferences.yml`, with
+  `appearance.themeMode` and `ai` sections); old preference files are not migrated
 
-* Writing surface gains a floating AI action bar - Rewrite, Expand, Shorten - next to the paragraph or
-  heading the mouse hovers or the edit caret sits in; half-transparent until the mouse moves onto it,
-  and pressing any of its buttons does nothing yet, the same as the "Generate chapter" AI button above
+* Application logs its session to the console and to rolling, compressed log files under
+  `.ai-ghost/logs`; unreadable preferences or project files are reported in a dialog naming the
+  reason instead of failing silently, and the "open recent" list survives an empty session
 
-* Inspector gains a third section, "Design", showing the appearance of the book title, the chapter
-  heading, its further heading lines and the body text - family, size, weight, slant, alignment and
-  line spacing for each; unlike the other two sections it stays filled as long as a project is open,
-  no matter what is picked in the project tree, and every change is visible on the manuscript right
-  away
+* Startup shows a floating, frameless splash animation of the logo while settings are read, fading
+  out as the main window appears
 
-* Edit menu and tool bar carry Undo and Redo: each button shows the name of the change it would take
-  back or apply again as its tooltip, and its dropdown - opened like a browser's back button - lists
-  the most recent steps so several of them can be jumped at once; consecutive typing falls together
-  into a single step, and the history starts empty again whenever a project is opened or newly created
+* User interface redesign: the "Ghost Writer" type face shipped with the app, an indigo-and-navy
+  light/dark theme following the `themeMode` preference, restyled buttons, list entries and
+  dialogs (including height-adapting messages and Yes/No question dialogs), and a bolder AI wand
+  icon
 
-* While the application starts, its logo floats on the desktop without a window frame or background,
-  breathing and drifting gently so it is clear that something is still happening; it rests there for
-  a moment, the settings are read behind it, and it fades away as the main window appears
+* Main window: menu bar (`File`, `Publish`, `Help`) with icons and shortcuts, `Editor`/`Preview`
+  tabs, a project tree beside the editing area, translated UI (English/German), and the AI Ghost
+  application icon in every size
 
-* Project Settings dialog opens from the File menu and from the tool bar: a tree on the left switches
-  between sections, and the *Design* section sets the page size - a preset such as A5 or A4, or a
-  custom width and height - the four page margins, and whether the book begins and ends with a blank
-  page; width, height and the margins are set with millimetre steppers, a single margin can be no
-  more than a third of the page and the stepper holds it there, and the ceiling follows the width and
-  height as they change; OK stores and closes, Apply stores without closing, Cancel discards, and a
-  width or height that is not greater than zero keeps both from being stored. The *General* section
-  and the child sections of *Design* - title page, copyright page, prolog, chapter, epilog, blurb -
-  are placeholders for now
-
-* Project records what its fonts measured like on the computer it was written on, and says so when
-  a font is missing or sets differently when the project is opened elsewhere: one warning names the
-  affected elements, the font the project asks for and the font that is used instead - a project
-  written before this existed carries no such record and is opened silently as before
-
-* Preferences are stored as YAML in `preferences.yml` instead of as JSON in `preferences.json`, so
-  the settings read like plain lines of text when you open the file - a `preferences.json` left over
-  from an earlier version is not read any more and the settings have to be chosen again
-
-* Preferences file groups its settings in blocks: the appearance is chosen under `appearance` with
-  `themeMode` inside it, and the limits of the AI stand under `ai` - a file still naming `themeMode`
-  at the top level is read with the default appearance, so the choice has to be made again once
-
-* Warning and error dialogs take the height their text needs: a message running over several lines
-  is wrapped and shown completely instead of being cut off at the bottom
-
-* Button starting an AI action shows a bolder magic wand: a thick shaft with rounded ends and two
-  clear sparkles instead of the thin line with tiny dots, so it stays readable at small sizes
-
-* Title lines of a book are shown as a list and no longer as loose fields: the lines, the hint that
-  there is none yet and the plus adding one stand together in an area of their own, and a line
-  separates one entry from the next
-
-* Buttons stand off the surface they sit on: each one carries a brighter fill of its own, a line
-  around it and a soft shadow, hovering and pressing shade that fill, and the button answering a
-  dialog carries the indigo of the application; only the buttons of the tool bar and of the menu bar
-  stay flat, because those strips lift them already
-
-* Button removing an entry of a list - a title line, for instance - shows a trash bin in the indigo
-  of the application instead of a red cross
-
-* Messages of the application are shown in dialogs of their own look, with an icon drawn for the
-  light and for the dark appearance, and a report you unfold with "Show details" whenever there is
-  more to say than one sentence - the parts an incomplete project lost, for instance
-
-* Question dialogs are answered with "Yes" and "No" instead of a button naming the action, and
-  closing such a dialog with ESCAPE or the window close button counts as "No"
-
-* Book project is stored as one document holding its parts side by side - the project data, the
-  design of the manuscript and the manuscript itself - so a project written by a newer version still
-  opens with the parts this version knows, and a damaged file is reported instead of opening an empty
-  project
-
-* Project document that lost one of its three basic parts - the project data, the design or the
-  manuscript - is reported as a corrupt project instead of being opened with empty defaults in place
-  of the lost part; a saved document names the parts stored beside those three, so a part that went
-  missing is noticed as well
-
-* Project document that only lost a part beyond the three basic ones is no longer thrown away: a
-  warning names the affected parts, says that saving removes them from the file for good, and opens
-  the project only after you confirm
-
-* Project document keeps a part this version cannot read - written by a newer version for instance -
-  and writes it back unchanged when you save, instead of dropping it
-
-* Entries inside a project document carry the `.json` extension, so the content is recognizable in
-  any archive tool
-
-* Project tree gains a checkbox on the prolog, the epilog and the blurb: switching it off keeps the
-  part's text exactly as written but leaves it out of the finished book, shown greyed out and locked
-  on the writing surface until it is switched back on; the switch is undone and redone like any other
-  change
-
-* Menu "open recent project" shows each entry on two lines - the file name, and below it in
-  smaller type the folder the project sits in, so two projects of the same name are told apart
-
-* List of recently opened projects is no longer emptied when the window leaves the screen without a
-  project having been opened meanwhile
-
-* Saving or opening a project that fails is reported in a dialog naming the reason - a missing file,
-  a folder in place of the file, a file that cannot be read or written, or a damaged project file -
-  and the application keeps running with the project it holds
-
-* Course of a session is written to the console and to a log file in `.ai-ghost/logs` of the home
-  directory; the file carries more detail than the console, is rolled over daily and at 10 MB, and
-  the last ten of the older files are kept compressed
-
-* Preferences that cannot be read are reported while starting: a missing file is replaced by the
-  defaults silently, a damaged or unreadable file is only reset after you confirm, and a folder in
-  place of the file is reported before the application closes; all of these dialogs follow the
-  language of the application and its appearance
-
-* User interface uses its own type face `Ghost Writer`, a rounded geometric sans matching the logo;
-  it ships with the application, so the text looks the same on every platform
-* User interface text is slightly larger and rendered with grey scale smoothing, which suits the
-  even stroke weight of the new type face
-
-* Main window menu bar with the menus `File`, `Publish` and `Help`
-* Menu entries carry icons, and the frequently used ones carry their usual keyboard shortcut:
-  `Ctrl+O` to open a project, `Ctrl+S` to save, `Ctrl+Shift+S` to save under a new name,
-  `Ctrl+Alt+C` for a new chapter, and `F1` for the online help
-* User interface is translated; it follows the system language and ships English and German
-* Application window carries the AI Ghost icon in every size the window manager asks for
-* User interface uses the AI Ghost design: a light theme with indigo accents, deep navy text and
-  softly rounded controls, matching the logo and the documentation site
-* User interface comes in a light and a dark appearance; the dark one carries the same indigo
-  accents on deep navy surfaces
-* Appearance follows the `themeMode` setting of the preferences - `LIGHT`, `DARK` or `SYSTEM`, which
-  follows the operating system; the setting is read while starting, so a change takes effect after a
-  restart
-* Main window shows the `Editor` and `Preview` tabs in the AI Ghost design: rounded tab headers on
-  the window surface, separated from the content by an indigo accent line
-* `Editor` tab is split into the project tree on the left and the editing area on the right,
-  separated by a splitter the user can drag; the tree never becomes narrower than 250 pixels and
-  a wider window gives the extra room to the editing area
-* Editing area shows a placeholder until the editors for the parts of the book exist
-* `Editor` tab shows the open project as a tree: `Prolog`, `Chapter`, `Epilog` and `Blurb` sit below
-  the project, each with its icon, and every chapter is listed by its name below `Chapter`
-* Book project carries a prolog, an epilog and a blurb beside its chapters; each of them is optional
-  and stays absent until it is created
-
-* Application is shipped as a ZIP archive containing `ghost-ui.sh`, `ghost-ui.bat` and a `libs` folder
-  with all required JARs
+* Application is shipped as a ZIP archive containing `ghost-ui.sh`, `ghost-ui.bat` and a `libs`
+  folder with all required JARs
