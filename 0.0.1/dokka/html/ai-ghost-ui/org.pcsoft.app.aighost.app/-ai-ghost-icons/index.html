@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>AiGhostIcons</title>
+    <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
+        <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer="defer"></script>
+</head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+            <a class="library-name--link" href="../../../index.html" tabindex="1">
+                    ai-ghost-ui
+            </a>
+        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle"
+                type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+1.0-SNAPSHOT        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true"
+                        data-filter=":app:ai-ghost-ui/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
+                        data-role="dropdown-toggle"
+                        aria-controls="platform-tags-listbox"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-label="Toggle source sets"
+                ></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":app:ai-ghost-ui/main"
+                                       data-filter=":app:ai-ghost-ui/main"/>
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button"
+                    type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config='{"defaultSize": 280, "minSize": 200, "maxSize": 400}'>
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
+                    data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    ai-ghost-ui
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="classlike" id="content" pageIds="ai-ghost-ui::org.pcsoft.app.aighost.app/AiGhostIcons///PointingToDeclaration//-1949050900">
+  <div class="breadcrumbs"><a href="../../../index.html">ai-ghost-ui</a><span class="delimiter">/</span><a href="../index.html">org.pcsoft.app.aighost.app</a><span class="delimiter">/</span><span class="current">AiGhostIcons</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Ai</span><wbr></wbr><span>Ghost</span><wbr></wbr><span><span>Icons</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">object </span><a href="index.html">AiGhostIcons</a></div><p class="paragraph">Central access point for every icon shipped with the application.</p><p class="paragraph">All icons live below <code class="lang-kotlin">app/ui/src/main/resources/icons</code> and are loaded lazily on first access, so that no image is decoded before it is actually shown.</p></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="PROPERTY">
+        <h2 class="tableheader">Properties</h2>
+        <div class="table"><a data-name="2030576015%2FProperties%2F-1949050900" anchor-label="add" id="2030576015%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="add.html"><span><span>add</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2030576015%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="add.html">add</a><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/Image///PointingToDeclaration/">Image</span></div><div class="brief "><p class="paragraph">Icon for adding another entry to a list the user builds up.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="807584140%2FProperties%2F-1949050900" anchor-label="aiAction" id="807584140%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="ai-action.html"><span>ai</span><wbr></wbr><span><span>Action</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="807584140%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="ai-action.html">aiAction</a><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/Image///PointingToDeclaration/">Image</span></div><div class="brief "><p class="paragraph">Icon for handing a text over to the AI, be it to write it or to improve its wording.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1891361984%2FProperties%2F-1949050900" anchor-label="application" id="1891361984%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="application.html"><span><span>application</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1891361984%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="application.html">application</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><span data-unresolved-link="javafx.scene.image/Image///PointingToDeclaration/">Image</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">The application icon in every available size, ordered from smallest to largest.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-177051057%2FProperties%2F-1949050900" anchor-label="APPLICATION_ICON_SIZES" id="-177051057%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-a-p-p-l-i-c-a-t-i-o-n_-i-c-o-n_-s-i-z-e-s.html"><span>APPLICATION_</span><wbr></wbr><span>ICON_</span><wbr></wbr><span>SIZES</span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-177051057%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="-a-p-p-l-i-c-a-t-i-o-n_-i-c-o-n_-s-i-z-e-s.html">APPLICATION_ICON_SIZES</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Edge lengths in pixels for which the application icon is available.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-214398507%2FProperties%2F-1949050900" anchor-label="blurb" id="-214398507%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="blurb.html"><span><span>blurb</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-214398507%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="blurb.html">blurb</a><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/Image///PointingToDeclaration/">Image</span></div><div class="brief "><p class="paragraph">Icon for creating a blurb.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1367111139%2FProperties%2F-1949050900" anchor-label="chapter" id="1367111139%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="chapter.html"><span><span>chapter</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1367111139%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="chapter.html">chapter</a><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/Image///PointingToDeclaration/">Image</span></div><div class="brief "><p class="paragraph">Icon for creating a chapter.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1981666438%2FProperties%2F-1949050900" anchor-label="DIALOG_ICON_SIZE" id="-1981666438%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-d-i-a-l-o-g_-i-c-o-n_-s-i-z-e.html"><span>DIALOG_</span><wbr></wbr><span>ICON_</span><wbr></wbr><span>SIZE</span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1981666438%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">const </span><span class="token keyword">val </span><a href="-d-i-a-l-o-g_-i-c-o-n_-s-i-z-e.html">DIALOG_ICON_SIZE</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span><span class="token constant">48.0</span></div><div class="brief "><p class="paragraph">Default edge length in pixels used when an icon is rendered into a dialog.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-757314334%2FProperties%2F-1949050900" anchor-label="DIALOG_ICON_STORED_SIZE" id="-757314334%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-d-i-a-l-o-g_-i-c-o-n_-s-t-o-r-e-d_-s-i-z-e.html"><span>DIALOG_</span><wbr></wbr><span>ICON_</span><wbr></wbr><span>STORED_</span><wbr></wbr><span>SIZE</span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-757314334%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">const </span><span class="token keyword">val </span><a href="-d-i-a-l-o-g_-i-c-o-n_-s-t-o-r-e-d_-s-i-z-e.html">DIALOG_ICON_STORED_SIZE</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator"> = </span><span class="token constant">48</span></div><div class="brief "><p class="paragraph">Edge length in pixels the dialog icons are stored in.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1357508836%2FProperties%2F-1949050900" anchor-label="epilog" id="1357508836%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="epilog.html"><span><span>epilog</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1357508836%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="epilog.html">epilog</a><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/Image///PointingToDeclaration/">Image</span></div><div class="brief "><p class="paragraph">Icon for creating an epilog.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-542756304%2FProperties%2F-1949050900" anchor-label="expand" id="-542756304%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="expand.html"><span><span>expand</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-542756304%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="expand.html">expand</a><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/Image///PointingToDeclaration/">Image</span></div><div class="brief "><p class="paragraph">Icon for expanding a paragraph or heading with AI.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="233705046%2FProperties%2F-1949050900" anchor-label="export" id="233705046%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="export.html"><span><span>export</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="233705046%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="export.html">export</a><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/Image///PointingToDeclaration/">Image</span></div><div class="brief "><p class="paragraph">Icon for the export menu.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-600236394%2FProperties%2F-1949050900" anchor-label="helpOnline" id="-600236394%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="help-online.html"><span>help</span><wbr></wbr><span><span>Online</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-600236394%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="help-online.html">helpOnline</a><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/Image///PointingToDeclaration/">Image</span></div><div class="brief "><p class="paragraph">Icon for the online help.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1242308419%2FProperties%2F-1949050900" anchor-label="MENU_ICON_SIZE" id="1242308419%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-m-e-n-u_-i-c-o-n_-s-i-z-e.html"><span>MENU_</span><wbr></wbr><span>ICON_</span><wbr></wbr><span>SIZE</span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1242308419%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">const </span><span class="token keyword">val </span><a href="-m-e-n-u_-i-c-o-n_-s-i-z-e.html">MENU_ICON_SIZE</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span><span class="token constant">16.0</span></div><div class="brief "><p class="paragraph">Default edge length in pixels used when an icon is rendered into a menu.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1879624455%2FProperties%2F-1949050900" anchor-label="MENU_ICON_STORED_SIZE" id="-1879624455%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-m-e-n-u_-i-c-o-n_-s-t-o-r-e-d_-s-i-z-e.html"><span>MENU_</span><wbr></wbr><span>ICON_</span><wbr></wbr><span>STORED_</span><wbr></wbr><span>SIZE</span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1879624455%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">const </span><span class="token keyword">val </span><a href="-m-e-n-u_-i-c-o-n_-s-t-o-r-e-d_-s-i-z-e.html">MENU_ICON_STORED_SIZE</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator"> = </span><span class="token constant">32</span></div><div class="brief "><p class="paragraph">Edge length in pixels the menu icons are stored in.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1047232576%2FProperties%2F-1949050900" anchor-label="open" id="-1047232576%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="open.html"><span><span>open</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1047232576%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="open.html">open</a><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/Image///PointingToDeclaration/">Image</span></div><div class="brief "><p class="paragraph">Icon for opening a project.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-979781608%2FProperties%2F-1949050900" anchor-label="preferences" id="-979781608%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="preferences.html"><span><span>preferences</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-979781608%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="preferences.html">preferences</a><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/Image///PointingToDeclaration/">Image</span></div><div class="brief "><p class="paragraph">Icon for the application preferences.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="842582964%2FProperties%2F-1949050900" anchor-label="projectSettings" id="842582964%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="project-settings.html"><span>project</span><wbr></wbr><span><span>Settings</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="842582964%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="project-settings.html">projectSettings</a><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/Image///PointingToDeclaration/">Image</span></div><div class="brief "><p class="paragraph">Icon for the project settings.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="807615987%2FProperties%2F-1949050900" anchor-label="prolog" id="807615987%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="prolog.html"><span><span>prolog</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="807615987%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="prolog.html">prolog</a><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/Image///PointingToDeclaration/">Image</span></div><div class="brief "><p class="paragraph">Icon for creating a prolog.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1391386996%2FProperties%2F-1949050900" anchor-label="redo" id="-1391386996%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="redo.html"><span><span>redo</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1391386996%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="redo.html">redo</a><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/Image///PointingToDeclaration/">Image</span></div><div class="brief "><p class="paragraph">Icon for redoing the most recently undone change.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1585984390%2FProperties%2F-1949050900" anchor-label="remove" id="1585984390%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="remove.html"><span><span>remove</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1585984390%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="remove.html">remove</a><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/Image///PointingToDeclaration/">Image</span></div><div class="brief "><p class="paragraph">Icon for removing a single entry from a list the user builds up.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1506268548%2FProperties%2F-1949050900" anchor-label="rewrite" id="1506268548%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="rewrite.html"><span><span>rewrite</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1506268548%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="rewrite.html">rewrite</a><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/Image///PointingToDeclaration/">Image</span></div><div class="brief "><p class="paragraph">Icon for rewriting a paragraph or heading with AI.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="139645933%2FProperties%2F-1949050900" anchor-label="save" id="139645933%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="save.html"><span><span>save</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="139645933%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="save.html">save</a><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/Image///PointingToDeclaration/">Image</span></div><div class="brief "><p class="paragraph">Icon for saving the current project.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1199759397%2FProperties%2F-1949050900" anchor-label="saveAs" id="-1199759397%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="save-as.html"><span>save</span><wbr></wbr><span><span>As</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1199759397%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="save-as.html">saveAs</a><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/Image///PointingToDeclaration/">Image</span></div><div class="brief "><p class="paragraph">Icon for saving the current project under a new name.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="690770699%2FProperties%2F-1949050900" anchor-label="shorten" id="690770699%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="shorten.html"><span><span>shorten</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="690770699%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="shorten.html">shorten</a><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/Image///PointingToDeclaration/">Image</span></div><div class="brief "><p class="paragraph">Icon for shortening a paragraph or heading with AI.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-982851420%2FProperties%2F-1949050900" anchor-label="TREE_ICON_SIZE" id="-982851420%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-t-r-e-e_-i-c-o-n_-s-i-z-e.html"><span>TREE_</span><wbr></wbr><span>ICON_</span><wbr></wbr><span>SIZE</span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-982851420%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">const </span><span class="token keyword">val </span><a href="-t-r-e-e_-i-c-o-n_-s-i-z-e.html">TREE_ICON_SIZE</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-double/index.html">Double</a><span class="token operator"> = </span><span class="token constant">16.0</span></div><div class="brief "><p class="paragraph">Default edge length in pixels used when an icon is rendered into a tree node.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1604710810%2FProperties%2F-1949050900" anchor-label="undo" id="-1604710810%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="undo.html"><span><span>undo</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1604710810%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="undo.html">undo</a><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/Image///PointingToDeclaration/">Image</span></div><div class="brief "><p class="paragraph">Icon for undoing the most recent change.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="110719905%2FFunctions%2F-1949050900" anchor-label="buttonAdd" id="110719905%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="button-add.html"><span>button</span><wbr></wbr><span><span>Add</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="110719905%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-static/index.html"><span class="token annotation builtin">JvmStatic</span></a></div></div><span class="token keyword">fun </span><a href="button-add.html"><span class="token function">buttonAdd</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/ImageView///PointingToDeclaration/">ImageView</span></div><div class="brief "><p class="paragraph">Creates the button graphic for adding an entry, scaled to <a href="-m-e-n-u_-i-c-o-n_-s-i-z-e.html">MENU_ICON_SIZE</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2125731142%2FFunctions%2F-1949050900" anchor-label="buttonAiAction" id="-2125731142%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="button-ai-action.html"><span>button</span><wbr></wbr><span>Ai</span><wbr></wbr><span><span>Action</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2125731142%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-static/index.html"><span class="token annotation builtin">JvmStatic</span></a></div></div><span class="token keyword">fun </span><a href="button-ai-action.html"><span class="token function">buttonAiAction</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/ImageView///PointingToDeclaration/">ImageView</span></div><div class="brief "><p class="paragraph">Creates the button graphic for handing a text over to the AI, scaled to <a href="-m-e-n-u_-i-c-o-n_-s-i-z-e.html">MENU_ICON_SIZE</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1103351518%2FFunctions%2F-1949050900" anchor-label="buttonExpand" id="1103351518%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="button-expand.html"><span>button</span><wbr></wbr><span><span>Expand</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1103351518%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-static/index.html"><span class="token annotation builtin">JvmStatic</span></a></div></div><span class="token keyword">fun </span><a href="button-expand.html"><span class="token function">buttonExpand</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/ImageView///PointingToDeclaration/">ImageView</span></div><div class="brief "><p class="paragraph">Creates the button graphic for expanding a paragraph or heading with AI, scaled to <a href="-m-e-n-u_-i-c-o-n_-s-i-z-e.html">MENU_ICON_SIZE</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1062875084%2FFunctions%2F-1949050900" anchor-label="buttonRemove" id="-1062875084%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="button-remove.html"><span>button</span><wbr></wbr><span><span>Remove</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1062875084%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-static/index.html"><span class="token annotation builtin">JvmStatic</span></a></div></div><span class="token keyword">fun </span><a href="button-remove.html"><span class="token function">buttonRemove</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/ImageView///PointingToDeclaration/">ImageView</span></div><div class="brief "><p class="paragraph">Creates the button graphic for removing an entry, scaled to <a href="-m-e-n-u_-i-c-o-n_-s-i-z-e.html">MENU_ICON_SIZE</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="996003478%2FFunctions%2F-1949050900" anchor-label="buttonRewrite" id="996003478%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="button-rewrite.html"><span>button</span><wbr></wbr><span><span>Rewrite</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="996003478%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-static/index.html"><span class="token annotation builtin">JvmStatic</span></a></div></div><span class="token keyword">fun </span><a href="button-rewrite.html"><span class="token function">buttonRewrite</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/ImageView///PointingToDeclaration/">ImageView</span></div><div class="brief "><p class="paragraph">Creates the button graphic for rewriting a paragraph or heading with AI, scaled to <a href="-m-e-n-u_-i-c-o-n_-s-i-z-e.html">MENU_ICON_SIZE</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="180505629%2FFunctions%2F-1949050900" anchor-label="buttonShorten" id="180505629%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="button-shorten.html"><span>button</span><wbr></wbr><span><span>Shorten</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="180505629%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-static/index.html"><span class="token annotation builtin">JvmStatic</span></a></div></div><span class="token keyword">fun </span><a href="button-shorten.html"><span class="token function">buttonShorten</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/ImageView///PointingToDeclaration/">ImageView</span></div><div class="brief "><p class="paragraph">Creates the button graphic for shortening a paragraph or heading with AI, scaled to <a href="-m-e-n-u_-i-c-o-n_-s-i-z-e.html">MENU_ICON_SIZE</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-275515471%2FFunctions%2F-1949050900" anchor-label="error" id="-275515471%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="error.html"><span><span>error</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-275515471%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-static/index.html"><span class="token annotation builtin">JvmStatic</span></a></div><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-overloads/index.html"><span class="token annotation builtin">JvmOverloads</span></a></div></div><span class="token keyword">fun </span><a href="error.html"><span class="token function">error</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">scheme<span class="token operator">: </span><a href="../-ai-ghost-color-scheme/index.html">AiGhostColorScheme</a><span class="token operator"> = </span>AiGhostTheme.colorScheme</span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/Image///PointingToDeclaration/">Image</span></div><div class="brief "><p class="paragraph">Reads the icon of an error dialog for the given colour scheme.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1165638036%2FFunctions%2F-1949050900" anchor-label="menuBlurb" id="1165638036%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="menu-blurb.html"><span>menu</span><wbr></wbr><span><span>Blurb</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1165638036%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-static/index.html"><span class="token annotation builtin">JvmStatic</span></a></div></div><span class="token keyword">fun </span><a href="menu-blurb.html"><span class="token function">menuBlurb</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/ImageView///PointingToDeclaration/">ImageView</span></div><div class="brief "><p class="paragraph">Creates the menu graphic for creating a blurb, scaled to <a href="-m-e-n-u_-i-c-o-n_-s-i-z-e.html">MENU_ICON_SIZE</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="437334498%2FFunctions%2F-1949050900" anchor-label="menuChapter" id="437334498%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="menu-chapter.html"><span>menu</span><wbr></wbr><span><span>Chapter</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="437334498%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-static/index.html"><span class="token annotation builtin">JvmStatic</span></a></div></div><span class="token keyword">fun </span><a href="menu-chapter.html"><span class="token function">menuChapter</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/ImageView///PointingToDeclaration/">ImageView</span></div><div class="brief "><p class="paragraph">Creates the menu graphic for creating a chapter, scaled to <a href="-m-e-n-u_-i-c-o-n_-s-i-z-e.html">MENU_ICON_SIZE</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1188968709%2FFunctions%2F-1949050900" anchor-label="menuEpilog" id="1188968709%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="menu-epilog.html"><span>menu</span><wbr></wbr><span><span>Epilog</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1188968709%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-static/index.html"><span class="token annotation builtin">JvmStatic</span></a></div></div><span class="token keyword">fun </span><a href="menu-epilog.html"><span class="token function">menuEpilog</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/ImageView///PointingToDeclaration/">ImageView</span></div><div class="brief "><p class="paragraph">Creates the menu graphic for creating an epilog, scaled to <a href="-m-e-n-u_-i-c-o-n_-s-i-z-e.html">MENU_ICON_SIZE</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="65164919%2FFunctions%2F-1949050900" anchor-label="menuExport" id="65164919%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="menu-export.html"><span>menu</span><wbr></wbr><span><span>Export</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="65164919%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-static/index.html"><span class="token annotation builtin">JvmStatic</span></a></div></div><span class="token keyword">fun </span><a href="menu-export.html"><span class="token function">menuExport</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/ImageView///PointingToDeclaration/">ImageView</span></div><div class="brief "><p class="paragraph">Creates the menu graphic for the export menu, scaled to <a href="-m-e-n-u_-i-c-o-n_-s-i-z-e.html">MENU_ICON_SIZE</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1332056521%2FFunctions%2F-1949050900" anchor-label="menuHelpOnline" id="-1332056521%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="menu-help-online.html"><span>menu</span><wbr></wbr><span>Help</span><wbr></wbr><span><span>Online</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1332056521%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-static/index.html"><span class="token annotation builtin">JvmStatic</span></a></div></div><span class="token keyword">fun </span><a href="menu-help-online.html"><span class="token function">menuHelpOnline</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/ImageView///PointingToDeclaration/">ImageView</span></div><div class="brief "><p class="paragraph">Creates the menu graphic for the online help, scaled to <a href="-m-e-n-u_-i-c-o-n_-s-i-z-e.html">MENU_ICON_SIZE</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="244210721%2FFunctions%2F-1949050900" anchor-label="menuOpen" id="244210721%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="menu-open.html"><span>menu</span><wbr></wbr><span><span>Open</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="244210721%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-static/index.html"><span class="token annotation builtin">JvmStatic</span></a></div></div><span class="token keyword">fun </span><a href="menu-open.html"><span class="token function">menuOpen</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/ImageView///PointingToDeclaration/">ImageView</span></div><div class="brief "><p class="paragraph">Creates the menu graphic for opening a project, scaled to <a href="-m-e-n-u_-i-c-o-n_-s-i-z-e.html">MENU_ICON_SIZE</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2103598231%2FFunctions%2F-1949050900" anchor-label="menuPreferences" id="2103598231%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="menu-preferences.html"><span>menu</span><wbr></wbr><span><span>Preferences</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2103598231%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-static/index.html"><span class="token annotation builtin">JvmStatic</span></a></div></div><span class="token keyword">fun </span><a href="menu-preferences.html"><span class="token function">menuPreferences</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/ImageView///PointingToDeclaration/">ImageView</span></div><div class="brief "><p class="paragraph">Creates the menu graphic for the application preferences, scaled to <a href="-m-e-n-u_-i-c-o-n_-s-i-z-e.html">MENU_ICON_SIZE</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-737339213%2FFunctions%2F-1949050900" anchor-label="menuProjectSettings" id="-737339213%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="menu-project-settings.html"><span>menu</span><wbr></wbr><span>Project</span><wbr></wbr><span><span>Settings</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-737339213%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-static/index.html"><span class="token annotation builtin">JvmStatic</span></a></div></div><span class="token keyword">fun </span><a href="menu-project-settings.html"><span class="token function">menuProjectSettings</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/ImageView///PointingToDeclaration/">ImageView</span></div><div class="brief "><p class="paragraph">Creates the menu graphic for the project settings, scaled to <a href="-m-e-n-u_-i-c-o-n_-s-i-z-e.html">MENU_ICON_SIZE</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="639075860%2FFunctions%2F-1949050900" anchor-label="menuProlog" id="639075860%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="menu-prolog.html"><span>menu</span><wbr></wbr><span><span>Prolog</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="639075860%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-static/index.html"><span class="token annotation builtin">JvmStatic</span></a></div></div><span class="token keyword">fun </span><a href="menu-prolog.html"><span class="token function">menuProlog</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/ImageView///PointingToDeclaration/">ImageView</span></div><div class="brief "><p class="paragraph">Creates the menu graphic for creating a prolog, scaled to <a href="-m-e-n-u_-i-c-o-n_-s-i-z-e.html">MENU_ICON_SIZE</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-99943699%2FFunctions%2F-1949050900" anchor-label="menuRedo" id="-99943699%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="menu-redo.html"><span>menu</span><wbr></wbr><span><span>Redo</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-99943699%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-static/index.html"><span class="token annotation builtin">JvmStatic</span></a></div></div><span class="token keyword">fun </span><a href="menu-redo.html"><span class="token function">menuRedo</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/ImageView///PointingToDeclaration/">ImageView</span></div><div class="brief "><p class="paragraph">Creates the menu graphic for redoing the most recently undone change, scaled to <a href="-m-e-n-u_-i-c-o-n_-s-i-z-e.html">MENU_ICON_SIZE</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1431089230%2FFunctions%2F-1949050900" anchor-label="menuSave" id="1431089230%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="menu-save.html"><span>menu</span><wbr></wbr><span><span>Save</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1431089230%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-static/index.html"><span class="token annotation builtin">JvmStatic</span></a></div></div><span class="token keyword">fun </span><a href="menu-save.html"><span class="token function">menuSave</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/ImageView///PointingToDeclaration/">ImageView</span></div><div class="brief "><p class="paragraph">Creates the menu graphic for saving the current project, scaled to <a href="-m-e-n-u_-i-c-o-n_-s-i-z-e.html">MENU_ICON_SIZE</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1368299524%2FFunctions%2F-1949050900" anchor-label="menuSaveAs" id="-1368299524%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="menu-save-as.html"><span>menu</span><wbr></wbr><span>Save</span><wbr></wbr><span><span>As</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1368299524%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-static/index.html"><span class="token annotation builtin">JvmStatic</span></a></div></div><span class="token keyword">fun </span><a href="menu-save-as.html"><span class="token function">menuSaveAs</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/ImageView///PointingToDeclaration/">ImageView</span></div><div class="brief "><p class="paragraph">Creates the menu graphic for saving the current project under a new name, scaled to <a href="-m-e-n-u_-i-c-o-n_-s-i-z-e.html">MENU_ICON_SIZE</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-313267513%2FFunctions%2F-1949050900" anchor-label="menuUndo" id="-313267513%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="menu-undo.html"><span>menu</span><wbr></wbr><span><span>Undo</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-313267513%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-static/index.html"><span class="token annotation builtin">JvmStatic</span></a></div></div><span class="token keyword">fun </span><a href="menu-undo.html"><span class="token function">menuUndo</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/ImageView///PointingToDeclaration/">ImageView</span></div><div class="brief "><p class="paragraph">Creates the menu graphic for undoing the most recent change, scaled to <a href="-m-e-n-u_-i-c-o-n_-s-i-z-e.html">MENU_ICON_SIZE</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1024352147%2FFunctions%2F-1949050900" anchor-label="treeBlurb" id="1024352147%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="tree-blurb.html"><span>tree</span><wbr></wbr><span><span>Blurb</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1024352147%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-static/index.html"><span class="token annotation builtin">JvmStatic</span></a></div></div><span class="token keyword">fun </span><a href="tree-blurb.html"><span class="token function">treeBlurb</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/ImageView///PointingToDeclaration/">ImageView</span></div><div class="brief "><p class="paragraph">Creates the tree graphic for the blurb, scaled to <a href="-t-r-e-e_-i-c-o-n_-s-i-z-e.html">TREE_ICON_SIZE</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2100548641%2FFunctions%2F-1949050900" anchor-label="treeChapter" id="2100548641%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="tree-chapter.html"><span>tree</span><wbr></wbr><span><span>Chapter</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2100548641%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-static/index.html"><span class="token annotation builtin">JvmStatic</span></a></div></div><span class="token keyword">fun </span><a href="tree-chapter.html"><span class="token function">treeChapter</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/ImageView///PointingToDeclaration/">ImageView</span></div><div class="brief "><p class="paragraph">Creates the tree graphic for a chapter, scaled to <a href="-t-r-e-e_-i-c-o-n_-s-i-z-e.html">TREE_ICON_SIZE</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1104073446%2FFunctions%2F-1949050900" anchor-label="treeEpilog" id="1104073446%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="tree-epilog.html"><span>tree</span><wbr></wbr><span><span>Epilog</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1104073446%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-static/index.html"><span class="token annotation builtin">JvmStatic</span></a></div></div><span class="token keyword">fun </span><a href="tree-epilog.html"><span class="token function">treeEpilog</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/ImageView///PointingToDeclaration/">ImageView</span></div><div class="brief "><p class="paragraph">Creates the tree graphic for the epilog, scaled to <a href="-t-r-e-e_-i-c-o-n_-s-i-z-e.html">TREE_ICON_SIZE</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="554180597%2FFunctions%2F-1949050900" anchor-label="treeProlog" id="554180597%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="tree-prolog.html"><span>tree</span><wbr></wbr><span><span>Prolog</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="554180597%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-static/index.html"><span class="token annotation builtin">JvmStatic</span></a></div></div><span class="token keyword">fun </span><a href="tree-prolog.html"><span class="token function">treeProlog</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/ImageView///PointingToDeclaration/">ImageView</span></div><div class="brief "><p class="paragraph">Creates the tree graphic for the prolog, scaled to <a href="-t-r-e-e_-i-c-o-n_-s-i-z-e.html">TREE_ICON_SIZE</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-330508539%2FFunctions%2F-1949050900" anchor-label="warning" id="-330508539%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="warning.html"><span><span>warning</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-330508539%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-static/index.html"><span class="token annotation builtin">JvmStatic</span></a></div><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-overloads/index.html"><span class="token annotation builtin">JvmOverloads</span></a></div></div><span class="token keyword">fun </span><a href="warning.html"><span class="token function">warning</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">scheme<span class="token operator">: </span><a href="../-ai-ghost-color-scheme/index.html">AiGhostColorScheme</a><span class="token operator"> = </span>AiGhostTheme.colorScheme</span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="javafx.scene.image/Image///PointingToDeclaration/">Image</span></div><div class="brief "><p class="paragraph">Reads the icon of a warning dialog for the given colour scheme.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2026 Copyright</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

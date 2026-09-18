@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+         <loc>https://kleinerhacker.github.io/ai-ghost/latest/0.0.1/</loc>
+         <lastmod>2026-09-18</lastmod>
+    </url>
+    <url>
+         <loc>https://kleinerhacker.github.io/ai-ghost/latest/0.0.1/editor/</loc>
+         <lastmod>2026-09-18</lastmod>
+    </url>
+    <url>
+         <loc>https://kleinerhacker.github.io/ai-ghost/latest/0.0.1/logging/</loc>
+         <lastmod>2026-09-18</lastmod>
+    </url>
+    <url>
+         <loc>https://kleinerhacker.github.io/ai-ghost/latest/0.0.1/menu/</loc>
+         <lastmod>2026-09-18</lastmod>
+    </url>
+    <url>
+         <loc>https://kleinerhacker.github.io/ai-ghost/latest/0.0.1/project-settings/</loc>
+         <lastmod>2026-09-18</lastmod>
+    </url>
+    <url>
+         <loc>https://kleinerhacker.github.io/ai-ghost/latest/0.0.1/project-tree/</loc>
+         <lastmod>2026-09-18</lastmod>
+    </url>
+    <url>
+         <loc>https://kleinerhacker.github.io/ai-ghost/latest/0.0.1/theme/</loc>
+         <lastmod>2026-09-18</lastmod>
+    </url>
+</urlset>

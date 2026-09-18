@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>MainWindowViewModel</title>
+    <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
+        <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer="defer"></script>
+</head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+            <a class="library-name--link" href="../../../index.html" tabindex="1">
+                    ai-ghost-ui
+            </a>
+        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle"
+                type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+1.0-SNAPSHOT        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true"
+                        data-filter=":app:ai-ghost-ui/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
+                        data-role="dropdown-toggle"
+                        aria-controls="platform-tags-listbox"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-label="Toggle source sets"
+                ></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":app:ai-ghost-ui/main"
+                                       data-filter=":app:ai-ghost-ui/main"/>
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button"
+                    type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config='{"defaultSize": 280, "minSize": 200, "maxSize": 400}'>
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
+                    data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    ai-ghost-ui
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="classlike" id="content" pageIds="ai-ghost-ui::org.pcsoft.app.aighost.app.ui.window/MainWindowViewModel///PointingToDeclaration//-1949050900">
+  <div class="breadcrumbs"><a href="../../../index.html">ai-ghost-ui</a><span class="delimiter">/</span><a href="../index.html">org.pcsoft.app.aighost.app.ui.window</a><span class="delimiter">/</span><span class="current">MainWindowViewModel</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Main</span><wbr></wbr><span>Window</span><wbr></wbr><span>View</span><wbr></wbr><span><span>Model</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">MainWindowViewModel</a> : <span data-unresolved-link="de.saxsys.mvvmfx/ViewModel///PointingToDeclaration/">ViewModel</span></div><p class="paragraph">View model of the application main window.</p><p class="paragraph">The window owns the project the user works on: <a href="project.html">project</a> is that project as a property model, so every control below the window follows a field of it, and <a href="current-file.html">currentFile</a> is the document it belongs to. The storages of <code class="lang-kotlin">ai-ghost-model</code> keep nothing themselves - they are asked to read and to write through <a href="../../org.pcsoft.app.aighost.app.controller/-io-controller/index.html">IoController</a>, and the answer lands here.</p><p class="paragraph"><a href="open-recent.html">openRecent</a> holds the files of the &quot;open recent&quot; menu. The settings are a plain value object that reports nothing, so the menu is filled from them whenever the window comes on screen and is written back when the window leaves it - but only when something was actually added meanwhile, otherwise leaving the window would replace the stored list with whatever this one happens to hold.</p></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="tableheader">Constructors</h2>
+        <div class="table"><a data-name="-1091748093%2FConstructors%2F-1949050900" anchor-label="MainWindowViewModel" id="-1091748093%2FConstructors%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-main-window-view-model.html"><span>Main</span><wbr></wbr><span>Window</span><wbr></wbr><span>View</span><wbr></wbr><span><span>Model</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1091748093%2FConstructors%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="tableheader">Properties</h2>
+        <div class="table"><a data-name="1026683757%2FProperties%2F-1949050900" anchor-label="alreadySaved" id="1026683757%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="already-saved.html"><span>already</span><wbr></wbr><span><span>Saved</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1026683757%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="already-saved.html">alreadySaved</a><span class="token operator">: </span><span data-unresolved-link="javafx.beans.binding/BooleanBinding///PointingToDeclaration/">BooleanBinding</span></div><div class="brief "><p class="paragraph">Whether the open project already has a document, which decides between save and save as.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1793542903%2FProperties%2F-1949050900" anchor-label="currentFile" id="-1793542903%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="current-file.html"><span>current</span><wbr></wbr><span><span>File</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1793542903%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="current-file.html">currentFile</a><span class="token operator">: </span><span data-unresolved-link="javafx.beans.property/ObjectProperty///PointingToDeclaration/">ObjectProperty</span><span class="token operator">&lt;</span><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/io/File.html">File</a><span class="token operator">?</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">The document <a href="project.html">project</a> belongs to, absent while it was never saved.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2036845641%2FProperties%2F-1949050900" anchor-label="openRecent" id="-2036845641%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="open-recent.html"><span>open</span><wbr></wbr><span><span>Recent</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2036845641%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="open-recent.html">openRecent</a><span class="token operator">: </span><span data-unresolved-link="javafx.beans.property/SetProperty///PointingToDeclaration/">SetProperty</span><span class="token operator">&lt;</span><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/io/File.html">File</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Files the user opened last, the most recent one first.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2032755355%2FProperties%2F-1949050900" anchor-label="openRecentDisabled" id="2032755355%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="open-recent-disabled.html"><span>open</span><wbr></wbr><span>Recent</span><wbr></wbr><span><span>Disabled</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2032755355%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="open-recent-disabled.html">openRecentDisabled</a><span class="token operator">: </span><span data-unresolved-link="javafx.beans.property/ReadOnlyBooleanProperty///PointingToDeclaration/">ReadOnlyBooleanProperty</span></div><div class="brief "><p class="paragraph">A read-only Boolean property that indicates whether the &quot;Open Recent&quot; functionality is disabled. It is <code class="lang-kotlin">true</code> when the list of recently opened files is empty.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="717050245%2FProperties%2F-1949050900" anchor-label="project" id="717050245%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="project.html"><span><span>project</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="717050245%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="project.html">project</a><span class="token operator">: </span><span data-unresolved-link="org.pcsoft.app.aighost.fx.model.project/ProjectProperty///PointingToDeclaration/">ProjectProperty</span></div><div class="brief "><p class="paragraph">The project the user works on, with every part and field of it as a property of its own.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1192327878%2FProperties%2F-1949050900" anchor-label="projectName" id="-1192327878%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="project-name.html"><span>project</span><wbr></wbr><span><span>Name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1192327878%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="project-name.html">projectName</a><span class="token operator">: </span><span data-unresolved-link="javafx.beans.property/StringProperty///PointingToDeclaration/">StringProperty</span></div><div class="brief "><p class="paragraph">Name of the open project, the text the window title is built from.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="328718010%2FProperties%2F-1949050900" anchor-label="undoStack" id="328718010%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="undo-stack.html"><span>undo</span><wbr></wbr><span><span>Stack</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="328718010%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="undo-stack.html">undoStack</a><span class="token operator">: </span><a href="../../org.pcsoft.app.aighost.app.undo/-undo-stack/index.html">UndoStack</a></div><div class="brief "><p class="paragraph">Undo/redo history of the open project.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="-1317992925%2FFunctions%2F-1949050900" anchor-label="newProject" id="-1317992925%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="new-project.html"><span>new</span><wbr></wbr><span><span>Project</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1317992925%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="new-project.html"><span class="token function">newProject</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Closes the open project and starts a fresh one.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1258245591%2FFunctions%2F-1949050900" anchor-label="openProject" id="1258245591%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="open-project.html"><span>open</span><wbr></wbr><span><span>Project</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1258245591%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="open-project.html"><span class="token function">openProject</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">file<span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/io/File.html">File</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Opens the project of <a href="open-project.html">file</a>, as far as it could be read.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1633239522%2FFunctions%2F-1949050900" anchor-label="publish" id="1633239522%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1633239522%2FFunctions%2F-1949050900"><span><span>publish</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1633239522%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#1633239522%2FFunctions%2F-1949050900"><span class="token function">publish</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">messageName<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">vararg </span>payload<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="899874713%2FFunctions%2F-1949050900" anchor-label="saveProject" id="899874713%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="save-project.html"><span>save</span><wbr></wbr><span><span>Project</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="899874713%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="save-project.html"><span class="token function">saveProject</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">file<span class="token operator">: </span><a href="https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/io/File.html">File</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Writes the open project to <a href="save-project.html">file</a>, or to the document it belongs to when none is named.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1850452056%2FFunctions%2F-1949050900" anchor-label="subscribe" id="-1850452056%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1850452056%2FFunctions%2F-1949050900"><span><span>subscribe</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1850452056%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#-1850452056%2FFunctions%2F-1949050900"><span class="token function">subscribe</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">messageName<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">observer<span class="token operator">: </span><span data-unresolved-link="de.saxsys.mvvmfx.utils.notifications/NotificationObserver///PointingToDeclaration/">NotificationObserver</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1748465939%2FFunctions%2F-1949050900" anchor-label="unsubscribe" id="-1748465939%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1401166134%2FFunctions%2F-1949050900"><span><span>unsubscribe</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1748465939%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#-1401166134%2FFunctions%2F-1949050900"><span class="token function">unsubscribe</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">observer<span class="token operator">: </span><span data-unresolved-link="de.saxsys.mvvmfx.utils.notifications/NotificationObserver///PointingToDeclaration/">NotificationObserver</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#-511063121%2FFunctions%2F-1949050900"><span class="token function">unsubscribe</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">messageName<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">observer<span class="token operator">: </span><span data-unresolved-link="de.saxsys.mvvmfx.utils.notifications/NotificationObserver///PointingToDeclaration/">NotificationObserver</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2026 Copyright</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

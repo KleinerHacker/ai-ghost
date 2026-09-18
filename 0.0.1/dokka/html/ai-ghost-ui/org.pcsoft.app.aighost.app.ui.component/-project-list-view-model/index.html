@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>ProjectListViewModel</title>
+    <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
+        <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer="defer"></script>
+</head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+            <a class="library-name--link" href="../../../index.html" tabindex="1">
+                    ai-ghost-ui
+            </a>
+        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle"
+                type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+1.0-SNAPSHOT        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true"
+                        data-filter=":app:ai-ghost-ui/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
+                        data-role="dropdown-toggle"
+                        aria-controls="platform-tags-listbox"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-label="Toggle source sets"
+                ></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":app:ai-ghost-ui/main"
+                                       data-filter=":app:ai-ghost-ui/main"/>
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button"
+                    type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config='{"defaultSize": 280, "minSize": 200, "maxSize": 400}'>
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
+                    data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    ai-ghost-ui
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="classlike" id="content" pageIds="ai-ghost-ui::org.pcsoft.app.aighost.app.ui.component/ProjectListViewModel///PointingToDeclaration//-1949050900">
+  <div class="breadcrumbs"><a href="../../../index.html">ai-ghost-ui</a><span class="delimiter">/</span><a href="../index.html">org.pcsoft.app.aighost.app.ui.component</a><span class="delimiter">/</span><span class="current">ProjectListViewModel</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Project</span><wbr></wbr><span>List</span><wbr></wbr><span>View</span><wbr></wbr><span><span>Model</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">ProjectListViewModel</a> : <span data-unresolved-link="de.saxsys.mvvmfx/ViewModel///PointingToDeclaration/">ViewModel</span></div><p class="paragraph">View model of <a href="../-project-list/index.html">ProjectList</a>.</p><p class="paragraph">The property model of the project is the single input of the component and is handed over through <span data-unresolved-link="org.pcsoft.app.aighost.app.ui.component/ProjectListViewModel/bind/#org.pcsoft.app.aighost.fx.model.project.ProjectProperty/PointingToDeclaration/">bind</span>; it is taken as the model itself and not as the value of a property of its own, so a property never carries another property. Everything the tree needs is derived from the project inside it: a project always carries its book, so only the project itself can be absent, which is the state before the user opened or created one. <a href="selected-item.html">selectedItem</a> is the single output and reports which node the user picked.</p><p class="paragraph">The tree follows the exchange of the project and not every write inside it: a rewritten chapter title leaves the nodes where they are, so the user does not lose the selection while typing.</p><p class="paragraph"><a href="add-chapter.html">addChapter</a>, <a href="remove-chapter.html">removeChapter</a> and <a href="rename-chapter.html">renameChapter</a> are the only way the tree itself changes the manuscript (IP-38): adding or removing a chapter keeps <span data-unresolved-link="org.pcsoft.app.aighost.model.project.book/Book/chapters/#/PointingToDeclaration/">org.pcsoft.app.aighost.model.project.book.Book.chapters</span> and the chapter's page in <span data-unresolved-link="org.pcsoft.app.aighost.model.project.book/Book/document/#/PointingToDeclaration/">org.pcsoft.app.aighost.model.project.book.Book.document</span> in lock step, so neither ever names a page or an anchor the other does not know about. Whether removing a chapter needs the user's confirmation first is a question of <span data-unresolved-link="org.pcsoft.app.aighost.app.ui.component/ProjectListCell///PointingToDeclaration/">ProjectListCell</span>, which shows the tree - this view model carries out the removal once it is asked to, unconditionally.</p><p class="paragraph"><a href="set-prolog-included.html">setPrologIncluded</a>, <a href="set-epilog-included.html">setEpilogIncluded</a> and <a href="set-blurb-included.html">setBlurbIncluded</a> (IP-23) switch whether that part belongs to the finished book, without touching its text. Whichever field property of the book model changes it - the tree's own checkbox today, a further control elsewhere later - <a href="prolog.html">prolog</a>, <a href="epilog.html">epilog</a> and <a href="blurb.html">blurb</a> pick the change up through a listener on the matching <code class="lang-kotlin">*Property</code> of <span data-unresolved-link="org.pcsoft.app.aighost.fx.model.project.book/BookProperty///PointingToDeclaration/">BookProperty</span> and hand out a fresh copy, so <span data-unresolved-link="org.pcsoft.app.aighost.app.ui.component/ProjectListCell///PointingToDeclaration/">ProjectListCell</span> always renders the current switch even when it was flipped somewhere else. <span data-unresolved-link="org.pcsoft.app.aighost.app.ui.component/ProjectListViewModel/bindUndoStack/#org.pcsoft.app.aighost.app.undo.UndoStack/PointingToDeclaration/">bindUndoStack</span> hands over the undo history the switch is recorded into.</p></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="tableheader">Constructors</h2>
+        <div class="table"><a data-name="-1468610286%2FConstructors%2F-1949050900" anchor-label="ProjectListViewModel" id="-1468610286%2FConstructors%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-project-list-view-model.html"><span>Project</span><wbr></wbr><span>List</span><wbr></wbr><span>View</span><wbr></wbr><span><span>Model</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1468610286%2FConstructors%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="tableheader">Properties</h2>
+        <div class="table"><a data-name="990294208%2FProperties%2F-1949050900" anchor-label="blurb" id="990294208%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="blurb.html"><span><span>blurb</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="990294208%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="blurb.html">blurb</a><span class="token operator">: </span><span data-unresolved-link="javafx.beans.property/ReadOnlyObjectProperty///PointingToDeclaration/">ReadOnlyObjectProperty</span><span class="token operator">&lt;</span><span data-unresolved-link="org.pcsoft.app.aighost.model.project.book/Blurb///PointingToDeclaration/">Blurb</span><span class="token operator">?</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Blurb of the open project, absent without a project or before the user created one.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1250974329%2FProperties%2F-1949050900" anchor-label="chapters" id="1250974329%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="chapters.html"><span><span>chapters</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1250974329%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="chapters.html">chapters</a><span class="token operator">: </span><span data-unresolved-link="javafx.beans.property/ReadOnlyListProperty///PointingToDeclaration/">ReadOnlyListProperty</span><span class="token operator">&lt;</span><span data-unresolved-link="org.pcsoft.app.aighost.model.project.book/Chapter///PointingToDeclaration/">Chapter</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Chapters of the open project in the order the user arranged them, empty without a project.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="48277337%2FProperties%2F-1949050900" anchor-label="epilog" id="48277337%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="epilog.html"><span><span>epilog</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="48277337%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="epilog.html">epilog</a><span class="token operator">: </span><span data-unresolved-link="javafx.beans.property/ReadOnlyObjectProperty///PointingToDeclaration/">ReadOnlyObjectProperty</span><span class="token operator">&lt;</span><span data-unresolved-link="org.pcsoft.app.aighost.model.project.book/Epilog///PointingToDeclaration/">Epilog</span><span class="token operator">?</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Epilog of the open project, absent without a project or before the user created one.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-501615512%2FProperties%2F-1949050900" anchor-label="prolog" id="-501615512%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="prolog.html"><span><span>prolog</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-501615512%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="prolog.html">prolog</a><span class="token operator">: </span><span data-unresolved-link="javafx.beans.property/ReadOnlyObjectProperty///PointingToDeclaration/">ReadOnlyObjectProperty</span><span class="token operator">&lt;</span><span data-unresolved-link="org.pcsoft.app.aighost.model.project.book/Prolog///PointingToDeclaration/">Prolog</span><span class="token operator">?</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Prolog of the open project, absent without a project or before the user created one.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1192983567%2FProperties%2F-1949050900" anchor-label="selectedItem" id="-1192983567%2FProperties%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="selected-item.html"><span>selected</span><wbr></wbr><span><span>Item</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1192983567%2FProperties%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="selected-item.html">selectedItem</a><span class="token operator">: </span><span data-unresolved-link="javafx.beans.property/ReadOnlyObjectProperty///PointingToDeclaration/">ReadOnlyObjectProperty</span><span class="token operator">&lt;</span><a href="../-project-list-item/index.html">ProjectListItem</a><span class="token operator">?</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">The node the user picked in the tree, absent while nothing is selected.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="-697249261%2FFunctions%2F-1949050900" anchor-label="addChapter" id="-697249261%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="add-chapter.html"><span>add</span><wbr></wbr><span><span>Chapter</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-697249261%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="add-chapter.html"><span class="token function">addChapter</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Adds a freshly named chapter at the end of the manuscript.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1633239522%2FFunctions%2F-1949050900" anchor-label="publish" id="1633239522%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../../org.pcsoft.app.aighost.app.ui.window/-main-window-view-model/index.html#1633239522%2FFunctions%2F-1949050900"><span><span>publish</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1633239522%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="../../org.pcsoft.app.aighost.app.ui.window/-main-window-view-model/index.html#1633239522%2FFunctions%2F-1949050900"><span class="token function">publish</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">messageName<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">vararg </span>payload<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-487859661%2FFunctions%2F-1949050900" anchor-label="removeChapter" id="-487859661%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="remove-chapter.html"><span>remove</span><wbr></wbr><span><span>Chapter</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-487859661%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="remove-chapter.html"><span class="token function">removeChapter</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">chapter<span class="token operator">: </span><span data-unresolved-link="org.pcsoft.app.aighost.model.project.book/Chapter///PointingToDeclaration/">Chapter</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Removes <a href="remove-chapter.html">chapter</a> and its page from the manuscript.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-932896802%2FFunctions%2F-1949050900" anchor-label="renameChapter" id="-932896802%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="rename-chapter.html"><span>rename</span><wbr></wbr><span><span>Chapter</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-932896802%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="rename-chapter.html"><span class="token function">renameChapter</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">chapter<span class="token operator">: </span><span data-unresolved-link="org.pcsoft.app.aighost.model.project.book/Chapter///PointingToDeclaration/">Chapter</span><span class="token punctuation">, </span></span><span class="parameter ">name<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Renames <a href="rename-chapter.html">chapter</a> to <a href="rename-chapter.html">name</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1860064623%2FFunctions%2F-1949050900" anchor-label="setBlurbIncluded" id="1860064623%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="set-blurb-included.html"><span>set</span><wbr></wbr><span>Blurb</span><wbr></wbr><span><span>Included</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1860064623%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="set-blurb-included.html"><span class="token function">setBlurbIncluded</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">included<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Switches whether the blurb belongs to the finished book, without touching its text.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1503808900%2FFunctions%2F-1949050900" anchor-label="setEpilogIncluded" id="-1503808900%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="set-epilog-included.html"><span>set</span><wbr></wbr><span>Epilog</span><wbr></wbr><span><span>Included</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1503808900%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="set-epilog-included.html"><span class="token function">setEpilogIncluded</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">included<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Switches whether the epilog belongs to the finished book, without touching its text.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1462289845%2FFunctions%2F-1949050900" anchor-label="setPrologIncluded" id="-1462289845%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="set-prolog-included.html"><span>set</span><wbr></wbr><span>Prolog</span><wbr></wbr><span><span>Included</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1462289845%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="set-prolog-included.html"><span class="token function">setPrologIncluded</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">included<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Switches whether the prolog belongs to the finished book, without touching its text.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1850452056%2FFunctions%2F-1949050900" anchor-label="subscribe" id="-1850452056%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../../org.pcsoft.app.aighost.app.ui.window/-main-window-view-model/index.html#-1850452056%2FFunctions%2F-1949050900"><span><span>subscribe</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1850452056%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="../../org.pcsoft.app.aighost.app.ui.window/-main-window-view-model/index.html#-1850452056%2FFunctions%2F-1949050900"><span class="token function">subscribe</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">messageName<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">observer<span class="token operator">: </span><span data-unresolved-link="de.saxsys.mvvmfx.utils.notifications/NotificationObserver///PointingToDeclaration/">NotificationObserver</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1748465939%2FFunctions%2F-1949050900" anchor-label="unsubscribe" id="-1748465939%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../../org.pcsoft.app.aighost.app.ui.window/-main-window-view-model/index.html#-1401166134%2FFunctions%2F-1949050900"><span><span>unsubscribe</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1748465939%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="../../org.pcsoft.app.aighost.app.ui.window/-main-window-view-model/index.html#-1401166134%2FFunctions%2F-1949050900"><span class="token function">unsubscribe</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">observer<span class="token operator">: </span><span data-unresolved-link="de.saxsys.mvvmfx.utils.notifications/NotificationObserver///PointingToDeclaration/">NotificationObserver</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="../../org.pcsoft.app.aighost.app.ui.window/-main-window-view-model/index.html#-511063121%2FFunctions%2F-1949050900"><span class="token function">unsubscribe</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">messageName<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">observer<span class="token operator">: </span><span data-unresolved-link="de.saxsys.mvvmfx.utils.notifications/NotificationObserver///PointingToDeclaration/">NotificationObserver</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2026 Copyright</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

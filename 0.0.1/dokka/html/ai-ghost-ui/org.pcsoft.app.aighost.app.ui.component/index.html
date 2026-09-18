@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>org.pcsoft.app.aighost.app.ui.component</title>
+    <link href="../../images/logo-icon.svg" rel="icon" type="image/svg">
+        <script>var pathToRoot = "../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../styles/style.css" rel="Stylesheet">
+<link href="../../styles/main.css" rel="Stylesheet">
+<link href="../../styles/prism.css" rel="Stylesheet">
+<link href="../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../ui-kit/ui-kit.min.js" defer="defer"></script>
+</head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+            <a class="library-name--link" href="../../index.html" tabindex="1">
+                    ai-ghost-ui
+            </a>
+        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle"
+                type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+1.0-SNAPSHOT        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true"
+                        data-filter=":app:ai-ghost-ui/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
+                        data-role="dropdown-toggle"
+                        aria-controls="platform-tags-listbox"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-label="Toggle source sets"
+                ></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":app:ai-ghost-ui/main"
+                                       data-filter=":app:ai-ghost-ui/main"/>
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button"
+                    type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config='{"defaultSize": 280, "minSize": 200, "maxSize": 400}'>
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
+                    data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    ai-ghost-ui
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="package" id="content" pageIds="ai-ghost-ui::org.pcsoft.app.aighost.app.ui.component////PointingToDeclaration//-1949050900">
+  <div class="breadcrumbs"><a href="../../index.html">ai-ghost-ui</a><span class="delimiter">/</span><span class="current">org.pcsoft.app.aighost.app.ui.component</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>Package-level</span></span> <span><span>declarations</span></span></h1>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="TYPE">Types</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="TYPE">
+        <h2 class="tableheader">Types</h2>
+        <div class="table"><a data-name="-1219737728%2FClasslikes%2F-1949050900" anchor-label="AiActionBar" id="-1219737728%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-ai-action-bar/index.html"><span>Ai</span><wbr></wbr><span>Action</span><wbr></wbr><span><span>Bar</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1219737728%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-ai-action-bar/index.html">AiActionBar</a> : <span data-unresolved-link="javafx.scene.layout/HBox///PointingToDeclaration/">HBox</span></div><div class="brief "><p class="paragraph">Floating bar of AI actions - Rewrite, Expand, Shorten - shown next to the focused paragraph or heading of the writing surface (IP-18).</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2032594725%2FClasslikes%2F-1949050900" anchor-label="AiActionBarView" id="-2032594725%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-ai-action-bar-view/index.html"><span>Ai</span><wbr></wbr><span>Action</span><wbr></wbr><span>Bar</span><wbr></wbr><span><span>View</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2032594725%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-ai-action-bar-view/index.html">AiActionBarView</a> : <span data-unresolved-link="de.saxsys.mvvmfx/FxmlView///PointingToDeclaration/">FxmlView</span><span class="token operator">&lt;</span><a href="-ai-action-bar-view-model/index.html">AiActionBarViewModel</a><span class="token operator">&gt; </span>, <span data-unresolved-link="javafx.fxml/Initializable///PointingToDeclaration/">Initializable</span></div><div class="brief "><p class="paragraph">View of <a href="-ai-action-bar/index.html">AiActionBar</a>, holding the three buttons of the floating AI action bar.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-585304354%2FClasslikes%2F-1949050900" anchor-label="AiActionBarViewModel" id="-585304354%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-ai-action-bar-view-model/index.html"><span>Ai</span><wbr></wbr><span>Action</span><wbr></wbr><span>Bar</span><wbr></wbr><span>View</span><wbr></wbr><span><span>Model</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-585304354%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-ai-action-bar-view-model/index.html">AiActionBarViewModel</a> : <span data-unresolved-link="de.saxsys.mvvmfx/ViewModel///PointingToDeclaration/">ViewModel</span></div><div class="brief "><p class="paragraph">View model of <a href="-ai-action-bar/index.html">AiActionBar</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="829596260%2FClasslikes%2F-1949050900" anchor-label="BookPartEditor" id="829596260%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-book-part-editor/index.html"><span>Book</span><wbr></wbr><span>Part</span><wbr></wbr><span><span>Editor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="829596260%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-book-part-editor/index.html">BookPartEditor</a> : <span data-unresolved-link="javafx.scene.layout/BorderPane///PointingToDeclaration/">BorderPane</span></div><div class="brief "><p class="paragraph">The sheet in the centre of the editor, where a book part is written in the typography and the page structure of the finished book.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2127518143%2FClasslikes%2F-1949050900" anchor-label="BookPartEditorView" id="2127518143%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-book-part-editor-view/index.html"><span>Book</span><wbr></wbr><span>Part</span><wbr></wbr><span>Editor</span><wbr></wbr><span><span>View</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2127518143%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-book-part-editor-view/index.html">BookPartEditorView</a> : <span data-unresolved-link="de.saxsys.mvvmfx/FxmlView///PointingToDeclaration/">FxmlView</span><span class="token operator">&lt;</span><a href="-book-part-editor-view-model/index.html">BookPartEditorViewModel</a><span class="token operator">&gt; </span>, <span data-unresolved-link="javafx.fxml/Initializable///PointingToDeclaration/">Initializable</span></div><div class="brief "><p class="paragraph">View of <a href="-book-part-editor/index.html">BookPartEditor</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-790324102%2FClasslikes%2F-1949050900" anchor-label="BookPartEditorViewModel" id="-790324102%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-book-part-editor-view-model/index.html"><span>Book</span><wbr></wbr><span>Part</span><wbr></wbr><span>Editor</span><wbr></wbr><span>View</span><wbr></wbr><span><span>Model</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-790324102%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-book-part-editor-view-model/index.html">BookPartEditorViewModel</a> : <span data-unresolved-link="de.saxsys.mvvmfx/ViewModel///PointingToDeclaration/">ViewModel</span></div><div class="brief "><p class="paragraph">View model of <a href="-book-part-editor/index.html">BookPartEditor</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="829640897%2FClasslikes%2F-1949050900" anchor-label="BookPartPageDesignSettings" id="829640897%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-book-part-page-design-settings/index.html"><span>Book</span><wbr></wbr><span>Part</span><wbr></wbr><span>Page</span><wbr></wbr><span>Design</span><wbr></wbr><span><span>Settings</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="829640897%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-book-part-page-design-settings/index.html">BookPartPageDesignSettings</a> : <span data-unresolved-link="javafx.scene.layout/BorderPane///PointingToDeclaration/">BorderPane</span></div><div class="brief "><p class="paragraph">Reusable group of three <a href="-style-data-editor/index.html">StyleDataEditor</a> instances editing the styles a written book part carries: its title, the further title lines below it and its body text.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="401052060%2FClasslikes%2F-1949050900" anchor-label="BookPartPageDesignSettingsView" id="401052060%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-book-part-page-design-settings-view/index.html"><span>Book</span><wbr></wbr><span>Part</span><wbr></wbr><span>Page</span><wbr></wbr><span>Design</span><wbr></wbr><span>Settings</span><wbr></wbr><span><span>View</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="401052060%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-book-part-page-design-settings-view/index.html">BookPartPageDesignSettingsView</a> : <span data-unresolved-link="de.saxsys.mvvmfx/FxmlView///PointingToDeclaration/">FxmlView</span><span class="token operator">&lt;</span><a href="-book-part-page-design-settings-view-model/index.html">BookPartPageDesignSettingsViewModel</a><span class="token operator">&gt; </span>, <span data-unresolved-link="javafx.fxml/Initializable///PointingToDeclaration/">Initializable</span></div><div class="brief "><p class="paragraph">View of <a href="-book-part-page-design-settings/index.html">BookPartPageDesignSettings</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2054538941%2FClasslikes%2F-1949050900" anchor-label="BookPartPageDesignSettingsViewModel" id="2054538941%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-book-part-page-design-settings-view-model/index.html"><span>Book</span><wbr></wbr><span>Part</span><wbr></wbr><span>Page</span><wbr></wbr><span>Design</span><wbr></wbr><span>Settings</span><wbr></wbr><span>View</span><wbr></wbr><span><span>Model</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2054538941%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-book-part-page-design-settings-view-model/index.html">BookPartPageDesignSettingsViewModel</a> : <span data-unresolved-link="de.saxsys.mvvmfx/ViewModel///PointingToDeclaration/">ViewModel</span></div><div class="brief "><p class="paragraph">View model of <a href="-book-part-page-design-settings/index.html">BookPartPageDesignSettings</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-314751848%2FClasslikes%2F-1949050900" anchor-label="ChapterPageDesignSettings" id="-314751848%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-chapter-page-design-settings/index.html"><span>Chapter</span><wbr></wbr><span>Page</span><wbr></wbr><span>Design</span><wbr></wbr><span><span>Settings</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-314751848%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-chapter-page-design-settings/index.html">ChapterPageDesignSettings</a> : <span data-unresolved-link="javafx.scene.layout/BorderPane///PointingToDeclaration/">BorderPane</span></div><div class="brief "><p class="paragraph">The &quot;Chapter pages&quot; design section: the appearance of the chapter heading, its further heading lines and the body text, plus the switch that pushes the heading onto a page of its own.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="861258227%2FClasslikes%2F-1949050900" anchor-label="ChapterPageDesignSettingsView" id="861258227%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-chapter-page-design-settings-view/index.html"><span>Chapter</span><wbr></wbr><span>Page</span><wbr></wbr><span>Design</span><wbr></wbr><span>Settings</span><wbr></wbr><span><span>View</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="861258227%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-chapter-page-design-settings-view/index.html">ChapterPageDesignSettingsView</a> : <span data-unresolved-link="de.saxsys.mvvmfx/FxmlView///PointingToDeclaration/">FxmlView</span><span class="token operator">&lt;</span><a href="-chapter-page-design-settings-view-model/index.html">ChapterPageDesignSettingsViewModel</a><span class="token operator">&gt; </span>, <span data-unresolved-link="javafx.fxml/Initializable///PointingToDeclaration/">Initializable</span></div><div class="brief "><p class="paragraph">View of <a href="-chapter-page-design-settings/index.html">ChapterPageDesignSettings</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-790940474%2FClasslikes%2F-1949050900" anchor-label="ChapterPageDesignSettingsViewModel" id="-790940474%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-chapter-page-design-settings-view-model/index.html"><span>Chapter</span><wbr></wbr><span>Page</span><wbr></wbr><span>Design</span><wbr></wbr><span>Settings</span><wbr></wbr><span>View</span><wbr></wbr><span><span>Model</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-790940474%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-chapter-page-design-settings-view-model/index.html">ChapterPageDesignSettingsViewModel</a> : <span data-unresolved-link="de.saxsys.mvvmfx/ViewModel///PointingToDeclaration/">ViewModel</span></div><div class="brief "><p class="paragraph">View model of <a href="-chapter-page-design-settings/index.html">ChapterPageDesignSettings</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-394798114%2FClasslikes%2F-1949050900" anchor-label="CopyrightPageDesignSettings" id="-394798114%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-copyright-page-design-settings/index.html"><span>Copyright</span><wbr></wbr><span>Page</span><wbr></wbr><span>Design</span><wbr></wbr><span><span>Settings</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-394798114%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-copyright-page-design-settings/index.html">CopyrightPageDesignSettings</a> : <span data-unresolved-link="javafx.scene.layout/BorderPane///PointingToDeclaration/">BorderPane</span></div><div class="brief "><p class="paragraph">Die &quot;Copyright-Seite&quot;-Design-Sektion: Erscheinungsbild von Copyright-Text, Copyright-Zusatz und optional des Autors.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1430734393%2FClasslikes%2F-1949050900" anchor-label="CopyrightPageDesignSettingsView" id="1430734393%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-copyright-page-design-settings-view/index.html"><span>Copyright</span><wbr></wbr><span>Page</span><wbr></wbr><span>Design</span><wbr></wbr><span>Settings</span><wbr></wbr><span><span>View</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1430734393%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-copyright-page-design-settings-view/index.html">CopyrightPageDesignSettingsView</a> : <span data-unresolved-link="de.saxsys.mvvmfx/FxmlView///PointingToDeclaration/">FxmlView</span><span class="token operator">&lt;</span><a href="-copyright-page-design-settings-view-model/index.html">CopyrightPageDesignSettingsViewModel</a><span class="token operator">&gt; </span>, <span data-unresolved-link="javafx.fxml/Initializable///PointingToDeclaration/">Initializable</span></div><div class="brief "><p class="paragraph">View of <a href="-copyright-page-design-settings/index.html">CopyrightPageDesignSettings</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-189830080%2FClasslikes%2F-1949050900" anchor-label="CopyrightPageDesignSettingsViewModel" id="-189830080%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-copyright-page-design-settings-view-model/index.html"><span>Copyright</span><wbr></wbr><span>Page</span><wbr></wbr><span>Design</span><wbr></wbr><span>Settings</span><wbr></wbr><span>View</span><wbr></wbr><span><span>Model</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-189830080%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-copyright-page-design-settings-view-model/index.html">CopyrightPageDesignSettingsViewModel</a> : <span data-unresolved-link="de.saxsys.mvvmfx/ViewModel///PointingToDeclaration/">ViewModel</span></div><div class="brief "><p class="paragraph">View model of <a href="-copyright-page-design-settings/index.html">CopyrightPageDesignSettings</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-261088148%2FClasslikes%2F-1949050900" anchor-label="DesignSettings" id="-261088148%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-design-settings/index.html"><span>Design</span><wbr></wbr><span><span>Settings</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-261088148%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-design-settings/index.html">DesignSettings</a> : <span data-unresolved-link="javafx.scene.layout/BorderPane///PointingToDeclaration/">BorderPane</span></div><div class="brief "><p class="paragraph">The &quot;Design&quot; section of the project settings: the page geometry and the two blank pages that frame the book.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="787517383%2FClasslikes%2F-1949050900" anchor-label="DesignSettingsView" id="787517383%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-design-settings-view/index.html"><span>Design</span><wbr></wbr><span>Settings</span><wbr></wbr><span><span>View</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="787517383%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-design-settings-view/index.html">DesignSettingsView</a> : <span data-unresolved-link="de.saxsys.mvvmfx/FxmlView///PointingToDeclaration/">FxmlView</span><span class="token operator">&lt;</span><a href="-design-settings-view-model/index.html">DesignSettingsViewModel</a><span class="token operator">&gt; </span>, <span data-unresolved-link="javafx.fxml/Initializable///PointingToDeclaration/">Initializable</span></div><div class="brief "><p class="paragraph">View of <a href="-design-settings/index.html">DesignSettings</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1086057330%2FClasslikes%2F-1949050900" anchor-label="DesignSettingsViewModel" id="1086057330%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-design-settings-view-model/index.html"><span>Design</span><wbr></wbr><span>Settings</span><wbr></wbr><span>View</span><wbr></wbr><span><span>Model</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1086057330%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-design-settings-view-model/index.html">DesignSettingsViewModel</a> : <span data-unresolved-link="de.saxsys.mvvmfx/ViewModel///PointingToDeclaration/">ViewModel</span></div><div class="brief "><p class="paragraph">View model of <a href="-design-settings/index.html">DesignSettings</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1011037056%2FClasslikes%2F-1949050900" anchor-label="Editor" id="-1011037056%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-editor/index.html"><span><span>Editor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1011037056%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-editor/index.html">Editor</a> : <span data-unresolved-link="javafx.scene.layout/BorderPane///PointingToDeclaration/">BorderPane</span></div><div class="brief "><p class="paragraph">Puts the project tree, the editing area and the inspector side by side, separated by splitters the user moves.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="763303387%2FClasslikes%2F-1949050900" anchor-label="EditorView" id="763303387%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-editor-view/index.html"><span>Editor</span><wbr></wbr><span><span>View</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="763303387%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-editor-view/index.html">EditorView</a> : <span data-unresolved-link="de.saxsys.mvvmfx/FxmlView///PointingToDeclaration/">FxmlView</span><span class="token operator">&lt;</span><a href="-editor-view-model/index.html">EditorViewModel</a><span class="token operator">&gt; </span>, <span data-unresolved-link="javafx.fxml/Initializable///PointingToDeclaration/">Initializable</span></div><div class="brief "><p class="paragraph">View of <a href="-editor/index.html">Editor</a>, holding the project tree, the writing surface and the inspector in a horizontal split.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-160296482%2FClasslikes%2F-1949050900" anchor-label="EditorViewModel" id="-160296482%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-editor-view-model/index.html"><span>Editor</span><wbr></wbr><span>View</span><wbr></wbr><span><span>Model</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-160296482%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-editor-view-model/index.html">EditorViewModel</a> : <span data-unresolved-link="de.saxsys.mvvmfx/ViewModel///PointingToDeclaration/">ViewModel</span></div><div class="brief "><p class="paragraph">View model of <a href="-editor/index.html">Editor</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-486320514%2FClasslikes%2F-1949050900" anchor-label="Inspector" id="-486320514%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-inspector/index.html"><span><span>Inspector</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-486320514%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-inspector/index.html">Inspector</a> : <span data-unresolved-link="javafx.scene.layout/BorderPane///PointingToDeclaration/">BorderPane</span></div><div class="brief "><p class="paragraph">Editing surface next to the manuscript, holding what does not belong on the page itself: the fields of the book and, for whatever part of it is picked in <a href="-project-list/index.html">ProjectList</a>, the fields of that part.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-766218023%2FClasslikes%2F-1949050900" anchor-label="InspectorView" id="-766218023%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-inspector-view/index.html"><span>Inspector</span><wbr></wbr><span><span>View</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-766218023%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-inspector-view/index.html">InspectorView</a> : <span data-unresolved-link="de.saxsys.mvvmfx/FxmlView///PointingToDeclaration/">FxmlView</span><span class="token operator">&lt;</span><a href="-inspector-view-model/index.html">InspectorViewModel</a><span class="token operator">&gt; </span>, <span data-unresolved-link="javafx.fxml/Initializable///PointingToDeclaration/">Initializable</span></div><div class="brief "><p class="paragraph">View of <a href="-inspector/index.html">Inspector</a>, holding the two fixed sections &quot;Book&quot; and &quot;Chapter&quot;.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1414784416%2FClasslikes%2F-1949050900" anchor-label="InspectorViewModel" id="1414784416%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-inspector-view-model/index.html"><span>Inspector</span><wbr></wbr><span>View</span><wbr></wbr><span><span>Model</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1414784416%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-inspector-view-model/index.html">InspectorViewModel</a> : <span data-unresolved-link="de.saxsys.mvvmfx/ViewModel///PointingToDeclaration/">ViewModel</span></div><div class="brief "><p class="paragraph">View model of <a href="-inspector/index.html">Inspector</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="822691007%2FClasslikes%2F-1949050900" anchor-label="PagePreset" id="822691007%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-page-preset/index.html"><span>Page</span><wbr></wbr><span><span>Preset</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="822691007%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">enum </span><a href="-page-preset/index.html">PagePreset</a> : <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-enum/index.html">Enum</a><span class="token operator">&lt;</span><a href="-page-preset/index.html">PagePreset</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">A ready-made page size the user picks in the design project settings instead of typing width and height by hand.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1670576481%2FClasslikes%2F-1949050900" anchor-label="PlaceholderSettings" id="-1670576481%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-placeholder-settings/index.html"><span>Placeholder</span><wbr></wbr><span><span>Settings</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1670576481%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-placeholder-settings/index.html">PlaceholderSettings</a> : <span data-unresolved-link="javafx.scene.layout/BorderPane///PointingToDeclaration/">BorderPane</span></div><div class="brief "><p class="paragraph">Stand-in for a settings section whose editor is not built yet.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1525889310%2FClasslikes%2F-1949050900" anchor-label="ProjectList" id="1525889310%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-project-list/index.html"><span>Project</span><wbr></wbr><span><span>List</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1525889310%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-project-list/index.html">ProjectList</a> : <span data-unresolved-link="javafx.scene.layout/BorderPane///PointingToDeclaration/">BorderPane</span></div><div class="brief "><p class="paragraph">Shows the open project as a tree: prolog, chapters, epilog and blurb below the project itself.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1640069835%2FClasslikes%2F-1949050900" anchor-label="ProjectListItem" id="1640069835%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-project-list-item/index.html"><span>Project</span><wbr></wbr><span>List</span><wbr></wbr><span><span>Item</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1640069835%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">interface </span><a href="-project-list-item/index.html">ProjectListItem</a></div><div class="brief "><p class="paragraph">One entry of the project tree shown by <a href="-project-list/index.html">ProjectList</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="877790073%2FClasslikes%2F-1949050900" anchor-label="ProjectListView" id="877790073%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-project-list-view/index.html"><span>Project</span><wbr></wbr><span>List</span><wbr></wbr><span><span>View</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="877790073%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-project-list-view/index.html">ProjectListView</a> : <span data-unresolved-link="de.saxsys.mvvmfx/FxmlView///PointingToDeclaration/">FxmlView</span><span class="token operator">&lt;</span><a href="-project-list-view-model/index.html">ProjectListViewModel</a><span class="token operator">&gt; </span>, <span data-unresolved-link="javafx.fxml/Initializable///PointingToDeclaration/">Initializable</span></div><div class="brief "><p class="paragraph">View of <a href="-project-list/index.html">ProjectList</a>, showing the open project as a tree.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-586615040%2FClasslikes%2F-1949050900" anchor-label="ProjectListViewModel" id="-586615040%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-project-list-view-model/index.html"><span>Project</span><wbr></wbr><span>List</span><wbr></wbr><span>View</span><wbr></wbr><span><span>Model</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-586615040%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-project-list-view-model/index.html">ProjectListViewModel</a> : <span data-unresolved-link="de.saxsys.mvvmfx/ViewModel///PointingToDeclaration/">ViewModel</span></div><div class="brief "><p class="paragraph">View model of <a href="-project-list/index.html">ProjectList</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-219011964%2FClasslikes%2F-1949050900" anchor-label="ProjectSettingsSection" id="-219011964%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-project-settings-section/index.html"><span>Project</span><wbr></wbr><span>Settings</span><wbr></wbr><span><span>Section</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-219011964%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">interface </span><a href="-project-settings-section/index.html">ProjectSettingsSection</a></div><div class="brief "><p class="paragraph">One section of the project settings, shown as a node of the <a href="-project-settings-tree/index.html">ProjectSettingsTree</a> and picked by the user to bring its editor to the front of the dialog.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1674213957%2FClasslikes%2F-1949050900" anchor-label="ProjectSettingsTree" id="-1674213957%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-project-settings-tree/index.html"><span>Project</span><wbr></wbr><span>Settings</span><wbr></wbr><span><span>Tree</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1674213957%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-project-settings-tree/index.html">ProjectSettingsTree</a> : <span data-unresolved-link="javafx.scene.layout/BorderPane///PointingToDeclaration/">BorderPane</span></div><div class="brief "><p class="paragraph">Navigation of the project settings dialog: a tree without a visible root, one node per <a href="-project-settings-section/index.html">ProjectSettingsSection</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1009957270%2FClasslikes%2F-1949050900" anchor-label="ProjectSettingsTreeView" id="1009957270%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-project-settings-tree-view/index.html"><span>Project</span><wbr></wbr><span>Settings</span><wbr></wbr><span>Tree</span><wbr></wbr><span><span>View</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1009957270%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-project-settings-tree-view/index.html">ProjectSettingsTreeView</a> : <span data-unresolved-link="de.saxsys.mvvmfx/FxmlView///PointingToDeclaration/">FxmlView</span><span class="token operator">&lt;</span><a href="-project-settings-tree-view-model/index.html">ProjectSettingsTreeViewModel</a><span class="token operator">&gt; </span>, <span data-unresolved-link="javafx.fxml/Initializable///PointingToDeclaration/">Initializable</span></div><div class="brief "><p class="paragraph">View of <a href="-project-settings-tree/index.html">ProjectSettingsTree</a>, showing every <a href="-project-settings-section/index.html">ProjectSettingsSection</a> as a fixed tree node.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2069460221%2FClasslikes%2F-1949050900" anchor-label="ProjectSettingsTreeViewModel" id="-2069460221%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-project-settings-tree-view-model/index.html"><span>Project</span><wbr></wbr><span>Settings</span><wbr></wbr><span>Tree</span><wbr></wbr><span>View</span><wbr></wbr><span><span>Model</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2069460221%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-project-settings-tree-view-model/index.html">ProjectSettingsTreeViewModel</a> : <span data-unresolved-link="de.saxsys.mvvmfx/ViewModel///PointingToDeclaration/">ViewModel</span></div><div class="brief "><p class="paragraph">View model of <a href="-project-settings-tree/index.html">ProjectSettingsTree</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-66667187%2FClasslikes%2F-1949050900" anchor-label="StyleDataEditor" id="-66667187%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-style-data-editor/index.html"><span>Style</span><wbr></wbr><span>Data</span><wbr></wbr><span><span>Editor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-66667187%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-style-data-editor/index.html">StyleDataEditor</a> : <span data-unresolved-link="javafx.scene.layout/BorderPane///PointingToDeclaration/">BorderPane</span></div><div class="brief "><p class="paragraph">Reusable editor for the appearance of a piece of text: font family, size, weight and slant, the horizontal placement and the space between the lines.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1520031784%2FClasslikes%2F-1949050900" anchor-label="StyleDataEditorView" id="1520031784%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-style-data-editor-view/index.html"><span>Style</span><wbr></wbr><span>Data</span><wbr></wbr><span>Editor</span><wbr></wbr><span><span>View</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1520031784%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-style-data-editor-view/index.html">StyleDataEditorView</a> : <span data-unresolved-link="de.saxsys.mvvmfx/FxmlView///PointingToDeclaration/">FxmlView</span><span class="token operator">&lt;</span><a href="-style-data-editor-view-model/index.html">StyleDataEditorViewModel</a><span class="token operator">&gt; </span>, <span data-unresolved-link="javafx.fxml/Initializable///PointingToDeclaration/">Initializable</span></div><div class="brief "><p class="paragraph">View of <a href="-style-data-editor/index.html">StyleDataEditor</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2032514993%2FClasslikes%2F-1949050900" anchor-label="StyleDataEditorViewModel" id="2032514993%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-style-data-editor-view-model/index.html"><span>Style</span><wbr></wbr><span>Data</span><wbr></wbr><span>Editor</span><wbr></wbr><span>View</span><wbr></wbr><span><span>Model</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2032514993%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-style-data-editor-view-model/index.html">StyleDataEditorViewModel</a> : <span data-unresolved-link="de.saxsys.mvvmfx/ViewModel///PointingToDeclaration/">ViewModel</span></div><div class="brief "><p class="paragraph">View model of <a href="-style-data-editor/index.html">StyleDataEditor</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="942861997%2FClasslikes%2F-1949050900" anchor-label="TitlePageDesignSettings" id="942861997%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-title-page-design-settings/index.html"><span>Title</span><wbr></wbr><span>Page</span><wbr></wbr><span>Design</span><wbr></wbr><span><span>Settings</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="942861997%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-title-page-design-settings/index.html">TitlePageDesignSettings</a> : <span data-unresolved-link="javafx.scene.layout/BorderPane///PointingToDeclaration/">BorderPane</span></div><div class="brief "><p class="paragraph">Design settings of the title page: the style of the main title, the style of the further title lines below it, a switch for whether the author name is printed at all, and the style of that author name.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1485724040%2FClasslikes%2F-1949050900" anchor-label="TitlePageDesignSettingsView" id="1485724040%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-title-page-design-settings-view/index.html"><span>Title</span><wbr></wbr><span>Page</span><wbr></wbr><span>Design</span><wbr></wbr><span>Settings</span><wbr></wbr><span><span>View</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1485724040%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-title-page-design-settings-view/index.html">TitlePageDesignSettingsView</a> : <span data-unresolved-link="de.saxsys.mvvmfx/FxmlView///PointingToDeclaration/">FxmlView</span><span class="token operator">&lt;</span><a href="-title-page-design-settings-view-model/index.html">TitlePageDesignSettingsViewModel</a><span class="token operator">&gt; </span>, <span data-unresolved-link="javafx.fxml/Initializable///PointingToDeclaration/">Initializable</span></div><div class="brief "><p class="paragraph">View of <a href="-title-page-design-settings/index.html">TitlePageDesignSettings</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-659877295%2FClasslikes%2F-1949050900" anchor-label="TitlePageDesignSettingsViewModel" id="-659877295%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-title-page-design-settings-view-model/index.html"><span>Title</span><wbr></wbr><span>Page</span><wbr></wbr><span>Design</span><wbr></wbr><span>Settings</span><wbr></wbr><span>View</span><wbr></wbr><span><span>Model</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-659877295%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-title-page-design-settings-view-model/index.html">TitlePageDesignSettingsViewModel</a> : <span data-unresolved-link="de.saxsys.mvvmfx/ViewModel///PointingToDeclaration/">ViewModel</span></div><div class="brief "><p class="paragraph">View model of <a href="-title-page-design-settings/index.html">TitlePageDesignSettings</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2026 Copyright</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

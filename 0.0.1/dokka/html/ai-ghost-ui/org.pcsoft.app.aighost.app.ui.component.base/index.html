@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>org.pcsoft.app.aighost.app.ui.component.base</title>
+    <link href="../../images/logo-icon.svg" rel="icon" type="image/svg">
+        <script>var pathToRoot = "../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../styles/style.css" rel="Stylesheet">
+<link href="../../styles/main.css" rel="Stylesheet">
+<link href="../../styles/prism.css" rel="Stylesheet">
+<link href="../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../ui-kit/ui-kit.min.js" defer="defer"></script>
+</head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+            <a class="library-name--link" href="../../index.html" tabindex="1">
+                    ai-ghost-ui
+            </a>
+        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle"
+                type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+1.0-SNAPSHOT        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true"
+                        data-filter=":app:ai-ghost-ui/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
+                        data-role="dropdown-toggle"
+                        aria-controls="platform-tags-listbox"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-label="Toggle source sets"
+                ></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":app:ai-ghost-ui/main"
+                                       data-filter=":app:ai-ghost-ui/main"/>
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button"
+                    type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config='{"defaultSize": 280, "minSize": 200, "maxSize": 400}'>
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
+                    data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    ai-ghost-ui
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="package" id="content" pageIds="ai-ghost-ui::org.pcsoft.app.aighost.app.ui.component.base////PointingToDeclaration//-1949050900">
+  <div class="breadcrumbs"><a href="../../index.html">ai-ghost-ui</a><span class="delimiter">/</span><span class="current">org.pcsoft.app.aighost.app.ui.component.base</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>Package-level</span></span> <span><span>declarations</span></span></h1>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="TYPE">Types</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="TYPE">
+        <h2 class="tableheader">Types</h2>
+        <div class="table"><a data-name="-734239331%2FClasslikes%2F-1949050900" anchor-label="AiPromptArea" id="-734239331%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-ai-prompt-area/index.html"><span>Ai</span><wbr></wbr><span>Prompt</span><wbr></wbr><span><span>Area</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-734239331%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-ai-prompt-area/index.html">AiPromptArea</a> : <span data-unresolved-link="javafx.scene.layout/BorderPane///PointingToDeclaration/">BorderPane</span></div><div class="brief "><p class="paragraph">Input area for a prompt the user writes for the AI.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1411569784%2FClasslikes%2F-1949050900" anchor-label="AiPromptAreaView" id="1411569784%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-ai-prompt-area-view/index.html"><span>Ai</span><wbr></wbr><span>Prompt</span><wbr></wbr><span>Area</span><wbr></wbr><span><span>View</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1411569784%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-ai-prompt-area-view/index.html">AiPromptAreaView</a> : <span data-unresolved-link="de.saxsys.mvvmfx/FxmlView///PointingToDeclaration/">FxmlView</span><span class="token operator">&lt;</span><a href="-ai-prompt-area-view-model/index.html">AiPromptAreaViewModel</a><span class="token operator">&gt; </span>, <span data-unresolved-link="javafx.fxml/Initializable///PointingToDeclaration/">Initializable</span></div><div class="brief "><p class="paragraph">View of <a href="-ai-prompt-area/index.html">AiPromptArea</a>, holding the writing surface and the footer below it.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1782552223%2FClasslikes%2F-1949050900" anchor-label="AiPromptAreaViewModel" id="-1782552223%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-ai-prompt-area-view-model/index.html"><span>Ai</span><wbr></wbr><span>Prompt</span><wbr></wbr><span>Area</span><wbr></wbr><span>View</span><wbr></wbr><span><span>Model</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1782552223%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-ai-prompt-area-view-model/index.html">AiPromptAreaViewModel</a> : <span data-unresolved-link="de.saxsys.mvvmfx/ViewModel///PointingToDeclaration/">ViewModel</span></div><div class="brief "><p class="paragraph">View model of <a href="-ai-prompt-area/index.html">AiPromptArea</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1611109239%2FClasslikes%2F-1949050900" anchor-label="AiPromptUsage" id="1611109239%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-ai-prompt-usage/index.html"><span>Ai</span><wbr></wbr><span>Prompt</span><wbr></wbr><span><span>Usage</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1611109239%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">enum </span><a href="-ai-prompt-usage/index.html">AiPromptUsage</a> : <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-enum/index.html">Enum</a><span class="token operator">&lt;</span><a href="-ai-prompt-usage/index.html">AiPromptUsage</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">How far the written prompt has eaten into the number of characters it is allowed to use.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1647177465%2FClasslikes%2F-1949050900" anchor-label="AiTextField" id="-1647177465%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-ai-text-field/index.html"><span>Ai</span><wbr></wbr><span>Text</span><wbr></wbr><span><span>Field</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1647177465%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-ai-text-field/index.html">AiTextField</a> : <span data-unresolved-link="javafx.scene.layout/BorderPane///PointingToDeclaration/">BorderPane</span></div><div class="brief "><p class="paragraph">Single line input whose text can be written by the AI instead of by the user.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="981779209%2FClasslikes%2F-1949050900" anchor-label="AiTextFieldList" id="981779209%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-ai-text-field-list/index.html"><span>Ai</span><wbr></wbr><span>Text</span><wbr></wbr><span>Field</span><wbr></wbr><span><span>List</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="981779209%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-ai-text-field-list/index.html">AiTextFieldList</a> : <span data-unresolved-link="javafx.scene.layout/VBox///PointingToDeclaration/">VBox</span></div><div class="brief "><p class="paragraph">A list of texts the user builds up: one <a href="-ai-text-field-list-item/index.html">AiTextFieldListItem</a> per entry, and below them the plus asking for another one.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-391214305%2FClasslikes%2F-1949050900" anchor-label="AiTextFieldListEvent" id="-391214305%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-ai-text-field-list-event/index.html"><span>Ai</span><wbr></wbr><span>Text</span><wbr></wbr><span>Field</span><wbr></wbr><span>List</span><wbr></wbr><span><span>Event</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-391214305%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-ai-text-field-list-event/index.html">AiTextFieldListEvent</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">source<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token punctuation">, </span></span><span class="parameter ">target<span class="token operator">: </span><span data-unresolved-link="javafx.event/EventTarget///PointingToDeclaration/">EventTarget</span><span class="token punctuation">, </span></span><span class="parameter ">eventType<span class="token operator">: </span><span data-unresolved-link="javafx.event/EventType///PointingToDeclaration/">EventType</span><span class="token operator">&lt;</span><a href="-ai-text-field-list-event/index.html">AiTextFieldListEvent</a><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>index<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span> : <span data-unresolved-link="javafx.event/Event///PointingToDeclaration/">Event</span></div><div class="brief "><p class="paragraph">Request an <a href="-ai-text-field-list/index.html">AiTextFieldList</a> publishes.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1470752970%2FClasslikes%2F-1949050900" anchor-label="AiTextFieldListItem" id="-1470752970%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-ai-text-field-list-item/index.html"><span>Ai</span><wbr></wbr><span>Text</span><wbr></wbr><span>Field</span><wbr></wbr><span>List</span><wbr></wbr><span><span>Item</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1470752970%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-ai-text-field-list-item/index.html">AiTextFieldListItem</a> : <span data-unresolved-link="javafx.scene.layout/BorderPane///PointingToDeclaration/">BorderPane</span></div><div class="brief "><p class="paragraph">One entry of a list of texts: an <a href="-ai-text-field/index.html">AiTextField</a> and, at its end, the bin taking the entry out again.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="425446162%2FClasslikes%2F-1949050900" anchor-label="AiTextFieldListItemEvent" id="425446162%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-ai-text-field-list-item-event/index.html"><span>Ai</span><wbr></wbr><span>Text</span><wbr></wbr><span>Field</span><wbr></wbr><span>List</span><wbr></wbr><span>Item</span><wbr></wbr><span><span>Event</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="425446162%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-ai-text-field-list-item-event/index.html">AiTextFieldListItemEvent</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">source<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token punctuation">, </span></span><span class="parameter ">target<span class="token operator">: </span><span data-unresolved-link="javafx.event/EventTarget///PointingToDeclaration/">EventTarget</span><span class="token punctuation">, </span></span><span class="parameter ">eventType<span class="token operator">: </span><span data-unresolved-link="javafx.event/EventType///PointingToDeclaration/">EventType</span><span class="token operator">&lt;</span><a href="-ai-text-field-list-item-event/index.html">AiTextFieldListItemEvent</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span> : <span data-unresolved-link="javafx.event/Event///PointingToDeclaration/">Event</span></div><div class="brief "><p class="paragraph">Request an <a href="-ai-text-field-list-item/index.html">AiTextFieldListItem</a> publishes.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="979899793%2FClasslikes%2F-1949050900" anchor-label="AiTextFieldListItemView" id="979899793%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-ai-text-field-list-item-view/index.html"><span>Ai</span><wbr></wbr><span>Text</span><wbr></wbr><span>Field</span><wbr></wbr><span>List</span><wbr></wbr><span>Item</span><wbr></wbr><span><span>View</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="979899793%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-ai-text-field-list-item-view/index.html">AiTextFieldListItemView</a> : <span data-unresolved-link="de.saxsys.mvvmfx/FxmlView///PointingToDeclaration/">FxmlView</span><span class="token operator">&lt;</span><a href="-ai-text-field-list-item-view-model/index.html">AiTextFieldListItemViewModel</a><span class="token operator">&gt; </span>, <span data-unresolved-link="javafx.fxml/Initializable///PointingToDeclaration/">Initializable</span></div><div class="brief "><p class="paragraph">View of <a href="-ai-text-field-list-item/index.html">AiTextFieldListItem</a>, holding the field of the entry and the bin removing it.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="350385128%2FClasslikes%2F-1949050900" anchor-label="AiTextFieldListItemViewModel" id="350385128%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-ai-text-field-list-item-view-model/index.html"><span>Ai</span><wbr></wbr><span>Text</span><wbr></wbr><span>Field</span><wbr></wbr><span>List</span><wbr></wbr><span>Item</span><wbr></wbr><span>View</span><wbr></wbr><span><span>Model</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="350385128%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-ai-text-field-list-item-view-model/index.html">AiTextFieldListItemViewModel</a> : <span data-unresolved-link="de.saxsys.mvvmfx/ViewModel///PointingToDeclaration/">ViewModel</span></div><div class="brief "><p class="paragraph">View model of <a href="-ai-text-field-list-item/index.html">AiTextFieldListItem</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2061934564%2FClasslikes%2F-1949050900" anchor-label="AiTextFieldListView" id="2061934564%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-ai-text-field-list-view/index.html"><span>Ai</span><wbr></wbr><span>Text</span><wbr></wbr><span>Field</span><wbr></wbr><span>List</span><wbr></wbr><span><span>View</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2061934564%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-ai-text-field-list-view/index.html">AiTextFieldListView</a> : <span data-unresolved-link="de.saxsys.mvvmfx/FxmlView///PointingToDeclaration/">FxmlView</span><span class="token operator">&lt;</span><a href="-ai-text-field-list-view-model/index.html">AiTextFieldListViewModel</a><span class="token operator">&gt; </span>, <span data-unresolved-link="javafx.fxml/Initializable///PointingToDeclaration/">Initializable</span></div><div class="brief "><p class="paragraph">View of <a href="-ai-text-field-list/index.html">AiTextFieldList</a>, holding the entries, the hint of the empty list and the plus.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2106353013%2FClasslikes%2F-1949050900" anchor-label="AiTextFieldListViewModel" id="2106353013%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-ai-text-field-list-view-model/index.html"><span>Ai</span><wbr></wbr><span>Text</span><wbr></wbr><span>Field</span><wbr></wbr><span>List</span><wbr></wbr><span>View</span><wbr></wbr><span><span>Model</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2106353013%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-ai-text-field-list-view-model/index.html">AiTextFieldListViewModel</a> : <span data-unresolved-link="de.saxsys.mvvmfx/ViewModel///PointingToDeclaration/">ViewModel</span></div><div class="brief "><p class="paragraph">View model of <a href="-ai-text-field-list/index.html">AiTextFieldList</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1161773342%2FClasslikes%2F-1949050900" anchor-label="AiTextFieldView" id="-1161773342%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-ai-text-field-view/index.html"><span>Ai</span><wbr></wbr><span>Text</span><wbr></wbr><span>Field</span><wbr></wbr><span><span>View</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1161773342%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-ai-text-field-view/index.html">AiTextFieldView</a> : <span data-unresolved-link="de.saxsys.mvvmfx/FxmlView///PointingToDeclaration/">FxmlView</span><span class="token operator">&lt;</span><a href="-ai-text-field-view-model/index.html">AiTextFieldViewModel</a><span class="token operator">&gt; </span>, <span data-unresolved-link="javafx.fxml/Initializable///PointingToDeclaration/">Initializable</span></div><div class="brief "><p class="paragraph">View of <a href="-ai-text-field/index.html">AiTextField</a>, holding the input line and the wand at its end.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-121375433%2FClasslikes%2F-1949050900" anchor-label="AiTextFieldViewModel" id="-121375433%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-ai-text-field-view-model/index.html"><span>Ai</span><wbr></wbr><span>Text</span><wbr></wbr><span>Field</span><wbr></wbr><span>View</span><wbr></wbr><span><span>Model</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-121375433%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-ai-text-field-view-model/index.html">AiTextFieldViewModel</a> : <span data-unresolved-link="de.saxsys.mvvmfx/ViewModel///PointingToDeclaration/">ViewModel</span></div><div class="brief "><p class="paragraph">View model of <a href="-ai-text-field/index.html">AiTextField</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2026 Copyright</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

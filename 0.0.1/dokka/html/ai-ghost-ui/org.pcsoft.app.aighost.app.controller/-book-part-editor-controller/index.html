@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>BookPartEditorController</title>
+    <link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">
+        <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer="defer"></script>
+</head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+            <a class="library-name--link" href="../../../index.html" tabindex="1">
+                    ai-ghost-ui
+            </a>
+        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle"
+                type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+1.0-SNAPSHOT        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true"
+                        data-filter=":app:ai-ghost-ui/main">jvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox"
+                        data-role="dropdown-toggle"
+                        aria-controls="platform-tags-listbox"
+                        aria-haspopup="listbox"
+                        aria-expanded="false"
+                        aria-label="Toggle source sets"
+                ></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":app:ai-ghost-ui/main"
+                                       data-filter=":app:ai-ghost-ui/main"/>
+                                <span class="checkbox--icon"></span>
+                                jvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button"
+                    type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config='{"defaultSize": 280, "minSize": 200, "maxSize": 400}'>
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list"
+                    data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    ai-ghost-ui
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="classlike" id="content" pageIds="ai-ghost-ui::org.pcsoft.app.aighost.app.controller/BookPartEditorController///PointingToDeclaration//-1949050900">
+  <div class="breadcrumbs"><a href="../../../index.html">ai-ghost-ui</a><span class="delimiter">/</span><a href="../index.html">org.pcsoft.app.aighost.app.controller</a><span class="delimiter">/</span><span class="current">BookPartEditorController</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Book</span><wbr></wbr><span>Part</span><wbr></wbr><span>Editor</span><wbr></wbr><span><span>Controller</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">object </span><a href="index.html">BookPartEditorController</a></div><p class="paragraph">The domain logic of the book's writing surface, kept out of its view model.</p><p class="paragraph">Since IP-39 the sheet always shows the whole book as one <span data-unresolved-link="org.pcsoft.framework.simplay.engine.model/Document///PointingToDeclaration/">Document</span>, built by <span data-unresolved-link="org.pcsoft.app.aighost.layouting.model.project/BookDocumentBuilder///PointingToDeclaration/">BookDocumentBuilder</span>; a tree selection only navigates to the picked part's <code class="lang-kotlin">TextAnchor</code>, it never swaps the document. This controller resolves a picked <a href="../../org.pcsoft.app.aighost.app.ui.component/-project-list-item/index.html">ProjectListItem</a> onto that anchor id (<a href="resolve.html">resolve</a>), builds the whole-book document together with the write-back target of every block (<a href="build-whole-document.html">buildWholeDocument</a>), and maps a block back onto the manuscript field it stands for (<a href="read-model.html">readModel</a>/<a href="write-model.html">writeModel</a>) - the same way <a href="../-io-controller/index.html">org.pcsoft.app.aighost.app.controller.IoController</a> reads and writes documents without holding an open one, so all of this is testable without a JavaFX toolkit.</p><p class="paragraph">A prolog, a chapter, an epilog, the title page and the copyright page are all read from and written back into the book's simPlay <code class="lang-kotlin">Document</code> through the anchor id of their page - <code class="lang-kotlin">&quot;prolog&quot;</code>, <code class="lang-kotlin">&quot;epilog&quot;</code>, <code class="lang-kotlin">&quot;title&quot;</code>, <code class="lang-kotlin">&quot;copyright&quot;</code> or a chapter's <code class="lang-kotlin">id.toString()</code> - via <span data-unresolved-link="org.pcsoft.app.aighost.layouting.model.project.book/BookPartBuilder///PointingToDeclaration/">org.pcsoft.app.aighost.layouting.model.project.book.BookPartBuilder</span>. The title and the copyright page may carry one further, non-anchored block with the author's name, rebuilt fresh from <span data-unresolved-link="org.pcsoft.app.aighost.model.project.meta/Meta///PointingToDeclaration/">Meta</span> on every call; that block is never part of a block's write-back target. Only the blurb, which still carries its own paragraphs on the model directly, keeps a different path: <span data-unresolved-link="org.pcsoft.app.aighost.layouting.model.project.book/BlurbBuilder///PointingToDeclaration/">org.pcsoft.app.aighost.layouting.model.project.book.BlurbBuilder</span> embeds the blurb's anchor token inside the first paragraph's own text instead of a block of its own, so <a href="write-model.html">writeModel</a> strips it back off before the clean paragraph is stored.</p></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="TYPE">
+        <h2 class="tableheader">Types</h2>
+        <div class="table"><a data-name="697834602%2FClasslikes%2F-1949050900" anchor-label="PageLabel" id="697834602%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-page-label/index.html"><span>Page</span><wbr></wbr><span><span>Label</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="697834602%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-page-label/index.html">PageLabel</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>pageId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>text<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">One label naming the part that begins on a page, shown above it as a <code class="lang-kotlin">PageDecoration</code>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1682076820%2FClasslikes%2F-1949050900" anchor-label="PartResolution" id="1682076820%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-part-resolution/index.html"><span>Part</span><wbr></wbr><span><span>Resolution</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1682076820%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-part-resolution/index.html">PartResolution</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>mode<span class="token operator">: </span><a href="../-part-mode/index.html">PartMode</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>anchorId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">The resolved part behind a picked project tree node.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2031945068%2FClasslikes%2F-1949050900" anchor-label="WholeDocumentPlan" id="-2031945068%2FClasslikes%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-whole-document-plan/index.html"><span>Whole</span><wbr></wbr><span>Document</span><wbr></wbr><span><span>Plan</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2031945068%2FClasslikes%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-whole-document-plan/index.html">WholeDocumentPlan</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>document<span class="token operator">: </span><span data-unresolved-link="org.pcsoft.framework.simplay.engine.model/Document///PointingToDeclaration/">Document</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>targets<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../-part-target/index.html">PartTarget</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">The whole-book document and the write-back target of every one of its blocks.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="-1654042564%2FFunctions%2F-1949050900" anchor-label="applyParagraphOperation" id="-1654042564%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="apply-paragraph-operation.html"><span>apply</span><wbr></wbr><span>Paragraph</span><wbr></wbr><span><span>Operation</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1654042564%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="apply-paragraph-operation.html"><span class="token function">applyParagraphOperation</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">document<span class="token operator">: </span><span data-unresolved-link="org.pcsoft.framework.simplay.engine.model/Document///PointingToDeclaration/">Document</span><span class="token punctuation">, </span></span><span class="parameter ">anchorId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">op<span class="token operator">: </span><span class="token punctuation">(</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><span data-unresolved-link="org.pcsoft.framework.simplay.engine.model/TextBlock///PointingToDeclaration/">TextBlock</span><span class="token operator">&gt;</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><span data-unresolved-link="org.pcsoft.framework.simplay.engine.model/TextBlock///PointingToDeclaration/">TextBlock</span><span class="token operator">&gt;</span><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="org.pcsoft.framework.simplay.engine.model/Document///PointingToDeclaration/">Document</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Applies a structural block operation to the page of <a href="apply-paragraph-operation.html">document</a> whose id is <a href="apply-paragraph-operation.html">anchorId</a>, as one transaction.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1832457598%2FFunctions%2F-1949050900" anchor-label="blockLocalCharOffset" id="1832457598%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="block-local-char-offset.html"><span>block</span><wbr></wbr><span>Local</span><wbr></wbr><span>Char</span><wbr></wbr><span><span>Offset</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1832457598%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="block-local-char-offset.html"><span class="token function">blockLocalCharOffset</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">document<span class="token operator">: </span><span data-unresolved-link="org.pcsoft.framework.simplay.engine.model/Document///PointingToDeclaration/">Document</span><span class="token punctuation">, </span></span><span class="parameter ">block<span class="token operator">: </span><span data-unresolved-link="org.pcsoft.framework.simplay.engine.model/TextBlock///PointingToDeclaration/">TextBlock</span><span class="token punctuation">, </span></span><span class="parameter ">position<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">The character offset of <a href="block-local-char-offset.html">block</a> within <a href="block-local-char-offset.html">document</a>, counted the same way <code class="lang-kotlin">CaretModel.position</code> counts (a <code class="lang-kotlin">TextAnchor</code> is zero characters), relative to the start of <a href="block-local-char-offset.html">block</a> itself rather than the whole document.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="572374791%2FFunctions%2F-1949050900" anchor-label="buildPageLabels" id="572374791%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="build-page-labels.html"><span>build</span><wbr></wbr><span>Page</span><wbr></wbr><span><span>Labels</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="572374791%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="build-page-labels.html"><span class="token function">buildPageLabels</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">book<span class="token operator">: </span><span data-unresolved-link="org.pcsoft.app.aighost.model.project.book/Book///PointingToDeclaration/">Book</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="-page-label/index.html">BookPartEditorController.PageLabel</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Builds one label per page of the book's whole document, naming the part that begins there.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1602030794%2FFunctions%2F-1949050900" anchor-label="buildWholeDocument" id="-1602030794%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="build-whole-document.html"><span>build</span><wbr></wbr><span>Whole</span><wbr></wbr><span><span>Document</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1602030794%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="build-whole-document.html"><span class="token function">buildWholeDocument</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">project<span class="token operator">: </span><span data-unresolved-link="org.pcsoft.app.aighost.model.project/Project///PointingToDeclaration/">Project</span><span class="token punctuation">, </span></span><span class="parameter ">design<span class="token operator">: </span><span data-unresolved-link="org.pcsoft.app.aighost.model.project.design/Design///PointingToDeclaration/">Design</span><span class="token punctuation">, </span></span><span class="parameter ">meta<span class="token operator">: </span><span data-unresolved-link="org.pcsoft.app.aighost.model.project.meta/Meta///PointingToDeclaration/">Meta</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="-whole-document-plan/index.html">BookPartEditorController.WholeDocumentPlan</a></div><div class="brief "><p class="paragraph">Builds the whole-book document together with the write-back target of every one of its blocks.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-436512308%2FFunctions%2F-1949050900" anchor-label="documentBlockIndex" id="-436512308%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="document-block-index.html"><span>document</span><wbr></wbr><span>Block</span><wbr></wbr><span><span>Index</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-436512308%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="document-block-index.html"><span class="token function">documentBlockIndex</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">document<span class="token operator">: </span><span data-unresolved-link="org.pcsoft.framework.simplay.engine.model/Document///PointingToDeclaration/">Document</span><span class="token punctuation">, </span></span><span class="parameter ">anchorId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">pageLocalIndex<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The document-wide, zero-based block ordinal <code class="lang-kotlin">CaretModel.moveIntoBlock</code> expects for the block at <a href="document-block-index.html">pageLocalIndex</a> of the page whose id is <a href="document-block-index.html">anchorId</a> - <code class="lang-kotlin">CaretModel</code> addresses blocks across the whole document, not per page.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1078116878%2FFunctions%2F-1949050900" anchor-label="mergeTextBlock" id="-1078116878%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="merge-text-block.html"><span>merge</span><wbr></wbr><span>Text</span><wbr></wbr><span><span>Block</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1078116878%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="merge-text-block.html"><span class="token function">mergeTextBlock</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">blocks<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><span data-unresolved-link="org.pcsoft.framework.simplay.engine.model/TextBlock///PointingToDeclaration/">TextBlock</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">index<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">withPrevious<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><span data-unresolved-link="org.pcsoft.framework.simplay.engine.model/TextBlock///PointingToDeclaration/">TextBlock</span><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Merges the block at <a href="merge-text-block.html">index</a> of <a href="merge-text-block.html">blocks</a> with a neighbour, for the context menu's explicit &quot;merge&quot; commands - a keyboard <code class="lang-kotlin">Backspace</code>/<code class="lang-kotlin">Delete</code> across a block boundary already merges blocks through <code class="lang-kotlin">PaperSheetView</code> itself and never calls this.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="234357481%2FFunctions%2F-1949050900" anchor-label="moveTextBlock" id="234357481%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="move-text-block.html"><span>move</span><wbr></wbr><span>Text</span><wbr></wbr><span><span>Block</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="234357481%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="move-text-block.html"><span class="token function">moveTextBlock</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">blocks<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><span data-unresolved-link="org.pcsoft.framework.simplay.engine.model/TextBlock///PointingToDeclaration/">TextBlock</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">index<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">up<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><span data-unresolved-link="org.pcsoft.framework.simplay.engine.model/TextBlock///PointingToDeclaration/">TextBlock</span><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Moves the block at <a href="move-text-block.html">index</a> of <a href="move-text-block.html">blocks</a> one position towards the start or the end of the page.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1525602466%2FFunctions%2F-1949050900" anchor-label="pageKeepsAnchor" id="1525602466%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="page-keeps-anchor.html"><span>page</span><wbr></wbr><span>Keeps</span><wbr></wbr><span><span>Anchor</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1525602466%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="page-keeps-anchor.html"><span class="token function">pageKeepsAnchor</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">page<span class="token operator">: </span><span data-unresolved-link="org.pcsoft.framework.simplay.engine.model/Page///PointingToDeclaration/">Page</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Whether <a href="page-keeps-anchor.html">page</a> still starts with its <code class="lang-kotlin">${id}</code>-anchor token, checked after a native structural edit.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1216279989%2FFunctions%2F-1949050900" anchor-label="readModel" id="-1216279989%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="read-model.html"><span>read</span><wbr></wbr><span><span>Model</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1216279989%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="read-model.html"><span class="token function">readModel</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">project<span class="token operator">: </span><span data-unresolved-link="org.pcsoft.app.aighost.fx.model.project/ProjectProperty///PointingToDeclaration/">ProjectProperty</span><span class="token punctuation">, </span></span><span class="parameter ">target<span class="token operator">: </span><a href="../-part-target/index.html">PartTarget</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">Reads the current text of one block from the model.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="461647272%2FFunctions%2F-1949050900" anchor-label="removeTextBlock" id="461647272%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="remove-text-block.html"><span>remove</span><wbr></wbr><span>Text</span><wbr></wbr><span><span>Block</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="461647272%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="remove-text-block.html"><span class="token function">removeTextBlock</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">blocks<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><span data-unresolved-link="org.pcsoft.framework.simplay.engine.model/TextBlock///PointingToDeclaration/">TextBlock</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">index<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><span data-unresolved-link="org.pcsoft.framework.simplay.engine.model/TextBlock///PointingToDeclaration/">TextBlock</span><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Removes the block at <a href="remove-text-block.html">index</a> of <a href="remove-text-block.html">blocks</a>, keeping at least one block and never the one at position <code class="lang-kotlin">0</code>, which carries the page's <code class="lang-kotlin">TextAnchor</code>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-878607848%2FFunctions%2F-1949050900" anchor-label="resolve" id="-878607848%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="resolve.html"><span><span>resolve</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-878607848%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="resolve.html"><span class="token function">resolve</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">item<span class="token operator">: </span><a href="../../org.pcsoft.app.aighost.app.ui.component/-project-list-item/index.html">ProjectListItem</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="-part-resolution/index.html">BookPartEditorController.PartResolution</a></div><div class="brief "><p class="paragraph">Resolves the picked project tree node onto the <code class="lang-kotlin">TextAnchor</code> id <code class="lang-kotlin">PaperSheetView</code> navigates to.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1560577437%2FFunctions%2F-1949050900" anchor-label="splitTextBlock" id="-1560577437%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="split-text-block.html"><span>split</span><wbr></wbr><span>Text</span><wbr></wbr><span><span>Block</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1560577437%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="split-text-block.html"><span class="token function">splitTextBlock</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">blocks<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><span data-unresolved-link="org.pcsoft.framework.simplay.engine.model/TextBlock///PointingToDeclaration/">TextBlock</span><span class="token operator">&gt;</span><span class="token punctuation">, </span></span><span class="parameter ">index<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">charOffset<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">style<span class="token operator">: </span><span data-unresolved-link="org.pcsoft.framework.simplay.engine.model/TextStyle///PointingToDeclaration/">TextStyle</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><span data-unresolved-link="org.pcsoft.framework.simplay.engine.model/TextBlock///PointingToDeclaration/">TextBlock</span><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Splits the block at <a href="split-text-block.html">index</a> of <a href="split-text-block.html">blocks</a> into two, at the anchor-excluding character <a href="split-text-block.html">charOffset</a>.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-947866130%2FFunctions%2F-1949050900" anchor-label="targetsOfPage" id="-947866130%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="targets-of-page.html"><span>targets</span><wbr></wbr><span>Of</span><wbr></wbr><span><span>Page</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-947866130%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="targets-of-page.html"><span class="token function">targetsOfPage</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">page<span class="token operator">: </span><span data-unresolved-link="org.pcsoft.framework.simplay.engine.model/Page///PointingToDeclaration/">Page</span><span class="token punctuation">, </span></span><span class="parameter ">design<span class="token operator">: </span><span data-unresolved-link="org.pcsoft.app.aighost.model.project.design/Design///PointingToDeclaration/">Design</span><span class="token punctuation">, </span></span><span class="parameter ">meta<span class="token operator">: </span><span data-unresolved-link="org.pcsoft.app.aighost.model.project.meta/Meta///PointingToDeclaration/">Meta</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../-part-target/index.html">PartTarget</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">The targets of every block of <a href="targets-of-page.html">page</a>, in block order - the public entry point <span data-unresolved-link="org.pcsoft.app.aighost.app.controller/BookPartEditorController/targetsOf/#org.pcsoft.framework.simplay.engine.model.Page#org.pcsoft.app.aighost.model.project.design.Design#org.pcsoft.app.aighost.model.project.meta.Meta/PointingToDeclaration/">targetsOf</span> uses internally, exposed for a caller that must rebuild a single page's targets after a native structural edit (a <code class="lang-kotlin">Backspace</code>/<code class="lang-kotlin">Delete</code> merge) instead of the whole document.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1662839147%2FFunctions%2F-1949050900" anchor-label="writeModel" id="1662839147%2FFunctions%2F-1949050900" data-filterable-set=":app:ai-ghost-ui/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":app:ai-ghost-ui/main" data-filterable-set=":app:ai-ghost-ui/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="write-model.html"><span>write</span><wbr></wbr><span><span>Model</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1662839147%2FFunctions%2F-1949050900"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":app:ai-ghost-ui/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="write-model.html"><span class="token function">writeModel</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">project<span class="token operator">: </span><span data-unresolved-link="org.pcsoft.app.aighost.fx.model.project/ProjectProperty///PointingToDeclaration/">ProjectProperty</span><span class="token punctuation">, </span></span><span class="parameter ">design<span class="token operator">: </span><span data-unresolved-link="org.pcsoft.app.aighost.model.project.design/Design///PointingToDeclaration/">Design</span><span class="token punctuation">, </span></span><span class="parameter ">target<span class="token operator">: </span><a href="../-part-target/index.html">PartTarget</a><span class="token punctuation">, </span></span><span class="parameter ">value<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Writes the text of one block back into the model.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>© 2026 Copyright</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

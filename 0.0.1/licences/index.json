@@ -1,0 +1,275 @@
+{
+    "dependencies": [
+        {
+            "moduleName": "com.fasterxml.jackson.core:jackson-annotations",
+            "moduleUrl": "https://github.com/FasterXML/jackson",
+            "moduleVersion": "2.22",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "com.fasterxml.jackson.core:jackson-core",
+            "moduleUrl": "https://github.com/FasterXML/jackson-core",
+            "moduleVersion": "2.22.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "com.fasterxml.jackson.core:jackson-databind",
+            "moduleUrl": "https://github.com/FasterXML/jackson",
+            "moduleVersion": "2.22.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml",
+            "moduleUrl": "https://github.com/FasterXML/jackson-dataformats-text",
+            "moduleVersion": "2.22.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "com.fasterxml.jackson.module:jackson-module-kotlin",
+            "moduleUrl": "https://github.com/FasterXML/jackson-module-kotlin",
+            "moduleVersion": "2.22.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "com.fasterxml.jackson:jackson-bom",
+            "moduleUrl": "https://github.com/FasterXML/jackson-bom",
+            "moduleVersion": "2.22.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "de.saxsys:mvvmfx",
+            "moduleVersion": "1.8.0",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "eu.lestard:doc-annotations",
+            "moduleUrl": "https://github.com/lestard/doc-annotations",
+            "moduleVersion": "0.2",
+            "moduleLicense": "'MIT License'",
+            "moduleLicenseUrl": "'http://opensource.org/licenses/mit-license'"
+        },
+        {
+            "moduleName": "io.arrow-kt:arrow-annotations",
+            "moduleUrl": "https://github.com/arrow-kt/arrow/",
+            "moduleVersion": "2.1.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "io.arrow-kt:arrow-annotations-jvm",
+            "moduleUrl": "https://github.com/arrow-kt/arrow/",
+            "moduleVersion": "2.1.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "io.arrow-kt:arrow-atomic",
+            "moduleUrl": "https://github.com/arrow-kt/arrow/",
+            "moduleVersion": "2.1.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "io.arrow-kt:arrow-atomic-jvm",
+            "moduleUrl": "https://github.com/arrow-kt/arrow/",
+            "moduleVersion": "2.1.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "io.arrow-kt:arrow-core",
+            "moduleUrl": "https://github.com/arrow-kt/arrow/",
+            "moduleVersion": "2.1.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "io.arrow-kt:arrow-core-jvm",
+            "moduleUrl": "https://github.com/arrow-kt/arrow/",
+            "moduleVersion": "2.1.2",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "io.github.classgraph:classgraph",
+            "moduleUrl": "https://github.com/classgraph/classgraph",
+            "moduleVersion": "4.8.194",
+            "moduleLicense": "The MIT License (MIT)",
+            "moduleLicenseUrl": "http://opensource.org/licenses/MIT"
+        },
+        {
+            "moduleName": "net.jodah:typetools",
+            "moduleUrl": "http://github.com/jhalterman/typetools/",
+            "moduleVersion": "0.6.1",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "http://apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "org.apache.commons:commons-lang3",
+            "moduleUrl": "https://commons.apache.org/proper/commons-lang/",
+            "moduleVersion": "3.20.0",
+            "moduleLicense": "Apache-2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.apache.logging.log4j:log4j-api",
+            "moduleUrl": "https://logging.apache.org/log4j/2.x/",
+            "moduleVersion": "2.26.1",
+            "moduleLicense": "Apache-2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.apache.logging.log4j:log4j-core",
+            "moduleUrl": "https://logging.apache.org/log4j/2.x/",
+            "moduleVersion": "2.26.1",
+            "moduleLicense": "Apache-2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.apache.logging.log4j:log4j-slf4j2-impl",
+            "moduleUrl": "https://logging.apache.org/log4j/2.x/",
+            "moduleVersion": "2.26.1",
+            "moduleLicense": "Apache-2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.controlsfx:controlsfx",
+            "moduleUrl": "http://www.controlsfx.org/",
+            "moduleVersion": "11.2.5",
+            "moduleLicense": "The 3-Clause BSD License",
+            "moduleLicenseUrl": "http://www.opensource.org/licenses/bsd-license.php"
+        },
+        {
+            "moduleName": "org.jetbrains.kotlin:kotlin-reflect",
+            "moduleUrl": "https://kotlinlang.org/",
+            "moduleVersion": "2.1.21",
+            "moduleLicense": "The Apache License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.jetbrains.kotlin:kotlin-stdlib",
+            "moduleUrl": "https://kotlinlang.org/",
+            "moduleVersion": "2.4.20",
+            "moduleLicense": "Apache-2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.jetbrains.kotlinx:kotlinx-serialization-bom",
+            "moduleUrl": "https://github.com/Kotlin/kotlinx.serialization",
+            "moduleVersion": "1.11.0",
+            "moduleLicense": "Apache-2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.jetbrains.kotlinx:kotlinx-serialization-core",
+            "moduleUrl": "https://github.com/Kotlin/kotlinx.serialization",
+            "moduleVersion": "1.11.0",
+            "moduleLicense": "Apache-2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.jetbrains.kotlinx:kotlinx-serialization-core-jvm",
+            "moduleUrl": "https://github.com/Kotlin/kotlinx.serialization",
+            "moduleVersion": "1.11.0",
+            "moduleLicense": "Apache-2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.jetbrains.kotlinx:kotlinx-serialization-json",
+            "moduleUrl": "https://github.com/Kotlin/kotlinx.serialization",
+            "moduleVersion": "1.11.0",
+            "moduleLicense": "Apache-2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.jetbrains.kotlinx:kotlinx-serialization-json-jvm",
+            "moduleUrl": "https://github.com/Kotlin/kotlinx.serialization",
+            "moduleVersion": "1.11.0",
+            "moduleLicense": "Apache-2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.jetbrains:annotations",
+            "moduleUrl": "http://www.jetbrains.org",
+            "moduleVersion": "13.0",
+            "moduleLicense": "The Apache Software License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
+            "moduleName": "org.openjfx:javafx-base",
+            "moduleUrl": "https://openjdk.java.net/projects/openjfx/",
+            "moduleVersion": "25.0.1",
+            "moduleLicense": "GPLv2+CE",
+            "moduleLicenseUrl": "https://openjdk.java.net/legal/gplv2+ce.html"
+        },
+        {
+            "moduleName": "org.openjfx:javafx-controls",
+            "moduleUrl": "https://openjdk.java.net/projects/openjfx/",
+            "moduleVersion": "25.0.1",
+            "moduleLicense": "GPLv2+CE",
+            "moduleLicenseUrl": "https://openjdk.java.net/legal/gplv2+ce.html"
+        },
+        {
+            "moduleName": "org.openjfx:javafx-fxml",
+            "moduleUrl": "https://openjdk.java.net/projects/openjfx/",
+            "moduleVersion": "25.0.1",
+            "moduleLicense": "GPLv2+CE",
+            "moduleLicenseUrl": "https://openjdk.java.net/legal/gplv2+ce.html"
+        },
+        {
+            "moduleName": "org.openjfx:javafx-graphics",
+            "moduleUrl": "https://openjdk.java.net/projects/openjfx/",
+            "moduleVersion": "25.0.1",
+            "moduleLicense": "GPLv2+CE",
+            "moduleLicenseUrl": "https://openjdk.java.net/legal/gplv2+ce.html"
+        },
+        {
+            "moduleName": "org.pcsoft.framework:simplay-common",
+            "moduleVersion": "0.5.1",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "org.pcsoft.framework:simplay-engine",
+            "moduleVersion": "0.5.1",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "org.pcsoft.framework:simplay-engine-jvm",
+            "moduleVersion": "0.5.1",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "org.pcsoft.framework:simplay-fx",
+            "moduleVersion": "0.5.1",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0"
+        },
+        {
+            "moduleName": "org.slf4j:slf4j-api",
+            "moduleUrl": "http://www.slf4j.org",
+            "moduleVersion": "2.0.19",
+            "moduleLicense": "MIT",
+            "moduleLicenseUrl": "https://opensource.org/license/mit"
+        },
+        {
+            "moduleName": "org.yaml:snakeyaml",
+            "moduleUrl": "https://bitbucket.org/snakeyaml/snakeyaml",
+            "moduleVersion": "2.5",
+            "moduleLicense": "Apache License, Version 2.0",
+            "moduleLicenseUrl": "http://www.apache.org/licenses/LICENSE-2.0.txt"
+        }
+    ],
+    "importedModules": [
+        
+    ]
+}
