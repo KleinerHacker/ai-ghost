@@ -25,6 +25,7 @@ import javafx.beans.property.StringProperty
 import javafx.beans.value.ChangeListener
 import javafx.beans.value.ObservableValue
 import javafx.event.EventHandler
+import javafx.scene.control.Label
 import javafx.scene.input.KeyCode
 import javafx.scene.input.KeyEvent
 import org.pcsoft.app.aighost.app.Messages
@@ -36,8 +37,11 @@ import org.pcsoft.app.aighost.fx.model.project.book.BookProperty
 import org.pcsoft.app.aighost.layouting.model.project.DocumentStyleRefresher
 import org.pcsoft.app.aighost.model.pref.WritingMode
 import org.pcsoft.framework.simplay.engine.model.Document
+import org.pcsoft.framework.simplay.fx.PageDecoration
 import org.pcsoft.framework.simplay.fx.PaperSheetMode
 import org.pcsoft.framework.simplay.fx.PaperSheetView
+import org.pcsoft.framework.simplay.uicommon.EdgeAlignment
+import org.pcsoft.framework.simplay.uicommon.PageEdge
 import org.pcsoft.framework.simplay.uicommon.PageMode
 
 /**
@@ -87,6 +91,12 @@ import org.pcsoft.framework.simplay.uicommon.PageMode
  * again right after; a toggle of the switch itself, reported through a listener on
  * [BookProperty.prologProperty], [BookProperty.epilogProperty] and [BookProperty.blurbProperty], reapplies
  * it on its own without rebuilding the document.
+ *
+ * [pushWholeDocument] also rebuilds [PaperSheetView.pageDecorations] through [applyPageLabels]: one
+ * label per page, naming the book part that begins there ([BookPartEditorController.buildPageLabels]),
+ * for orientation even before a part carries any text. `pageDecorations` is plain view state on the
+ * sheet itself, never a global registry, so the `showingBinding` pattern of `fx-component-lifecycle`
+ * does not apply to it either.
  *
  * The component follows only models handed to it and registers nothing in a global registry, so the
  * `showingBinding` pattern of `fx-component-lifecycle` does not apply here, the same as for
@@ -554,6 +564,7 @@ class BookPartEditorViewModel : ViewModel {
                 } finally {
                     applyingDocument = false
                 }
+                paperSheetView.pageDecorations.clear()
             }
             return
         }
@@ -591,6 +602,7 @@ class BookPartEditorViewModel : ViewModel {
         // document was just reloaded from outside, which clears PaperSheetView.pageModes - reapplied
         // here so a switched-off part stays visibly inactive without a second call from the caller.
         applyPageModes()
+        applyPageLabels(project.book)
     }
 
     // Keeps a switched-off prolog, epilog or blurb visibly inactive on the sheet through
@@ -605,5 +617,25 @@ class BookPartEditorViewModel : ViewModel {
             if (!book.epilog.included) put("epilog", PageMode.DISABLED)
             if (!book.blurb.included) put("blurb", PageMode.DISABLED)
         }
+    }
+
+    // Rebuilds PaperSheetView.pageDecorations from the model: one label per page, naming the book part
+    // that begins there. A PageDecoration resolves by the page's stable id, so replacing the whole list
+    // on every rebuild is safe even though the document itself was just reloaded from outside.
+    private fun applyPageLabels(book: org.pcsoft.app.aighost.model.project.book.Book) {
+        if (!::paperSheetView.isInitialized) return
+
+        paperSheetView.pageDecorations.setAll(
+            BookPartEditorController.buildPageLabels(book).map { label ->
+                PageDecoration().apply {
+                    pageId = label.pageId
+                    edge = PageEdge.TOP
+                    alignment = EdgeAlignment.START
+                    // Moves the label further away from the page, i.e. above it instead of onto it.
+                    offsetY = 6.0
+                    content = Label(label.text).apply { styleClass.add("book-part-editor-page-label") }
+                }
+            }
+        )
     }
 }

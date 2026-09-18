@@ -12,12 +12,14 @@
 
 package org.pcsoft.app.aighost.app.controller
 
+import org.pcsoft.app.aighost.app.Messages
 import org.pcsoft.app.aighost.app.ui.component.ProjectListItem
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
 import org.pcsoft.app.aighost.layouting.model.common.toPageLayout
 import org.pcsoft.app.aighost.layouting.model.common.toTextStyle
 import org.pcsoft.app.aighost.layouting.model.project.BookDocumentBuilder
 import org.pcsoft.app.aighost.model.project.Project
+import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.design.Design
 import org.pcsoft.app.aighost.model.project.meta.Meta
 import org.pcsoft.framework.simplay.engine.model.Document
@@ -27,6 +29,7 @@ import org.pcsoft.framework.simplay.engine.model.SinglePage
 import org.pcsoft.framework.simplay.engine.model.TextBlock
 import org.pcsoft.framework.simplay.engine.model.TextStyle
 import org.pcsoft.framework.simplay.engine.model.charCount
+import java.text.MessageFormat
 
 /**
  * The domain logic of the book's writing surface, kept out of its view model.
@@ -90,6 +93,30 @@ object BookPartEditorController {
         val document = BookDocumentBuilder.build(project.book, design, meta)
         val targets = document.pages.associate { page -> page.id to targetsOf(page, design, meta) }
         return WholeDocumentPlan(document, targets)
+    }
+
+    /**
+     * Builds one label per page of the book's whole document, naming the part that begins there.
+     *
+     * Shown as a `PageDecoration` above the page, this is the orientation aid a part still gives even
+     * before it carries any text of its own - the page id (its anchor id) and the reading order both
+     * mirror [BookDocumentBuilder.build] exactly, so a label always lands on the page it names.
+     *
+     * @param book the manuscript, read for its chapters and whether the copyright page is included
+     * @return one [PageLabel] per page of the whole document, in reading order
+     */
+    fun buildPageLabels(book: Book): List<PageLabel> = buildList {
+        add(PageLabel("title", Messages["component.projectList.titlePage"]))
+        if (book.copyright.included) {
+            add(PageLabel("copyright", Messages["component.projectList.copyrightPage"]))
+        }
+        add(PageLabel("prolog", Messages["component.projectList.prolog"]))
+        book.chapters.forEachIndexed { index, chapter ->
+            val text = MessageFormat.format(Messages["component.bookPartEditor.pageLabel.chapter"], index + 1, chapter.name)
+            add(PageLabel(chapter.id.toString(), text))
+        }
+        add(PageLabel("epilog", Messages["component.projectList.epilog"]))
+        add(PageLabel("blurb", Messages["component.projectList.blurb"]))
     }
 
     /**
@@ -389,5 +416,16 @@ object BookPartEditorController {
     data class WholeDocumentPlan(
         val document: Document,
         val targets: Map<String, List<PartTarget>>
+    )
+
+    /**
+     * One label naming the part that begins on a page, shown above it as a `PageDecoration`.
+     *
+     * @property pageId the id of the page (the part's anchor id) the label belongs to
+     * @property text the label's translated text
+     */
+    data class PageLabel(
+        val pageId: String,
+        val text: String
     )
 }

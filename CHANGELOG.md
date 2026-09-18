@@ -38,6 +38,10 @@
 * Inspector's "Chapter" section gains a "Generate chapter" AI button; pressing it does nothing yet -
   the actual generation is coming with a future feature
 
+* Writing surface shows a small label above every page, naming the book part that begins there - the
+  title page, the copyright page, the prolog, a chapter (with its number and name) the epilog or the
+  blurb - for orientation while scrolling, even before that part carries any text
+
 * Writing surface gains paragraph structure editing: Enter splits a paragraph at the caret, Backspace
   at its very start or Delete at its very end merges it with the neighbouring one, and Ctrl+Shift+Up /
   Ctrl+Shift+Down moves it up or down - the same actions are also on the paragraph's right-click menu.

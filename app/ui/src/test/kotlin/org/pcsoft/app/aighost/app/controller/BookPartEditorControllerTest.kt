@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.pcsoft.app.aighost.app.Messages
 import org.pcsoft.app.aighost.app.ui.component.ProjectListItem
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
 import org.pcsoft.app.aighost.layouting.model.common.toPageLayout
@@ -234,6 +235,67 @@ class BookPartEditorControllerTest {
         assertTrue(plan.document.pages.none { it.id == "copyright" })
         assertNull(plan.targets["copyright"])
     }
+
+    /**
+     * Use case: one label is built per page of the whole document, in reading order, naming the title
+     * page, the copyright page, the prolog, every chapter (numbered from one, with its own name) and
+     * the epilog and the blurb - matching the page ids [BookPartEditorController.buildWholeDocument]
+     * gives the very same book.
+     */
+    @Test
+    fun buildsOnePageLabelPerPartInReadingOrder() {
+        val labels = BookPartEditorController.buildPageLabels(project.value.book)
+
+        assertEquals(
+            listOf("title", "copyright", "prolog", chapter.id.toString(), "epilog", "blurb"),
+            labels.map { it.pageId }
+        )
+        assertEquals(chapterPageLabel(1, "first"), labels.single { it.pageId == chapter.id.toString() }.text)
+    }
+
+    /**
+     * Use case: the copyright page is switched off, so no label is built for it either, mirroring the
+     * whole document, which has no page for it.
+     */
+    @Test
+    fun pageLabelsExcludeTheCopyrightPageWhenNotIncluded() {
+        val withoutCopyright = Book(
+            copyright = Copyright(included = false),
+            prolog = Prolog(),
+            chapters = emptyList(),
+            epilog = Epilog(),
+            blurb = Blurb()
+        )
+
+        val labels = BookPartEditorController.buildPageLabels(withoutCopyright)
+
+        assertTrue(labels.none { it.pageId == "copyright" })
+    }
+
+    /**
+     * Use case: several chapters are labelled with their one-based reading position, not their index
+     * in the underlying list, so the first chapter reads "Chapter 1", not "Chapter 0".
+     */
+    @Test
+    fun pageLabelsNumberChaptersFromOne() {
+        val second = Chapter("second")
+        val withTwoChapters = Book(
+            prolog = Prolog(),
+            chapters = listOf(chapter, second),
+            epilog = Epilog(),
+            blurb = Blurb()
+        )
+
+        val labels = BookPartEditorController.buildPageLabels(withTwoChapters)
+
+        assertEquals(chapterPageLabel(1, "first"), labels.single { it.pageId == chapter.id.toString() }.text)
+        assertEquals(chapterPageLabel(2, "second"), labels.single { it.pageId == second.id.toString() }.text)
+    }
+
+    // Builds the expected text of a chapter's page label straight from the bundle, so this test does
+    // not depend on the JVM's default locale resolving to the English base bundle.
+    private fun chapterPageLabel(number: Int, name: String): String =
+        java.text.MessageFormat.format(Messages["component.bookPartEditor.pageLabel.chapter"], number, name)
 
     /**
      * Use case: an empty blurb is still seeded with its anchor token, so the whole document has one

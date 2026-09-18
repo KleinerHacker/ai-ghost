@@ -50,3 +50,17 @@
 .book-part-editor-progress {
     -fx-progress-color: -ghost-accent;
 }
+
+/*
+ * The section label a PageDecoration anchors above every page: a small pill naming the book part that
+ * begins there, for orientation even before the part carries any text of its own.
+ */
+.book-part-editor-page-label {
+    -fx-background-color: -ghost-surface-input;
+    -fx-background-radius: 8px;
+    -fx-border-color: -ghost-tint-line;
+    -fx-border-radius: 8px;
+    -fx-text-fill: -ghost-ink-soft;
+    -fx-padding: 2px 8px 2px 8px;
+    -fx-font-size: 12px;
+}

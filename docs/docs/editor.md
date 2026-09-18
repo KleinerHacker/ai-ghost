@@ -69,3 +69,9 @@ moves along automatically as the sheet is scrolled or zoomed.
 None of its three buttons does anything yet; pressing one has no effect until a future feature
 connects the bar to an AI provider.
 
+## Section label
+
+A small label above every page names the book part that begins there - the title page, the copyright
+page, the prolog, a chapter (with its number and name), the epilog or the blurb. It stays visible for
+orientation while scrolling, even before that part carries any text of its own.
+
