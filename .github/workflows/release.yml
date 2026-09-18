@@ -81,6 +81,7 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build and package
+        shell: bash
         run: |
           ./gradlew build -x test -x integrationTest packageDist \
             -PreleaseVersion="${{ github.ref_name }}" --stacktrace
