@@ -114,6 +114,11 @@ class BookPartEditorTest : ApplicationTest() {
         projectModel = ProjectProperty(project())
         selection = SimpleObjectProperty(null)
         undoStack = UndoStack()
+        // undoEntries is a capped view for the history dropdown, not the history itself. The tests
+        // here count entries through it, and a fixture that types its text fills those ten default
+        // places on its own on a slow runner - every keystroke past the merge pause becomes an entry
+        // of its own - so the cap silently swallows the very entry an assertion is about.
+        undoStack.visibleEntryCount.value = 100
 
         editor = BookPartEditor()
         editor.bindProject(projectModel)
