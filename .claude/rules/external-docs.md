@@ -12,11 +12,11 @@ name: external-docs
 * Documentation for Panelium FX: `https://kleinerhacker.github.io/panelium-fx/latest/`
   * Contains MKDocs documentation
 * GitHub Repository: `https://github.com/KleinerHacker/panelium-fx`
-  * Contians code access
+  * Contains code access
 
 ## simpLay
 
 * Documentation for simpLay: `https://kleinerhacker.github.io/simpLay/latest/`
   * Contains MKDocs documentation
-* GitHub Repository: `https://github.com/KleinerHacker/simPlay`
+* GitHub Repository: `https://github.com/KleinerHacker/simpLay`
   * Contains code access

@@ -28,6 +28,7 @@ import javafx.event.EventHandler
 import javafx.scene.control.Label
 import javafx.scene.input.KeyCode
 import javafx.scene.input.KeyEvent
+import javafx.scene.layout.VBox
 import org.pcsoft.app.aighost.app.Messages
 import org.pcsoft.app.aighost.app.controller.*
 import org.pcsoft.app.aighost.app.undo.DocumentStructureUndoEntry
@@ -633,7 +634,9 @@ class BookPartEditorViewModel : ViewModel {
                     alignment = EdgeAlignment.START
                     // Moves the label further away from the page, i.e. above it instead of onto it.
                     offsetY = 6.0
-                    content = Label(label.text).apply { styleClass.add("book-part-editor-page-label") }
+                    content = VBox(Label(label.text).apply { styleClass.add("book-part-editor-page-label") }).apply {
+                        styleClass.add("book-part-editor-page-label-container")
+                    }
                 }
             }
         )

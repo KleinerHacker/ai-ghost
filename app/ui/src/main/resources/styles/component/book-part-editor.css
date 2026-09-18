@@ -36,6 +36,8 @@
     -fx-shadow-color: -ghost-shadow;
     -fx-selection-color: -ghost-tint-hover;
     -fx-caret-color: -ghost-ink;
+    -fx-deactivated-sheet-background: -ghost-surface-bar;
+    -fx-deactivated-overlay-color: -ghost-tint-line;
 }
 
 /* A read-only sheet - the title page and the copyright page - selects in a more muted tone. */
@@ -63,4 +65,9 @@
     -fx-text-fill: -ghost-ink-soft;
     -fx-padding: 2px 8px 2px 8px;
     -fx-font-size: 12px;
+}
+
+/* Keeps the label's pill itself free of the extra space above it, unlike padding on the pill. */
+.book-part-editor-page-label-container {
+    -fx-padding: 10px 0 0 0;
 }
