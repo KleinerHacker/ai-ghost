@@ -296,7 +296,8 @@ Preferences, About und Online Doku als Backstage-Schnellaktionen.
 **Scope**
 
 * Menüpunkte Preferences, About, Online Doku als `FXBackstageQuickAction`-Einträge im Footer der Backstage aus IP-02
-* Dialoge/Ziel werden nur so gebaut, dass sie existieren (Preferences-Dialog, About-Dialog als Platzhalter, Online-Doku-Ziel-URL); eine vollständige funktionale Ausgestaltung der Dialoge ist NICHT Teil dieses Features
+* Dialoge werden nur so gebaut, dass sie existieren (Preferences-Dialog, About-Dialog als Platzhalter); eine vollständige funktionale Ausgestaltung der Dialoge ist NICHT Teil dieses Features
+* Online Doku: `onAction` öffnet `https://kleinerhacker.github.io/ai-ghost/latest/` im externen Browser des Betriebssystems (kein eingebetteter Browser); die vollständige funktionale Verdrahtung dieser einen Aktion IST Teil dieses Features, im Unterschied zu Preferences/About
 * NICHT enthalten: Neu, Öffnen, Speichern/Speichern unter
 
 **Affected Areas**
@@ -311,12 +312,12 @@ IP-02
 
 **Expected Result**
 
-Preferences, About und Online Doku erscheinen als Quick-Actions im Footer der Backstage; die zugehörigen Dialoge/Ziele existieren als Platzhalter, ohne funktionale Verdrahtung.
+Preferences, About und Online Doku erscheinen als Quick-Actions im Footer der Backstage; Preferences/About existieren als Platzhalter-Dialoge ohne funktionale Verdrahtung, Online Doku öffnet funktionsfähig `https://kleinerhacker.github.io/ai-ghost/latest/` im externen Browser des Betriebssystems.
 
 **Technical Considerations**
 
-* Ziel-URL für Online Doku ist vor Umsetzung zu klären
-* Keine Business-Logik-Verdrahtung gemäß Nutzervorgabe
+* Öffnen im externen Browser (nicht eingebettet) z.B. über `java.awt.Desktop.getDesktop().browse(URI)` oder ein plattformunabhängiges Äquivalent; konkrete Umsetzung ist bei Beginn dieser Implementation Plan anhand des bestehenden Projektstands zu prüfen
+* Keine Business-Logik-Verdrahtung für Preferences/About gemäß Nutzervorgabe; Online Doku ist davon explizit ausgenommen
 
 ### IP-09: ChromePane-Schnellaktionen
 
@@ -367,7 +368,6 @@ IP-01
 * Die Backstage-Ansicht wird seit panelium-fx 0.4.0 nicht mehr selbst konzipiert, sondern über die mitgelieferte Komponente `FXBackstageMenuPane` (Einträge `FXBackstageMenuItem`, Footer-Aktionen `FXBackstageQuickAction`) umgesetzt; dies korrigiert die frühere Annahme (Version 0.3.1), panelium-fx liefere dafür keine fertige Komponente
 * `FXMenuPane` ist laut Doku selbst noch nicht vollständig implementiert ("current building block") - Funktionsumfang bei jeder betroffenen Implementation Plan gegenprüfen; die Backstage-Komponente gilt laut Doku als eigenständiger, bereits nutzbarer Baustein
 * GitHub-Package-Repository-Zugang (Auth) für panelium-fx ist bereits eingerichtet
-* Ziel-URL für "Online Doku" ist offen
 * Der CI-Pipeline-Zugriff auf das GitHub-Package-Repository liegt in der Verantwortung des Nutzers und ist kein offener Punkt dieses Features
 
 ## 9. Feature Completion Criteria
@@ -376,6 +376,7 @@ IP-01
 * Reiter Bearbeiten zeigt beide Gruppen (Einfügen/Ausschneiden/Kopieren, Undo/Redo) funktionsfähig
 * Reiter Publish existiert als leerer Platzhalter
 * Das Datei-Menü (Backstage über `FXBackstageMenuPane`) bietet Neu (mit Profilen), Öffnen (mit Recent-Liste), Speichern/Speichern unter (mit letzten Speicherorten) sowie Preferences/About/Online Doku als Footer-Schnellaktionen
+* Online Doku öffnet funktionsfähig `https://kleinerhacker.github.io/ai-ghost/latest/` im externen Browser des Betriebssystems
 * ChromePane zeigt die Schnellaktionen Speichern, Separator, Undo, Redo in `captionLeftItems` mit funktionierender Anbindung
 * Der Standard-Fenstertitel im ChromePane ist ausgeblendet
 * Alle neuen bzw. geänderten UI-Texte sind über die Message Bundles übersetzt (inkl. Deutsch)
