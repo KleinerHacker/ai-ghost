@@ -514,8 +514,14 @@ class BookPartEditorTest : ApplicationTest() {
         // split just created is not reliably resolvable by CaretModel for a following action right away
         // (the same reason typing into one is avoided above), so it is explicitly navigated onto again,
         // the same way every other structural test here always re-navigates before its next action
-        // instead of trusting a split's own caret restore for anything beyond showing the result.
+        // instead of trusting a split's own caret restore for anything beyond showing the result. A
+        // freshly split block also needs a real layout pass, not just an event pulse, before
+        // CaretModel.currentTextBlock/currentPage resolve onto it - the same extra step select() always
+        // takes after swapping the sheet's content - otherwise performMove()'s currentBlock() silently
+        // sees no usable block and the move is a no-op.
         interact { sheet.caretModel.moveIntoBlock(globalBlockIndex(anchorId, 1), 0) }
+        WaitForAsyncUtils.waitForFxEvents()
+        interact { editor.scene.root.layout() }
         WaitForAsyncUtils.waitForFxEvents()
         val countBeforeMove = undoStack.undoEntries.size
 
