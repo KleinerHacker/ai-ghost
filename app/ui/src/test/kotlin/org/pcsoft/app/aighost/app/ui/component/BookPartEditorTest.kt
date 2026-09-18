@@ -28,6 +28,8 @@ import org.pcsoft.app.aighost.app.Messages
 import org.pcsoft.app.aighost.app.controller.IoController
 import org.pcsoft.app.aighost.app.undo.UndoStack
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
+import org.pcsoft.app.aighost.layouting.model.common.toPageLayout
+import org.pcsoft.app.aighost.layouting.model.common.toTextStyle
 import org.pcsoft.app.aighost.model.pref.WritingMode
 import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.FontData
@@ -46,6 +48,9 @@ import org.pcsoft.app.aighost.model.project.design.EpilogPageDesign
 import org.pcsoft.app.aighost.model.project.design.PrologPageDesign
 import org.pcsoft.app.aighost.model.project.design.TitlePageDesign
 import org.pcsoft.app.aighost.model.project.meta.Meta
+import org.pcsoft.framework.simplay.engine.model.Document
+import org.pcsoft.framework.simplay.engine.model.FlowPage
+import org.pcsoft.framework.simplay.engine.model.TextBlock
 import org.pcsoft.framework.simplay.fx.PaperSheetMode
 import org.pcsoft.framework.simplay.fx.PaperSheetView
 import org.pcsoft.framework.simplay.uicommon.PageMode
@@ -479,56 +484,53 @@ class BookPartEditorTest : ApplicationTest() {
      * step and undo/redo replays the block order exactly (IP-32/IP-33).
      *
      * `BookPartEditorController.moveTextBlock` never moves the block at index `0`, since it carries the
-     * page's `TextAnchor` - the fixture therefore needs a third block, built from two splits. Both of
-     * them cut their block mid-word instead of at its end, because `CaretModel` cannot put the caret
-     * into an empty block at all: it slides on to the next block carrying text, across a page boundary
-     * if need be. A fixture of two trailing empty blocks therefore left the caret on the *epilog* page's
-     * anchor block, where `moveTextBlock` rightly refuses index `0`, and the whole move became a silent
-     * no-op. Three blocks that all carry text keep every one of them addressable, and make the swap
-     * itself readable - two empty blocks read the same whether the move ran or not, so nothing but the
-     * undo count could ever have caught it.
+     * page's `TextAnchor`, so this needs three blocks - and every one of them has to carry text, because
+     * `CaretModel` cannot put the caret into an empty block at all: it slides on to the next block that
+     * has some, across a page boundary if need be. Splitting on the sheet cannot produce three such
+     * blocks (a split at a block's end leaves the new one empty), so they are seeded straight into the
+     * book's `Document` instead, the way `BookPartEditorControllerTest` seeds a chapter that already
+     * carries text. Seeding also makes the move readable in the block list itself - three blocks that
+     * differ show the swap, where two empty ones read the same whether it ran or not.
      */
     @Test
     fun movePushesOneUndoStepAndRestoresBlockCountOnUndoRedo() {
-        select(ProjectListItem.ChapterItem(chapter))
         val anchorId = chapter.id.toString()
+        val seeded = listOf("\${$anchorId}Alpha", "Beta", "Gamma")
         interact {
-            sheet.requestFocus()
-            sheet.caretModel.moveToEndOfBlock(globalBlockIndex(anchorId, 0))
+            val design = projectModel.value.design
+            projectModel.bookProperty.document = Document(
+                pages = listOf(
+                    FlowPage(
+                        design.pageFormat.toPageLayout(),
+                        seeded.map { TextBlock.of(it, design.chapterPage.textStyle.toTextStyle()) },
+                        id = anchorId
+                    )
+                )
+            )
+            projectModel.designProperty.refresh()
         }
         WaitForAsyncUtils.waitForFxEvents()
-        typeSlowly("HelloWorld")
+        select(ProjectListItem.ChapterItem(chapter))
+        assertEquals(seeded, storedBlocks(anchorId), "the fixture must start from three blocks that all carry text")
 
-        interact { sheet.caretModel.moveIntoBlock(globalBlockIndex(anchorId, 0), 5) }
-        WaitForAsyncUtils.waitForFxEvents()
-        fireSplit()
-        assertEquals(2, storedBlocks(anchorId).size, "the fixture for this test must start out split in two")
-
-        interact { sheet.caretModel.moveIntoBlock(globalBlockIndex(anchorId, 1), 2) }
-        WaitForAsyncUtils.waitForFxEvents()
-        fireSplit()
-
-        val blocksBeforeMove = storedBlocks(anchorId)
-        assertEquals(
-            3, blocksBeforeMove.filter { it.isNotEmpty() }.distinct().size,
-            "the fixture needs three distinct, non-empty blocks, or a swap cannot be told apart: $blocksBeforeMove"
-        )
-
-        interact { sheet.caretModel.moveIntoBlock(globalBlockIndex(anchorId, 1), 0) }
+        interact {
+            sheet.requestFocus()
+            sheet.caretModel.moveIntoBlock(globalBlockIndex(anchorId, 1), 0)
+        }
         WaitForAsyncUtils.waitForFxEvents()
         val countBeforeMove = undoStack.undoEntries.size
 
         // Moving that block up would land on the immovable anchor block at index 0, so it is moved down.
         fireMoveDown()
 
-        val movedOrder = listOf(blocksBeforeMove[0], blocksBeforeMove[2], blocksBeforeMove[1])
+        val movedOrder = listOf(seeded[0], seeded[2], seeded[1])
         assertEquals(movedOrder, storedBlocks(anchorId), "the move must swap the block with the one after it")
         assertEquals(countBeforeMove + 1, undoStack.undoEntries.size, "the move must push exactly one undo entry")
 
         interact { undoStack.undo() }
         WaitForAsyncUtils.waitForFxEvents()
 
-        assertEquals(blocksBeforeMove, storedBlocks(anchorId), "undo must put the block back where it was")
+        assertEquals(seeded, storedBlocks(anchorId), "undo must put the block back where it was")
 
         interact { undoStack.redo() }
         WaitForAsyncUtils.waitForFxEvents()
