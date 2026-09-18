@@ -476,18 +476,17 @@ class BookPartEditorTest : ApplicationTest() {
 
     /**
      * Use case: the user moves a block of a paragraph on the sheet, so the change is one single undo
-     * step and undo/redo replays the block count exactly (IP-32/IP-33).
+     * step and undo/redo replays the block order exactly (IP-32/IP-33).
      *
      * `BookPartEditorController.moveTextBlock` never moves the block at index `0`, since it carries the
-     * page's `TextAnchor` - the fixture therefore needs a third block: the anchor block plus two further
-     * ones, built from two splits that are never followed by typing into the block a split just created.
-     * Typing into such a fresh, still-empty block turned out to be an upstream simPlay quirk of its own -
-     * PaperSheetView silently merges it back into its predecessor and drops the typed text, undoing the
-     * split in the process - so both trailing blocks are left empty here instead, and the exact block
-     * ordering `moveTextBlock` produces from that (up vs. down, which index swaps with which) is already
-     * proven, with no such UI quirk in the way, by `BookPartEditorControllerTest.movesATextBlockUpAndDownButNeverBlockZero`.
-     * This test proves only what that one cannot: that the view model really pushes the move as a single
-     * `DocumentStructureUndoEntry` and that undoing and redoing it does not lose or duplicate a block.
+     * page's `TextAnchor` - the fixture therefore needs a third block, built from two splits. Both of
+     * them cut their block mid-word instead of at its end, because `CaretModel` cannot put the caret
+     * into an empty block at all: it slides on to the next block carrying text, across a page boundary
+     * if need be. A fixture of two trailing empty blocks therefore left the caret on the *epilog* page's
+     * anchor block, where `moveTextBlock` rightly refuses index `0`, and the whole move became a silent
+     * no-op. Three blocks that all carry text keep every one of them addressable, and make the swap
+     * itself readable - two empty blocks read the same whether the move ran or not, so nothing but the
+     * undo count could ever have caught it.
      */
     @Test
     fun movePushesOneUndoStepAndRestoresBlockCountOnUndoRedo() {
@@ -499,22 +498,22 @@ class BookPartEditorTest : ApplicationTest() {
         }
         WaitForAsyncUtils.waitForFxEvents()
         typeSlowly("HelloWorld")
+
+        interact { sheet.caretModel.moveIntoBlock(globalBlockIndex(anchorId, 0), 5) }
+        WaitForAsyncUtils.waitForFxEvents()
         fireSplit()
         assertEquals(2, storedBlocks(anchorId).size, "the fixture for this test must start out split in two")
 
-        // Jumping back onto block 0 - not itself freshly split, and followed only by a menu action, the
-        // same pattern mergePushesOneUndoStepAndRestoresStructureOnUndoRedo already relies on - splits it
-        // again at its own end, giving a third block without ever typing into either empty one.
-        interact { sheet.caretModel.moveToEndOfBlock(globalBlockIndex(anchorId, 0)) }
+        interact { sheet.caretModel.moveIntoBlock(globalBlockIndex(anchorId, 1), 2) }
         WaitForAsyncUtils.waitForFxEvents()
         fireSplit()
-        assertEquals(3, storedBlocks(anchorId).size, "the fixture for this test must end up split into three")
 
-        // The second split leaves the caret on the block it just created, at index 1 - a fresh block a
-        // split just created is not reliably resolvable by CaretModel for a following action right away
-        // (the same reason typing into one is avoided above), so it is explicitly navigated onto again,
-        // the same way every other structural test here always re-navigates before its next action
-        // instead of trusting a split's own caret restore for anything beyond showing the result.
+        val blocksBeforeMove = storedBlocks(anchorId)
+        assertEquals(
+            3, blocksBeforeMove.filter { it.isNotEmpty() }.distinct().size,
+            "the fixture needs three distinct, non-empty blocks, or a swap cannot be told apart: $blocksBeforeMove"
+        )
+
         interact { sheet.caretModel.moveIntoBlock(globalBlockIndex(anchorId, 1), 0) }
         WaitForAsyncUtils.waitForFxEvents()
         val countBeforeMove = undoStack.undoEntries.size
@@ -522,18 +521,19 @@ class BookPartEditorTest : ApplicationTest() {
         // Moving that block up would land on the immovable anchor block at index 0, so it is moved down.
         fireMoveDown()
 
-        assertEquals(3, storedBlocks(anchorId).size, "moving a block must not lose or duplicate one")
+        val movedOrder = listOf(blocksBeforeMove[0], blocksBeforeMove[2], blocksBeforeMove[1])
+        assertEquals(movedOrder, storedBlocks(anchorId), "the move must swap the block with the one after it")
         assertEquals(countBeforeMove + 1, undoStack.undoEntries.size, "the move must push exactly one undo entry")
 
         interact { undoStack.undo() }
         WaitForAsyncUtils.waitForFxEvents()
 
-        assertEquals(3, storedBlocks(anchorId).size, "undo must restore the original block count")
+        assertEquals(blocksBeforeMove, storedBlocks(anchorId), "undo must put the block back where it was")
 
         interact { undoStack.redo() }
         WaitForAsyncUtils.waitForFxEvents()
 
-        assertEquals(3, storedBlocks(anchorId).size, "redo must move the block again without losing one")
+        assertEquals(movedOrder, storedBlocks(anchorId), "redo must move the block again")
     }
 
     /**
