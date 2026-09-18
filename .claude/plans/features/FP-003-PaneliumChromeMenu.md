@@ -5,7 +5,7 @@
 * Ersetzung der bestehenden JavaFX `MenuBar` und `ToolBar` im Hauptfenster durch panelium-fx
 * Einbindung des Panelium `ChromePane` als neuer Fensterrahmen
 * Einbindung des Panelium `FXMenuPane` (MenuPane) als neues Datei-/Bearbeiten-/Publish-Menü
-* Nachbildung eines Office-artigen "Backstage"-Bereichs für das Datei-Menü auf eigener Basis
+* Nutzung der von panelium-fx 0.4.0 bereitgestellten Backstage-Komponente (`FXBackstageMenuPane`) für das Datei-Menü, statt einer eigenen Nachbildung
 
 ## 2. Current State
 
@@ -20,43 +20,47 @@
 * Kein Profil-Konzept für "Neu" vorhanden (nur feste Einträge Project/Chapter)
 * Preferences- und About-Dialoge existieren nicht verdrahtet bzw. nicht auffindbar
 * Icons werden über `AiGhostIcons` (Kotlin-Objekt, `fx:factory`) eingebunden; vorhanden u.a. `open`, `save`, `save-as`, `preferences`, `undo`, `redo`, `export`, `help-online`; fehlend: Ausschneiden, Kopieren, Einfügen, About/"i"
-* panelium-fx ist als Dependency noch nicht eingebunden
+* panelium-fx ist als Dependency noch nicht eingebunden; die verfügbare Version wurde zwischenzeitlich auf `0.4.0` aktualisiert (vorher `0.3.1`)
+* Laut MkDocs-Doku (`menu-pane/implementation`, Stand panelium-fx 0.4.0) stellt `FXMenuPane` inzwischen einen eigenen "File"-Tab bereit, der beim Anklicken eine Backstage-Ansicht öffnet (`isFileTabActive`/`fileTabActiveProperty()`, `backstageContent`); als Standardkomponente dafür liefert panelium-fx `FXBackstageMenuPane` mit, bestehend aus einer Menüliste (`items`, `FXBackstageMenuItem`), einem Inhaltsbereich je ausgewähltem Eintrag und Schnellaktionen im Footer (`quickActions`, `FXBackstageQuickAction`); wird `backstageContent` nicht gesetzt, instanziiert `FXMenuPane` beim ersten Öffnen selbst eine Standardinstanz
 
 ## 3. Requirements
 
 ### Functional Requirements
 
 * Fensterrahmen läuft vollständig über den Panelium `ChromePane`
-* MenuPane besitzt zunächst die Reiter "Bearbeiten" und "Publish" sowie einen separaten Datei-Menüpunkt
+* MenuPane besitzt zunächst die Reiter "Bearbeiten" und "Publish" sowie den eingebauten "File"-Tab für das Datei-Menü
 * Reiter "Bearbeiten": Gruppe Einfügen (groß) + Ausschneiden/Kopieren (klein, untereinander); Gruppe Undo (groß) / Redo (groß)
 * Reiter "Publish" bleibt zunächst leer (Platzhalter-Struktur)
-* Datei-Menü behält alle bisherigen Funktionen: Neu, Öffnen, Speichern, Speichern unter, Preferences, About, Online Doku
-* Neu: vordefinierte Profile auf einer Backstage-artigen Ansicht (Detailkonzept folgt in der zugehörigen Implementation Plan)
-* Speichern / Speichern unter: Auswahl aus den zuletzt verwendeten Speicherorten
-* Öffnen: Liste der zuletzt geöffneten Dateien (Wiederverwendung des bestehenden Recent-Mechanismus)
-* Preferences, About und Online Doku erscheinen unten im Datei-Menü als einmalige Aktionen; die zugehörigen Dialoge werden nur so gebaut, dass sie existieren, eine funktionale Verdrahtung ist NICHT Teil dieses Features
-* ChromePane erhält Icon-Schaltflächen: Speichern, Separator, Undo, Redo, jeweils mit Anbindung an die bestehende ViewModel-Logik
+* Datei-Menü (Backstage) behält alle bisherigen Funktionen: Neu, Öffnen, Speichern, Speichern unter, Preferences, About, Online Doku
+* Neu: vordefinierte Profile als `FXBackstageMenuItem`-Einträge der Backstage; ein Profil ist ein vorgefertigtes Buch mit optional vorausgewählten Buchteilen (`BookPart`-Typen wie Prolog, Kapitel, Epilog); die konkreten Profile sind neu zu erstellen (Detailkonzept folgt in der zugehörigen Implementation Plan)
+* Speichern / Speichern unter: Auswahl aus den zuletzt verwendeten Speicherorten, dargestellt im Inhaltsbereich des jeweiligen Backstage-Eintrags; die Speicherorte werden analog zu "Zuletzt geöffnet" (`RecentOpened`) als eigene Liste mitgeführt
+* Öffnen: Liste der zuletzt geöffneten Dateien (Wiederverwendung des bestehenden Recent-Mechanismus), dargestellt im Inhaltsbereich des Backstage-Eintrags "Öffnen"
+* Preferences, About und Online Doku erscheinen als Schnellaktionen (`FXBackstageQuickAction`) im Footer der Backstage; die zugehörigen Dialoge werden nur so gebaut, dass sie existieren, eine funktionale Verdrahtung ist NICHT Teil dieses Features
+* ChromePane erhält Icon-Schaltflächen: Speichern, Separator, Undo, Redo, jeweils mit Anbindung an die bestehende ViewModel-Logik, platziert in `captionLeftItems`
+* Der Standard-Fenstertitel der `ChromeCaptionBar` wird ausgeblendet
 
 ### Technical Requirements
 
-* Dependency `org.pcsoft.framework:panelium:0.3.1` wird neu eingebunden, inklusive GitHub-Package-Repository-Zugang (`https://maven.pkg.github.com/KleinerHacker/panelium-fx`, GitHub-PAT mit `read:packages`)
+* Dependency `org.pcsoft.framework:panelium:0.4.0` wird neu eingebunden, inklusive GitHub-Package-Repository-Zugang (`https://maven.pkg.github.com/KleinerHacker/panelium-fx`, GitHub-PAT mit `read:packages`); der Zugang ist bereits eingerichtet
+* Die GitHub-Package-Repository-Authentifizierung der CI-Pipeline verantwortet der Nutzer selbst; kein Handlungsbedarf innerhalb dieses Features
 * MVVM-FX-Trennung (View/ViewModel) bleibt bestehen, keine Business-Logik in der View
 * I18N über bestehende Message Bundles, Übersetzung ausschließlich über den `translator`-Agenten
 * Styling ausschließlich über das bestehende zentrale Stylesheet-/Palette-System, keine Inline-Styles
 * Fehlende Icons (Ausschneiden, Kopieren, Einfügen, About/"i") werden über den `icon-creator`-Agenten erstellt
 * `ui-styling`-Skill gilt für jede Änderung unter `app/ui`
 * `fx-component-lifecycle`-Skill gilt, sobald eine neue View globale Listener/Subscriptions registriert
-* Laut MkDocs-Doku (`menu-pane/implementation`) ist der `FXMenuPane`-Funktionsumfang selbst noch nicht vollständig implementiert ("current building block") - dies ist bei jeder Implementation Plan, die den MenuPane betrifft, gegenzuprüfen
+* Laut MkDocs-Doku (`menu-pane/implementation`) ist der `FXMenuPane`-Funktionsumfang selbst noch nicht vollständig implementiert ("current building block") - dies ist bei jeder Implementation Plan, die den MenuPane betrifft, gegenzuprüfen; die Backstage-Komponente (`FXBackstageMenuPane`) ist davon laut Doku als eigenständiger, bereits nutzbarer Baustein zu unterscheiden
 
 ## 4. Architecture
 
 * Der bestehende `BorderPane` in `MainWindowView.fxml` verliert `MenuBar` und `ToolBar` im `top`-Bereich
 * `ChromePane` übernimmt den Fensterrahmen: Einbindung entweder über `PaneliumStage` oder manuell als `ChromePane(content)` in einer transparenten `Scene` mit `StageStyle.TRANSPARENT`; in FXML als `<ChromePane>`-Wurzel- bzw. Kindelement
 * Die Titelleiste (`ChromeCaptionBar`) stellt drei Bereichslisten bereit: `captionLeftItems`, `captionCenterItems`, `captionRightItems` (befüllbar per Kotlin `.add(...)` oder als FXML-Kindelemente); die OS-Fensterbuttons (Min/Max/Close) werden automatisch getrennt davon ergänzt
-* `FXMenuPane` wird über `MenuChromePane` eingebettet (`menuChromePane.menuPane = menuPane; menuChromePane.body = content`)
-* MenuPane-Aufbau: `FXMenuPane()` mit `FXMenuTab(id, title)`-Objekten (`menuPane.tabs.addAll(...)`, `menuPane.activate(tab)`); jeder Tab enthält `FXMenuGroup(vararg boxes, anchor = ...)` mit Titel; Boxen sind `FXMenuGroupLargeBox(...)` (große Buttons, z.B. Einfügen, Undo, Redo) bzw. `FXMenuGroupSmallBox(...)` (bis zu drei kleine, vertikal gestapelte Buttons, z.B. Ausschneiden/Kopieren); `anchor` markiert die nie einklappende Box, `priority` (`FXMenuGroupBoxPriority`) steuert das Einklappverhalten bei Platzmangel
-* Das Datei-Menü ist kein regulärer MenuPane-Tab, sondern ein eigener Menüpunkt mit Backstage-artiger Detailansicht, die auf Basis eines eigenen Popups/Overlays selbst konzipiert wird, da panelium-fx dafür keine fertige Komponente liefert
-* Bestehende ViewModel-Bindings (`viewModel.undoStack`, `viewModel.openRecent`, `actionSave`, `actionOpen`, `actionSaveAs`) werden wiederverwendet und nur an die neuen View-Elemente umgehängt, nicht neu konzipiert
+* `FXMenuPane` wird über `MenuChromePane` eingebettet (`menuChromePane.menuPane = menuPane; menuChromePane.body = content`); `MenuChromePane` legt die Backstage als Overlay über den Body, der angedockte Tab bleibt dabei sichtbar
+* MenuPane-Aufbau: `FXMenuPane()` mit `FXMenuTab(id, title)`-Objekten (`menuPane.tabs.addAll(...)`, `menuPane.activate(tab)`) für die Reiter Bearbeiten/Publish; jeder Tab enthält `FXMenuGroup(vararg boxes, anchor = ...)` mit Titel; Boxen sind `FXMenuGroupLargeBox(...)` (große Buttons, z.B. Einfügen, Undo, Redo) bzw. `FXMenuGroupSmallBox(...)` (bis zu drei kleine, vertikal gestapelte Buttons, z.B. Ausschneiden/Kopieren); `anchor` markiert die nie einklappende Box, `priority` (`FXMenuGroupBoxPriority`) steuert das Einklappverhalten bei Platzmangel
+* Das Datei-Menü ist der eingebaute "File"-Tab von `FXMenuPane`: Anklicken setzt `isFileTabActive`/`fileTabActiveProperty()` auf `true` und zeigt `backstageContent`; als `backstageContent` wird explizit eine `FXBackstageMenuPane`-Instanz gesetzt (statt der automatischen Standardinstanz), um projektspezifische Einträge zu steuern
+* `FXBackstageMenuPane` wird über `items` (Liste von `FXBackstageMenuItem`, je mit `id`, `text`, optionalem Icon und `content`-Node) für Neu/Öffnen/Speichern/Speichern unter befüllt; `selectedItem`/`selectedItemProperty()` steuert die aktuelle Auswahl; über `menuWidth`/`menuWidthProperty()` (Default `300.0`) lässt sich die Breite der Menüliste bei Bedarf anpassen; Preferences/About/Online Doku werden als `quickActions` (`FXBackstageQuickAction`, je mit `id` und `onAction`-Callback) im Footer abgebildet
+* Bestehende ViewModel-Bindings (`viewModel.undoStack`, `viewModel.openRecent`, `actionSave`, `actionOpen`, `actionSaveAs`) werden wiederverwendet und nur an die neuen View-Elemente (Reiter-Boxen bzw. `content`-Nodes der Backstage-Einträge) umgehängt, nicht neu konzipiert
 * Neue Datenmodelle (letzte Speicherorte, Neu-Profile) werden, sofern nötig, unter `lib/model` mit FX-Pendant unter `lib/fx-model` angelegt (`fx-model`-Skill beachten, `model-explore`/`model-creator`-Agenten nutzen)
 
 ## 5. Implementation Plan Overview
@@ -64,13 +68,13 @@
 | ID    | Implementation Plan | Objective | Dependencies |
 | ----- | -------------------- | --------- | ------------ |
 | IP-01 | ChromePane-Einbindung | Panelium-Dependency einbinden, ChromePane als Fensterrahmen aktivieren | - |
-| IP-02 | MenuPane-Grundgerüst | Leere Reiter Bearbeiten/Publish sowie Datei-Menüpunkt anlegen | IP-01 |
+| IP-02 | MenuPane-Grundgerüst | Leere Reiter Bearbeiten/Publish sowie Backstage-Grundgerüst für den File-Tab anlegen | IP-01 |
 | IP-03 | Reiter Bearbeiten | Gruppen Einfügen/Ausschneiden/Kopieren und Undo/Redo im Reiter Bearbeiten füllen | IP-02 |
 | IP-04 | Reiter Publish | Struktur des leeren Publish-Reiters anlegen | IP-02 |
-| IP-05 | Datei-Menü: Neu | Backstage-Ansicht mit vordefinierten Profilen für Neu | IP-02 |
-| IP-06 | Datei-Menü: Öffnen | Liste zuletzt geöffneter Dateien im neuen Datei-Menü | IP-02 |
-| IP-07 | Datei-Menü: Speichern/Speichern unter | Auswahl der letzten Speicherorte für Speichern und Speichern unter | IP-02 |
-| IP-08 | Datei-Menü: Einmalige Aktionen | Preferences, About, Online Doku unten im Datei-Menü | IP-02 |
+| IP-05 | Datei-Menü: Neu | Backstage-Eintrag mit vordefinierten Profilen für Neu | IP-02 |
+| IP-06 | Datei-Menü: Öffnen | Liste zuletzt geöffneter Dateien im Backstage-Eintrag Öffnen | IP-02 |
+| IP-07 | Datei-Menü: Speichern / Speichern unter | Auswahl der letzten Speicherorte für Speichern und Speichern unter | IP-02 |
+| IP-08 | Datei-Menü: Einmalige Aktionen | Preferences, About, Online Doku als Backstage-Schnellaktionen | IP-02 |
 | IP-09 | ChromePane-Schnellaktionen | Icon-Schaltflächen Speichern, Separator, Undo, Redo im ChromePane | IP-01, IP-03, IP-07 |
 
 ## 6. Implementation Plans
@@ -83,10 +87,10 @@ Vollständige Umstellung des Hauptfensters auf den Panelium `ChromePane` als Fen
 
 **Scope**
 
-* Einbindung der Dependency `org.pcsoft.framework:panelium:0.3.1` inklusive GitHub-Package-Repo-Zugang
+* Einbindung der Dependency `org.pcsoft.framework:panelium:0.4.0` inklusive GitHub-Package-Repo-Zugang
 * Ersetzen der bisherigen Fensterdekoration durch `ChromePane` (via `PaneliumStage` oder manuell mit `StageStyle.TRANSPARENT`)
 * Grundlegende Titelleiste (`ChromeCaptionBar`) ohne Quick-Actions in `captionLeftItems`/`captionCenterItems`/`captionRightItems` (folgen erst in IP-09)
-* NICHT enthalten: MenuPane, Datei-Menü, Schnellaktionen
+* NICHT enthalten: MenuPane, Datei-Menü/Backstage, Schnellaktionen
 
 **Affected Areas**
 
@@ -104,22 +108,21 @@ Das Hauptfenster wird vollständig über `ChromePane` dargestellt, alte `MenuBar
 
 **Technical Considerations**
 
-* GitHub-Package-Repository benötigt Authentifizierung; Credentials-Handling muss projektkonform (Gradle-Properties/Secrets) erfolgen
-* Vor Umsetzung ist zu prüfen, ob CI-Pipeline (`ci-pipeline`-Skill) Zugriff auf das Package-Repo hat
-* Einbindung laut MkDocs-Doku `platinum-chrome/implementation`: `PaneliumStage` oder manuelles `ChromePane(content)` in transparenter `Scene`; FXML unterstützt `<ChromePane>` direkt
+* GitHub-Package-Repository-Zugang (Auth) ist bereits eingerichtet, Zuständigkeit für CI-seitige Authentifizierung liegt beim Nutzer
+* Einbindung laut MkDocs-Doku `panelium-chrome/implementation`: `PaneliumStage` oder manuelles `ChromePane(content)` in transparenter `Scene`; FXML unterstützt `<ChromePane>` direkt
 
 ### IP-02: MenuPane-Grundgerüst
 
 **Objective**
 
-Anlegen des `FXMenuPane` mit den leeren, aber bereits benannten Reitern Bearbeiten und Publish sowie des separaten Datei-Menüpunkts.
+Anlegen des `FXMenuPane` mit den leeren, aber bereits benannten Reitern Bearbeiten und Publish sowie des Backstage-Grundgerüsts für den eingebauten File-Tab.
 
 **Scope**
 
 * Struktureller Einbau von `FXMenuPane`/`MenuChromePane` in `ChromePane` (`menuChromePane.menuPane = menuPane`, `menuChromePane.body = content`)
 * Leere Reiter "Bearbeiten" und "Publish" als `FXMenuTab(id, title)`, registriert über `menuPane.tabs.addAll(...)`
-* Datei-Menüpunkt als eigener Einstiegspunkt (noch ohne Backstage-Inhalt)
-* NICHT enthalten: Inhalte der Reiter, Inhalte des Datei-Menüs
+* Eigene `FXBackstageMenuPane`-Instanz anlegen und als `menuPane.backstageContent` setzen (noch ohne Einträge/Quick-Actions)
+* NICHT enthalten: Inhalte der Reiter, Einträge und Quick-Actions der Backstage
 
 **Affected Areas**
 
@@ -132,12 +135,12 @@ IP-01
 
 **Expected Result**
 
-MenuPane ist sichtbar mit den Reitern Bearbeiten/Publish (leer) und einem Datei-Menüpunkt (leer/Platzhalter).
+MenuPane ist sichtbar mit den Reitern Bearbeiten/Publish (leer) und einem File-Tab, der eine leere Backstage öffnet.
 
 **Technical Considerations**
 
 * Struktur muss so angelegt sein, dass IP-03 bis IP-08 unabhängig voneinander Inhalte ergänzen können
-* Laut Doku ist `FXMenuPane` selbst noch "current building block", nicht vollständig fertiggestellt - Funktionsumfang vor Umsetzung anhand aktueller Doku/API gegenprüfen
+* Laut Doku ist `FXMenuPane` selbst noch "current building block", nicht vollständig fertiggestellt - Funktionsumfang vor Umsetzung anhand aktueller Doku/API gegenprüfen; `FXBackstageMenuPane` gilt laut Doku als eigenständiger, bereits nutzbarer Baustein
 
 ### IP-03: Reiter Bearbeiten
 
@@ -202,12 +205,12 @@ Keine besonderen.
 
 **Objective**
 
-Backstage-artige Ansicht für "Neu" mit vordefinierten Profilen.
+Backstage-Eintrag "Neu" mit vordefinierten Profilen.
 
 **Scope**
 
-* Eigene Backstage-Ansicht (Popup/Overlay auf Basis vorhandener panelium-fx-Bausteine, da kein fertiges Backstage-Control existiert)
-* Vordefinierte Profile als Auswahl (Detailkonzept der Profile wird in dieser Implementation Plan konkretisiert)
+* Neuer `FXBackstageMenuItem` "Neu" mit eigenem `content`-Node in der Backstage aus IP-02
+* Vordefinierte Profile als Auswahl im `content`-Bereich dieses Eintrags: ein Profil ist ein vorgefertigtes Buch mit optional vorausgewählten Buchteilen (`BookPart`-Typen wie Prolog, Kapitel, Epilog); die konkreten Profile werden in dieser Implementation Plan neu erstellt
 * NICHT enthalten: Öffnen, Speichern, Speichern unter, Preferences/About/Online Doku
 
 **Affected Areas**
@@ -222,21 +225,21 @@ IP-02
 
 **Expected Result**
 
-"Neu" öffnet eine Backstage-Ansicht mit auswählbaren, vordefinierten Profilen; Auswahl legt ein neues Projekt/Kapitel gemäß Profil an.
+Der Backstage-Eintrag "Neu" zeigt auswählbare, vordefinierte Profile (vorgefertigte Bücher mit optional vorausgewählten Buchteilen); Auswahl legt ein neues Projekt gemäß Profil an.
 
 **Technical Considerations**
 
-* Konzept der Profile (Inhalt, Anzahl, Persistenz) ist zu Beginn dieser Implementation Plan zu konkretisieren
+* Anzahl, Inhalt und genaue Buchteil-Vorauswahl je Profil sowie deren Persistenz sind zu Beginn dieser Implementation Plan zu konkretisieren
 
 ### IP-06: Datei-Menü: Öffnen
 
 **Objective**
 
-Liste der zuletzt geöffneten Dateien im neuen Datei-Menü.
+Liste der zuletzt geöffneten Dateien im Backstage-Eintrag "Öffnen".
 
 **Scope**
 
-* Wiederverwendung des bestehenden `viewModel.openRecent`-Mechanismus im neuen Datei-Menü
+* Neuer `FXBackstageMenuItem` "Öffnen" mit eigenem `content`-Node, der den bestehenden `viewModel.openRecent`-Mechanismus darstellt
 * NICHT enthalten: Neu, Speichern/Speichern unter, Preferences/About/Online Doku
 
 **Affected Areas**
@@ -249,7 +252,7 @@ IP-02
 
 **Expected Result**
 
-"Öffnen" zeigt im neuen Datei-Menü die bisherige Liste zuletzt geöffneter Dateien in äquivalenter Funktionalität.
+Der Backstage-Eintrag "Öffnen" zeigt die bisherige Liste zuletzt geöffneter Dateien in äquivalenter Funktionalität.
 
 **Technical Considerations**
 
@@ -263,14 +266,14 @@ Auswahl der zuletzt verwendeten Speicherorte bei Speichern und Speichern unter.
 
 **Scope**
 
-* Neuer Mechanismus zur Nachverfolgung zuletzt verwendeter Speicherorte
-* Integration in "Speichern" und "Speichern unter" im neuen Datei-Menü
+* Neues Model "zuletzt verwendete Speicherorte" analog zu `RecentOpened` (eigene Liste mit `max`/`entries`, unveränderliche `add`/`remove`/`clear`-Operationen, Persistenz in `Preferences`), unter `lib/model/pref` mit FX-Pendant unter `lib/fx-model/pref` (`fx-model`-Skill, `model-explore`/`model-creator`-Agenten)
+* Neue `FXBackstageMenuItem`-Einträge "Speichern" und "Speichern unter" mit eigenen `content`-Nodes in der Backstage
 * NICHT enthalten: Neu, Öffnen, Preferences/About/Online Doku
 
 **Affected Areas**
 
 * MainWindow-View/ViewModel
-* ggf. neues Model/Preferences-Feld unter `lib/model` + `lib/fx-model` (`fx-model`-Skill)
+* Neues Model/Preferences-Feld unter `lib/model` + `lib/fx-model` (`fx-model`-Skill)
 
 **Dependencies**
 
@@ -278,21 +281,21 @@ IP-02
 
 **Expected Result**
 
-"Speichern" und "Speichern unter" bieten eine Auswahl der zuletzt verwendeten Speicherorte an, zusätzlich zur bisherigen Dateiauswahl.
+Die Backstage-Einträge "Speichern" und "Speichern unter" bieten eine Auswahl der zuletzt verwendeten Speicherorte an, zusätzlich zur bisherigen Dateiauswahl.
 
 **Technical Considerations**
 
-* Prüfen, ob der bestehende Recent-Files-Mechanismus für "Öffnen" strukturell wiederverwendet werden kann oder ein eigenständiges Modell nötig ist
+* `RecentOpened` (`lib/model/pref/RecentOpened.kt`) dient als Vorbild für Struktur und Verhalten des neuen Modells (eigene, aber strukturell parallele Liste, kein gemeinsames Modell mit "Öffnen")
 
 ### IP-08: Datei-Menü: Einmalige Aktionen
 
 **Objective**
 
-Preferences, About und Online Doku als einmalige Aktionen unten im Datei-Menü.
+Preferences, About und Online Doku als Backstage-Schnellaktionen.
 
 **Scope**
 
-* Menüpunkte Preferences, About, Online Doku im neuen Datei-Menü
+* Menüpunkte Preferences, About, Online Doku als `FXBackstageQuickAction`-Einträge im Footer der Backstage aus IP-02
 * Dialoge/Ziel werden nur so gebaut, dass sie existieren (Preferences-Dialog, About-Dialog als Platzhalter, Online-Doku-Ziel-URL); eine vollständige funktionale Ausgestaltung der Dialoge ist NICHT Teil dieses Features
 * NICHT enthalten: Neu, Öffnen, Speichern/Speichern unter
 
@@ -308,7 +311,7 @@ IP-02
 
 **Expected Result**
 
-Preferences, About und Online Doku erscheinen unten im Datei-Menü; die zugehörigen Dialoge/Ziele existieren als Platzhalter, ohne funktionale Verdrahtung.
+Preferences, About und Online Doku erscheinen als Quick-Actions im Footer der Backstage; die zugehörigen Dialoge/Ziele existieren als Platzhalter, ohne funktionale Verdrahtung.
 
 **Technical Considerations**
 
@@ -323,7 +326,8 @@ Icon-Schaltflächen Speichern, Separator, Undo, Redo direkt im ChromePane.
 
 **Scope**
 
-* Icon-Buttons in `captionRightItems` (vor den automatisch ergänzten OS-Fensterbuttons) bzw. `captionCenterItems` der `ChromeCaptionBar`
+* Icon-Buttons in `captionLeftItems` der `ChromeCaptionBar`
+* Ausblenden des Standard-Fenstertitels (`isDefaultTitleVisible` / `defaultTitleVisibleProperty()` auf `false`)
 * Anbindung an bestehende ViewModel-Aktionen (`actionSave`, `viewModel.undoStack`)
 * Abschließender Schritt des Features gemäß Vorgabe
 
@@ -337,11 +341,11 @@ IP-01, IP-03, IP-07
 
 **Expected Result**
 
-ChromePane zeigt Icon-Schaltflächen für Speichern (+ Separator), Undo und Redo, funktional identisch zur bisherigen ToolBar.
+ChromePane zeigt Icon-Schaltflächen für Speichern (+ Separator), Undo und Redo in `captionLeftItems`, funktional identisch zur bisherigen ToolBar; der Standard-Fenstertitel ist ausgeblendet.
 
 **Technical Considerations**
 
-* Platzierung `captionRightItems` vs. `captionCenterItems` anhand des tatsächlichen Erscheinungsbilds bei Umsetzungsbeginn final festlegen
+* Laut MkDocs-Doku (`panelium-chrome/implementation`) wird der Titel über `isDefaultTitleVisible` (bzw. `*Property()`) deaktiviert, in FXML über `defaultTitleVisible="false"` am `ChromePane`
 
 ## 7. Dependency Graph
 
@@ -359,18 +363,19 @@ IP-01
 
 ## 8. Risks and Open Questions
 
-* Konzept der vordefinierten Profile für "Neu" ist inhaltlich noch offen (Klärung zu Beginn von IP-05, laut Nutzervorgabe bewusst später zu konkretisieren)
-* Backstage-Ansicht muss vollständig selbst konzipiert werden, da panelium-fx keine fertige Komponente dafür liefert (bestätigt für Version 0.3.1, auch laut `menu-pane/implementation`-Doku)
-* `FXMenuPane` ist laut Doku selbst noch nicht vollständig implementiert ("current building block") - Funktionsumfang bei jeder betroffenen Implementation Plan gegenprüfen
-* GitHub-Package-Repository-Zugang (Auth) für panelium-fx muss projektkonform eingerichtet werden, inklusive möglicher Auswirkung auf die CI-Pipeline
+* Anzahl, Inhalt und Buchteil-Vorauswahl der vordefinierten Profile für "Neu" sind inhaltlich noch offen (Klärung zu Beginn von IP-05); Profile sind vorgefertigte Bücher mit optional vorausgewählten Buchteilen (`BookPart`-Typen)
+* Die Backstage-Ansicht wird seit panelium-fx 0.4.0 nicht mehr selbst konzipiert, sondern über die mitgelieferte Komponente `FXBackstageMenuPane` (Einträge `FXBackstageMenuItem`, Footer-Aktionen `FXBackstageQuickAction`) umgesetzt; dies korrigiert die frühere Annahme (Version 0.3.1), panelium-fx liefere dafür keine fertige Komponente
+* `FXMenuPane` ist laut Doku selbst noch nicht vollständig implementiert ("current building block") - Funktionsumfang bei jeder betroffenen Implementation Plan gegenprüfen; die Backstage-Komponente gilt laut Doku als eigenständiger, bereits nutzbarer Baustein
+* GitHub-Package-Repository-Zugang (Auth) für panelium-fx ist bereits eingerichtet
 * Ziel-URL für "Online Doku" ist offen
-* Mechanismus für "zuletzt verwendete Speicherorte" (IP-07) ist neu zu konzipieren, ggf. in Anlehnung an den bestehenden Recent-Files-Mechanismus
+* Der CI-Pipeline-Zugriff auf das GitHub-Package-Repository liegt in der Verantwortung des Nutzers und ist kein offener Punkt dieses Features
 
 ## 9. Feature Completion Criteria
 
 * Das Hauptfenster läuft vollständig über `ChromePane` und `FXMenuPane`, die alte `MenuBar`/`ToolBar` ist entfernt
 * Reiter Bearbeiten zeigt beide Gruppen (Einfügen/Ausschneiden/Kopieren, Undo/Redo) funktionsfähig
 * Reiter Publish existiert als leerer Platzhalter
-* Das Datei-Menü bietet Neu (mit Profilen), Öffnen (mit Recent-Liste), Speichern/Speichern unter (mit letzten Speicherorten) sowie Preferences/About/Online Doku als einmalige Aktionen
-* ChromePane zeigt die Schnellaktionen Speichern, Separator, Undo, Redo mit funktionierender Anbindung
+* Das Datei-Menü (Backstage über `FXBackstageMenuPane`) bietet Neu (mit Profilen), Öffnen (mit Recent-Liste), Speichern/Speichern unter (mit letzten Speicherorten) sowie Preferences/About/Online Doku als Footer-Schnellaktionen
+* ChromePane zeigt die Schnellaktionen Speichern, Separator, Undo, Redo in `captionLeftItems` mit funktionierender Anbindung
+* Der Standard-Fenstertitel im ChromePane ist ausgeblendet
 * Alle neuen bzw. geänderten UI-Texte sind über die Message Bundles übersetzt (inkl. Deutsch)

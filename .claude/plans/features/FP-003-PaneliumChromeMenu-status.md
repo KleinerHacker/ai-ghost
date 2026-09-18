@@ -23,3 +23,17 @@ Status: NOT_STARTED
 ## Notes
 
 Feature Plan erstellt. Noch keine Implementation Plan gestartet.
+
+Update 2026-09-19: panelium-fx wurde auf Version 0.4.0 aktualisiert. Laut Online-Doku
+(`menu-pane/implementation`, `panelium-chrome/implementation`) liefert panelium-fx nun die
+Backstage-Komponente `FXBackstageMenuPane` (Einträge `FXBackstageMenuItem`, Footer-Aktionen
+`FXBackstageQuickAction`) für den eingebauten File-Tab von `FXMenuPane` mit. Der Feature Plan
+wurde entsprechend korrigiert: Das Datei-Menü wird nicht mehr selbst konzipiert, sondern über
+`FXBackstageMenuPane` umgesetzt; die Dependency-Version wurde von 0.3.1 auf 0.4.0 angepasst.
+
+Update 2026-09-19 (Klärungen): Profile für "Neu" sind vorgefertigte Bücher mit optional
+vorausgewählten Buchteilen (`BookPart`-Typen). "Zuletzt verwendete Speicherorte" (IP-07) wird
+als eigenes Model analog zu `RecentOpened` mitgeführt. GitHub-Package-Repository-Zugang ist
+bereits eingerichtet. CI-seitige Authentifizierung liegt in der Verantwortung des Nutzers.
+IP-09 nutzt `captionLeftItems` und blendet den Standard-Fenstertitel aus
+(`isDefaultTitleVisible = false`).
