@@ -1,0 +1,82 @@
+/*
+ * Copyright (c) KleinerHacker alias Pfeiffer C Soft 2026.
+ * This work is licensed under the Apache License, Version 2.0.
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at:
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, this software is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations.
+ */
+
+/*
+ * The inspector: fixed, collapsible sections next to the manuscript, one per part of the book that
+ * is edited beside the page - the book itself and, depending on what is picked in the project tree, a
+ * chapter or the blurb.
+ */
+
+.inspector-scroll,
+.inspector-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.inspector-content {
+    -fx-background-color: transparent;
+}
+
+/* One collapsible section of the inspector, built on a TitledPane. */
+.inspector-section {
+    -fx-background-color: -ghost-surface;
+    -fx-background-radius: 8px;
+}
+
+.inspector-section > .title {
+    -fx-background-color: -ghost-surface-raised;
+    -fx-background-radius: 8px 8px 0 0;
+    -fx-padding: 6px 10px 6px 10px;
+}
+
+.inspector-section:expanded > .title {
+    -fx-background-radius: 8px 8px 0 0;
+}
+
+.inspector-section:collapsed > .title {
+    -fx-background-radius: 8px;
+}
+
+.inspector-section > .title > .text {
+    -fx-fill: -ghost-ink;
+    -fx-font-weight: bold;
+}
+
+.inspector-section > .title > .arrow-button > .arrow {
+    -fx-background-color: -ghost-ink-soft;
+}
+
+.inspector-section > .title:hover {
+    -fx-background-color: -ghost-tint-hover;
+}
+
+.inspector-section > .content {
+    -fx-background-color: -ghost-surface;
+    -fx-background-radius: 0 0 8px 8px;
+    -fx-padding: 10px;
+}
+
+/* The name of a field stands above it and steps back from the text written into the field. */
+.inspector-label {
+    -fx-text-fill: -ghost-ink-soft;
+    -fx-font-weight: bold;
+}
+
+/* Shown in place of a section's fields while nothing bound to it matches the current selection. */
+.inspector-empty {
+    -fx-alignment: center;
+    -fx-padding: 20px 10px 20px 10px;
+}
+
+.inspector-empty-label {
+    -fx-text-fill: -ghost-ink-soft;
+    -fx-wrap-text: true;
+}

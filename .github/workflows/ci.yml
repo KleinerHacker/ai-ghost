@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   # Detects which parts of the repository changed, so only the affected jobs run.
-  # code    -> build, test, licences
+  # code    -> build, developer-test, integration-test, licences
   # docs    -> validate-docs
   # .github -> everything
   changes:
@@ -76,6 +76,11 @@ jobs:
     needs: changes
     if: needs.changes.outputs.code == 'true'
 
+    # simPlay resolves from GitHub Packages, which needs a token even for a read. GITHUB_ACTOR is
+    # present on every runner; GITHUB_TOKEN has to be mapped in from the job secret.
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -99,6 +104,9 @@ jobs:
     needs: changes
     if: needs.changes.outputs.code == 'true'
 
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -116,12 +124,17 @@ jobs:
       - name: Build
         run: ./gradlew build -x test --stacktrace --info
 
-  # Tests run the real JavaFX toolkit, so they are exercised on every host family.
-  test:
-    name: test (${{ matrix.os }})
+  # Developer tests (plain, unsuffixed test classes) run on every host family, since they exercise
+  # the real JavaFX toolkit.
+  developer-test:
+    name: developer-test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     needs: [ changes, build ]
     if: needs.changes.outputs.code == 'true'
+
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     strategy:
       fail-fast: false
       matrix:
@@ -142,14 +155,51 @@ jobs:
         if: runner.os != 'Windows'
         run: chmod +x ./gradlew
 
-      - name: Run tests
+      - name: Run developer tests
         run: ./gradlew test --stacktrace --info
+
+  # Integration tests ("...IT") cover a complete feature or aim at performance, per the `testing`
+  # skill, and run apart from the plain developer tests, on every host family as well.
+  integration-test:
+    name: integration-test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    needs: [ changes, build ]
+    if: needs.changes.outputs.code == 'true'
+
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up JDK
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: gradle
+
+      - name: Make Gradle wrapper executable
+        if: runner.os != 'Windows'
+        run: chmod +x ./gradlew
+
+      - name: Run integration tests
+        run: ./gradlew integrationTest --stacktrace --info
 
   # Build the docs as a generation test (mkdocs --strict) on every push and PR. No deployment here.
   validate-docs:
     runs-on: ubuntu-latest
     needs: changes
     if: needs.changes.outputs.docs == 'true'
+
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Checkout repository

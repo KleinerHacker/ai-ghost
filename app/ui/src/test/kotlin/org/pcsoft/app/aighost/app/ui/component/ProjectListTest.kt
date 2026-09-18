@@ -14,10 +14,12 @@ package org.pcsoft.app.aighost.app.ui.component
 
 import de.saxsys.mvvmfx.MvvmFX
 import javafx.scene.Scene
+import javafx.scene.control.CheckBox
 import javafx.scene.control.TreeItem
 import javafx.scene.control.TreeView
 import javafx.stage.Stage
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -29,12 +31,13 @@ import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.book.Chapter
 import org.pcsoft.app.aighost.model.project.book.Epilog
 import org.pcsoft.app.aighost.model.project.Project
-import org.pcsoft.app.aighost.model.project.design.AuthorDesign
-import org.pcsoft.app.aighost.model.project.design.ChapterDesign
-import org.pcsoft.app.aighost.model.project.design.CopyrightDesign
+import org.pcsoft.app.aighost.model.project.design.BlurbPageDesign
+import org.pcsoft.app.aighost.model.project.design.ChapterPageDesign
+import org.pcsoft.app.aighost.model.project.design.CopyrightPageDesign
 import org.pcsoft.app.aighost.model.project.design.Design
-import org.pcsoft.app.aighost.model.project.design.TextDesign
-import org.pcsoft.app.aighost.model.project.design.TitleDesign
+import org.pcsoft.app.aighost.model.project.design.EpilogPageDesign
+import org.pcsoft.app.aighost.model.project.design.PrologPageDesign
+import org.pcsoft.app.aighost.model.project.design.TitlePageDesign
 import org.pcsoft.app.aighost.model.project.meta.Meta
 import org.pcsoft.app.aighost.model.project.book.Prolog
 import org.pcsoft.app.aighost.model.common.Alignment
@@ -83,15 +86,15 @@ class ProjectListTest : ApplicationTest() {
     private fun project(book: Book): Project = Project(
         meta = Meta(
             name = "My Novel",
-            author = "Jane Doe",
-            copyright = "(c) 2026 Jane Doe"
+            author = "Jane Doe"
         ),
         design = Design(
-            authorDesign = AuthorDesign(style()),
-            copyrightDesign = CopyrightDesign(style(), show = false),
-            titleDesign = TitleDesign(style()),
-            chapterDesign = ChapterDesign(style(), style()),
-            textDesign = TextDesign(style()),
+            titlePage = TitlePageDesign(style(), style(), showAuthor = true, authorStyle = style()),
+            copyrightPage = CopyrightPageDesign(style(), style(), showAuthor = false, authorStyle = style()),
+            prologPage = PrologPageDesign(style(), style(), style()),
+            blurbPage = BlurbPageDesign(style()),
+            chapterPage = ChapterPageDesign(style(), style(), style()),
+            epilogPage = EpilogPageDesign(style(), style(), style()),
             startWithEmptyPage = false,
             endWithEmptyPage = false
         ),
@@ -108,21 +111,42 @@ class ProjectListTest : ApplicationTest() {
         tree.root.children.first { it.value is ProjectListItem.Chapters }
 
     /**
-     * Use case: the user looks at the project without having opened one, so the tree already shows
-     * the project with its four branches instead of staying empty.
+     * Use case: the user looks at a project that has not been written yet, so the tree shows the
+     * project with its fixed branches - front matter first - and hands on the empty parts every book
+     * carries.
      */
     @Test
     fun showsTheFixedBranchesBelowTheProject() {
         assertEquals(ProjectListItem.Root, tree.root.value)
         assertEquals(
             listOf(
-                ProjectListItem.PrologItem(null),
+                ProjectListItem.TitlePageItem,
+                ProjectListItem.CopyrightPageItem,
+                ProjectListItem.PrologItem(Prolog()),
                 ProjectListItem.Chapters,
-                ProjectListItem.EpilogItem(null),
-                ProjectListItem.BlurbItem(null)
+                ProjectListItem.EpilogItem(Epilog()),
+                ProjectListItem.BlurbItem(Blurb())
             ),
             tree.root.children.map { it.value }
         )
+    }
+
+    /**
+     * Use case: the front matter is written on the paper as well, so the title page and the copyright
+     * page each get a node of their own, labelled from the message bundle and placed ahead of the
+     * prolog.
+     */
+    @Test
+    fun showsTheFrontMatterBranchesLabelledAheadOfTheProlog() {
+        val titleItem = tree.root.children[0]
+        val copyrightItem = tree.root.children[1]
+
+        assertEquals(ProjectListItem.TitlePageItem, titleItem.value)
+        assertEquals(ProjectListItem.CopyrightPageItem, copyrightItem.value)
+
+        val cells = tree.lookupAll(".tree-cell").filterIsInstance<ProjectListCell>()
+        assertEquals("Title Page", cells.first { it.treeItem === titleItem }.text)
+        assertEquals("Copyright Page", cells.first { it.treeItem === copyrightItem }.text)
     }
 
     /**
@@ -141,33 +165,26 @@ class ProjectListTest : ApplicationTest() {
      */
     @Test
     fun listsEveryChapterOfTheBoundProject() {
-        setProject(
-            project(
-                Book(title = "My Novel",
-                    chapters = listOf(
-                        Chapter("first", "The First Part"),
-                        Chapter("second", "The Second Part")
-                    )
-                )
-            )
-        )
+        val first = Chapter("first")
+        val second = Chapter("second")
+        setProject(project(Book(chapters = listOf(first, second))))
 
         assertEquals(
             listOf(
-                ProjectListItem.ChapterItem(Chapter("first", "The First Part")),
-                ProjectListItem.ChapterItem(Chapter("second", "The Second Part"))
+                ProjectListItem.ChapterItem(first),
+                ProjectListItem.ChapterItem(second)
             ),
             chaptersItem().children.map { it.value }
         )
     }
 
     /**
-     * Use case: a chapter is shown by the name the user gave it, because its printed heading may
-     * still be empty while the chapter is only outlined.
+     * Use case: a chapter is shown by the name the user gave it, since no printed heading lives on the
+     * model anymore.
      */
     @Test
-    fun labelsAChapterByItsNameNotByItsTitle() {
-        setProject(project(Book(title = "My Novel", chapters = listOf(Chapter("draft-01", "The First Part")))))
+    fun labelsAChapterByItsName() {
+        setProject(project(Book(chapters = listOf(Chapter("draft-01")))))
 
         val chapterItem = chaptersItem().children.single()
         val cell = tree.lookupAll(".tree-cell")
@@ -184,14 +201,16 @@ class ProjectListTest : ApplicationTest() {
      */
     @Test
     fun handsOnPrologEpilogAndBlurbOfTheBoundProject() {
-        val prolog = Prolog("Before It All")
-        val epilog = Epilog("After It All")
+        val prolog = Prolog(included = true)
+        val epilog = Epilog(included = true)
         val blurb = Blurb(paragraph = listOf("A gripping tale."))
 
-        setProject(project(Book(title = "My Novel", prolog = prolog, epilog = epilog, blurb = blurb)))
+        setProject(project(Book(prolog = prolog, epilog = epilog, blurb = blurb)))
 
         assertEquals(
             listOf(
+                ProjectListItem.TitlePageItem,
+                ProjectListItem.CopyrightPageItem,
                 ProjectListItem.PrologItem(prolog),
                 ProjectListItem.Chapters,
                 ProjectListItem.EpilogItem(epilog),
@@ -207,16 +226,17 @@ class ProjectListTest : ApplicationTest() {
      */
     @Test
     fun reportsTheSelectedChapter() {
-        setProject(project(Book(title = "My Novel", chapters = listOf(Chapter("first", "The First Part")))))
+        val chapter = Chapter("first")
+        setProject(project(Book(chapters = listOf(chapter))))
 
         val reported = mutableListOf<ProjectListItem?>()
         projectList.selectedItem.addListener { _, _, new -> reported += new }
 
         interact { tree.selectionModel.select(chaptersItem().children.single()) }
 
-        assertEquals(listOf(ProjectListItem.ChapterItem(Chapter("first", "The First Part"))), reported)
+        assertEquals(listOf(ProjectListItem.ChapterItem(chapter)), reported)
         assertEquals(
-            ProjectListItem.ChapterItem(Chapter("first", "The First Part")),
+            ProjectListItem.ChapterItem(chapter),
             projectList.selectedItem.value
         )
     }
@@ -229,7 +249,18 @@ class ProjectListTest : ApplicationTest() {
     fun reportsASelectedFixedBranch() {
         interact { tree.selectionModel.select(tree.root.children.last()) }
 
-        assertEquals(ProjectListItem.BlurbItem(null), projectList.selectedItem.value)
+        assertEquals(ProjectListItem.BlurbItem(Blurb()), projectList.selectedItem.value)
+    }
+
+    /**
+     * Use case: the user picks the title page branch, so the component reports it, which lets the
+     * surrounding window open the title page on the paper.
+     */
+    @Test
+    fun reportsTheSelectedTitlePageBranch() {
+        interact { tree.selectionModel.select(tree.root.children.first()) }
+
+        assertEquals(ProjectListItem.TitlePageItem, projectList.selectedItem.value)
     }
 
     /**
@@ -238,14 +269,15 @@ class ProjectListTest : ApplicationTest() {
      */
     @Test
     fun clearsTheSelectionWhenAnotherProjectIsBound() {
-        setProject(project(Book(title = "My Novel", chapters = listOf(Chapter("first", "The First Part")))))
+        setProject(project(Book(chapters = listOf(Chapter("first")))))
         interact { tree.selectionModel.select(chaptersItem().children.single()) }
 
-        setProject(project(Book(title = "Another Novel", chapters = listOf(Chapter("other", "Another Part")))))
+        val other = Chapter("other")
+        setProject(project(Book(chapters = listOf(other))))
 
         assertNull(projectList.selectedItem.value)
         assertEquals(
-            listOf(ProjectListItem.ChapterItem(Chapter("other", "Another Part"))),
+            listOf(ProjectListItem.ChapterItem(other)),
             chaptersItem().children.map { it.value }
         )
     }
@@ -256,11 +288,65 @@ class ProjectListTest : ApplicationTest() {
      */
     @Test
     fun emptiesTheChaptersBranchForAFreshProject() {
-        setProject(project(Book(title = "My Novel", chapters = listOf(Chapter("first", "The First Part")))))
+        setProject(project(Book(chapters = listOf(Chapter("first")))))
 
         setProject(Project())
 
         assertEquals(emptyList<ProjectListItem>(), chaptersItem().children.map { it.value })
-        assertEquals(4, tree.root.children.size)
+        assertEquals(6, tree.root.children.size)
+    }
+
+    private fun cellFor(item: TreeItem<ProjectListItem>): ProjectListCell =
+        tree.lookupAll(".tree-cell").filterIsInstance<ProjectListCell>().first { it.treeItem === item }
+
+    private fun checkBoxOf(item: TreeItem<ProjectListItem>): CheckBox =
+        cellFor(item).graphic!!.lookup(".check-box") as CheckBox
+
+    /**
+     * Use case: the project carries an included prolog, so the checkbox next to its icon shows
+     * checked instead of the neutral, unchecked default.
+     */
+    @Test
+    fun showsACheckedCheckboxForAnIncludedProlog() {
+        setProject(project(Book(prolog = Prolog(included = true))))
+
+        val prologItem = tree.root.children[2]
+        assertTrue(checkBoxOf(prologItem).isSelected)
+    }
+
+    /**
+     * Use case: the project carries an epilog that was never switched on, so its checkbox shows
+     * unchecked.
+     */
+    @Test
+    fun showsAnUncheckedCheckboxForAnExcludedEpilog() {
+        setProject(project(Book()))
+
+        val epilogItem = tree.root.children[4]
+        assertFalse(checkBoxOf(epilogItem).isSelected)
+    }
+
+    /**
+     * Use case: the user clicks the blurb's checkbox, so the switch reaches the model right away.
+     */
+    @Test
+    fun togglingTheCheckboxSwitchesInclusionInTheModel() {
+        setProject(project(Book()))
+        val blurbItem = tree.root.children.last()
+
+        interact { checkBoxOf(blurbItem).fire() }
+        WaitForAsyncUtils.waitForFxEvents()
+
+        assertTrue(projectModel.value.book.blurb.included)
+        assertTrue(checkBoxOf(blurbItem).isSelected)
+    }
+
+    /**
+     * Use case: a structural node - the chapters branch - carries no switch of its own, so its graphic
+     * is the plain chapter icon instead of a checkbox.
+     */
+    @Test
+    fun showsNoCheckboxForAStructuralNode() {
+        assertNull(cellFor(chaptersItem()).graphic!!.lookup(".check-box"))
     }
 }

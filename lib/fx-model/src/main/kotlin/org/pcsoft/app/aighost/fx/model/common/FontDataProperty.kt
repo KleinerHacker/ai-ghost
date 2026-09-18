@@ -79,21 +79,35 @@ class FontDataProperty internal constructor() : SimpleObjectProperty<FontData?>(
             italicProperty.set(value)
         }
 
+    /**
+     * Fingerprint of the family as it was measured, encoded as a single line of text, as a property
+     * of its own.
+     */
+    val fingerprintProperty: StringProperty = SimpleStringProperty()
+
+    /** Fingerprint of the family as it was measured, absent while it has never been taken. */
+    var fingerprint: String?
+        get() = fingerprintProperty.get()
+        set(value) {
+            fingerprintProperty.set(value)
+        }
+
     init {
         fields.string(nameProperty, "name")
         fields.integer(sizeProperty, "size")
         fields.boolean(boldProperty, "bold")
         fields.boolean(italicProperty, "italic")
+        fields.string(fingerprintProperty, "fingerprint")
 
         // The field properties belong to another object after every exchange, so they are tied to the
         // one this property carries now.
-        addListener { _, _, newValue -> fields.rebind(newValue) }
+        addListener { fields.rebind(get()) }
         fields.rebind(get())
     }
 
     /**
-     * Reads every field of the wrapped font again and hands what changed to the field properties, for
-     * a caller that wrote on the font past this model.
+     * Reads every field of the wrapped font again and hands what changed to the field properties,
+     * for a caller that wrote on the font past this model.
      */
     fun refresh() = fields.refresh()
 

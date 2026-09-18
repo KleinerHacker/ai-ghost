@@ -2,7 +2,7 @@
 name: component-explore
 description: Explores a typical Java FX component to gather design and architecture information.
 
-model: opus
+model: sonnet
 effort: low
 
 skills:

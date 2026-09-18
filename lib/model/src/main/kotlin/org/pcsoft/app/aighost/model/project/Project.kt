@@ -36,7 +36,7 @@ import org.pcsoft.app.aighost.plugin.api.model.project.ProjectPart
  *
  * @property meta Meta data of the project - its name, its author and its copyright notice.
  * @property design Typographic and page settings the manuscript is rendered with.
- * @property book The manuscript with its title and chapters.
+ * @property book The manuscript with its prompts and chapters.
  * @property extensionParts The readable parts beyond the three standard ones, by their identifier.
  * @property unknownParts The stored text of every part this application cannot read, by its identifier.
  */

@@ -2,6 +2,81 @@
 
 ## [Unreleased]
 
+* Book, its prolog, its chapters, its epilog, its title page and its copyright page no longer carry a
+  heading, further heading lines or flowing text of their own as separate fields: that text now lives
+  in the manuscript's own document model. A chapter carries a stable identity of its own behind the
+  scenes, invisible to the user, that survives a rename
+
+* Project tree gains chapter management: "Add Chapter" on the chapters branch or on a chapter creates
+  a new, empty chapter ready to write; a chapter's own menu also offers "Rename Chapter" and "Delete
+  Chapter", the latter asking for confirmation first, since the chapter's text is removed with it and
+  cannot be brought back
+
+* Editor centre is now a writing surface instead of a placeholder, always showing the whole book as one
+  sheet that already carries its typography, margins and page structure; picking a part in the project
+  tree - the title page, the copyright page, the prolog, a chapter, the epilog or the blurb - jumps to
+  its place on that same sheet instead of opening a document of its own, and every one of them,
+  including the title page and the copyright page, is written on directly, with every keystroke taken
+  straight into the project. A design change in the Inspector re-lays the sheet at once without moving
+  the caret, and every text change is undone and redone from the tool bar, with consecutive typing in
+  one block falling together into a single step
+
+* Project tree gains a "Title Page" and a "Copyright Page" node ahead of the prolog, so the front
+  matter can be opened on the writing surface like every other part
+
+* Editor gains a tool bar above the writing surface with a "Preview" toggle, switching the whole sheet
+  between writing and a read-only preview of the printed page; the position last written at and the
+  chosen mode are both remembered and restored the next time the project is opened. Opening a long book
+  for the first time shows a brief loading indicator while it is laid out
+
+* Editor gains an Inspector on the right of the manuscript, next to the project tree: a "Book"
+  section holds the author and both prompts of the manuscript, and a "Chapter" section shows the name
+  and both prompts of whatever chapter is picked in the project tree, or the prompt of the blurb once
+  it is picked; either section shows a short explanation instead of fields while nothing matching is
+  picked, and both can be collapsed and expanded on their own
+
+* Inspector's "Chapter" section gains a "Generate chapter" AI button; pressing it does nothing yet -
+  the actual generation is coming with a future feature
+
+* Writing surface gains paragraph structure editing: Enter splits a paragraph at the caret, Backspace
+  at its very start or Delete at its very end merges it with the neighbouring one, and Ctrl+Shift+Up /
+  Ctrl+Shift+Down moves it up or down - the same actions are also on the paragraph's right-click menu.
+  Every one of them is undone and redone as its own step
+
+* Writing surface gains a floating AI action bar - Rewrite, Expand, Shorten - next to the paragraph or
+  heading the mouse hovers or the edit caret sits in; half-transparent until the mouse moves onto it,
+  and pressing any of its buttons does nothing yet, the same as the "Generate chapter" AI button above
+
+* Inspector gains a third section, "Design", showing the appearance of the book title, the chapter
+  heading, its further heading lines and the body text - family, size, weight, slant, alignment and
+  line spacing for each; unlike the other two sections it stays filled as long as a project is open,
+  no matter what is picked in the project tree, and every change is visible on the manuscript right
+  away
+
+* Edit menu and tool bar carry Undo and Redo: each button shows the name of the change it would take
+  back or apply again as its tooltip, and its dropdown - opened like a browser's back button - lists
+  the most recent steps so several of them can be jumped at once; consecutive typing falls together
+  into a single step, and the history starts empty again whenever a project is opened or newly created
+
+* While the application starts, its logo floats on the desktop without a window frame or background,
+  breathing and drifting gently so it is clear that something is still happening; it rests there for
+  a moment, the settings are read behind it, and it fades away as the main window appears
+
+* Project Settings dialog opens from the File menu and from the tool bar: a tree on the left switches
+  between sections, and the *Design* section sets the page size - a preset such as A5 or A4, or a
+  custom width and height - the four page margins, and whether the book begins and ends with a blank
+  page; width, height and the margins are set with millimetre steppers, a single margin can be no
+  more than a third of the page and the stepper holds it there, and the ceiling follows the width and
+  height as they change; OK stores and closes, Apply stores without closing, Cancel discards, and a
+  width or height that is not greater than zero keeps both from being stored. The *General* section
+  and the child sections of *Design* - title page, copyright page, prolog, chapter, epilog, blurb -
+  are placeholders for now
+
+* Project records what its fonts measured like on the computer it was written on, and says so when
+  a font is missing or sets differently when the project is opened elsewhere: one warning names the
+  affected elements, the font the project asks for and the font that is used instead - a project
+  written before this existed carries no such record and is opened silently as before
+
 * Preferences are stored as YAML in `preferences.yml` instead of as JSON in `preferences.json`, so
   the settings read like plain lines of text when you open the file - a `preferences.json` left over
   from an earlier version is not read any more and the settings have to be chosen again
@@ -54,6 +129,11 @@
 
 * Entries inside a project document carry the `.json` extension, so the content is recognizable in
   any archive tool
+
+* Project tree gains a checkbox on the prolog, the epilog and the blurb: switching it off keeps the
+  part's text exactly as written but leaves it out of the finished book, shown greyed out and locked
+  on the writing surface until it is switched back on; the switch is undone and redone like any other
+  change
 
 * Menu "open recent project" shows each entry on two lines - the file name, and below it in
   smaller type the folder the project sits in, so two projects of the same name are told apart

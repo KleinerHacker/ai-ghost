@@ -16,15 +16,23 @@ import de.saxsys.mvvmfx.FxmlView
 import de.saxsys.mvvmfx.InjectViewModel
 import javafx.fxml.FXML
 import javafx.fxml.Initializable
+import javafx.scene.control.ToggleButton
+import org.pcsoft.app.aighost.app.undo.UndoStack
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
+import org.pcsoft.app.aighost.model.pref.WritingMode
 import java.net.URL
 import java.util.*
 
 /**
- * View of [Editor], holding the project tree and the editing area in a horizontal split.
+ * View of [Editor], holding the project tree, the writing surface and the inspector in a horizontal
+ * split.
  *
- * The split itself is described in the FXML; the view only passes the project model on to the tree
- * and to the manuscript editor, so neither of them reads the project from anywhere else.
+ * The split itself is described in the FXML; the view only passes the project model on to the tree,
+ * the writing surface and the inspector, so none of them reads the project from anywhere else. The
+ * writing surface and the inspector also follow the node picked in the tree, which is why
+ * [pnlProjectList]'s selection is bound onto the view model here and handed to them. The undo history
+ * is passed to [pnlProjectList] as well as to [bookPartEditor] (IP-23), since a toggled prolog, epilog
+ * or blurb switch in the tree is recorded into the same history as a text change.
  *
  * The model arrives after this view was built, which is why the view is told about it through the
  * view model instead of reading it in [initialize].
@@ -32,10 +40,16 @@ import java.util.*
 class EditorView : FxmlView<EditorViewModel>, Initializable {
 
     @FXML
-    private lateinit var bookEditor: BookEditor
+    private lateinit var inspector: Inspector
 
     @FXML
     private lateinit var pnlProjectList: ProjectList
+
+    @FXML
+    private lateinit var bookPartEditor: BookPartEditor
+
+    @FXML
+    private lateinit var btnWritingMode: ToggleButton
 
     @InjectViewModel
     private lateinit var viewModel: EditorViewModel
@@ -44,21 +58,48 @@ class EditorView : FxmlView<EditorViewModel>, Initializable {
         viewModel.onProjectBound = ::bindProject
         viewModel.project?.also(::bindProject)
 
-        viewModel.selectedProjectTreeItem.bind(pnlProjectList.selectedItem)
+        viewModel.onUndoStackBound = ::bindUndoStack
+        viewModel.undoStack?.also(::bindUndoStack)
 
-        bookEditor.visibleProperty().bind(viewModel.showBookEditor)
+        viewModel.selectedProjectTreeItem.bind(pnlProjectList.selectedItem)
+        inspector.bindSelection(viewModel.selectedProjectTreeItem)
+        bookPartEditor.bindSelection(viewModel.selectedProjectTreeItem)
+
+        btnWritingMode.isSelected = bookPartEditor.writingModeProperty.get() == WritingMode.PREVIEW
+        bookPartEditor.writingModeProperty.addListener { _, _, mode ->
+            btnWritingMode.isSelected = mode == WritingMode.PREVIEW
+        }
+    }
+
+    /**
+     * Switches the writing surface between writing and preview, following the tool bar's toggle
+     * button.
+     *
+     * Triggered by [btnWritingMode].
+     */
+    @FXML
+    private fun actionToggleWritingMode() {
+        bookPartEditor.setWritingMode(if (btnWritingMode.isSelected) WritingMode.PREVIEW else WritingMode.WRITING)
     }
 
     /**
      * Passes the property model of the project on to the parts of the editor.
      *
-     * The manuscript editor works on the book of that project, which is a property model of its own
-     * and stays the same instance while the project inside it is exchanged.
-     *
      * @param project the project model of the surrounding window
      */
     private fun bindProject(project: ProjectProperty) {
         pnlProjectList.bindProject(project)
-        bookEditor.bindBook(project.bookProperty)
+        inspector.bindProject(project)
+        bookPartEditor.bindProject(project)
+    }
+
+    /**
+     * Passes the undo history of the open project on to the tree and the writing surface.
+     *
+     * @param undoStack the one undo history of the surrounding window
+     */
+    private fun bindUndoStack(undoStack: UndoStack) {
+        pnlProjectList.bindUndoStack(undoStack)
+        bookPartEditor.bindUndoStack(undoStack)
     }
 }

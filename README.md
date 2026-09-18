@@ -50,18 +50,31 @@ opened once the user accepts it. Both documents are written with Jackson.
 | JavaFX desktop shell (`app/ai-ghost-ui`)          | Implemented |
 | JSON data model (`lib/ai-ghost-model`)            | Implemented |
 | AI support library (`lib/ai-ghost-ai`)            | Implemented |
+| Text layouting and JavaFX rendering delegated to simPlay (`simplay-engine`, `simplay-fx`, GitHub Packages) | Planned |
+| Layout blocks from book, design and meta data, on the simPlay raw model (`lib/ai-ghost-layouting-model`) | Implemented |
+| Font identity of a project and report of a substitution | Implemented |
 | Prompt input with character limit and token estimate | Implemented |
 | ZIP distribution with start scripts and `libs`    | Implemented |
 | MVVM UI architecture (MVVM FX)                    | Implemented |
 | Internationalisation of the UI (English, German)  | Implemented |
 | Menu bar with icons and keyboard shortcuts        | Implemented |
 | Editor and preview tabs of the main window        | Implemented |
-| Project tree with prolog, chapters, epilog, blurb | Implemented |
-| Editor split into project tree and editing area   | Implemented |
+| Project tree with title page, copyright page, prolog, chapters, epilog, blurb | Implemented |
+| Project tree: add, rename and delete chapters, with confirmation before deleting | Implemented |
+| Project tree: switch prolog, epilog and blurb into or out of the book | Implemented |
+| Editor split into project tree, writing surface and inspector | Implemented |
+| Writing surface: book parts and front matter written on the paginated sheet | Implemented |
+| Writing surface: split, merge, move and cross-paragraph caret navigation | Implemented |
+| Writing surface: floating AI action bar (Rewrite/Expand/Shorten) over the focused paragraph or heading; buttons not wired yet | Implemented |
+| Inspector with collapsible Book, Chapter and Design sections | Implemented |
+| Project settings dialog: page format and blank pages (Design section) | Implemented |
+| Live typography editing of title, chapter heading and body text in the Inspector | Implemented |
+| Undo/Redo of project changes, with named history dropdown | Implemented |
 | Product design shared with logo and documentation | Implemented |
 | Light and dark appearance, chosen in the preferences | Implemented |
 | Shipped `Ghost Writer` type face                  | Implemented |
 | Logging to console and to a rolled over log file  | Implemented |
+| Splash screen with a background area for startup jobs | Implemented |
 | Dokka API documentation                           | Implemented |
 | Dependency licence report                         | Implemented |
 | MkDocs documentation site (versioned via mike)    | Implemented |
@@ -84,6 +97,14 @@ git clone https://github.com/KleinerHacker/ai-ghost.git
 cd ai-ghost
 ./gradlew build
 ```
+
+The layout engine [simPlay](https://github.com/KleinerHacker/simPlay) is resolved from GitHub
+Packages, which requires authentication even for a read. Provide a GitHub token with the
+`read:packages` scope through `gpr.user` / `gpr.key` in `~/.gradle/gradle.properties`, or through the
+`GITHUB_ACTOR` / `GITHUB_TOKEN` environment variables. Without a token or network access the build
+cannot resolve simPlay. As a tokenless alternative for local development, run
+`./gradlew publishToMavenLocal` in a simPlay checkout - the local Maven repository is on the build's
+repository list.
 
 ## Run
 

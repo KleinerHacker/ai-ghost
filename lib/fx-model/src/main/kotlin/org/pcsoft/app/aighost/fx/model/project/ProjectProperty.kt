@@ -60,7 +60,7 @@ class ProjectProperty(project: Project) : SimpleObjectProperty<Project>(project)
     // alignment is not written back into it.
     private var attaching = false
 
-    /** Meta data of the project - its name, its author and its copyright notice. */
+    /** Meta data of the project - its name and its author. */
     val metaProperty: MetaProperty = MetaProperty()
 
     /** Meta data of the project. */
@@ -98,8 +98,8 @@ class ProjectProperty(project: Project) : SimpleObjectProperty<Project>(project)
         // The properties of the parts belong to another object after every exchange, so they are tied
         // to the one this property carries now. The constructor of the base class stored the project
         // without announcing it, so they are tied to it right here as well.
-        addListener { _, _, newValue ->
-            fields.rebind(newValue)
+        addListener {
+            fields.rebind(get())
             refreshAttachedParts()
         }
         fields.rebind(get())

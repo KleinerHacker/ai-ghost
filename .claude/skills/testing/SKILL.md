@@ -1,6 +1,6 @@
 ---
 name: testing
-description: Rules for writing tests - JUnit, TestFX for headless Java FX UI tests, package mirroring, coverage and the developer test vs. integration test ("IT" suffix) split. Load before creating or changing any test class.
+description: Rules for writing tests - JUnit, TestFX for headless Java FX UI tests, package mirroring, coverage and the developer test vs. integration test ("IT" suffix) vs. regression test ("RT" suffix) split. Load before creating or changing any test class.
 ---
 
 # Testing
@@ -28,11 +28,17 @@ description: Rules for writing tests - JUnit, TestFX for headless Java FX UI tes
       that the remaining controls still write to their own entry
     * Exchanging the bound model object MUST be proven: the controls show the new object and write
       into it only, the object left behind stays untouched
-* Tests are to be split into two categories
+* Tests are to be split into three categories
     * **Developer tests** - Simple unit tests covering individual pieces of functionality
-      * All Test Classes without suffix of "IT"
+      * All Test Classes without suffix of "IT" or "RT"
     * **Integration tests** - Tests covering complete features or aiming at performance
       * Identified by Class Name ending with "IT"
       * ONLY allowed in application modules under `app`
-      * FORBIDDEN in library modules under `lib` - a library carries developer tests only
-        * A test spanning several library classes stays a developer test without the "IT" suffix
+      * FORBIDDEN in library modules under `lib`
+    * **Regression tests** - Tests feeding input through several classes of one or more libraries
+      and comparing the produced result against a fixed reference (e.g. a golden file)
+      * Identified by Class Name ending with "RT"
+      * ONLY allowed in library modules under `lib`
+      * FORBIDDEN in application modules under `app` - use "IT" there instead
+      * A test spanning several library classes without comparing against a fixed reference stays
+        a developer test without the "RT" suffix

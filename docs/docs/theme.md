@@ -32,6 +32,13 @@ Only colours change: surfaces, text, outlines, selection and the accents of the 
 spacing and the rounded shapes stay the same, and so does the shipped `Ghost Writer` type face, so
 nothing in the window moves when you switch the appearance.
 
+## While the application starts
+
+Before the main window opens, the AI Ghost logo floats on your desktop on its own - no window frame,
+no background. It breathes and drifts gently so you can see that the start is still working. While it
+is shown, AI Ghost reads your preferences and prepares the session; the logo then fades away as the
+main window appears.
+
 ## When the preferences cannot be read
 
 AI Ghost reads `preferences.yml` before the first window appears and tells you when that fails:

@@ -28,12 +28,14 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder
  * @property recentOpened Files the user opened last, ten at most by default.
  * @property appearance Visual appearance of the application, [ThemeMode.SYSTEM] by default.
  * @property ai Configuration settings related to AI functionality in the application.
+ * @property editor Settings of the writing surface.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
-@JsonPropertyOrder("recentOpened", "appearance", "ai")
+@JsonPropertyOrder("recentOpened", "appearance", "ai", "editor")
 data class Preferences(
     var recentOpened: RecentOpened = RecentOpened(max = 10),
 
     var appearance: Appearance = Appearance(),
-    var ai: Ai = Ai()
+    var ai: Ai = Ai(),
+    var editor: Editor = Editor()
 )

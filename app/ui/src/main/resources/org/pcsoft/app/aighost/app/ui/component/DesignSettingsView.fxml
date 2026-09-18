@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright (c) KleinerHacker alias Pfeiffer C Soft 2026.
+  ~ This work is licensed under the Apache License, Version 2.0.
+  ~ You may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at:
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, this software is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and limitations.
+  -->
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<fx:root type="BorderPane" styleClass="design-settings" xmlns="http://javafx.com/javafx"
+         xmlns:fx="http://javafx.com/fxml"
+         fx:controller="org.pcsoft.app.aighost.app.ui.component.DesignSettingsView">
+    <center>
+        <GridPane hgap="12.0" vgap="10.0">
+            <padding>
+                <Insets top="16.0" right="16.0" bottom="16.0" left="16.0"/>
+            </padding>
+            <columnConstraints>
+                <ColumnConstraints minWidth="140.0" halignment="RIGHT"/>
+                <ColumnConstraints minWidth="160.0" hgrow="ALWAYS"/>
+            </columnConstraints>
+
+            <Label text="%dialog.projectSettings.design.preset" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+            <ComboBox fx:id="cmbPreset" maxWidth="Infinity" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+            <Label text="%dialog.projectSettings.design.width" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+            <Spinner fx:id="spnWidth" editable="true" maxWidth="Infinity" GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+
+            <Label text="%dialog.projectSettings.design.height" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+            <Spinner fx:id="spnHeight" editable="true" maxWidth="Infinity" GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+
+            <Label fx:id="lblSizeError" styleClass="settings-error" text="%dialog.projectSettings.design.error.size"
+                   wrapText="true" GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+
+            <Separator GridPane.rowIndex="4" GridPane.columnIndex="0" GridPane.columnSpan="2"/>
+
+            <Label text="%dialog.projectSettings.design.inner" GridPane.rowIndex="5" GridPane.columnIndex="0"/>
+            <Spinner fx:id="spnInner" editable="true" maxWidth="Infinity" GridPane.rowIndex="5" GridPane.columnIndex="1"/>
+
+            <Label text="%dialog.projectSettings.design.outer" GridPane.rowIndex="6" GridPane.columnIndex="0"/>
+            <Spinner fx:id="spnOuter" editable="true" maxWidth="Infinity" GridPane.rowIndex="6" GridPane.columnIndex="1"/>
+
+            <Label text="%dialog.projectSettings.design.top" GridPane.rowIndex="7" GridPane.columnIndex="0"/>
+            <Spinner fx:id="spnTop" editable="true" maxWidth="Infinity" GridPane.rowIndex="7" GridPane.columnIndex="1"/>
+
+            <Label text="%dialog.projectSettings.design.bottom" GridPane.rowIndex="8" GridPane.columnIndex="0"/>
+            <Spinner fx:id="spnBottom" editable="true" maxWidth="Infinity" GridPane.rowIndex="8" GridPane.columnIndex="1"/>
+
+            <Separator GridPane.rowIndex="9" GridPane.columnIndex="0" GridPane.columnSpan="2"/>
+
+            <CheckBox fx:id="chkStart" text="%dialog.projectSettings.design.startEmptyPage"
+                      GridPane.rowIndex="10" GridPane.columnIndex="1"/>
+            <CheckBox fx:id="chkEnd" text="%dialog.projectSettings.design.endEmptyPage"
+                      GridPane.rowIndex="11" GridPane.columnIndex="1"/>
+        </GridPane>
+    </center>
+</fx:root>

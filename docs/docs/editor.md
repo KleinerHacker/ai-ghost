@@ -26,5 +26,46 @@ so the tree keeps the width it was given.
 
 ## Editing area
 
-The editing area currently shows a placeholder. The editors for the individual parts of the book -
-prolog, chapters, epilog and blurb - are added in a later version.
+The editing area is the **writing surface**: the part picked in the project tree is shown on a sheet
+that already carries the typography, the margins and the page structure of the finished book.
+
+* **Prolog, chapters and epilog** are written directly on the sheet - the heading, its further lines
+  and every paragraph. Each paragraph is its own text block; a change is taken over into the project
+  with every keystroke.
+* **The blurb** is written the same way, without a heading.
+* **The title page and the copyright page** are shown as they will be printed, but are not edited
+  here: their text comes from the *Book* section of the inspector and from the project settings.
+
+A design change made in the inspector - a different font, size or line spacing - is applied to the
+sheet at once, without the caret leaving the place it was in.
+
+Every text change is undone and redone through the Undo and Redo buttons of the tool bar. Consecutive
+typing in the same block falls together into a single step; moving to another block or leaving the
+sheet closes that step.
+
+## Paragraphs
+
+Each paragraph is its own block on the sheet, and can be reshaped without leaving the keyboard:
+
+* **Enter** splits the paragraph at the caret into two.
+* **Backspace** at the very start of a paragraph merges it into the one before it; **Delete** at the
+  very end merges it with the one after it.
+* **Ctrl+Shift+Up** and **Ctrl+Shift+Down** move the whole paragraph one place up or down. The
+  paragraph's right-click menu offers the same actions - *Split paragraph*, *Merge with previous
+  paragraph*, *Merge with next paragraph*, *Remove paragraph*, *Move paragraph up* and *Move paragraph
+  down*.
+* **Up** and **Down** move the caret into the paragraph above or below once it sits on the first or the
+  last line of the current one - the same way they would in a single, book-length page.
+
+Every one of these is undone and redone as its own step, exactly like a text change.
+
+## AI action bar
+
+A small, floating bar with three buttons - **Rewrite**, **Expand**, **Shorten** - appears above the
+paragraph or heading the mouse hovers, and above the one the edit caret currently sits in. It stays
+half-transparent until the mouse moves directly onto it, so it does not distract from reading, and
+moves along automatically as the sheet is scrolled or zoomed.
+
+None of its three buttons does anything yet; pressing one has no effect until a future feature
+connects the bar to an AI provider.
+

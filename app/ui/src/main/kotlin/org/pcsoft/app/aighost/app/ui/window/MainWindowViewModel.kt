@@ -18,6 +18,7 @@ import javafx.beans.binding.BooleanBinding
 import javafx.beans.property.*
 import javafx.collections.FXCollections
 import org.pcsoft.app.aighost.app.controller.IoController
+import org.pcsoft.app.aighost.app.undo.UndoStack
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
 import org.pcsoft.app.aighost.model.project.Project
 import java.io.File
@@ -59,6 +60,15 @@ class MainWindowViewModel : ViewModel {
      * so it is taken from the property model instead of read off the project itself.
      */
     val projectName: StringProperty = project.metaProperty.nameProperty
+
+    /**
+     * Undo/redo history of the open project.
+     *
+     * Belongs to the project currently held by [project], so it is emptied whenever that project is
+     * replaced by [newProject] or [openProject] - a history reaching across two different projects
+     * would undo changes into a document the user never asked to touch.
+     */
+    val undoStack: UndoStack = UndoStack()
     //endregion
 
     //region Preferences Part
@@ -95,6 +105,7 @@ class MainWindowViewModel : ViewModel {
     fun newProject() {
         project.value = Project()
         currentFile.value = null
+        undoStack.clear()
     }
 
     /**
@@ -113,6 +124,7 @@ class MainWindowViewModel : ViewModel {
         project.value = loaded
         currentFile.value = file
         openRecent.add(file)
+        undoStack.clear()
 
         return true
     }

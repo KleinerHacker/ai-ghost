@@ -57,7 +57,6 @@ class MetaPropertyTest {
         recorder.watch("meta", property)
         recorder.watch("meta.name", property.nameProperty)
         recorder.watch("meta.author", property.authorProperty)
-        recorder.watch("meta.copyright", property.copyrightProperty)
 
         parentEvents = 0
     }
@@ -65,8 +64,7 @@ class MetaPropertyTest {
     /** The meta data every test starts from, built fresh so no test sees the object of another. */
     private fun newMeta(): Meta = Meta(
         name = "My Novel",
-        author = "Jane Doe",
-        copyright = "(c) 2026 Jane Doe"
+        author = "Jane Doe"
     )
 
     /**
@@ -77,7 +75,6 @@ class MetaPropertyTest {
     fun readsEveryFieldFromTheModelObject() {
         assertEquals("My Novel", property.nameProperty.get())
         assertEquals("Jane Doe", property.authorProperty.get())
-        assertEquals("(c) 2026 Jane Doe", property.copyrightProperty.get())
     }
 
     /**
@@ -119,11 +116,13 @@ class MetaPropertyTest {
      */
     @Test
     fun aChangeOnTheModelObjectBecomesVisible() {
-        holder.meta?.copyright = "(c) 2027 Jane Doe"
+        holder.meta?.name = "Renamed Past The Property"
+        holder.meta?.author = "John Doe"
 
         property.refresh()
 
-        assertEquals("(c) 2027 Jane Doe", property.copyrightProperty.get())
+        assertEquals("Renamed Past The Property", property.nameProperty.get())
+        assertEquals("John Doe", property.authorProperty.get())
     }
 
     /**
@@ -135,11 +134,10 @@ class MetaPropertyTest {
         recorder.reset()
         parentEvents = 0
 
-        property.set(Meta(name = "Other Novel", author = "John Doe", copyright = "(c) 2026 John Doe"))
+        property.set(Meta(name = "Other Novel", author = "John Doe"))
 
         assertEquals("Other Novel", property.nameProperty.get())
         assertEquals("John Doe", property.authorProperty.get())
-        assertEquals("(c) 2026 John Doe", property.copyrightProperty.get())
         recorder.assertAllFired("exchanging the meta data")
         assertEquals(1, parentEvents)
     }
@@ -154,9 +152,7 @@ class MetaPropertyTest {
 
         property.set(newMeta())
 
-        assertEquals(0, recorder.countOf("meta.name"))
-        assertEquals(0, recorder.countOf("meta.author"))
-        assertEquals(0, recorder.countOf("meta.copyright"))
+        recorder.assertNoneFired("exchanging the meta data against an equal one")
     }
 
     /**
@@ -170,6 +166,7 @@ class MetaPropertyTest {
         property.set(null)
 
         assertNull(property.nameProperty.get())
+        assertNull(property.authorProperty.get())
 
         property.nameProperty.set("Ignored")
 

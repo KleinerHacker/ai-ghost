@@ -13,9 +13,9 @@
 package org.pcsoft.app.aighost.fx.model.project.book
 
 import javafx.beans.property.ListProperty
+import javafx.beans.property.ObjectProperty
 import javafx.beans.property.SimpleListProperty
-import javafx.beans.property.SimpleStringProperty
-import javafx.beans.property.StringProperty
+import javafx.beans.property.SimpleObjectProperty
 import javafx.collections.FXCollections
 import org.pcsoft.app.aighost.fx.model.internal.BeanFields
 import org.pcsoft.app.aighost.fx.model.project.ProjectPartProperty
@@ -23,47 +23,30 @@ import org.pcsoft.app.aighost.fx.model.project.common.AIPromptProperty
 import org.pcsoft.app.aighost.model.project.book.Blurb
 import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.book.Chapter
+import org.pcsoft.app.aighost.model.project.book.Copyright
 import org.pcsoft.app.aighost.model.project.book.Epilog
 import org.pcsoft.app.aighost.model.project.book.Prolog
 import org.pcsoft.app.aighost.model.project.common.AIPrompt
+import org.pcsoft.framework.simplay.engine.model.Document
 
 /**
  * Property wrapping the manuscript of a project and offering every field of it - and every field of
  * the objects nested in it - as a property of its own.
  *
- * Prolog, epilog and blurb exist only after the user created them, so the properties standing for
- * them carry no object until then and their field properties answer with neutral values. The chapters
- * are offered as a list of the plain objects, because the user arranges them as a whole.
+ * Copyright page, prolog, epilog and blurb are always part of the manuscript, each of them carrying a
+ * switch that tells whether it belongs to the book. The properties standing for them carry no object
+ * only as long as no manuscript sits behind this property, and their field properties answer with
+ * neutral values until then. The chapters are offered as a list of the plain objects, because the user
+ * arranges them as a whole.
  *
  * Every part nested in the manuscript is handed out with its own type, so a user interface reaches the
- * fields of the prompts, of the prolog, of the epilog and of the blurb through the property standing
- * for that part. The book itself is built by the project alone and therefore carries an internal
- * constructor.
+ * fields of the prompts, of the copyright page, of the prolog, of the epilog and of the blurb through
+ * the property standing for that part. The book itself is built by the project alone and therefore
+ * carries an internal constructor.
  */
 class BookProperty internal constructor() : ProjectPartProperty<Book>() {
 
     private val fields = BeanFields<Book> { fireValueChangedEvent() }
-
-    /** Main title of the book, as a property of its own. */
-    val titleProperty: StringProperty = SimpleStringProperty()
-
-    /** Main title of the book. */
-    var title: String?
-        get() = titleProperty.get()
-        set(value) {
-            titleProperty.set(value)
-        }
-
-    /** Further title lines shown below the main title, as a property of their own. */
-    val titleAppendixProperty: ListProperty<String> =
-        SimpleListProperty(FXCollections.observableArrayList())
-
-    /** Further title lines shown below the main title. */
-    var titleAppendix: List<String>
-        get() = titleAppendixProperty.get()
-        set(value) {
-            titleAppendixProperty.setAll(value)
-        }
 
     /** Prompts the manuscript as a whole is generated from, as a property of their own. */
     val promptsProperty: AIPromptProperty = AIPromptProperty()
@@ -73,6 +56,16 @@ class BookProperty internal constructor() : ProjectPartProperty<Book>() {
         get() = promptsProperty.get()
         set(value) {
             promptsProperty.set(value)
+        }
+
+    /** Copyright page of the book, as a property of its own. */
+    val copyrightProperty: CopyrightProperty = CopyrightProperty()
+
+    /** Copyright page of the book. */
+    var copyright: Copyright?
+        get() = copyrightProperty.get()
+        set(value) {
+            copyrightProperty.set(value)
         }
 
     /** Prolog printed before the first chapter, as a property of its own. */
@@ -116,18 +109,34 @@ class BookProperty internal constructor() : ProjectPartProperty<Book>() {
             blurbProperty.set(value)
         }
 
+    /**
+     * The manuscript's flowing text as simPlay's raw [Document], as a property of its own.
+     *
+     * A plain reference, not a nested model: [Document] is a value object from simPlay with no
+     * property model of its own in `lib/fx-model`, so a change inside it is only ever picked up by
+     * [refresh], the same as any other reference field.
+     */
+    val documentProperty: ObjectProperty<Document?> = SimpleObjectProperty()
+
+    /** The manuscript's flowing text as simPlay's raw [Document]. */
+    var document: Document?
+        get() = documentProperty.get()
+        set(value) {
+            documentProperty.set(value)
+        }
+
     init {
-        fields.string(titleProperty, "title")
-        fields.list(titleAppendixProperty, "titleAppendix")
         fields.model(promptsProperty, "prompts", promptsProperty::refresh)
+        fields.model(copyrightProperty, "copyright", copyrightProperty::refresh)
         fields.model(prologProperty, "prolog", prologProperty::refresh)
         fields.list(chaptersProperty, "chapters")
         fields.model(epilogProperty, "epilog", epilogProperty::refresh)
         fields.model(blurbProperty, "blurb", blurbProperty::refresh)
+        fields.reference(documentProperty, "document")
 
         // The field properties belong to another object after every exchange, so they are tied to the
         // one this property carries now.
-        addListener { _, _, newValue -> fields.rebind(newValue) }
+        addListener { fields.rebind(get()) }
         fields.rebind(get())
     }
 

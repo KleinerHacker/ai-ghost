@@ -12,7 +12,6 @@
 
 package org.pcsoft.app.aighost.fx.model.common
 
-import javafx.beans.InvalidationListener
 import javafx.beans.binding.Bindings
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleIntegerProperty
@@ -30,8 +29,8 @@ import org.pcsoft.app.aighost.model.common.FontData
  * Developer tests for [FontDataProperty].
  *
  * The property wraps the font of a piece of text and offers every field of that object as a property
- * of its own. Every test checks the object tree the way the user interface uses it: a binding hangs on
- * the font itself and on every single field of it, and the tests assert that a change reaches every
+ * of its own. Every test checks the object tree the way the user interface uses it: a binding hangs
+ * on the font itself and on every single field, and the tests assert that a change reaches every
  * binding that has to know about it - upwards to the parent the property reports to as well as
  * downwards into the fields of an exchanged font.
  */
@@ -66,9 +65,21 @@ class FontDataPropertyTest {
     private lateinit var italicView: StringProperty
     private var italicViewChanges = 0
 
+    /** Binding on the fingerprint. */
+    private lateinit var fingerprintView: StringProperty
+    private var fingerprintViewChanges = 0
+
     @BeforeEach
     fun setUp() {
-        holder = Holder(FontData(name = "Times New Roman", size = 12, bold = false, italic = false))
+        holder = Holder(
+            FontData(
+                name = "Times New Roman",
+                size = 12,
+                bold = false,
+                italic = false,
+                fingerprint = "v1|100.0|9.0|2.0|1.0,2.0"
+            )
+        )
         parentEvents = 0
 
         property = FontDataProperty()
@@ -109,6 +120,14 @@ class FontDataPropertyTest {
         italicBinding.addListener { _, _, _ -> italicViewChanges++ }
         italicView.bind(italicBinding)
 
+        fingerprintView = SimpleStringProperty()
+        val fingerprintBinding = Bindings.createStringBinding(
+            { property.fingerprintProperty.get() ?: MISSING },
+            property.fingerprintProperty
+        )
+        fingerprintBinding.addListener { _, _, _ -> fingerprintViewChanges++ }
+        fingerprintView.bind(fingerprintBinding)
+
         resetCounters()
     }
 
@@ -119,18 +138,29 @@ class FontDataPropertyTest {
         sizeViewChanges = 0
         boldViewChanges = 0
         italicViewChanges = 0
+        fingerprintViewChanges = 0
     }
+
+    /** The fingerprint the font of every test starts with. */
+    private fun initialFingerprint(): String = "v1|100.0|9.0|2.0|1.0,2.0"
 
     /** Text form of the whole font, used as the value of the binding on the root. */
     private fun state(font: FontData?): String =
-        "${font?.name ?: MISSING}|${font?.size ?: 0}|${font?.bold ?: false}|${font?.italic ?: false}"
+        "${font?.name ?: MISSING}|${font?.size ?: 0}|${font?.bold ?: false}|${font?.italic ?: false}|" +
+                (font?.fingerprint ?: MISSING)
 
     /**
      * Asserts that every binding of the object tree delivers the given state, so no view keeps the
      * value of a previous font or of a previous field value.
      */
-    private fun assertTreeShows(name: String?, size: Int, bold: Boolean, italic: Boolean) {
-        assertEquals("${name ?: MISSING}|$size|$bold|$italic", rootView.get()) {
+    private fun assertTreeShows(
+        name: String?,
+        size: Int,
+        bold: Boolean,
+        italic: Boolean,
+        fingerprint: String? = initialFingerprint()
+    ) {
+        assertEquals("${name ?: MISSING}|$size|$bold|$italic|${fingerprint ?: MISSING}", rootView.get()) {
             "the binding on the font delivers an outdated state"
         }
         assertEquals(name ?: MISSING, nameView.get()) {
@@ -144,6 +174,9 @@ class FontDataPropertyTest {
         }
         assertEquals(italic.toString(), italicView.get()) {
             "the binding on the italic flag delivers an outdated value"
+        }
+        assertEquals(fingerprint ?: MISSING, fingerprintView.get()) {
+            "the binding on the fingerprint delivers an outdated value"
         }
     }
 
@@ -289,6 +322,69 @@ class FontDataPropertyTest {
     }
 
     /**
+     * Use case: the family is measured on this machine, so the freshly taken and encoded fingerprint
+     * lands in the font object and both the binding on that field and the binding on the font show it.
+     */
+    @Test
+    fun writesFingerprintToModelAndNotifiesTree() {
+        property.fingerprint = "v1|100.0|10.5|3.25|1.0,2.0"
+
+        assertEquals("v1|100.0|10.5|3.25|1.0,2.0", holder.font?.fingerprint)
+        assertTreeShows(
+            name = "Times New Roman",
+            size = 12,
+            bold = false,
+            italic = false,
+            fingerprint = "v1|100.0|10.5|3.25|1.0,2.0"
+        )
+        assertTrue(fingerprintViewChanges > 0) { "the binding on the fingerprint was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the font was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+    }
+
+    /**
+     * Use case: the encoded fingerprint is bound to the value the measuring step produces, so every
+     * fingerprint that step delivers reaches the font object and every binding above it shows it.
+     */
+    @Test
+    fun writesBoundFingerprintToModelAndNotifiesTree() {
+        val source = SimpleStringProperty("v1|100.0|9.0|2.0|1.0,2.0")
+        property.fingerprintProperty.bind(source)
+
+        source.set("v1|100.0|10.5|3.25|1.0,2.0")
+
+        assertEquals("v1|100.0|10.5|3.25|1.0,2.0", holder.font?.fingerprint)
+        assertTreeShows(
+            name = "Times New Roman",
+            size = 12,
+            bold = false,
+            italic = false,
+            fingerprint = "v1|100.0|10.5|3.25|1.0,2.0"
+        )
+        assertTrue(fingerprintViewChanges > 0) { "the binding on the fingerprint was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the font was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+    }
+
+    /**
+     * Use case: the font of a project written before fingerprints existed carries none, so the field
+     * property answers with a neutral value and the font dialog can be built nevertheless.
+     */
+    @Test
+    fun readsNeutralValueWhenFingerprintIsAbsent() {
+        property.fingerprint = null
+
+        assertNull(holder.font?.fingerprint)
+        assertTreeShows(
+            name = "Times New Roman",
+            size = 12,
+            bold = false,
+            italic = false,
+            fingerprint = null
+        )
+    }
+
+    /**
      * Use case: a field of the font is changed by application code past the property, so the property
      * is told to read the font again and every field property delivers the current value afterwards.
      */
@@ -298,6 +394,7 @@ class FontDataPropertyTest {
         holder.font?.size = 16
         holder.font?.bold = true
         holder.font?.italic = true
+        holder.font?.fingerprint = "v1|100.0|10.5|3.25|1.0,2.0"
 
         property.refresh()
 
@@ -305,41 +402,72 @@ class FontDataPropertyTest {
         assertEquals(16, property.size)
         assertTrue(property.bold)
         assertTrue(property.italic)
-        assertTreeShows(name = "Garamond", size = 16, bold = true, italic = true)
+        assertEquals("v1|100.0|10.5|3.25|1.0,2.0", property.fingerprint)
+        assertTreeShows(
+            name = "Garamond",
+            size = 16,
+            bold = true,
+            italic = true,
+            fingerprint = "v1|100.0|10.5|3.25|1.0,2.0"
+        )
     }
 
     /**
-     * Use case: the whole font is replaced - the user applied another style - so the field properties
-     * belong to another object afterwards and every binding of the object tree shows the values of that
-     * object instead of the previous ones.
+     * Use case: the whole font is replaced - the user applied another style - so every field property
+     * belongs to the new object afterwards and every binding of the object tree shows its values
+     * instead of the previous ones.
      */
     @Test
     fun writesReplacedFontToModelAndNotifiesWholeTree() {
-        property.value = FontData(name = "Garamond", size = 16, bold = true, italic = true)
+        property.value = FontData(
+            name = "Garamond",
+            size = 16,
+            bold = true,
+            italic = true,
+            fingerprint = "v1|100.0|10.5|3.25|1.0,2.0"
+        )
 
-        assertEquals(FontData("Garamond", 16, bold = true, italic = true), holder.font)
-        assertTreeShows(name = "Garamond", size = 16, bold = true, italic = true)
+        assertEquals(
+            FontData("Garamond", 16, bold = true, italic = true, fingerprint = "v1|100.0|10.5|3.25|1.0,2.0"),
+            holder.font
+        )
+        assertTreeShows(
+            name = "Garamond",
+            size = 16,
+            bold = true,
+            italic = true,
+            fingerprint = "v1|100.0|10.5|3.25|1.0,2.0"
+        )
         assertTrue(nameViewChanges > 0) { "the binding on the family name was not re-evaluated" }
         assertTrue(sizeViewChanges > 0) { "the binding on the font size was not re-evaluated" }
         assertTrue(boldViewChanges > 0) { "the binding on the bold flag was not re-evaluated" }
         assertTrue(italicViewChanges > 0) { "the binding on the italic flag was not re-evaluated" }
+        assertTrue(fingerprintViewChanges > 0) { "the binding on the fingerprint was not re-evaluated" }
         assertTrue(rootViewChanges > 0) { "the binding on the font was not re-evaluated" }
         assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
     }
 
     /**
-     * Use case: the font is exchanged for an object carrying the same values, so nothing the user
-     * interface shows changes and no field property reports a change of its own.
+     * Use case: the font is exchanged for an object carrying the same values - the same fingerprint
+     * included - so nothing the user interface shows changes and no field property reports a change of
+     * its own.
      */
     @Test
     fun keepsFieldsQuietWhenReplacedFontCarriesTheSameValues() {
-        property.value = FontData(name = "Times New Roman", size = 12, bold = false, italic = false)
+        property.value = FontData(
+            name = "Times New Roman",
+            size = 12,
+            bold = false,
+            italic = false,
+            fingerprint = initialFingerprint()
+        )
 
         assertTreeShows(name = "Times New Roman", size = 12, bold = false, italic = false)
         assertEquals(0, nameViewChanges) { "the family name was reported as changed although it did not change" }
         assertEquals(0, sizeViewChanges) { "the font size was reported as changed although it did not change" }
         assertEquals(0, boldViewChanges) { "the bold flag was reported as changed although it did not change" }
         assertEquals(0, italicViewChanges) { "the italic flag was reported as changed although it did not change" }
+        assertEquals(0, fingerprintViewChanges) { "the fingerprint was reported as changed although it did not change" }
     }
 
     /**
@@ -355,7 +483,8 @@ class FontDataPropertyTest {
         assertEquals(0, property.size)
         assertFalse(property.bold)
         assertFalse(property.italic)
-        assertTreeShows(name = null, size = 0, bold = false, italic = false)
+        assertNull(property.fingerprint)
+        assertTreeShows(name = null, size = 0, bold = false, italic = false, fingerprint = null)
     }
 
     /**
@@ -370,6 +499,7 @@ class FontDataPropertyTest {
         property.size = 18
         property.bold = true
         property.italic = true
+        property.fingerprint = "v1|100.0|10.5|3.25|1.0,2.0"
 
         assertNull(holder.font)
     }

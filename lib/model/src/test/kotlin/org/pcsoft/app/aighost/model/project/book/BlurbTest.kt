@@ -16,6 +16,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
@@ -38,17 +40,46 @@ class BlurbTest {
     }
 
     /**
-     * Use case: the blurb is written to disk, so its prompt and its paragraphs appear in the JSON
-     * under the stable property names the file format promises.
+     * Use case: a book is created before the user decided about its blurb, so the blurb is already
+     * there without belonging to the book yet.
      */
     @Test
-    fun serialisesPromptAndParagraphs() {
+    fun defaultsToNotIncluded() {
+        assertFalse(Blurb().included)
+    }
+
+    /**
+     * Use case: the user takes the blurb off the cover and puts it back later on, so everything
+     * written into it is still there instead of having been thrown away with the switch.
+     */
+    @Test
+    fun keepsTextWhenSwitchedOffAndOnAgain() {
+        val blurb = Blurb(
+            prompt = "Advertise a tale of two chapters.",
+            paragraph = listOf("A gripping tale.", "You will not put it down."),
+            included = true
+        )
+
+        blurb.included = false
+        blurb.included = true
+
+        assertEquals("Advertise a tale of two chapters.", blurb.prompt)
+        assertEquals(listOf("A gripping tale.", "You will not put it down."), blurb.paragraph)
+    }
+
+    /**
+     * Use case: the blurb is written to disk, so its prompt, its paragraphs and the switch appear in
+     * the JSON under the stable property names the file format promises.
+     */
+    @Test
+    fun serialisesPromptParagraphsAndSwitch() {
         val blurb = Blurb("Advertise a tale of two chapters.", listOf("A gripping tale."))
 
         val json = mapper.writeValueAsString(blurb)
 
         assertEquals(
-            """{"prompt":"Advertise a tale of two chapters.","paragraph":["A gripping tale."]}""",
+            """{"prompt":"Advertise a tale of two chapters.","paragraph":["A gripping tale."],""" +
+                """"included":false}""",
             json
         )
     }
@@ -73,16 +104,18 @@ class BlurbTest {
     }
 
     /**
-     * Use case: the user lets the blurb be written by the assistant, so the prompt behind it is
-     * stored with the blurb and comes back unchanged when the project is opened again.
+     * Use case: the user lets the blurb be written by the assistant and puts it on the cover, so the
+     * prompt behind it and the switch are stored with the blurb and come back unchanged when the
+     * project is opened again.
      */
     @Test
-    fun roundTripsPrompt() {
-        val blurb = Blurb("Advertise a tale of two chapters.", listOf("A gripping tale."))
+    fun roundTripsPromptAndSwitch() {
+        val blurb = Blurb("Advertise a tale of two chapters.", listOf("A gripping tale."), included = true)
 
         val restored: Blurb = mapper.readValue(mapper.writeValueAsString(blurb))
 
         assertEquals("Advertise a tale of two chapters.", restored.prompt)
+        assertTrue(restored.included)
     }
 
     /**

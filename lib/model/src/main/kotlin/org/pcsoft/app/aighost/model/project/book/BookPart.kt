@@ -15,19 +15,17 @@ package org.pcsoft.app.aighost.model.project.book
 import org.pcsoft.app.aighost.model.project.common.AIPrompt
 
 /**
- * A written part of a [Book] that carries a heading and its text.
+ * A written part of a [Book] that is generated from prompts.
  *
- * [Prolog], [Chapter] and [Epilog] share exactly this shape, so everything that renders or exports
- * written text works on this interface instead of on each of them.
+ * [Prolog], [Chapter] and [Epilog] share exactly this shape, so everything that works with the
+ * prompts of a written part works on this interface instead of on each of them.
  *
- * @property title Heading of the part.
- * @property titleAppendix Further heading lines shown below the title.
+ * The heading, its further lines and the flowing text that used to sit on this interface moved to
+ * the simPlay `Document` of [Book] (IP-36/37/38); a part contributes to that document through its
+ * anchor instead of carrying text fields of its own.
+ *
  * @property prompts Prompts for the part.
- * @property paragraph Paragraphs of the part in their order.
  */
 interface BookPart {
-    var title: String
-    var titleAppendix: List<String>
     var prompts: AIPrompt
-    var paragraph: List<String>
 }

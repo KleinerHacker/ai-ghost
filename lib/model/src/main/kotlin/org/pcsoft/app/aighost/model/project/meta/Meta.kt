@@ -28,7 +28,7 @@ private const val VERSION = 1
  * Represents the metadata for the project.
  *
  * This class captures the essential information about the project,
- * including its name, author, and copyright details.
+ * including its name and author.
  *
  * Beside what the user typed, the meta data carries the list of the parts the document holds beyond
  * the three standard ones. It is written on every save and is read to tell a complete document from
@@ -38,7 +38,6 @@ private const val VERSION = 1
  * @property version Version of the project metadata structure.
  * @property name The name of the project.
  * @property author The author of the project.
- * @property copyright The copyright information for the project.
  * @property additionalParts The identifiers of the parts stored beside the three standard ones.
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -48,6 +47,6 @@ data class Meta(
 
     var name: String = "New Project",
     var author: String = "",
-    var copyright: String = "",
+
     var additionalParts: List<String> = emptyList(),
 ) : ProjectPart

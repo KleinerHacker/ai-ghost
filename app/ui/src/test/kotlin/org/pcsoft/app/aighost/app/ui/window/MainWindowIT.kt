@@ -119,7 +119,7 @@ class MainWindowIT : ApplicationTest() {
     fun windowShowsTheGermanMenuBar() {
         val menuBar = window.scene.root.lookup(".menu-bar") as MenuBar
 
-        assertEquals(listOf("Datei", "Veröffentlichen", "Hilfe"), menuBar.menus.map { it.text })
+        assertEquals(listOf("Datei", "Bearbeiten", "Veröffentlichen", "Hilfe"), menuBar.menus.map { it.text })
         assertTrue(window.isShowing)
     }
 

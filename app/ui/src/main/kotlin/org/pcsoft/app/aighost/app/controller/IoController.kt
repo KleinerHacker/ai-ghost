@@ -12,8 +12,11 @@
 
 package org.pcsoft.app.aighost.app.controller
 
+import arrow.core.Either
 import javafx.application.Application
 import org.pcsoft.app.aighost.app.Messages
+import org.pcsoft.app.aighost.app.font.FontIdentity
+import org.pcsoft.app.aighost.app.font.FontIdentityCheck
 import org.pcsoft.app.aighost.app.ui.AiGhostDialog
 import org.pcsoft.app.aighost.app.util.logger
 import org.pcsoft.app.aighost.fx.model.pref.PreferencesProperty
@@ -22,6 +25,7 @@ import org.pcsoft.app.aighost.model.ProjectStorage
 import org.pcsoft.app.aighost.model.pref.Preferences
 import org.pcsoft.app.aighost.model.project.Project
 import java.io.File
+import java.text.MessageFormat
 
 /**
  * Reads and writes the documents of the application and tells the user when that did not work.
@@ -42,7 +46,7 @@ object IoController {
     /**
      * The settings the application works on, with every field of them as a property of its own.
      *
-     * Carries the defaults until [loadPreferences] read the file of the user.
+     * Carries the defaults until the read preferences were applied through [applyLoadedPreferences].
      */
     val preferences: PreferencesProperty = PreferencesProperty(Preferences())
 
@@ -50,12 +54,17 @@ object IoController {
     /**
      * Writes [project] to [file] and tells the user when that did not work.
      *
+     * Before the project is written, every font of its design that carries no fingerprint yet gets
+     * one, so a manuscript records what its fonts measured like on the machine it was written on.
+     *
      * @param project The project to store.
      * @param file The file to store it in.
      * @return `true` when the project was written.
      */
     fun saveProject(project: Project, file: File): Boolean {
         log.debug("Saving project {}", file.absolutePath)
+
+        FontIdentityCheck.stamp(project.design)
 
         return ProjectStorage.save(project, file).onLeft { error ->
             log.warn("Failed to save project: {}", error::class.simpleName)
@@ -73,6 +82,10 @@ object IoController {
      * A document that lost a part beyond the standard ones is only handed out once the user accepted
      * that loss, which [rescueProject] asks about. Every other failure is reported and answered with
      * nothing, so the project the window shows stays where it is.
+     *
+     * A project that was read is checked against the fonts of this machine, which
+     * [reportFontIdentity] reports. The project is handed out either way: a font that is not the one
+     * it was written in changes how the manuscript is set, not whether it can be worked on.
      *
      * @param file The file to read the project from.
      * @return The project that was read, `null` when it was not.
@@ -93,7 +106,9 @@ object IoController {
                     null
                 }
             }
-        }, { it })
+        }, { it }).also { project ->
+            project?.let { reportFontIdentity(it) }
+        }
     }
 
     /**
@@ -130,6 +145,58 @@ object IoController {
     }
 
     /**
+     * Tells the user which elements of [project] are not set in the font they were written in.
+     *
+     * One report for all of them: six elements could otherwise mean six dialogs in a row, and the
+     * elements themselves go into the details pane, the way a lost part does. A project written on
+     * this machine and a project older than the fingerprint report nothing at all.
+     *
+     * @param project The project that was read.
+     */
+    private fun reportFontIdentity(project: Project) {
+        val findings = FontIdentityCheck.check(project.design)
+        if (findings.isEmpty()) {
+            return
+        }
+
+        log.info("The project is set in {} substituted or deviating font(s)", findings.size)
+
+        AiGhostDialog.showWarningDetails(
+            Messages["text.font.substitution.title"],
+            Messages["text.font.substitution.header"],
+            listOf(
+                Messages["text.font.substitution.content"],
+                Messages["text.font.substitution.hint"]
+            ).joinToString(System.lineSeparator() + System.lineSeparator()),
+            findings.joinToString(System.lineSeparator()) { "- " + describe(it) },
+        )
+    }
+
+    /**
+     * Puts one finding into the line the details pane shows.
+     *
+     * @param finding The element and what is wrong with its font.
+     * @return The already translated line, naming the element, the expected font and the used one.
+     */
+    internal fun describe(finding: FontIdentityCheck.Finding): String = when (val identity = finding.identity) {
+        is FontIdentity.Substituted -> MessageFormat.format(
+            Messages["text.font.substitution.substituted"],
+            Messages[finding.elementKey],
+            identity.requestedFamily,
+            identity.substituteFamily,
+        )
+
+        is FontIdentity.Deviates -> MessageFormat.format(
+            Messages["text.font.substitution.deviates"],
+            Messages[finding.elementKey],
+            identity.family,
+        )
+
+        // A finding is only ever built for a substituted or a deviating font.
+        else -> Messages[finding.elementKey]
+    }
+
+    /**
      * Determines the reason for a project storage error and provides a user-facing message.
      *
      * @param error The project storage error that occurred.
@@ -147,15 +214,29 @@ object IoController {
 
     //region Preferences
     /**
-     * Reads the settings of the user into [preferences] and handles a failure according to
-     * [handlePreferencesError].
+     * Reads the settings of the user from their file without touching the application state.
      *
+     * The read is pure input and carries no dialog, so it may run off the FX thread - the startup
+     * area does exactly that. The result is handed to [applyLoadedPreferences] afterwards.
+     *
+     * @return the settings that were read, or the failure the storage reported
+     */
+    fun readPreferences(): Either<PreferencesStorage.Error, Preferences> {
+        log.debug("Loading preferences")
+        return PreferencesStorage.load()
+    }
+
+    /**
+     * Applies the outcome of [readPreferences]: a success replaces [preferences], a failure is
+     * answered according to [handlePreferencesError].
+     *
+     * MUST run on the FX thread, because a failure may show a dialog and may stop the application.
+     *
+     * @param result the outcome of [readPreferences]
      * @param app the running application, stopped when a failure leaves nothing to work with
      */
-    fun loadPreferences(app: Application) {
-        log.debug("Loading preferences")
-
-        PreferencesStorage.load().fold({ error ->
+    fun applyLoadedPreferences(result: Either<PreferencesStorage.Error, Preferences>, app: Application) {
+        result.fold({ error ->
             log.warn("Failed to load preferences: {}", error::class.simpleName)
             handlePreferencesError(error, app)
         }, { loaded ->

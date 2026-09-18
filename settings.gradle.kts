@@ -28,5 +28,11 @@ project(":lib:fx-model").name = "ai-ghost-fx-model"
 include(":lib:ai")
 project(":lib:ai").name = "ai-ghost-ai"
 
+// The text layouting and its JavaFX renderer now come from simPlay (simplay-engine / simplay-fx,
+// GitHub Packages). The former in-house modules :lib:layouting and :lib:layouting-fx were removed in
+// IP-29; :lib:layouting-model stays and is switched to the simPlay raw model in IP-30.
+include(":lib:layouting-model")
+project(":lib:layouting-model").name = "ai-ghost-layouting-model"
+
 include(":app:ui")
 project(":app:ui").name = "ai-ghost-ui"

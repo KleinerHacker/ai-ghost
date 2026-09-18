@@ -60,12 +60,20 @@ object AiGhostTheme {
         "/styles/component/tab-pane.css",
         "/styles/component/split-pane.css",
         "/styles/component/editor.css",
+        "/styles/component/book-part-editor.css",
+        "/styles/component/ai-action-bar.css",
         "/styles/component/prompt-area.css",
         "/styles/component/text-field.css",
         "/styles/component/text-field-list-item.css",
         "/styles/component/text-field-list.css",
-        "/styles/component/book-editor.css",
-        "/styles/component/dialog.css"
+        "/styles/component/inspector.css",
+        "/styles/component/dialog.css",
+        "/styles/component/project-settings.css",
+        "/styles/component/style-data-editor.css",
+        "/styles/component/book-part-page-design-settings.css",
+        "/styles/component/chapter-page-design-settings.css",
+        "/styles/component/title-page-design-settings.css",
+        "/styles/component/copyright-page-design-settings.css"
     )
 
     /**

@@ -16,7 +16,8 @@ import de.saxsys.mvvmfx.MvvmFX
 import javafx.application.Application
 import javafx.stage.Stage
 import org.apache.commons.lang3.SystemUtils
-import org.pcsoft.app.aighost.app.controller.IoController
+import org.pcsoft.app.aighost.app.startup.Startup
+import org.pcsoft.app.aighost.app.ui.splash.SplashStage
 import org.pcsoft.app.aighost.app.ui.window.MainWindow
 import org.pcsoft.app.aighost.app.util.logger
 
@@ -25,11 +26,17 @@ import org.pcsoft.app.aighost.app.util.logger
  */
 class AiGhostApplication : Application() {
     override fun start(stage: Stage) {
-        IoController.loadPreferences(this)
+        val splash = SplashStage()
 
-        AiGhostTheme.install()
-
-        MainWindow().show()
+        // The startup work begins only once the splash stands fully, so it never runs during the fade in.
+        splash.reveal {
+            Startup.run(this) {
+                splash.fadeOut {
+                    AiGhostTheme.install()
+                    MainWindow().show()
+                }
+            }
+        }
     }
 }
 
@@ -40,7 +47,12 @@ fun main() {
     logger<AiGhostApplication>().apply {
         info("====================")
         info("Starting application")
-        info("System: {}, Java: [Version: {}, Vendor: {}]", SystemUtils.OS_NAME, SystemUtils.JAVA_VERSION, SystemUtils.JAVA_VENDOR)
+        info(
+            "System: {}, Java: [Version: {}, Vendor: {}]",
+            SystemUtils.OS_NAME,
+            SystemUtils.JAVA_VERSION,
+            SystemUtils.JAVA_VENDOR
+        )
         info("====================")
     }
 

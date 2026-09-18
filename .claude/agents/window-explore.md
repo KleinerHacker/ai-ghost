@@ -2,7 +2,7 @@
 name: window-explore
 description: Explores a typical Java FX window to gather design and architecture information.
 
-model: opus
+model: sonnet
 effort: low
 
 skills:

@@ -19,7 +19,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.model.TestData
 import org.pcsoft.app.aighost.model.common.Alignment
-import org.pcsoft.app.aighost.model.common.StyleData
 import org.pcsoft.app.aighost.model.project.Project
 import org.pcsoft.app.aighost.plugin.api.model.project.ProjectPartInfo
 
@@ -31,21 +30,31 @@ class DesignTest {
     private val mapper: ObjectMapper = ObjectMapper().registerKotlinModule()
 
     /**
-     * Use case: a fresh project is rendered before the user touched the design, so every part carries
-     * the default style and the page flags start on the layout the application ships with.
+     * Use case: a fresh project is rendered before the user touched the design, so every page carries
+     * the default styles and the page flags start on the layout the application ships with.
      */
     @Test
     fun defaultsToPlainDesign() {
         val design = Design()
 
-        assertEquals(AuthorDesign(), design.authorDesign)
-        assertEquals(CopyrightDesign(), design.copyrightDesign)
-        assertEquals(TitleDesign(), design.titleDesign)
-        assertEquals(ChapterDesign(), design.chapterDesign)
-        assertEquals(TextDesign(), design.textDesign)
+        assertEquals(TitlePageDesign(), design.titlePage)
+        assertEquals(CopyrightPageDesign(), design.copyrightPage)
+        assertEquals(PrologPageDesign(), design.prologPage)
+        assertEquals(BlurbPageDesign(), design.blurbPage)
+        assertEquals(ChapterPageDesign(), design.chapterPage)
+        assertEquals(EpilogPageDesign(), design.epilogPage)
+        assertEquals(PageNumberDesign(), design.pageNumbering)
         assertEquals(true, design.startWithEmptyPage)
         assertEquals(true, design.endWithEmptyPage)
-        assertEquals(StyleData(), design.textDesign.style)
+    }
+
+    /**
+     * Use case: a fresh project is laid out before anybody chose a paper size, so the design carries
+     * the default page geometry.
+     */
+    @Test
+    fun defaultsToTheShippedPageLayout() {
+        assertEquals(PageFormat(), Design().pageFormat)
     }
 
     /**
@@ -60,21 +69,36 @@ class DesignTest {
     }
 
     /**
-     * Use case: the user styled every text of the manuscript separately, so each design part keeps its
-     * own font and alignment across the round trip instead of collapsing into one.
+     * Use case: the user styled every page of the manuscript separately, so each page design keeps
+     * its own fonts, alignments and line spacings across the round trip instead of collapsing.
      */
     @Test
-    fun roundTripsEveryDesignPartSeparately() {
+    fun roundTripsEveryPageDesignSeparately() {
         val restored: Design = mapper.readValue(mapper.writeValueAsString(TestData.design()))
 
-        assertEquals(16, restored.authorDesign.style.font.size)
-        assertEquals(Alignment.CENTER, restored.authorDesign.style.alignment)
-        assertEquals(8, restored.copyrightDesign.style.font.size)
-        assertEquals(Alignment.CENTER, restored.titleDesign.style.alignment)
-        assertEquals("Sans", restored.chapterDesign.titleStyle.font.name)
-        assertEquals(14, restored.chapterDesign.titleAppendixStyle.font.size)
-        assertEquals(Alignment.BLOCK, restored.textDesign.style.alignment)
+        assertEquals(28, restored.titlePage.titleStyle.font.size)
+        assertEquals(Alignment.CENTER, restored.titlePage.authorStyle.alignment)
+        assertEquals(8, restored.copyrightPage.copyrightStyle.font.size)
+        assertEquals(1.0, restored.copyrightPage.copyrightStyle.textLineSpacing)
+        assertEquals("Sans", restored.chapterPage.titleStyle.font.name)
+        assertEquals(14, restored.chapterPage.titleAppendixStyle.font.size)
+        assertEquals(Alignment.BLOCK, restored.chapterPage.textStyle.alignment)
+        assertEquals(1.45, restored.blurbPage.textStyle.textLineSpacing)
+        assertEquals(PageNumberPosition.BOTTOM_OUTER, restored.pageNumbering.position)
+        assertEquals(3, restored.pageNumbering.startNumber)
+        assertEquals(PageNumberCountingMode.SKIP_EXCLUDED, restored.pageNumbering.countingMode)
         assertEquals(TestData.design(), restored)
+    }
+
+    /**
+     * Use case: the user chose a paper size of their own, so the page geometry survives the round
+     * trip instead of falling back to the shipped default.
+     */
+    @Test
+    fun roundTripsPageFormat() {
+        val restored: Design = mapper.readValue(mapper.writeValueAsString(TestData.design()))
+
+        assertEquals(TestData.pageFormat(), restored.pageFormat)
     }
 
     /**
@@ -85,21 +109,23 @@ class DesignTest {
     fun roundTripsPageFlags() {
         val restored: Design = mapper.readValue(mapper.writeValueAsString(TestData.design()))
 
-        assertEquals(true, restored.copyrightDesign.show)
+        assertEquals(true, restored.chapterPage.titleOnSeparatePage)
         assertEquals(true, restored.startWithEmptyPage)
         assertEquals(false, restored.endWithEmptyPage)
     }
 
     /**
-     * Use case: a document holds one design part only, so the remaining ones are filled with their
-     * defaults instead of the part being rejected.
+     * Use case: a document holds one page flag only, so the remaining page designs are filled with
+     * their defaults instead of the part being rejected.
      */
     @Test
     fun readsPartialDocumentWithDefaults() {
         val design: Design = mapper.readValue("""{"startWithEmptyPage":false}""")
 
         assertEquals(false, design.startWithEmptyPage)
-        assertEquals(TextDesign(), design.textDesign)
+        assertEquals(ChapterPageDesign(), design.chapterPage)
+        assertEquals(PageFormat(), design.pageFormat)
+        assertEquals(PageNumberDesign(), design.pageNumbering)
         assertEquals(1, design.version)
     }
 

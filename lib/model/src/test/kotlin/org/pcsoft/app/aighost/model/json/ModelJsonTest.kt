@@ -19,7 +19,7 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.pcsoft.app.aighost.model.TestData
@@ -29,6 +29,7 @@ import org.pcsoft.app.aighost.model.pref.ThemeMode
 import org.pcsoft.app.aighost.model.project.book.Blurb
 import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.book.Chapter
+import org.pcsoft.app.aighost.model.project.book.Copyright
 import org.pcsoft.app.aighost.model.project.book.Epilog
 import org.pcsoft.app.aighost.model.project.book.Prolog
 import org.pcsoft.app.aighost.model.project.common.AIPrompt
@@ -57,6 +58,36 @@ class ModelJsonTest {
     fun parsesHandWrittenBookDocument() {
         val json = """
             {
+              "prompts" : { "contentPrompt" : "Tell a story in two parts.", "stylePrompt" : "Warm and calm." },
+              "prolog" : { "included" : true },
+              "chapters" : [
+                { "name" : "first" },
+                { "name" : "second" }
+              ],
+              "epilog" : { "included" : true },
+              "blurb" : { "paragraph" : [ "A gripping tale." ] }
+            }
+        """.trimIndent()
+
+        val book: Book = mapper.readValue(json)
+
+        assertEquals(AIPrompt("Tell a story in two parts.", "Warm and calm."), book.prompts)
+        assertEquals(listOf("first", "second"), book.chapters.map(Chapter::name))
+        assertEquals(Prolog(included = true), book.prolog)
+        assertEquals(Epilog(included = true), book.epilog)
+        assertEquals(Blurb(paragraph = listOf("A gripping tale.")), book.blurb)
+    }
+
+    /**
+     * Use case: an old project written before IP-36 still carries `title`, `titleAppendix` and
+     * `paragraph` on the book, its parts and its chapters, so opening it drops every one of those
+     * fields instead of failing to parse - the hard requirement IP-36 leaves for IP-37's migration to
+     * build on.
+     */
+    @Test
+    fun parsesHandWrittenBookDocumentFromBeforeTheAnchorRework() {
+        val json = """
+            {
               "title" : "My Novel",
               "prompts" : { "contentPrompt" : "Tell a story in two parts.", "stylePrompt" : "Warm and calm." },
               "prolog" : { "title" : "Before It All", "paragraph" : [ "Long before." ] },
@@ -71,12 +102,8 @@ class ModelJsonTest {
 
         val book: Book = mapper.readValue(json)
 
-        assertEquals("My Novel", book.title)
         assertEquals(AIPrompt("Tell a story in two parts.", "Warm and calm."), book.prompts)
         assertEquals(listOf("first", "second"), book.chapters.map(Chapter::name))
-        assertEquals(listOf("The beginning.", "And on it went."), book.chapters[1].paragraph)
-        assertEquals(Prolog("Before It All", paragraph = listOf("Long before.")), book.prolog)
-        assertEquals(Epilog("After It All", paragraph = listOf("And that was that.")), book.epilog)
         assertEquals(Blurb(paragraph = listOf("A gripping tale.")), book.blurb)
     }
 
@@ -88,14 +115,20 @@ class ModelJsonTest {
     fun parsesHandWrittenDesignDocument() {
         val json = """
             {
-              "authorDesign" : { "style" : { "font" : { "name" : "Sans", "size" : 16 }, "alignment" : "CENTER" } },
-              "copyrightDesign" : { "style" : { "font" : { "name" : "Serif", "size" : 8 } }, "show" : true },
-              "titleDesign" : { "style" : { "font" : { "name" : "Sans", "size" : 28, "bold" : true } } },
-              "chapterDesign" : {
-                "titleStyle" : { "font" : { "name" : "Sans", "size" : 20, "bold" : true } },
-                "titleAppendixStyle" : { "font" : { "name" : "Sans", "size" : 14, "italic" : true } }
+              "titlePage" : {
+                "titleStyle" : { "font" : { "name" : "Sans", "size" : 28, "bold" : true } },
+                "authorStyle" : { "font" : { "name" : "Sans", "size" : 16 }, "alignment" : "CENTER" },
+                "showAuthor" : false
               },
-              "textDesign" : { "style" : { "font" : { "name" : "Serif", "size" : 11 }, "alignment" : "BLOCK" } },
+              "copyrightPage" : {
+                "copyrightStyle" : { "font" : { "name" : "Serif", "size" : 8 }, "textLineSpacing" : 1.0 }
+              },
+              "chapterPage" : {
+                "titleStyle" : { "font" : { "name" : "Sans", "size" : 20, "bold" : true } },
+                "titleAppendixStyle" : { "font" : { "name" : "Sans", "size" : 14, "italic" : true } },
+                "titleOnSeparatePage" : true
+              },
+              "blurbPage" : { "textStyle" : { "font" : { "name" : "Serif", "size" : 11 }, "alignment" : "BLOCK" } },
               "startWithEmptyPage" : false,
               "endWithEmptyPage" : true
             }
@@ -103,34 +136,40 @@ class ModelJsonTest {
 
         val design: Design = mapper.readValue(json)
 
-        assertEquals(16, design.authorDesign.style.font.size)
-        assertEquals(Alignment.CENTER, design.authorDesign.style.alignment)
-        assertEquals(true, design.copyrightDesign.show)
-        assertEquals(true, design.titleDesign.style.font.bold)
-        assertEquals(true, design.chapterDesign.titleAppendixStyle.font.italic)
-        assertEquals(Alignment.BLOCK, design.textDesign.style.alignment)
+        assertEquals(28, design.titlePage.titleStyle.font.size)
+        assertEquals(Alignment.CENTER, design.titlePage.authorStyle.alignment)
+        assertEquals(false, design.titlePage.showAuthor)
+        assertEquals(1.0, design.copyrightPage.copyrightStyle.textLineSpacing)
+        assertEquals(true, design.chapterPage.titleStyle.font.bold)
+        assertEquals(true, design.chapterPage.titleAppendixStyle.font.italic)
+        assertEquals(true, design.chapterPage.titleOnSeparatePage)
+        assertEquals(Alignment.BLOCK, design.blurbPage.textStyle.alignment)
         assertEquals(false, design.startWithEmptyPage)
         assertEquals(true, design.endWithEmptyPage)
     }
 
     /**
-     * Use case: a project is opened whose book was never given a prolog, an epilog or a blurb, so
-     * the missing properties are read back as absent parts instead of failing the parse.
+     * Use case: a project is opened whose book carries no prolog, epilog or blurb property at all, so
+     * the missing properties are read back as the empty parts every book has, each of them switched
+     * off, instead of failing the parse.
      */
     @Test
     fun parsesBookDocumentWithoutOptionalParts() {
         val json = """
             {
-              "title" : "My Novel",
-              "chapters" : [ { "name" : "first", "title" : "Prologue" } ]
+              "chapters" : [ { "name" : "first" } ]
             }
         """.trimIndent()
 
         val book: Book = mapper.readValue(json)
 
-        assertNull(book.prolog)
-        assertNull(book.epilog)
-        assertNull(book.blurb)
+        assertEquals(Copyright(), book.copyright)
+        assertEquals(Prolog(), book.prolog)
+        assertEquals(Epilog(), book.epilog)
+        assertEquals(Blurb(), book.blurb)
+        assertFalse(book.prolog.included)
+        assertFalse(book.epilog.included)
+        assertFalse(book.blurb.included)
         assertEquals(listOf("first"), book.chapters.map(Chapter::name))
     }
 
@@ -152,13 +191,10 @@ class ModelJsonTest {
     @Test
     fun escapesSpecialCharactersInChapterText() {
         val book = Book(
-            title = "Special\"Characters",
-            titleAppendix = listOf("A \\ backslash"),
             chapters = listOf(
                 Chapter(
                     "chapter\\1",
-                    "Chapter\\1",
-                    paragraph = listOf("He said: \"Hello\"\nand left.\tEnd")
+                    prompts = AIPrompt(contentPrompt = "He said: \"Hello\"\nand left.\tEnd")
                 )
             )
         )
@@ -176,9 +212,8 @@ class ModelJsonTest {
     fun keepsUnicodeText() {
         val meta = Meta(name = "Café Notes", author = "Renée Müller")
         val book = Book(
-            title = "Café Notes",
             chapters = listOf(
-                Chapter("naïve", "Naïve Beginnings", paragraph = listOf("A café, a résumé – ok."))
+                Chapter("naïve", prompts = AIPrompt(contentPrompt = "A café, a résumé – ok."))
             ),
             blurb = Blurb(paragraph = listOf("Crème de la crème – a novel."))
         )
@@ -219,7 +254,7 @@ class ModelJsonTest {
     @Test
     fun rejectsBrokenDocument() {
         assertThrows<JsonProcessingException> {
-            mapper.readValue<Book>("""{"title":""")
+            mapper.readValue<Book>("""{"prompts":""")
         }
     }
 

@@ -13,12 +13,16 @@
 package org.pcsoft.app.aighost.app.controller
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.app.Messages
+import org.pcsoft.app.aighost.app.font.FontIdentity
+import org.pcsoft.app.aighost.app.font.FontIdentityCheck
 import org.pcsoft.app.aighost.model.PreferencesStorage
 import org.pcsoft.app.aighost.model.ProjectStorage
 import org.pcsoft.app.aighost.model.pref.ThemeMode
 import org.pcsoft.app.aighost.model.project.Project
+import org.pcsoft.framework.simplay.engine.model.FontFingerprint
 import java.io.File
 import java.io.IOException
 
@@ -217,6 +221,45 @@ class IoControllerTest {
             preferencesReasons.toSet().size,
             "two preferences failures share one text"
         )
+    }
+
+    /**
+     * Use case: the family a manuscript was written in is missing on this machine. The line the user
+     * reads names the element, the font the project asks for and the font that is set instead.
+     */
+    @Test
+    fun namesTheSubstituteOfAFontThatIsNotInstalled() {
+        val line = IoController.describe(
+            FontIdentityCheck.Finding(
+                FontIdentityCheck.ELEMENT_TEXT,
+                FontIdentity.Substituted("Garamond", "Arial")
+            )
+        )
+
+        assertTrue(line.contains(Messages[FontIdentityCheck.ELEMENT_TEXT]), "the element is named")
+        assertTrue(line.contains("Garamond"), "the font of the project is named")
+        assertTrue(line.contains("Arial"), "the font that is set instead is named")
+    }
+
+    /**
+     * Use case: the family is installed under the name of the project but sets differently. There is
+     * no substitute to name, so the line names the element and that one font only.
+     */
+    @Test
+    fun namesTheFontThatSetsDifferently() {
+        val line = IoController.describe(
+            FontIdentityCheck.Finding(
+                FontIdentityCheck.ELEMENT_TITLE,
+                FontIdentity.Deviates(
+                    "Garamond",
+                    FontFingerprint(100.0, 11.0, 3.0, listOf(1.0)),
+                    FontFingerprint(100.0, 11.5, 3.0, listOf(1.2))
+                )
+            )
+        )
+
+        assertTrue(line.contains(Messages[FontIdentityCheck.ELEMENT_TITLE]), "the element is named")
+        assertTrue(line.contains("Garamond"), "the font of the project is named")
     }
 
     /** A project that lost one part beyond the standard ones, the rescued project beside it. */

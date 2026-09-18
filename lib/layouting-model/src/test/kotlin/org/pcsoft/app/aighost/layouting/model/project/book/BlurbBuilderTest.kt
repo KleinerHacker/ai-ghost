@@ -1,0 +1,118 @@
+/*
+ * Copyright (c) KleinerHacker alias Pfeiffer C Soft 2026.
+ * This work is licensed under the Apache License, Version 2.0.
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at:
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, this software is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations.
+ */
+
+package org.pcsoft.app.aighost.layouting.model.project.book
+
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Test
+import org.pcsoft.app.aighost.model.common.Alignment
+import org.pcsoft.app.aighost.model.common.FontData
+import org.pcsoft.app.aighost.model.common.StyleData
+import org.pcsoft.app.aighost.model.project.book.Blurb
+import org.pcsoft.app.aighost.model.project.design.BlurbPageDesign
+import org.pcsoft.app.aighost.model.project.design.Design
+import org.pcsoft.framework.simplay.engine.model.TextAlignment
+
+/**
+ * Developer tests for the blocks of the blurb, [BlurbBuilder].
+ */
+class BlurbBuilderTest {
+
+    private val design = Design(
+        blurbPage = BlurbPageDesign(
+            textStyle = StyleData(
+                font = FontData("Baskerville", 11),
+                textLineSpacing = 1.6,
+                alignment = Alignment.BLOCK
+            )
+        )
+    )
+
+    /**
+     * Use case: the blurb is built into its paragraphs, in their order and with no heading in front of
+     * them, since the blurb carries none.
+     */
+    @Test
+    fun theBlurbIsItsParagraphsAndNothingElse() {
+        val blurb = Blurb(paragraph = listOf("A harbour town keeps its secrets.", "Until one summer."))
+
+        val blocks = BlurbBuilder.build(blurb, design)
+
+        assertEquals(
+            listOf("A harbour town keeps its secrets.", "Until one summer."),
+            blocks.map { it.toString() }
+        )
+    }
+
+    /**
+     * Use case: the blurb is set the way the body of the book is, so it comes out in the blurb page
+     * design and with the line spacing of that style.
+     */
+    @Test
+    fun theBlurbIsSetInTheBlurbPageDesign() {
+        val blocks = BlurbBuilder.build(Blurb(paragraph = listOf("Until one summer.")), design)
+
+        val style = blocks.single().style
+        assertEquals("Baskerville", style.font.family)
+        assertEquals(11.0, style.font.size)
+        assertEquals(TextAlignment.JUSTIFY, style.alignment)
+        assertEquals(1.6, style.lineSpacing.factor)
+    }
+
+    /**
+     * Use case: an empty paragraph inside the blurb is kept, exactly as it is in a chapter - it is
+     * part of what the user wrote.
+     */
+    @Test
+    fun anEmptyParagraphIsKept() {
+        val blurb = Blurb(paragraph = listOf("First.", "", "Second."))
+
+        assertEquals(listOf("First.", "", "Second."), BlurbBuilder.build(blurb, design).map { it.toString() })
+    }
+
+    /**
+     * Use case: the blurb belongs to every book but was not written yet, so it gives no block at all.
+     */
+    @Test
+    fun anEmptyBlurbGivesNoBlock() {
+        assertTrue(BlurbBuilder.build(Blurb(), design).isEmpty())
+    }
+
+    /**
+     * Use case: the whole-book document is built, so the blurb's first block carries the `${blurb}`
+     * anchor in front of its text - the single-part writing surface never asks for this, so its own
+     * paragraph text stays free of the marker.
+     */
+    @Test
+    fun theWholeBookDocumentEmbedsTheBlurbAnchorInTheFirstBlock() {
+        val blurb = Blurb(paragraph = listOf("A harbour town keeps its secrets.", "Until one summer."))
+
+        val blocks = BlurbBuilder.build(blurb, design, withAnchor = true)
+
+        assertEquals(
+            listOf("\${blurb}A harbour town keeps its secrets.", "Until one summer."),
+            blocks.map { it.toString() }
+        )
+    }
+
+    /**
+     * Use case: the whole-book document is built before any blurb was written, so the blurb still gets
+     * a page carrying its anchor instead of being left out of the document entirely.
+     */
+    @Test
+    fun theWholeBookDocumentSeedsTheAnchorEvenForAnEmptyBlurb() {
+        val blocks = BlurbBuilder.build(Blurb(), design, withAnchor = true)
+
+        assertEquals(listOf("\${blurb}"), blocks.map { it.toString() })
+    }
+}

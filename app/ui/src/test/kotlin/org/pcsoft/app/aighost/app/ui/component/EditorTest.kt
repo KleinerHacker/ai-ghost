@@ -15,36 +15,26 @@ package org.pcsoft.app.aighost.app.ui.component
 import de.saxsys.mvvmfx.MvvmFX
 import javafx.geometry.Orientation
 import javafx.scene.Scene
-import javafx.scene.control.Label
 import javafx.scene.control.SplitPane
-import javafx.scene.control.TextField
 import javafx.scene.control.TreeView
 import javafx.stage.Stage
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertSame
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.app.Messages
+import org.pcsoft.app.aighost.app.ui.component.base.AiPromptArea
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
 import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.FontData
 import org.pcsoft.app.aighost.model.common.StyleData
+import org.pcsoft.app.aighost.model.project.Project
 import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.book.Chapter
-import org.pcsoft.app.aighost.model.project.Project
-import org.pcsoft.app.aighost.model.project.design.AuthorDesign
-import org.pcsoft.app.aighost.model.project.design.ChapterDesign
-import org.pcsoft.app.aighost.model.project.design.CopyrightDesign
-import org.pcsoft.app.aighost.model.project.design.Design
-import org.pcsoft.app.aighost.model.project.design.TextDesign
-import org.pcsoft.app.aighost.model.project.design.TitleDesign
+import org.pcsoft.app.aighost.model.project.common.AIPrompt
+import org.pcsoft.app.aighost.model.project.design.*
 import org.pcsoft.app.aighost.model.project.meta.Meta
 import org.testfx.framework.junit5.ApplicationTest
 import org.testfx.util.WaitForAsyncUtils
-import java.util.Locale
-import java.util.ResourceBundle
+import java.util.*
 
 /**
  * Developer tests for [Editor].
@@ -85,30 +75,35 @@ class EditorTest : ApplicationTest() {
     private fun project(book: Book): Project = Project(
         meta = Meta(
             name = "My Novel",
-            author = "Jane Doe",
-            copyright = "(c) 2026 Jane Doe"
+            author = "Jane Doe"
         ),
         design = Design(
-            authorDesign = AuthorDesign(style()),
-            copyrightDesign = CopyrightDesign(style(), show = false),
-            titleDesign = TitleDesign(style()),
-            chapterDesign = ChapterDesign(style(), style()),
-            textDesign = TextDesign(style()),
+            titlePage = TitlePageDesign(style(), style(), showAuthor = true, authorStyle = style()),
+            copyrightPage = CopyrightPageDesign(style(), style(), showAuthor = false, authorStyle = style()),
+            prologPage = PrologPageDesign(style(), style(), style()),
+            blurbPage = BlurbPageDesign(style()),
+            chapterPage = ChapterPageDesign(style(), style(), style()),
+            epilogPage = EpilogPageDesign(style(), style(), style()),
             startWithEmptyPage = false,
             endWithEmptyPage = false
         ),
         book = book
     )
 
+    private val inspector: Inspector
+        get() = splitPane.items.last() as Inspector
+
     /**
-     * Use case: the user opens the editor, so the project tree sits on the left of a horizontal split
-     * and the editing area fills the rest, which is what the splitter divides.
+     * Use case: the user opens the editor, so the project tree sits on the left of a horizontal split,
+     * the editing area sits in the middle and the inspector sits on the right, which is what the two
+     * splitters divide.
      */
     @Test
     fun showsTheProjectTreeLeftOfTheEditingArea() {
         assertEquals(Orientation.HORIZONTAL, splitPane.orientation)
-        assertEquals(2, splitPane.items.size, "the split holds the tree and the editing area")
+        assertEquals(3, splitPane.items.size, "the split holds the tree, the editing area and the inspector")
         assertTrue(splitPane.items.first() is ProjectList, "the tree sits on the left")
+        assertTrue(splitPane.items.last() is Inspector, "the inspector sits on the right")
     }
 
     /**
@@ -141,31 +136,26 @@ class EditorTest : ApplicationTest() {
     }
 
     /**
-     * Use case: nothing can be edited yet, so the area right of the splitter shows a placeholder
-     * instead of staying empty.
+     * Use case: the middle area between the tree and the inspector is the writing surface, so the
+     * split holds a [BookPartEditor] there instead of the former placeholder.
      */
     @Test
-    fun showsAPlaceholderInTheEditingArea() {
-        val placeholder = editor.lookup(".editor-placeholder") as Label
-
-        assertNotNull(placeholder)
-        assertEquals("Not implemented yet.", placeholder.text)
-        assertSame(
-            splitPane.items.last(),
-            placeholder.parent,
-            "the placeholder belongs to the area right of the splitter"
+    fun showsTheWritingSurfaceInTheEditingArea() {
+        assertTrue(
+            splitPane.items[1] is BookPartEditor,
+            "the writing surface belongs to the middle area of the split"
         )
     }
 
-    /** The chapter titles the project tree on the left currently lists. */
+    /** The chapter names the project tree on the left currently lists. */
     @Suppress("UNCHECKED_CAST")
-    private fun chapterTitles(): List<String> {
+    private fun chapterNames(): List<String> {
         val tree = projectList.lookup(".tree-view") as TreeView<ProjectListItem>
 
         return tree.root.children
             .first { it.value is ProjectListItem.Chapters }
             .children
-            .map { (it.value as ProjectListItem.ChapterItem).chapter.title }
+            .map { (it.value as ProjectListItem.ChapterItem).chapter.name }
     }
 
     /** Puts [project] into the model the editor was handed and lets the controls follow it. */
@@ -180,9 +170,9 @@ class EditorTest : ApplicationTest() {
      */
     @Test
     fun handsTheBoundProjectOnToTheProjectTree() {
-        setProject(project(Book(title = "My Novel", chapters = listOf(Chapter("first", "The First Part")))))
+        setProject(project(Book(chapters = listOf(Chapter("first")))))
 
-        assertEquals(listOf("The First Part"), chapterTitles())
+        assertEquals(listOf("first"), chapterNames())
     }
 
     /**
@@ -191,23 +181,24 @@ class EditorTest : ApplicationTest() {
      */
     @Test
     fun handsTheClosedProjectOnToTheProjectTree() {
-        setProject(project(Book(title = "My Novel", chapters = listOf(Chapter("first", "The First Part")))))
+        setProject(project(Book(chapters = listOf(Chapter("first")))))
 
         setProject(Project())
 
-        assertEquals(emptyList<String>(), chapterTitles())
+        assertEquals(emptyList<String>(), chapterNames())
     }
 
     /**
-     * Use case: the manuscript of the bound project reaches the editing area, so its title stands in
-     * the title field without the surrounding window binding that field itself.
+     * Use case: the manuscript of the bound project reaches the inspector, so its content prompt
+     * stands in the content prompt field of the "Book" section without the surrounding window binding
+     * that field itself.
      */
     @Test
-    fun handsTheManuscriptOnToTheBookEditor() {
-        setProject(project(Book(title = "My Novel")))
+    fun handsTheManuscriptOnToTheInspector() {
+        setProject(project(Book(prompts = AIPrompt(contentPrompt = "A house nobody lives in"))))
 
-        val title = editor.lookup("#txtTitle").lookup(".text-field") as TextField
+        val contentPrompt = editor.lookup("#txaBookContentPrompt") as AiPromptArea
 
-        assertEquals("My Novel", title.text)
+        assertEquals("A house nobody lives in", contentPrompt.text.value)
     }
 }

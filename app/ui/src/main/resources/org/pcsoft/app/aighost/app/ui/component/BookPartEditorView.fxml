@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+  ~ Copyright (c) KleinerHacker alias Pfeiffer C Soft 2026.
+  ~ This work is licensed under the Apache License, Version 2.0.
+  ~ You may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at:
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, this software is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and limitations.
+  -->
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import org.pcsoft.app.aighost.app.ui.component.AiActionBar?>
+<?import org.pcsoft.framework.simplay.fx.FloatingOverlay?>
+<?import org.pcsoft.framework.simplay.fx.PaperSheetView?>
+<fx:root type="BorderPane" styleClass="book-part-editor" xmlns="http://javafx.com/javafx"
+         xmlns:fx="http://javafx.com/fxml"
+         fx:controller="org.pcsoft.app.aighost.app.ui.component.BookPartEditorView">
+    <center>
+        <StackPane>
+            <PaperSheetView fx:id="sheet">
+                <!--
+                  Two overlays instead of one, since a FloatingOverlay follows exactly one trigger:
+                  PARAGRAPH_HOVER shows the bar above a hovered paragraph in both writing and preview,
+                  CARET additionally shows it at the edit caret - and stays inert on its own in the
+                  preview's read-only mode (see FloatingOverlayTrigger.CARET), so no mode switch is
+                  needed here.
+                -->
+                <floatingOverlays>
+                    <FloatingOverlay trigger="PARAGRAPH_HOVER" anchor="TOP_CENTER" offsetY="-6.0">
+                        <content>
+                            <AiActionBar/>
+                        </content>
+                    </FloatingOverlay>
+                    <FloatingOverlay trigger="CARET" anchor="TOP_CENTER" offsetY="-6.0">
+                        <content>
+                            <AiActionBar/>
+                        </content>
+                    </FloatingOverlay>
+                </floatingOverlays>
+            </PaperSheetView>
+            <Label fx:id="lblEmpty" styleClass="book-part-editor-empty" text="%component.bookPartEditor.empty"/>
+            <ProgressIndicator fx:id="prgLoading" styleClass="book-part-editor-progress" maxWidth="64" maxHeight="64"/>
+        </StackPane>
+    </center>
+</fx:root>

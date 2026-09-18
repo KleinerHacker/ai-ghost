@@ -18,17 +18,20 @@ import javafx.beans.property.SimpleStringProperty
 import javafx.beans.property.StringProperty
 import javafx.collections.FXCollections
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.model.project.book.Blurb
 import org.pcsoft.app.aighost.model.project.book.Book
-import org.pcsoft.app.aighost.model.project.book.BookPart
 import org.pcsoft.app.aighost.model.project.book.Chapter
+import org.pcsoft.app.aighost.model.project.book.Copyright
 import org.pcsoft.app.aighost.model.project.book.Epilog
 import org.pcsoft.app.aighost.model.project.book.Prolog
 import org.pcsoft.app.aighost.model.project.common.AIPrompt
+import org.pcsoft.framework.simplay.engine.model.Document
+import org.pcsoft.framework.simplay.engine.model.PageNumbering
 
 /**
  * Developer tests for [BookProperty].
@@ -36,9 +39,9 @@ import org.pcsoft.app.aighost.model.project.common.AIPrompt
  * The property wraps the manuscript of a project and offers every field of that object - and every
  * field of the objects nested in it - as a property of its own. Every test checks the object tree the
  * way the user interface uses it: a binding hangs on each property of the tree - the book itself, the
- * prolog, the epilog and the blurb below it and every single field - and the tests assert that a change
- * reaches every binding that has to know about it, upwards to the parent the property reports to as
- * well as downwards into the fields of an exchanged object.
+ * copyright page, the prolog, the epilog and the blurb below it and every single field - and the tests
+ * assert that a change reaches every binding that has to know about it, upwards to the parent the
+ * property reports to as well as downwards into the fields of an exchanged object.
  */
 class BookPropertyTest {
 
@@ -55,33 +58,29 @@ class BookPropertyTest {
     private lateinit var rootView: StringProperty
     private var rootViewChanges = 0
 
-    /** Binding on the main title of the book. */
-    private lateinit var titleView: StringProperty
-    private var titleViewChanges = 0
-
-    /** Binding on the further title lines. */
-    private lateinit var titleAppendixView: StringProperty
-    private var titleAppendixViewChanges = 0
-
     /** Binding on the prompts of the whole manuscript. */
     private lateinit var promptsView: StringProperty
     private var promptsViewChanges = 0
+
+    /** Binding on the copyright page, standing for a view bound to that nested object. */
+    private lateinit var copyrightView: StringProperty
+    private var copyrightViewChanges = 0
+
+    /** Binding on the switch nested in the copyright page. */
+    private lateinit var copyrightIncludedView: StringProperty
+    private var copyrightIncludedViewChanges = 0
 
     /** Binding on the prolog, standing for a view bound to that nested object. */
     private lateinit var prologView: StringProperty
     private var prologViewChanges = 0
 
-    /** Binding on the heading nested in the prolog. */
-    private lateinit var prologTitleView: StringProperty
-    private var prologTitleViewChanges = 0
-
-    /** Binding on the paragraphs nested in the prolog. */
-    private lateinit var prologParagraphView: StringProperty
-    private var prologParagraphViewChanges = 0
-
     /** Binding on the prompts nested in the prolog. */
     private lateinit var prologPromptsView: StringProperty
     private var prologPromptsViewChanges = 0
+
+    /** Binding on the switch nested in the prolog. */
+    private lateinit var prologIncludedView: StringProperty
+    private var prologIncludedViewChanges = 0
 
     /** Binding on the chapters of the book. */
     private lateinit var chaptersView: StringProperty
@@ -91,9 +90,9 @@ class BookPropertyTest {
     private lateinit var epilogView: StringProperty
     private var epilogViewChanges = 0
 
-    /** Binding on the heading nested in the epilog. */
-    private lateinit var epilogTitleView: StringProperty
-    private var epilogTitleViewChanges = 0
+    /** Binding on the switch nested in the epilog. */
+    private lateinit var epilogIncludedView: StringProperty
+    private var epilogIncludedViewChanges = 0
 
     /** Binding on the blurb, standing for a view bound to that nested object. */
     private lateinit var blurbView: StringProperty
@@ -102,6 +101,14 @@ class BookPropertyTest {
     /** Binding on the paragraphs nested in the blurb. */
     private lateinit var blurbParagraphView: StringProperty
     private var blurbParagraphViewChanges = 0
+
+    /** Binding on the switch nested in the blurb. */
+    private lateinit var blurbIncludedView: StringProperty
+    private var blurbIncludedViewChanges = 0
+
+    /** Binding on the manuscript's document, a plain reference field with no nested model of its own. */
+    private lateinit var documentView: StringProperty
+    private var documentViewChanges = 0
 
     @BeforeEach
     fun setUp() {
@@ -122,22 +129,6 @@ class BookPropertyTest {
         rootBinding.addListener { _, _, _ -> rootViewChanges++ }
         rootView.bind(rootBinding)
 
-        titleView = SimpleStringProperty()
-        val titleBinding = Bindings.createStringBinding(
-            { property.titleProperty.get() ?: MISSING },
-            property.titleProperty
-        )
-        titleBinding.addListener { _, _, _ -> titleViewChanges++ }
-        titleView.bind(titleBinding)
-
-        titleAppendixView = SimpleStringProperty()
-        val titleAppendixBinding = Bindings.createStringBinding(
-            { property.titleAppendixProperty.joinToString(";") },
-            property.titleAppendixProperty
-        )
-        titleAppendixBinding.addListener { _, _, _ -> titleAppendixViewChanges++ }
-        titleAppendixView.bind(titleAppendixBinding)
-
         promptsView = SimpleStringProperty()
         val promptsBinding = Bindings.createStringBinding(
             { promptText(property.promptsProperty.get()) },
@@ -146,29 +137,29 @@ class BookPropertyTest {
         promptsBinding.addListener { _, _, _ -> promptsViewChanges++ }
         promptsView.bind(promptsBinding)
 
+        copyrightView = SimpleStringProperty()
+        val copyrightBinding = Bindings.createStringBinding(
+            { copyrightState(property.copyrightProperty.value) },
+            property.copyrightProperty
+        )
+        copyrightBinding.addListener { _, _, _ -> copyrightViewChanges++ }
+        copyrightView.bind(copyrightBinding)
+
+        copyrightIncludedView = SimpleStringProperty()
+        val copyrightIncludedBinding = Bindings.createStringBinding(
+            { property.copyrightProperty.includedProperty.get().toString() },
+            property.copyrightProperty.includedProperty
+        )
+        copyrightIncludedBinding.addListener { _, _, _ -> copyrightIncludedViewChanges++ }
+        copyrightIncludedView.bind(copyrightIncludedBinding)
+
         prologView = SimpleStringProperty()
         val prologBinding = Bindings.createStringBinding(
-            { partState(property.prologProperty.value) },
+            { prologState(property.prologProperty.value) },
             property.prologProperty
         )
         prologBinding.addListener { _, _, _ -> prologViewChanges++ }
         prologView.bind(prologBinding)
-
-        prologTitleView = SimpleStringProperty()
-        val prologTitleBinding = Bindings.createStringBinding(
-            { property.prologProperty.titleProperty.get() ?: MISSING },
-            property.prologProperty.titleProperty
-        )
-        prologTitleBinding.addListener { _, _, _ -> prologTitleViewChanges++ }
-        prologTitleView.bind(prologTitleBinding)
-
-        prologParagraphView = SimpleStringProperty()
-        val prologParagraphBinding = Bindings.createStringBinding(
-            { property.prologProperty.paragraphProperty.joinToString(";") },
-            property.prologProperty.paragraphProperty
-        )
-        prologParagraphBinding.addListener { _, _, _ -> prologParagraphViewChanges++ }
-        prologParagraphView.bind(prologParagraphBinding)
 
         prologPromptsView = SimpleStringProperty()
         val prologPromptsBinding = Bindings.createStringBinding(
@@ -177,6 +168,14 @@ class BookPropertyTest {
         )
         prologPromptsBinding.addListener { _, _, _ -> prologPromptsViewChanges++ }
         prologPromptsView.bind(prologPromptsBinding)
+
+        prologIncludedView = SimpleStringProperty()
+        val prologIncludedBinding = Bindings.createStringBinding(
+            { property.prologProperty.includedProperty.get().toString() },
+            property.prologProperty.includedProperty
+        )
+        prologIncludedBinding.addListener { _, _, _ -> prologIncludedViewChanges++ }
+        prologIncludedView.bind(prologIncludedBinding)
 
         chaptersView = SimpleStringProperty()
         val chaptersBinding = Bindings.createStringBinding(
@@ -188,19 +187,19 @@ class BookPropertyTest {
 
         epilogView = SimpleStringProperty()
         val epilogBinding = Bindings.createStringBinding(
-            { partState(property.epilogProperty.value) },
+            { epilogState(property.epilogProperty.value) },
             property.epilogProperty
         )
         epilogBinding.addListener { _, _, _ -> epilogViewChanges++ }
         epilogView.bind(epilogBinding)
 
-        epilogTitleView = SimpleStringProperty()
-        val epilogTitleBinding = Bindings.createStringBinding(
-            { property.epilogProperty.titleProperty.get() ?: MISSING },
-            property.epilogProperty.titleProperty
+        epilogIncludedView = SimpleStringProperty()
+        val epilogIncludedBinding = Bindings.createStringBinding(
+            { property.epilogProperty.includedProperty.get().toString() },
+            property.epilogProperty.includedProperty
         )
-        epilogTitleBinding.addListener { _, _, _ -> epilogTitleViewChanges++ }
-        epilogTitleView.bind(epilogTitleBinding)
+        epilogIncludedBinding.addListener { _, _, _ -> epilogIncludedViewChanges++ }
+        epilogIncludedView.bind(epilogIncludedBinding)
 
         blurbView = SimpleStringProperty()
         val blurbBinding = Bindings.createStringBinding(
@@ -218,47 +217,55 @@ class BookPropertyTest {
         blurbParagraphBinding.addListener { _, _, _ -> blurbParagraphViewChanges++ }
         blurbParagraphView.bind(blurbParagraphBinding)
 
+        blurbIncludedView = SimpleStringProperty()
+        val blurbIncludedBinding = Bindings.createStringBinding(
+            { property.blurbProperty.includedProperty.get().toString() },
+            property.blurbProperty.includedProperty
+        )
+        blurbIncludedBinding.addListener { _, _, _ -> blurbIncludedViewChanges++ }
+        blurbIncludedView.bind(blurbIncludedBinding)
+
+        documentView = SimpleStringProperty()
+        val documentBinding = Bindings.createStringBinding(
+            { documentState(property.documentProperty.get()) },
+            property.documentProperty
+        )
+        documentBinding.addListener { _, _, _ -> documentViewChanges++ }
+        documentView.bind(documentBinding)
+
         resetCounters()
     }
 
     private fun resetCounters() {
         parentEvents = 0
         rootViewChanges = 0
-        titleViewChanges = 0
-        titleAppendixViewChanges = 0
         promptsViewChanges = 0
+        copyrightViewChanges = 0
+        copyrightIncludedViewChanges = 0
         prologViewChanges = 0
-        prologTitleViewChanges = 0
-        prologParagraphViewChanges = 0
         prologPromptsViewChanges = 0
+        prologIncludedViewChanges = 0
         chaptersViewChanges = 0
         epilogViewChanges = 0
-        epilogTitleViewChanges = 0
+        epilogIncludedViewChanges = 0
         blurbViewChanges = 0
         blurbParagraphViewChanges = 0
+        blurbIncludedViewChanges = 0
+        documentViewChanges = 0
     }
 
     /** The manuscript every test starts from, built fresh so no test sees the objects of another. */
     private fun newBook(): Book = Book(
-        title = "The long journey",
-        titleAppendix = listOf("A novel"),
         prompts = INITIAL_PROMPTS,
-        prolog = Prolog(
-            title = "Before the storm",
-            titleAppendix = listOf("A short note"),
-            prompts = INITIAL_PROLOG_PROMPTS,
-            paragraph = listOf("The night was calm.")
-        ),
-        chapters = listOf(
-            Chapter(name = "Chapter one", title = "The arrival", paragraph = listOf("The train was late."))
-        ),
-        epilog = Epilog(
-            title = "What remains",
-            titleAppendix = listOf("A last word"),
-            paragraph = listOf("The house stood empty.")
-        ),
-        blurb = Blurb(paragraph = listOf("A story about a long journey."))
-    )
+        copyright = Copyright(included = true),
+        prolog = Prolog(prompts = INITIAL_PROLOG_PROMPTS, included = true),
+        chapters = listOf(Chapter(name = "Chapter one")),
+        epilog = Epilog(),
+        blurb = Blurb(paragraph = listOf("A story about a long journey."), included = true)
+    ).apply { document = INITIAL_DOCUMENT }
+
+    /** The book of the current test, which every test works on through the property. */
+    private fun book(): Book = holder.book!!
 
     /** Text form of a prompt pair, used as the value of a binding on prompts. */
     private fun promptText(prompts: AIPrompt?): String =
@@ -266,72 +273,80 @@ class BookPropertyTest {
 
     /** Text form of the whole book, used as the value of the binding on the root. */
     private fun bookState(book: Book?): String =
-        "${book?.title ?: MISSING}|${book?.titleAppendix.orEmpty().joinToString(";")}|" +
-                "${promptText(book?.prompts)}|" +
-                "${partState(book?.prolog)}|${book?.chapters.orEmpty().joinToString(";") { it.name }}|" +
-                "${partState(book?.epilog)}|${blurbState(book?.blurb)}"
+        "${promptText(book?.prompts)}|${copyrightState(book?.copyright)}|" +
+                "${prologState(book?.prolog)}|${book?.chapters.orEmpty().joinToString(";") { it.name }}|" +
+                "${epilogState(book?.epilog)}|${blurbState(book?.blurb)}|${documentState(book?.document)}"
 
-    /** Text form of a written part of the book, used as the value of the binding on that object. */
-    private fun partState(part: BookPart?): String =
-        "${part?.title ?: MISSING}|${part?.titleAppendix.orEmpty().joinToString(";")}|" +
-                "${promptText(part?.prompts)}|" +
-                part?.paragraph.orEmpty().joinToString(";")
+    /** Text form of the manuscript's document, used as the value of the binding on that field. */
+    private fun documentState(document: Document?): String =
+        document?.numbering?.startNumber?.toString() ?: MISSING
+
+    /** Text form of the copyright page, used as the value of the binding on that object. */
+    private fun copyrightState(copyright: Copyright?): String = "${copyright?.included ?: false}"
+
+    /** Text form of the prolog, used as the value of the binding on that object. */
+    private fun prologState(prolog: Prolog?): String =
+        "${promptText(prolog?.prompts)}|${prolog?.included ?: false}"
+
+    /** Text form of the epilog, used as the value of the binding on that object. */
+    private fun epilogState(epilog: Epilog?): String =
+        "${promptText(epilog?.prompts)}|${epilog?.included ?: false}"
 
     /** Text form of the blurb, used as the value of the binding on that object. */
     private fun blurbState(blurb: Blurb?): String =
-        "${blurb?.prompt ?: MISSING}|" + blurb?.paragraph.orEmpty().joinToString(";")
+        "${blurb?.prompt ?: MISSING}|${blurb?.paragraph.orEmpty().joinToString(";")}|" +
+                "${blurb?.included ?: false}"
 
     /**
      * Asserts that every binding of the object tree delivers the given state, so no view keeps the
      * value of a previous object or of a previous field value.
      */
     private fun assertTreeShows(
-        title: String?,
-        titleAppendix: List<String>,
+        copyright: Copyright?,
         prolog: Prolog?,
         chapters: List<Chapter>,
         epilog: Epilog?,
         blurb: Blurb?,
-        prompts: AIPrompt? = INITIAL_PROMPTS
+        prompts: AIPrompt? = INITIAL_PROMPTS,
+        document: Document? = INITIAL_DOCUMENT
     ) {
-        val titleAppendixText = titleAppendix.joinToString(";")
         val chaptersText = chapters.joinToString(";") { it.name }
 
         assertEquals(
-            "${title ?: MISSING}|$titleAppendixText|${promptText(prompts)}|" +
-                    "${partState(prolog)}|$chaptersText|" +
-                    "${partState(epilog)}|${blurbState(blurb)}",
+            "${promptText(prompts)}|${copyrightState(copyright)}|" +
+                    "${prologState(prolog)}|$chaptersText|" +
+                    "${epilogState(epilog)}|${blurbState(blurb)}|${documentState(document)}",
             rootView.get()
         ) { "the binding on the book delivers an outdated state" }
-        assertEquals(title ?: MISSING, titleView.get()) {
-            "the binding on the main title delivers an outdated value"
-        }
-        assertEquals(titleAppendixText, titleAppendixView.get()) {
-            "the binding on the further title lines delivers outdated lines"
+        assertEquals(documentState(document), documentView.get()) {
+            "the binding on the document delivers an outdated state"
         }
         assertEquals(promptText(prompts), promptsView.get()) {
             "the binding on the prompts of the book delivers outdated prompts"
         }
+        assertEquals(copyrightState(copyright), copyrightView.get()) {
+            "the binding on the copyright page delivers an outdated state"
+        }
+        assertEquals((copyright?.included ?: false).toString(), copyrightIncludedView.get()) {
+            "the binding on the switch of the copyright page delivers an outdated value"
+        }
         assertEquals(promptText(prolog?.prompts), prologPromptsView.get()) {
             "the binding on the prompts of the prolog delivers outdated prompts"
         }
-        assertEquals(partState(prolog), prologView.get()) {
+        assertEquals(prologState(prolog), prologView.get()) {
             "the binding on the prolog delivers an outdated state"
         }
-        assertEquals(prolog?.title ?: MISSING, prologTitleView.get()) {
-            "the binding on the heading of the prolog delivers an outdated value"
-        }
-        assertEquals(prolog?.paragraph.orEmpty().joinToString(";"), prologParagraphView.get()) {
-            "the binding on the paragraphs of the prolog delivers outdated paragraphs"
+        assertEquals((prolog?.included ?: false).toString(), prologIncludedView.get()) {
+            "the binding on the switch of the prolog delivers an outdated value"
         }
         assertEquals(chaptersText, chaptersView.get()) {
             "the binding on the chapters delivers outdated chapters"
         }
-        assertEquals(partState(epilog), epilogView.get()) {
+        assertEquals(epilogState(epilog), epilogView.get()) {
             "the binding on the epilog delivers an outdated state"
         }
-        assertEquals(epilog?.title ?: MISSING, epilogTitleView.get()) {
-            "the binding on the heading of the epilog delivers an outdated value"
+        assertEquals((epilog?.included ?: false).toString(), epilogIncludedView.get()) {
+            "the binding on the switch of the epilog delivers an outdated value"
         }
         assertEquals(blurbState(blurb), blurbView.get()) {
             "the binding on the blurb delivers an outdated state"
@@ -339,20 +354,15 @@ class BookPropertyTest {
         assertEquals(blurb?.paragraph.orEmpty().joinToString(";"), blurbParagraphView.get()) {
             "the binding on the paragraphs of the blurb delivers outdated paragraphs"
         }
+        assertEquals((blurb?.included ?: false).toString(), blurbIncludedView.get()) {
+            "the binding on the switch of the blurb delivers an outdated value"
+        }
     }
 
     /** Asserts that every binding of the object tree shows the manuscript the tests start from. */
     private fun assertTreeShowsInitialBook() {
         val book = newBook()
-        assertTreeShows(
-            book.title,
-            book.titleAppendix,
-            book.prolog,
-            book.chapters,
-            book.epilog,
-            book.blurb,
-            book.prompts
-        )
+        assertTreeShows(book.copyright, book.prolog, book.chapters, book.epilog, book.blurb, book.prompts, book.document)
     }
 
     /**
@@ -365,105 +375,89 @@ class BookPropertyTest {
     }
 
     /**
-     * Use case: the user renames the book, so the title lands in the model object and both the binding
-     * on that field and the binding on the book show it.
+     * Use case: the user types another copyright switch, so it lands in the nested model object and
+     * the bindings on that field, on the copyright page and on the book show it.
      */
     @Test
-    fun writesTitleToModelAndNotifiesTree() {
-        property.title = "The way back"
+    fun writesNestedCopyrightIncludedToModelAndNotifiesTree() {
+        property.copyrightProperty.included = false
 
-        assertEquals("The way back", holder.book?.title)
-        assertEquals("The way back", titleView.get())
-        assertTrue(titleViewChanges > 0) { "the binding on the main title was not re-evaluated" }
-        assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
-        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
-    }
-
-    /**
-     * Use case: the title is bound to the text field of the book dialog, so every text that field
-     * produces reaches the model object and every binding above it shows it.
-     */
-    @Test
-    fun writesBoundTitleToModelAndNotifiesTree() {
-        val source = SimpleStringProperty("Draft title")
-        property.titleProperty.bind(source)
-
-        source.set("The way back")
-
-        assertEquals("The way back", holder.book?.title)
-        assertEquals("The way back", titleView.get())
-        assertTrue(titleViewChanges > 0) { "the binding on the main title was not re-evaluated" }
-        assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
-        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
-    }
-
-    /**
-     * Use case: the user adds a further title line below the main title, so the content change alone
-     * reaches the model object and every binding above it shows it.
-     */
-    @Test
-    fun writesTitleAppendixEntryAddedToModelAndNotifiesTree() {
-        property.titleAppendixProperty.add("In three parts")
-
-        assertEquals(listOf("A novel", "In three parts"), holder.book?.titleAppendix)
-        assertEquals("A novel;In three parts", titleAppendixView.get())
-        assertTrue(titleAppendixViewChanges > 0) { "the binding on the further title lines was not re-evaluated" }
-        assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
-        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
-    }
-
-    /**
-     * Use case: the further title lines are filled from a binding, so every list that binding produces
-     * reaches the model object and every binding above it shows it.
-     */
-    @Test
-    fun writesBoundTitleAppendixToModelAndNotifiesTree() {
-        val source = SimpleObjectProperty(FXCollections.observableArrayList("A first note"))
-        property.titleAppendixProperty.bind(source)
-
-        source.set(FXCollections.observableArrayList("In three parts"))
-
-        assertEquals(listOf("In three parts"), holder.book?.titleAppendix)
-        assertEquals("In three parts", titleAppendixView.get())
-        assertTrue(titleAppendixViewChanges > 0) { "the binding on the further title lines was not re-evaluated" }
-        assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
-        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
-    }
-
-    /**
-     * Use case: the user writes a heading into the prolog, so the text lands in the nested model object
-     * and the bindings on that field, on the prolog and on the book show it.
-     */
-    @Test
-    fun writesNestedPrologTitleToModelAndNotifiesTree() {
-        property.prologProperty.title = "After the storm"
-
-        assertEquals("After the storm", holder.book?.prolog?.title)
-        assertEquals("After the storm", prologTitleView.get())
-        assertTrue(prologTitleViewChanges > 0) { "the binding on the heading of the prolog was not re-evaluated" }
-        assertTrue(prologViewChanges > 0) { "the binding on the prolog was not re-evaluated" }
-        assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
-        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
-    }
-
-    /**
-     * Use case: the paragraphs of the prolog are filled from a binding - the text editor hands over its
-     * content - so every list that binding produces reaches the nested model object and the bindings on
-     * that field, on the prolog and on the book show it.
-     */
-    @Test
-    fun writesBoundNestedPrologParagraphToModelAndNotifiesTree() {
-        val source = SimpleObjectProperty(FXCollections.observableArrayList("A first line."))
-        property.prologProperty.paragraphProperty.bind(source)
-
-        source.set(FXCollections.observableArrayList("Then the wind came."))
-
-        assertEquals(listOf("Then the wind came."), holder.book?.prolog?.paragraph)
-        assertEquals("Then the wind came.", prologParagraphView.get())
-        assertTrue(prologParagraphViewChanges > 0) {
-            "the binding on the paragraphs of the prolog was not re-evaluated"
+        assertFalse(book().copyright.included)
+        assertEquals("false", copyrightIncludedView.get())
+        assertTrue(copyrightIncludedViewChanges > 0) {
+            "the binding on the switch of the copyright page was not re-evaluated"
         }
+        assertTrue(copyrightViewChanges > 0) { "the binding on the copyright page was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+    }
+
+    /**
+     * Use case: the whole copyright page is replaced, so the field property below it belongs to
+     * another object afterwards and every binding of the object tree shows the values of that object
+     * instead of the previous ones.
+     */
+    @Test
+    fun writesCopyrightToModelAndNotifiesTree() {
+        val copyright = Copyright(included = false)
+
+        property.copyright = copyright
+
+        assertEquals(copyright, book().copyright)
+        assertEquals(copyrightState(copyright), copyrightView.get())
+        assertEquals("false", copyrightIncludedView.get())
+        assertTrue(copyrightIncludedViewChanges > 0) {
+            "the binding on the switch of the copyright page was not re-evaluated"
+        }
+        assertTrue(copyrightViewChanges > 0) { "the binding on the copyright page was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+    }
+
+    /**
+     * Use case: the user takes the prolog out of the book, so the switch lands in the nested model
+     * object and the bindings on that field, on the prolog and on the book show it.
+     */
+    @Test
+    fun writesNestedPrologIncludedToModelAndNotifiesTree() {
+        property.prologProperty.included = false
+
+        assertFalse(book().prolog.included)
+        assertEquals("false", prologIncludedView.get())
+        assertTrue(prologIncludedViewChanges > 0) { "the binding on the switch of the prolog was not re-evaluated" }
         assertTrue(prologViewChanges > 0) { "the binding on the prolog was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+    }
+
+    /**
+     * Use case: the user puts the epilog into the book, so the switch lands in the nested model object
+     * and the bindings on that field, on the epilog and on the book show it.
+     */
+    @Test
+    fun writesNestedEpilogIncludedToModelAndNotifiesTree() {
+        property.epilogProperty.included = true
+
+        assertTrue(book().epilog.included)
+        assertEquals("true", epilogIncludedView.get())
+        assertTrue(epilogIncludedViewChanges > 0) { "the binding on the switch of the epilog was not re-evaluated" }
+        assertTrue(epilogViewChanges > 0) { "the binding on the epilog was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+    }
+
+    /**
+     * Use case: the user takes the blurb off the cover, so the switch lands in the nested model object
+     * and the bindings on that field, on the blurb and on the book show it.
+     */
+    @Test
+    fun writesNestedBlurbIncludedToModelAndNotifiesTree() {
+        property.blurbProperty.included = false
+
+        assertFalse(book().blurb.included)
+        assertEquals("false", blurbIncludedView.get())
+        assertTrue(blurbIncludedViewChanges > 0) { "the binding on the switch of the blurb was not re-evaluated" }
+        assertTrue(blurbViewChanges > 0) { "the binding on the blurb was not re-evaluated" }
         assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
         assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
     }
@@ -475,51 +469,17 @@ class BookPropertyTest {
      */
     @Test
     fun writesPrologToModelAndNotifiesTree() {
-        val prolog = Prolog(
-            title = "After the storm",
-            titleAppendix = listOf("Written in winter"),
-            paragraph = listOf("Then the wind came.")
-        )
+        val prolog = Prolog(prompts = AIPrompt("Tell what happened.", "Slow."))
 
         property.prolog = prolog
 
-        assertEquals(prolog, holder.book?.prolog)
-        assertEquals(partState(prolog), prologView.get())
-        assertEquals("After the storm", prologTitleView.get())
-        assertTrue(prologTitleViewChanges > 0) { "the binding on the heading of the prolog was not re-evaluated" }
-        assertTrue(prologParagraphViewChanges > 0) {
-            "the binding on the paragraphs of the prolog was not re-evaluated"
+        assertEquals(prolog, book().prolog)
+        assertEquals(prologState(prolog), prologView.get())
+        assertEquals("false", prologIncludedView.get())
+        assertTrue(prologPromptsViewChanges > 0) {
+            "the binding on the prompts of the prolog was not re-evaluated"
         }
-        assertTrue(prologViewChanges > 0) { "the binding on the prolog was not re-evaluated" }
-        assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
-        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
-    }
-
-    /**
-     * Use case: the user deletes the prolog and creates a new one later on, so the properties below the
-     * prolog first answer with neutral values and take over the values of the new object afterwards -
-     * every binding of the object tree follows both steps.
-     */
-    @Test
-    fun createsPrologAndNotifiesTree() {
-        property.prolog = null
-
-        assertNull(holder.book?.prolog)
-        assertEquals(partState(null), prologView.get())
-        assertEquals(MISSING, prologTitleView.get())
-        assertEquals("", prologParagraphView.get())
-
-        resetCounters()
-        val prolog = Prolog(title = "After the storm", paragraph = listOf("Then the wind came."))
-        property.prolog = prolog
-
-        assertEquals(prolog, holder.book?.prolog)
-        assertEquals("After the storm", prologTitleView.get())
-        assertEquals("Then the wind came.", prologParagraphView.get())
-        assertTrue(prologTitleViewChanges > 0) { "the binding on the heading of the prolog was not re-evaluated" }
-        assertTrue(prologParagraphViewChanges > 0) {
-            "the binding on the paragraphs of the prolog was not re-evaluated"
-        }
+        assertTrue(prologIncludedViewChanges > 0) { "the binding on the switch of the prolog was not re-evaluated" }
         assertTrue(prologViewChanges > 0) { "the binding on the prolog was not re-evaluated" }
         assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
         assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
@@ -533,7 +493,7 @@ class BookPropertyTest {
     fun writesContentPromptToModelAndNotifiesTree() {
         property.promptsProperty.contentPromptProperty.set("Tell a story of a way back.")
 
-        assertEquals("Tell a story of a way back.", holder.book?.prompts?.contentPrompt)
+        assertEquals("Tell a story of a way back.", book().prompts.contentPrompt)
         assertEquals(
             promptText(AIPrompt("Tell a story of a way back.", INITIAL_PROMPTS.stylePrompt)),
             promptsView.get()
@@ -553,8 +513,8 @@ class BookPropertyTest {
         property.promptsProperty.contentPromptProperty.set("Tell a story of a way back.")
         property.promptsProperty.stylePromptProperty.set("Write it plainly.")
 
-        assertEquals("Tell a story of a way back.", holder.book?.prompts?.contentPrompt)
-        assertEquals("Write it plainly.", holder.book?.prompts?.stylePrompt)
+        assertEquals("Tell a story of a way back.", book().prompts.contentPrompt)
+        assertEquals("Write it plainly.", book().prompts.stylePrompt)
         assertEquals("Tell a story of a way back.", property.promptsProperty.contentPrompt)
         assertEquals("Write it plainly.", property.promptsProperty.stylePrompt)
         assertEquals(
@@ -574,7 +534,7 @@ class BookPropertyTest {
     fun writesPrologContentPromptToModelAndNotifiesTree() {
         property.prologProperty.promptsProperty.contentPromptProperty.set("Tell what nobody saw coming.")
 
-        assertEquals("Tell what nobody saw coming.", holder.book?.prolog?.prompts?.contentPrompt)
+        assertEquals("Tell what nobody saw coming.", book().prolog.prompts.contentPrompt)
         assertEquals(
             promptText(AIPrompt("Tell what nobody saw coming.", INITIAL_PROLOG_PROMPTS.stylePrompt)),
             prologPromptsView.get()
@@ -593,9 +553,9 @@ class BookPropertyTest {
      */
     @Test
     fun writesChapterAddedToModelAndNotifiesTree() {
-        property.chaptersProperty.add(Chapter(name = "Chapter two", title = "The departure"))
+        property.chaptersProperty.add(Chapter(name = "Chapter two"))
 
-        assertEquals(listOf("Chapter one", "Chapter two"), holder.book?.chapters?.map { it.name })
+        assertEquals(listOf("Chapter one", "Chapter two"), book().chapters.map { it.name })
         assertEquals("Chapter one;Chapter two", chaptersView.get())
         assertTrue(chaptersViewChanges > 0) { "the binding on the chapters was not re-evaluated" }
         assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
@@ -609,34 +569,15 @@ class BookPropertyTest {
     @Test
     fun writesBoundChaptersToModelAndNotifiesTree() {
         val source = SimpleObjectProperty(
-            FXCollections.observableArrayList(Chapter(name = "Chapter one", title = "The arrival"))
+            FXCollections.observableArrayList(Chapter(name = "Chapter one"))
         )
         property.chaptersProperty.bind(source)
 
-        source.set(FXCollections.observableArrayList(Chapter(name = "Chapter two", title = "The departure")))
+        source.set(FXCollections.observableArrayList(Chapter(name = "Chapter two")))
 
-        assertEquals(listOf("Chapter two"), holder.book?.chapters?.map { it.name })
+        assertEquals(listOf("Chapter two"), book().chapters.map { it.name })
         assertEquals("Chapter two", chaptersView.get())
         assertTrue(chaptersViewChanges > 0) { "the binding on the chapters was not re-evaluated" }
-        assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
-        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
-    }
-
-    /**
-     * Use case: the user writes a heading into the epilog, so the text lands in the nested model object
-     * and the bindings on that field, on the epilog and on the book show it.
-     */
-    @Test
-    fun writesNestedEpilogTitleToModelAndNotifiesTree() {
-        val source = SimpleStringProperty("Draft heading")
-        property.epilogProperty.titleProperty.bind(source)
-
-        source.set("The years after")
-
-        assertEquals("The years after", holder.book?.epilog?.title)
-        assertEquals("The years after", epilogTitleView.get())
-        assertTrue(epilogTitleViewChanges > 0) { "the binding on the heading of the epilog was not re-evaluated" }
-        assertTrue(epilogViewChanges > 0) { "the binding on the epilog was not re-evaluated" }
         assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
         assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
     }
@@ -648,14 +589,14 @@ class BookPropertyTest {
      */
     @Test
     fun writesEpilogToModelAndNotifiesTree() {
-        val epilog = Epilog(title = "The years after", paragraph = listOf("Nobody came back."))
+        val epilog = Epilog(included = true)
 
         property.epilog = epilog
 
-        assertEquals(epilog, holder.book?.epilog)
-        assertEquals(partState(epilog), epilogView.get())
-        assertEquals("The years after", epilogTitleView.get())
-        assertTrue(epilogTitleViewChanges > 0) { "the binding on the heading of the epilog was not re-evaluated" }
+        assertEquals(epilog, book().epilog)
+        assertEquals(epilogState(epilog), epilogView.get())
+        assertEquals("true", epilogIncludedView.get())
+        assertTrue(epilogIncludedViewChanges > 0) { "the binding on the switch of the epilog was not re-evaluated" }
         assertTrue(epilogViewChanges > 0) { "the binding on the epilog was not re-evaluated" }
         assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
         assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
@@ -671,7 +612,7 @@ class BookPropertyTest {
 
         assertEquals(
             listOf("A story about a long journey.", "For everyone who ever left home."),
-            holder.book?.blurb?.paragraph
+            book().blurb.paragraph
         )
         assertEquals(
             "A story about a long journey.;For everyone who ever left home.",
@@ -686,9 +627,9 @@ class BookPropertyTest {
     }
 
     /**
-     * Use case: the whole blurb is replaced, so the field property below it belongs to another object
-     * afterwards and every binding of the object tree shows the paragraphs of that object instead of
-     * the previous ones.
+     * Use case: the whole blurb is replaced, so the field properties below it belong to another object
+     * afterwards and every binding of the object tree shows the values of that object instead of the
+     * previous ones.
      */
     @Test
     fun writesBlurbToModelAndNotifiesTree() {
@@ -696,12 +637,14 @@ class BookPropertyTest {
 
         property.blurb = blurb
 
-        assertEquals(blurb, holder.book?.blurb)
+        assertEquals(blurb, book().blurb)
         assertEquals(blurbState(blurb), blurbView.get())
         assertEquals("For everyone who ever left home.", blurbParagraphView.get())
+        assertEquals("false", blurbIncludedView.get())
         assertTrue(blurbParagraphViewChanges > 0) {
             "the binding on the paragraphs of the blurb was not re-evaluated"
         }
+        assertTrue(blurbIncludedViewChanges > 0) { "the binding on the switch of the blurb was not re-evaluated" }
         assertTrue(blurbViewChanges > 0) { "the binding on the blurb was not re-evaluated" }
         assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
         assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
@@ -710,28 +653,29 @@ class BookPropertyTest {
     /**
      * Use case: a field of the book or of an object nested in it is changed by application code past
      * the property, so the property is told to read the book again and every field property delivers
-     * the current value afterwards - down into prolog, epilog and blurb, which nothing else would
-     * reach because those objects were not exchanged.
+     * the current value afterwards - down into copyright page, prolog, epilog and blurb, which nothing
+     * else would reach because those objects were not exchanged.
      */
     @Test
     fun readsFieldsChangedOnModel() {
-        holder.book?.title = "The way back"
-        holder.book?.titleAppendix = listOf("In three parts")
-        holder.book?.prompts = AIPrompt("Tell a story of a way back.", "Dry and short.")
-        holder.book?.prolog?.title = "After the storm"
-        holder.book?.chapters = listOf(Chapter(name = "Chapter two", title = "The departure"))
-        holder.book?.epilog?.title = "The years after"
-        holder.book?.blurb?.paragraph = listOf("For everyone who ever left home.")
+        val book = book()
+        book.prompts = AIPrompt("Tell a story of a way back.", "Dry and short.")
+        book.copyright.included = false
+        book.prolog.included = false
+        book.chapters = listOf(Chapter(name = "Chapter two"))
+        book.epilog.included = true
+        book.blurb.paragraph = listOf("For everyone who ever left home.")
+        book.blurb.included = false
 
         property.refresh()
 
-        assertEquals("The way back", property.title)
-        assertEquals(listOf("In three parts"), property.titleAppendix)
         assertEquals(AIPrompt("Tell a story of a way back.", "Dry and short."), property.prompts)
-        assertEquals("After the storm", property.prologProperty.title)
+        assertFalse(property.copyrightProperty.included)
+        assertFalse(property.prologProperty.included)
         assertEquals(listOf("Chapter two"), property.chapters.map { it.name })
-        assertEquals("The years after", property.epilogProperty.title)
+        assertTrue(property.epilogProperty.included)
         assertEquals(listOf("For everyone who ever left home."), property.blurbProperty.paragraph)
+        assertFalse(property.blurbProperty.included)
     }
 
     /**
@@ -741,46 +685,38 @@ class BookPropertyTest {
      */
     @Test
     fun writesReplacedBookToModelAndNotifiesWholeTree() {
-        val prolog = Prolog(title = "After the storm", paragraph = listOf("Then the wind came."))
-        val epilog = Epilog(title = "The years after", paragraph = listOf("Nobody came back."))
+        val copyright = Copyright(included = false)
+        val prolog = Prolog(prompts = AIPrompt("Tell what happened.", "Slow."))
+        val epilog = Epilog(included = true)
         val blurb = Blurb(paragraph = listOf("For everyone who ever left home."))
-        val chapters = listOf(Chapter(name = "Chapter two", title = "The departure"))
+        val chapters = listOf(Chapter(name = "Chapter two"))
 
         property.value = Book(
-            title = "The way back",
-            titleAppendix = listOf("In three parts"),
+            copyright = copyright,
             prolog = prolog,
             chapters = chapters,
             epilog = epilog,
             blurb = blurb
         )
 
-        assertTreeShows(
-            "The way back",
-            listOf("In three parts"),
-            prolog,
-            chapters,
-            epilog,
-            blurb,
-            AIPrompt()
-        )
-        assertTrue(titleViewChanges > 0) { "the binding on the main title was not re-evaluated" }
+        assertTreeShows(copyright, prolog, chapters, epilog, blurb, AIPrompt(), Document())
         assertTrue(promptsViewChanges > 0) { "the binding on the prompts of the book was not re-evaluated" }
+        assertTrue(copyrightIncludedViewChanges > 0) {
+            "the binding on the switch of the copyright page was not re-evaluated"
+        }
+        assertTrue(copyrightViewChanges > 0) { "the binding on the copyright page was not re-evaluated" }
         assertTrue(prologPromptsViewChanges > 0) {
             "the binding on the prompts of the prolog was not re-evaluated"
         }
-        assertTrue(titleAppendixViewChanges > 0) { "the binding on the further title lines was not re-evaluated" }
-        assertTrue(prologTitleViewChanges > 0) { "the binding on the heading of the prolog was not re-evaluated" }
-        assertTrue(prologParagraphViewChanges > 0) {
-            "the binding on the paragraphs of the prolog was not re-evaluated"
-        }
+        assertTrue(prologIncludedViewChanges > 0) { "the binding on the switch of the prolog was not re-evaluated" }
         assertTrue(prologViewChanges > 0) { "the binding on the prolog was not re-evaluated" }
         assertTrue(chaptersViewChanges > 0) { "the binding on the chapters was not re-evaluated" }
-        assertTrue(epilogTitleViewChanges > 0) { "the binding on the heading of the epilog was not re-evaluated" }
+        assertTrue(epilogIncludedViewChanges > 0) { "the binding on the switch of the epilog was not re-evaluated" }
         assertTrue(epilogViewChanges > 0) { "the binding on the epilog was not re-evaluated" }
         assertTrue(blurbParagraphViewChanges > 0) {
             "the binding on the paragraphs of the blurb was not re-evaluated"
         }
+        assertTrue(blurbIncludedViewChanges > 0) { "the binding on the switch of the blurb was not re-evaluated" }
         assertTrue(blurbViewChanges > 0) { "the binding on the blurb was not re-evaluated" }
         assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
         assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
@@ -795,30 +731,32 @@ class BookPropertyTest {
         property.value = newBook()
 
         assertTreeShowsInitialBook()
-        assertEquals(0, titleViewChanges) { "the main title was reported as changed although it did not change" }
-        assertEquals(0, titleAppendixViewChanges) {
-            "the further title lines were reported as changed although they did not change"
-        }
         assertEquals(0, promptsViewChanges) {
             "the prompts of the book were reported as changed although they did not change"
+        }
+        assertEquals(0, copyrightIncludedViewChanges) {
+            "the switch of the copyright page was reported as changed although it did not change"
+        }
+        assertEquals(0, copyrightViewChanges) {
+            "the copyright page was reported as changed although it did not change"
         }
         assertEquals(0, prologPromptsViewChanges) {
             "the prompts of the prolog were reported as changed although they did not change"
         }
-        assertEquals(0, prologTitleViewChanges) {
-            "the heading of the prolog was reported as changed although it did not change"
-        }
-        assertEquals(0, prologParagraphViewChanges) {
-            "the paragraphs of the prolog were reported as changed although they did not change"
+        assertEquals(0, prologIncludedViewChanges) {
+            "the switch of the prolog was reported as changed although it did not change"
         }
         assertEquals(0, prologViewChanges) { "the prolog was reported as changed although it did not change" }
         assertEquals(0, chaptersViewChanges) { "the chapters were reported as changed although they did not change" }
-        assertEquals(0, epilogTitleViewChanges) {
-            "the heading of the epilog was reported as changed although it did not change"
+        assertEquals(0, epilogIncludedViewChanges) {
+            "the switch of the epilog was reported as changed although it did not change"
         }
         assertEquals(0, epilogViewChanges) { "the epilog was reported as changed although it did not change" }
         assertEquals(0, blurbParagraphViewChanges) {
             "the paragraphs of the blurb were reported as changed although they did not change"
+        }
+        assertEquals(0, blurbIncludedViewChanges) {
+            "the switch of the blurb was reported as changed although it did not change"
         }
         assertEquals(0, blurbViewChanges) { "the blurb was reported as changed although it did not change" }
     }
@@ -832,17 +770,18 @@ class BookPropertyTest {
     fun readsNeutralValuesWhenBookIsAbsent() {
         property.value = null
 
-        assertNull(property.title)
-        assertEquals(emptyList<String>(), property.titleAppendix)
         assertNull(property.prompts)
+        assertNull(property.copyright)
+        assertFalse(property.copyrightProperty.included)
         assertNull(property.prolog)
-        assertNull(property.prologProperty.title)
+        assertFalse(property.prologProperty.included)
         assertEquals(emptyList<Chapter>(), property.chapters)
         assertNull(property.epilog)
-        assertNull(property.epilogProperty.title)
+        assertFalse(property.epilogProperty.included)
         assertNull(property.blurb)
         assertEquals(emptyList<String>(), property.blurbProperty.paragraph)
-        assertTreeShows(null, emptyList(), null, emptyList(), null, null, null)
+        assertFalse(property.blurbProperty.included)
+        assertTreeShows(null, null, emptyList(), null, null, null, null)
     }
 
     /**
@@ -853,13 +792,127 @@ class BookPropertyTest {
     fun dropsWritesWhenBookIsAbsent() {
         property.value = null
 
-        property.title = "The way back"
-        property.titleAppendix = listOf("In three parts")
         property.prompts = AIPrompt("Tell a story of a way back.", "Dry and short.")
-        property.prolog = Prolog(title = "After the storm")
-        property.chapters = listOf(Chapter(name = "Chapter two", title = "The departure"))
-        property.epilog = Epilog(title = "The years after")
+        property.copyright = Copyright(included = true)
+        property.copyrightProperty.included = true
+        property.prolog = Prolog(included = true)
+        property.prologProperty.included = true
+        property.chapters = listOf(Chapter(name = "Chapter two"))
+        property.epilog = Epilog(included = true)
         property.blurb = Blurb(paragraph = listOf("For everyone who ever left home."))
+
+        assertNull(holder.book)
+    }
+
+    /**
+     * Use case: the project is read from its file before the user interface is built, so the binding on
+     * the manuscript's document delivers the document that already sits in the model object.
+     */
+    @Test
+    fun readsInitialDocumentValue() {
+        assertEquals(INITIAL_DOCUMENT.numbering.startNumber.toString(), documentView.get())
+    }
+
+    /**
+     * Use case: the writing surface replaces the manuscript's document after an edit, so the new
+     * document lands in the model object and the binding on it, and on the book, show it.
+     */
+    @Test
+    fun writesDocumentToModelAndNotifiesTree() {
+        val document = Document(numbering = PageNumbering.OFF.copy(startNumber = 7))
+
+        property.document = document
+
+        assertEquals(document, book().document)
+        assertEquals("7", documentView.get())
+        assertTrue(documentViewChanges > 0) { "the binding on the document was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+    }
+
+    /**
+     * Use case: the document is filled from a binding, so a value that binding produces reaches the
+     * model object and the binding on it, and on the book, show it.
+     */
+    @Test
+    fun writesBoundDocumentToModelAndNotifiesTree() {
+        val document = Document(numbering = PageNumbering.OFF.copy(startNumber = 9))
+        val source = SimpleObjectProperty(document)
+        property.documentProperty.bind(source)
+
+        assertEquals(document, book().document)
+        assertEquals("9", documentView.get())
+        assertTrue(documentViewChanges > 0) { "the binding on the document was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+    }
+
+    /**
+     * Use case: the document is changed by application code past the property - for instance a
+     * migration writing straight onto the model - so [BookProperty.refresh] picks it up and the binding
+     * on it delivers the current value afterwards.
+     */
+    @Test
+    fun readsDocumentChangedOnModelAfterRefresh() {
+        val document = Document(numbering = PageNumbering.OFF.copy(startNumber = 11))
+        book().document = document
+
+        property.refresh()
+
+        assertEquals(document, property.document)
+    }
+
+    /**
+     * Use case: the whole manuscript is replaced - another project file was loaded - so the document
+     * property belongs to another object afterwards and the binding on it shows the document of that
+     * object instead of the previous one.
+     */
+    @Test
+    fun writesReplacedBookUpdatesDocumentAndNotifiesTree() {
+        val document = Document(numbering = PageNumbering.OFF.copy(startNumber = 13))
+
+        property.value = Book().apply { this.document = document }
+
+        assertEquals("13", documentView.get())
+        assertTrue(documentViewChanges > 0) { "the binding on the document was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the book was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+    }
+
+    /**
+     * Use case: the manuscript is exchanged for an object carrying the same document, so nothing the
+     * user interface shows changes and the document field does not report a change of its own.
+     */
+    @Test
+    fun keepsDocumentQuietWhenReplacedBookCarriesTheSameDocument() {
+        property.value = newBook()
+
+        assertEquals(0, documentViewChanges) {
+            "the document was reported as changed although it did not change"
+        }
+    }
+
+    /**
+     * Use case: no project is open at all, so the document property carries no value either, the same
+     * neutral state every other field falls back to.
+     */
+    @Test
+    fun readsNeutralDocumentWhenBookIsAbsent() {
+        property.value = null
+
+        assertNull(property.document)
+        assertEquals(MISSING, documentView.get())
+    }
+
+    /**
+     * Use case: the user interface writes a document into the property while no manuscript sits behind
+     * it, so the value is dropped instead of creating a book nobody asked for.
+     */
+    @Test
+    fun dropsDocumentWriteWhenBookIsAbsent() {
+        property.value = null
+
+        property.document = Document(numbering = PageNumbering.OFF.copy(startNumber = 5))
 
         assertNull(holder.book)
     }
@@ -875,5 +928,9 @@ class BookPropertyTest {
         /** The prompts of the prolog every test starts from, different from those of the book. */
         val INITIAL_PROLOG_PROMPTS: AIPrompt
             get() = AIPrompt("Tell what happened before the story.", "Quiet and slow.")
+
+        /** The manuscript's document every test starts from. */
+        val INITIAL_DOCUMENT: Document
+            get() = Document(numbering = PageNumbering.OFF.copy(startNumber = 3))
     }
 }

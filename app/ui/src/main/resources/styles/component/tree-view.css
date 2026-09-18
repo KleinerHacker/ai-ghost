@@ -68,3 +68,44 @@
 .tree-view > .virtual-flow > .clipped-container > .sheet > .tree-cell:filled:selected > .tree-disclosure-node > .arrow {
     -fx-background-color: -ghost-on-primary;
 }
+
+/*
+ * The checkbox a switchable part (prolog, epilog, blurb - IP-23) carries next to its icon, telling
+ * whether it belongs to the finished book. First used here, so it is styled scoped to the tree.
+ */
+.tree-view .tree-cell-part {
+    -fx-spacing: 4px;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.tree-view .tree-cell-part > .check-box > .box {
+    -fx-background-color: -ghost-surface-input;
+    -fx-background-radius: 8px;
+    -fx-border-color: -ghost-tint-line;
+    -fx-border-width: 2px;
+    -fx-border-radius: 8px;
+    -fx-padding: 2px;
+}
+
+.tree-view .tree-cell-part > .check-box:selected > .box {
+    -fx-background-color: -ghost-primary;
+    -fx-border-color: -ghost-primary;
+}
+
+.tree-view .tree-cell-part > .check-box:selected > .box > .mark {
+    -fx-background-color: -ghost-on-primary;
+}
+
+.tree-cell:filled:selected .tree-cell-part > .check-box > .box {
+    -fx-background-color: -ghost-surface;
+    -fx-border-color: -ghost-on-primary;
+}
+
+.tree-cell:filled:selected .tree-cell-part > .check-box:selected > .box {
+    -fx-background-color: -ghost-on-primary;
+    -fx-border-color: -ghost-on-primary;
+}
+
+.tree-cell:filled:selected .tree-cell-part > .check-box:selected > .box > .mark {
+    -fx-background-color: -ghost-primary;
+}

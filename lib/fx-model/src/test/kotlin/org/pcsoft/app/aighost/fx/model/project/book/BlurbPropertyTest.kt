@@ -13,11 +13,13 @@
 package org.pcsoft.app.aighost.fx.model.project.book
 
 import javafx.beans.binding.Bindings
+import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleObjectProperty
 import javafx.beans.property.SimpleStringProperty
 import javafx.beans.property.StringProperty
 import javafx.collections.FXCollections
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -27,12 +29,13 @@ import org.pcsoft.app.aighost.model.project.book.Blurb
 /**
  * Developer tests for [BlurbProperty].
  *
- * The property wraps the blurb of a book and offers its prompt and its text as properties of their
- * own. Every test checks the object tree the way the user interface uses it: a binding hangs on the
- * blurb itself and on every single field of it, and the tests assert that a change reaches every
- * binding that has to know about it - upwards to the parent the property reports to as well as
- * downwards into the fields of an exchanged blurb. A book carries a blurb only after the user created
- * it, so the behaviour without any blurb is checked as well.
+ * The property wraps the blurb of a book and offers its prompt, its text and its switch as properties
+ * of their own. Every test checks the object tree the way the user interface uses it: a binding hangs
+ * on the blurb itself and on every single field of it, and the tests assert that a change reaches
+ * every binding that has to know about it - upwards to the parent the property reports to as well as
+ * downwards into the fields of an exchanged blurb. A book always carries its blurb, but the property
+ * carries no object as long as no book sits behind the one standing for it, so that state is checked
+ * as well.
  */
 class BlurbPropertyTest {
 
@@ -56,6 +59,10 @@ class BlurbPropertyTest {
     /** Binding on the paragraphs of the blurb. */
     private lateinit var paragraphView: StringProperty
     private var paragraphViewChanges = 0
+
+    /** Binding on the switch telling whether the blurb belongs to the book. */
+    private lateinit var includedView: StringProperty
+    private var includedViewChanges = 0
 
     @BeforeEach
     fun setUp() {
@@ -97,6 +104,14 @@ class BlurbPropertyTest {
         paragraphBinding.addListener { _, _, _ -> paragraphViewChanges++ }
         paragraphView.bind(paragraphBinding)
 
+        includedView = SimpleStringProperty()
+        val includedBinding = Bindings.createStringBinding(
+            { property.includedProperty.get().toString() },
+            property.includedProperty
+        )
+        includedBinding.addListener { _, _, _ -> includedViewChanges++ }
+        includedView.bind(includedBinding)
+
         resetCounters()
     }
 
@@ -105,20 +120,26 @@ class BlurbPropertyTest {
         rootViewChanges = 0
         promptViewChanges = 0
         paragraphViewChanges = 0
+        includedViewChanges = 0
     }
 
     /** Text form of the whole blurb, used as the value of the binding on the root. */
     private fun state(blurb: Blurb?): String =
-        "${blurb?.prompt ?: MISSING}|" + blurb?.paragraph.orEmpty().joinToString(";")
+        "${blurb?.prompt ?: MISSING}|${blurb?.paragraph.orEmpty().joinToString(";")}|" +
+                "${blurb?.included ?: false}"
 
     /**
      * Asserts that every binding of the object tree delivers the given state, so no view keeps the
-     * prompt or the paragraphs of a previous blurb.
+     * prompt, the paragraphs or the switch of a previous blurb.
      */
-    private fun assertTreeShows(paragraph: List<String>, prompt: String? = INITIAL_PROMPT) {
+    private fun assertTreeShows(
+        paragraph: List<String>,
+        prompt: String? = INITIAL_PROMPT,
+        included: Boolean = false
+    ) {
         val paragraphText = paragraph.joinToString(";")
 
-        assertEquals("${prompt ?: MISSING}|$paragraphText", rootView.get()) {
+        assertEquals("${prompt ?: MISSING}|$paragraphText|$included", rootView.get()) {
             "the binding on the blurb delivers an outdated state"
         }
         assertEquals(prompt ?: MISSING, promptView.get()) {
@@ -126,6 +147,9 @@ class BlurbPropertyTest {
         }
         assertEquals(paragraphText, paragraphView.get()) {
             "the binding on the paragraphs delivers outdated paragraphs"
+        }
+        assertEquals(included.toString(), includedView.get()) {
+            "the binding on the switch delivers an outdated value"
         }
     }
 
@@ -225,6 +249,41 @@ class BlurbPropertyTest {
     }
 
     /**
+     * Use case: the user puts the blurb on the cover, so the switch lands in the model object and both
+     * the binding on that field and the binding on the blurb show it.
+     */
+    @Test
+    fun writesIncludedToModelAndNotifiesTree() {
+        property.included = true
+
+        assertEquals(true, holder.blurb?.included)
+        assertTreeShows(listOf("A story about a long journey."), included = true)
+        assertTrue(includedViewChanges > 0) { "the binding on the switch was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the blurb was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+    }
+
+    /**
+     * Use case: the switch is bound to the check box of the editor, so every state that box produces
+     * reaches the model object and every binding above it shows it.
+     */
+    @Test
+    fun writesBoundIncludedToModelAndNotifiesTree() {
+        val source = SimpleBooleanProperty(false)
+        property.includedProperty.bind(source)
+
+        source.set(true)
+
+        assertEquals(true, holder.blurb?.included)
+        assertTreeShows(listOf("A story about a long journey."), included = true)
+        assertTrue(includedViewChanges > 0) { "the binding on the switch was not re-evaluated" }
+        assertTrue(rootViewChanges > 0) { "the binding on the blurb was not re-evaluated" }
+        assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
+
+        property.includedProperty.unbind()
+    }
+
+    /**
      * Use case: a field of the blurb is changed by application code past the property, so the property
      * is told to read the blurb again and every field property delivers the current value afterwards.
      */
@@ -232,11 +291,13 @@ class BlurbPropertyTest {
     fun readsFieldsChangedOnModel() {
         holder.blurb?.prompt = "Advertise a journey nobody forgets."
         holder.blurb?.paragraph = listOf("For everyone who ever left home.")
+        holder.blurb?.included = true
 
         property.refresh()
 
         assertEquals("Advertise a journey nobody forgets.", property.prompt)
         assertEquals(listOf("For everyone who ever left home."), property.paragraph)
+        assertTrue(property.included)
     }
 
     /**
@@ -248,19 +309,26 @@ class BlurbPropertyTest {
     fun writesReplacedBlurbToModelAndNotifiesWholeTree() {
         property.value = Blurb(
             prompt = "Advertise a journey nobody forgets.",
-            paragraph = listOf("For everyone who ever left home.")
+            paragraph = listOf("For everyone who ever left home."),
+            included = true
         )
 
         assertEquals(
-            Blurb("Advertise a journey nobody forgets.", listOf("For everyone who ever left home.")),
+            Blurb(
+                "Advertise a journey nobody forgets.",
+                listOf("For everyone who ever left home."),
+                included = true
+            ),
             holder.blurb
         )
         assertTreeShows(
             listOf("For everyone who ever left home."),
-            "Advertise a journey nobody forgets."
+            "Advertise a journey nobody forgets.",
+            included = true
         )
         assertTrue(promptViewChanges > 0) { "the binding on the prompt was not re-evaluated" }
         assertTrue(paragraphViewChanges > 0) { "the binding on the paragraphs was not re-evaluated" }
+        assertTrue(includedViewChanges > 0) { "the binding on the switch was not re-evaluated" }
         assertTrue(rootViewChanges > 0) { "the binding on the blurb was not re-evaluated" }
         assertTrue(parentEvents > 0) { "the parent property was not told about the change" }
     }
@@ -283,11 +351,14 @@ class BlurbPropertyTest {
         assertEquals(0, paragraphViewChanges) {
             "the paragraphs were reported as changed although they did not change"
         }
+        assertEquals(0, includedViewChanges) {
+            "the switch was reported as changed although it did not change"
+        }
     }
 
     /**
-     * Use case: the book carries no blurb at all because the user never created one, so every field
-     * property answers with a neutral value and the editor can be built nevertheless.
+     * Use case: no book sits behind the property standing for the blurb because no project is open, so
+     * every field property answers with a neutral value and the editor can be built nevertheless.
      */
     @Test
     fun readsNeutralValuesWhenBlurbIsAbsent() {
@@ -295,11 +366,12 @@ class BlurbPropertyTest {
 
         assertNull(property.prompt)
         assertEquals(emptyList<String>(), property.paragraph)
+        assertFalse(property.included)
         assertTreeShows(emptyList(), null)
     }
 
     /**
-     * Use case: the editor writes into the property while the book carries no blurb, so the values are
+     * Use case: the editor writes into the property while no blurb sits behind it, so the values are
      * dropped instead of creating a blurb nobody asked for.
      */
     @Test
@@ -308,6 +380,7 @@ class BlurbPropertyTest {
 
         property.prompt = "Advertise a journey nobody forgets."
         property.paragraph = listOf("For everyone who ever left home.")
+        property.included = true
 
         assertNull(holder.blurb)
     }

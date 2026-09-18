@@ -19,16 +19,16 @@ Before creating a new Feature Plan, inspect the directory and determine the next
 Use the following naming convention:
 
 ```text
-<NUMBER>_<FeatureName>.md
+FP-<NUMBER>-<FeatureName>.md
 ```
 
 For example:
 
 ```text
 .claude/plans/features/
-├── 001_UserAuthentication.md
-├── 002_AuditLogging.md
-└── 003_UserImport.md
+├── FP-001-UserAuthentication.md
+├── FP-002-AuditLogging.md
+└── FP-003-UserImport.md
 ```
 
 The number must:
@@ -48,15 +48,15 @@ Every Feature Plan must have an associated status.
 Prefer storing the status in a separate file:
 
 ```text
-<NUMBER>_<FeatureName>_status.md
+FP-<NUMBER>-<FeatureName>-status.md
 ```
 
 For example:
 
 ```text
 .claude/plans/features/
-├── 001_UserAuthentication.md
-├── 001_UserAuthentication_status.md
+├── FP-001-UserAuthentication.md
+├── FP-001-UserAuthentication-status.md
 ```
 
 The status file must contain the current implementation status of the feature and its individual implementation plans.
@@ -198,13 +198,13 @@ Prefer parallelizable implementation plans where possible.
 Create the Feature Plan in:
 
 ```text
-.claude/plans/features/<NUMBER>_<FeatureName>.md
+.claude/plans/features/FP-<NUMBER>-<FeatureName>.md
 ```
 
 Create the corresponding status file:
 
 ```text
-.claude/plans/features/<NUMBER>_<FeatureName>_status.md
+.claude/plans/features/FP-<NUMBER>-<FeatureName>-status.md
 ```
 
 Do not modify unrelated files.
@@ -349,6 +349,60 @@ The status file is the authoritative source for the current implementation statu
 
 When an implementation plan is completed, update its status and recalculate the overall progress.
 
+## Derived Implementation Plans
+
+Every implementation plan derived from a Feature Plan lives in `.claude/plans/implementation/` and
+must carry the number of the Feature Plan it came from, followed by the ID of the plan itself:
+
+```text
+FP-<FEATURE_NUMBER>-IP-<PLAN_NUMBER>-<PlanName>.md
+FP-<FEATURE_NUMBER>-IP-<PLAN_NUMBER>-<PlanName>-status.md
+```
+
+For example, for the Feature Plan `FP-001-PaperWritingSurface.md`:
+
+```text
+.claude/plans/implementation/
+├── FP-001-Overview.md
+├── FP-001-IP-01-FontDiscoveryAndTextMeasuring.md
+├── FP-001-IP-01-FontDiscoveryAndTextMeasuring-status.md
+├── FP-001-IP-02-DesignPageFormat.md
+└── FP-001-IP-02-DesignPageFormat-status.md
+```
+
+The naming rules:
+
+* the feature number comes first, with the same three digits the Feature Plan carries
+* the plan ID follows, as `IP-<PLAN_NUMBER>` with two digits, exactly the ID used in the Feature Plan
+* the plan name follows last, in PascalCase
+* the status file adds `-status` to the very same name
+* a plan that belongs to no Feature Plan carries no `FP-` prefix
+
+The prefix makes the plans of a feature stay together in the directory and tells two plans carrying
+the same ID in different features apart.
+
+### Overview File
+
+Every Feature Plan must have exactly one overview file in `.claude/plans/implementation/`, carrying
+the number of the Feature Plan:
+
+```text
+FP-<FEATURE_NUMBER>-Overview.md
+```
+
+The overview file must contain:
+
+* the name of the Feature Plan and the path to it
+* one line per implementation plan: ID, name and the file name of the plan
+* the order in which the plans are implemented, with the prerequisites of each
+
+The overview file is created together with the implementation plans and is updated whenever a plan
+is added, renamed or removed. It is not a status file and carries no progress information; the
+status of the feature stays in the status file of the Feature Plan.
+
+The overview file stays in place until the last implementation plan of the feature is finished, and
+is removed together with it.
+
 ## Important Rules
 
 * Do not implement anything.
@@ -369,3 +423,5 @@ When an implementation plan is completed, update its status and recalculate the 
 * If the feature is ambiguous, investigate the codebase first and document unresolved questions.
 * Do not silently make major architectural decisions that are not supported by the existing codebase.
 * Keep the Feature Plan stable; implementation progress belongs in the status file.
+* Every derived implementation plan carries the feature number, then its own ID, then its name.
+* Every Feature Plan has exactly one overview file carrying the same feature number.

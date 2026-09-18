@@ -62,6 +62,7 @@ nav:
   - Menu and shortcuts: menu.md
   - Editor: editor.md
   - Project tree: project-tree.md
+  - Project settings: project-settings.md
   - Appearance: theme.md
   - Logging: logging.md
   - API Docs: dokka/html/index.html

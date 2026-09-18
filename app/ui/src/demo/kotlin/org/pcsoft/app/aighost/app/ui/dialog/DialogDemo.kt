@@ -22,6 +22,8 @@ import javafx.stage.Stage
 import org.pcsoft.app.aighost.app.AiGhostIcons
 import org.pcsoft.app.aighost.app.AiGhostTheme
 import org.pcsoft.app.aighost.app.ui.AiGhostDialog
+import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
+import org.pcsoft.app.aighost.model.project.Project
 
 /**
  * Opens every dialog of the application on demand, for the eye of a human being.
@@ -111,6 +113,13 @@ class DialogDemo : Application() {
                     )
                     println("detailed warning answered with $answer")
                 }
+            },
+            Button("Project settings").apply {
+                setOnAction {
+                    val design = ProjectProperty(Project()).designProperty
+                    AiGhostDialog.showProjectSettings(design, stage)
+                    println("project settings closed, page width is ${design.pageFormatProperty.width}")
+                }
             }
         )
 
@@ -121,7 +130,7 @@ class DialogDemo : Application() {
 
         stage.icons.setAll(AiGhostIcons.application)
         stage.title = "AI Ghost - dialog demo"
-        stage.scene = Scene(root, 320.0, 300.0).also(AiGhostTheme::apply)
+        stage.scene = Scene(root, 320.0, 340.0).also(AiGhostTheme::apply)
         stage.show()
     }
 }

@@ -1,0 +1,52 @@
+/*
+ * Copyright (c) KleinerHacker alias Pfeiffer C Soft 2026.
+ * This work is licensed under the Apache License, Version 2.0.
+ * You may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at:
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, this software is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and limitations.
+ */
+
+/*
+ * The writing surface sits on the plain window surface; the sheet itself brings its own look from the
+ * renderer library's stylesheet, overridden below to carry the application's palette.
+ */
+.book-part-editor {
+    -fx-background-color: -ghost-surface;
+}
+
+/*
+ * The hint shown while no part is picked is not text the user works with, so it steps back from the
+ * ink used for real writing.
+ */
+.book-part-editor-empty {
+    -fx-text-fill: -ghost-ink-soft;
+}
+
+/*
+ * simplay-fx's PaperSheetView ships its own default look; every colour it exposes is replaced here
+ * with the application's palette so the sheet does not stand out as a foreign control.
+ */
+.paper-sheet-view {
+    -fx-sheet-background: -ghost-surface-raised;
+    -fx-sheet-border-color: -ghost-tint-line;
+    -fx-shadow-color: -ghost-shadow;
+    -fx-selection-color: -ghost-tint-hover;
+    -fx-caret-color: -ghost-ink;
+}
+
+/* A read-only sheet - the title page and the copyright page - selects in a more muted tone. */
+.paper-sheet-view:readonly {
+    -fx-selection-color: -ghost-tint-pressed;
+}
+
+/*
+ * Shown once, while the whole book is measured for the first time after opening a project - simPlay's
+ * measure is a synchronous call on the FX thread, so this is the only feedback available while it runs.
+ */
+.book-part-editor-progress {
+    -fx-progress-color: -ghost-accent;
+}

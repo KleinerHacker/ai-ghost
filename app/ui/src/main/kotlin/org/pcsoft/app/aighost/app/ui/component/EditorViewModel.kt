@@ -13,10 +13,9 @@
 package org.pcsoft.app.aighost.app.ui.component
 
 import de.saxsys.mvvmfx.ViewModel
-import javafx.beans.binding.Bindings
-import javafx.beans.binding.BooleanBinding
 import javafx.beans.property.ObjectProperty
 import javafx.beans.property.SimpleObjectProperty
+import org.pcsoft.app.aighost.app.undo.UndoStack
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
 
 /**
@@ -28,7 +27,10 @@ import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
  * the user opens another one.
  *
  * [onProjectBound] is what [EditorView] uses to pass the model on to the parts of the editor, because
- * the view is built before the window hands the project over.
+ * the view is built before the window hands the project over. [onUndoStackBound] does the same for
+ * the undo history of the open project, which the writing surface records into.
+ * [selectedProjectTreeItem] mirrors the selection of the project tree, so [Inspector] and
+ * [BookPartEditor] can follow it without reading [ProjectList] itself.
  */
 class EditorViewModel : ViewModel {
 
@@ -36,19 +38,27 @@ class EditorViewModel : ViewModel {
     var project: ProjectProperty? = null
         private set
 
-    val selectedProjectTreeItem: ObjectProperty<ProjectListItem?> = SimpleObjectProperty()
-    val showBookEditor: BooleanBinding = Bindings.createBooleanBinding(
-        { selectedProjectTreeItem.value is ProjectListItem.Root },
-        selectedProjectTreeItem
-    )
+    /** The undo history of the open project, absent until the surrounding window handed it over. */
+    var undoStack: UndoStack? = null
+        private set
 
+    /** The node picked in the project tree, mirrored from [ProjectList.selectedItem]. */
+    val selectedProjectTreeItem: ObjectProperty<ProjectListItem?> = SimpleObjectProperty()
 
     /**
      * Called with the project model as soon as it is handed over.
      *
-     * Set by [EditorView], which passes the model on to the project tree and the manuscript editor.
+     * Set by [EditorView], which passes the model on to the project tree, the inspector and the
+     * writing surface.
      */
     internal var onProjectBound: ((ProjectProperty) -> Unit)? = null
+
+    /**
+     * Called with the undo history as soon as it is handed over.
+     *
+     * Set by [EditorView], which passes it on to the writing surface.
+     */
+    internal var onUndoStackBound: ((UndoStack) -> Unit)? = null
 
     /**
      * Takes the property model of the project over and lets the view pass it on.
@@ -58,5 +68,15 @@ class EditorViewModel : ViewModel {
     internal fun bind(project: ProjectProperty) {
         this.project = project
         onProjectBound?.invoke(project)
+    }
+
+    /**
+     * Takes the undo history of the open project over and lets the view pass it on.
+     *
+     * @param undoStack the one undo history of the surrounding window
+     */
+    internal fun bindUndoStack(undoStack: UndoStack) {
+        this.undoStack = undoStack
+        onUndoStackBound?.invoke(undoStack)
     }
 }

@@ -28,14 +28,22 @@ private const val VERSION = 1
  * Typographic and page layout settings of a [org.pcsoft.app.aighost.model.project.Project].
  *
  * Every project holds design settings that control how its manuscript is rendered. The settings
- * define the visual appearance of various book elements and page structure options.
+ * define the visual appearance of various book elements, the geometry of a page and page structure
+ * options.
+ *
+ * The settings are grouped by the page they apply to. Each page design carries the styles of its
+ * texts, and a style carries its own line spacing - a factor on the line height of the font, where
+ * `1.0` sets the lines as tightly as the font asks for and a larger value spreads them apart.
  *
  * @property version Version of the design metadata structure.
- * @property authorDesign Typographic settings for the author name.
- * @property copyrightDesign Typographic settings for the copyright page.
- * @property titleDesign Typographic settings for the title page.
- * @property chapterDesign Typographic settings for chapter headings and content.
- * @property textDesign Typographic settings for regular body text.
+ * @property pageFormat Size of a page and the empty space on its four sides.
+ * @property titlePage Typographic settings for the title page.
+ * @property copyrightPage Typographic settings for the copyright page.
+ * @property prologPage Typographic settings for the prolog page.
+ * @property blurbPage Typographic settings for the blurb page.
+ * @property chapterPage Typographic settings for the chapter pages.
+ * @property epilogPage Typographic settings for the epilog page.
+ * @property pageNumbering Page numbering settings, off by default.
  * @property startWithEmptyPage Whether to begin the book with a blank page, true by default.
  * @property endWithEmptyPage Whether to end the book with a blank page, true by default.
  */
@@ -44,11 +52,17 @@ private const val VERSION = 1
 data class Design(
     override val version: Int = VERSION,
 
-    var authorDesign: AuthorDesign = AuthorDesign(),
-    var copyrightDesign: CopyrightDesign = CopyrightDesign(),
-    var titleDesign: TitleDesign = TitleDesign(),
-    var chapterDesign: ChapterDesign = ChapterDesign(),
-    var textDesign: TextDesign = TextDesign(),
+    var pageFormat: PageFormat = PageFormat(),
+
+    var titlePage: TitlePageDesign = TitlePageDesign(),
+    var copyrightPage: CopyrightPageDesign = CopyrightPageDesign(),
+
+    var prologPage: PrologPageDesign = PrologPageDesign(),
+    var blurbPage: BlurbPageDesign = BlurbPageDesign(),
+    var chapterPage: ChapterPageDesign = ChapterPageDesign(),
+    var epilogPage: EpilogPageDesign = EpilogPageDesign(),
+
+    var pageNumbering: PageNumberDesign = PageNumberDesign(),
 
     var startWithEmptyPage: Boolean = true,
     var endWithEmptyPage: Boolean = true

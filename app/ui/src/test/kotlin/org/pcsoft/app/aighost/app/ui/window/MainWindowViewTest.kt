@@ -73,7 +73,7 @@ class MainWindowViewTest : ApplicationTest() {
      */
     @Test
     fun menuBarShowsEveryTopLevelMenu() {
-        assertEquals(listOf("File", "Publish", "Help"), menuBar.menus.map { it.text })
+        assertEquals(listOf("File", "Edit", "Publish", "Help"), menuBar.menus.map { it.text })
     }
 
     /**
@@ -104,6 +104,8 @@ class MainWindowViewTest : ApplicationTest() {
         assertEquals("Shift+Shortcut+S", accelerators["Save As..."])
         assertEquals("F1", accelerators["Online Help..."])
         assertEquals("Alt+Shortcut+C", accelerators["Chapter..."])
+        assertEquals("Shortcut+Z", accelerators["Undo"])
+        assertEquals("Shift+Shortcut+Z", accelerators["Redo"])
     }
 
     /**
@@ -114,7 +116,7 @@ class MainWindowViewTest : ApplicationTest() {
         val withGraphic = allItems().filter { it.graphic != null }.map { it.text }
 
         listOf(
-            "Chapter...", "Open...", "Save", "Save As...",
+            "Chapter...", "Open...", "Save", "Save As...", "Undo", "Redo",
             "Preferences...", "Project Settings...", "Export", "Online Help..."
         ).forEach { text ->
             assertNotNull(

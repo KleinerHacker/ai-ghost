@@ -16,6 +16,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.pcsoft.app.aighost.model.project.common.AIPrompt
 
@@ -27,89 +29,92 @@ class PrologTest {
     private val mapper: ObjectMapper = ObjectMapper().registerKotlinModule()
 
     /**
-     * Use case: the user creates the prolog and only titles it, so it starts without appendix lines,
-     * without prompts and without text instead of forcing content up front.
+     * Use case: the user creates the prolog before writing anything, so it starts without prompts
+     * instead of forcing content up front.
      */
     @Test
-    fun defaultsToEmptyAppendixPromptsAndText() {
-        val prolog = Prolog("Before It All")
-
-        assertEquals(emptyList<String>(), prolog.titleAppendix)
-        assertEquals(AIPrompt(), prolog.prompts)
-        assertEquals(emptyList<String>(), prolog.paragraph)
+    fun defaultsToEmptyPrompts() {
+        assertEquals(AIPrompt(), Prolog().prompts)
     }
 
     /**
-     * Use case: the prolog is rendered like any other written part, so it can be handed over as a
+     * Use case: a book is created before the user decided about its prolog, so the prolog is already
+     * there, without belonging to the book yet.
+     */
+    @Test
+    fun defaultsToNotIncluded() {
+        assertFalse(Prolog().included)
+    }
+
+    /**
+     * Use case: the prolog is handled like any other written part, so it can be handed over as a
      * [org.pcsoft.app.aighost.model.project.book.BookPart] together with chapters and the epilog.
      */
     @Test
     fun isABookPart() {
-        val part: BookPart = Prolog(
-            "Before It All",
-            listOf("A word up front"),
-            AIPrompt("Tell what happened before.", "Calm and slow."),
-            listOf("Text.")
-        )
+        val part: BookPart = Prolog(AIPrompt("Tell what happened before.", "Calm and slow."))
 
-        assertEquals("Before It All", part.title)
-        assertEquals(listOf("A word up front"), part.titleAppendix)
         assertEquals(AIPrompt("Tell what happened before.", "Calm and slow."), part.prompts)
-        assertEquals(listOf("Text."), part.paragraph)
     }
 
     /**
-     * Use case: the prolog is written to disk, so heading, appendix lines, prompts and paragraphs
-     * appear in the JSON under the stable property names the file format promises.
+     * Use case: the user takes the prolog out of the book and puts it back in later on, so its
+     * prompts are still there instead of having been thrown away with the switch.
      */
     @Test
-    fun serialisesTitleAppendixPromptsAndParagraphs() {
+    fun keepsPromptsWhenSwitchedOffAndOnAgain() {
         val prolog = Prolog(
-            "Before It All",
-            listOf("A word up front"),
             AIPrompt("Tell what happened before.", "Calm and slow."),
-            listOf("Long before.")
+            included = true
         )
+
+        prolog.included = false
+        prolog.included = true
+
+        assertEquals(AIPrompt("Tell what happened before.", "Calm and slow."), prolog.prompts)
+    }
+
+    /**
+     * Use case: the prolog is written to disk, so its prompts and the switch appear in the JSON under
+     * the stable property names the file format promises.
+     */
+    @Test
+    fun serialisesPromptsAndSwitch() {
+        val prolog = Prolog(AIPrompt("Tell what happened before.", "Calm and slow."))
 
         val json = mapper.writeValueAsString(prolog)
 
         assertEquals(
-            """{"title":"Before It All","titleAppendix":["A word up front"],""" +
-                """"prompts":{"contentPrompt":"Tell what happened before.","stylePrompt":"Calm and slow."},""" +
-                """"paragraph":["Long before."]}""",
+            """{"prompts":{"contentPrompt":"Tell what happened before.","stylePrompt":"Calm and slow."},""" +
+                """"included":false}""",
             json
         )
     }
 
     /**
-     * Use case: a stored prolog is read back, so heading, prompts and all paragraphs survive the
-     * round trip unchanged and keep their order.
+     * Use case: a stored prolog is read back, so its prompts and the switch survive the round trip
+     * unchanged.
      */
     @Test
-    fun roundTripsParagraphsInOrder() {
-        val prolog = Prolog(
-            "Before It All",
-            listOf("A word up front", "and another"),
-            AIPrompt("Tell what happened before.", "Calm and slow."),
-            listOf("First paragraph.", "Second paragraph.")
-        )
+    fun roundTripsPromptsAndSwitch() {
+        val prolog = Prolog(AIPrompt("Tell what happened before.", "Calm and slow."), included = true)
 
         val restored: Prolog = mapper.readValue(mapper.writeValueAsString(prolog))
 
         assertEquals(prolog, restored)
         assertEquals(AIPrompt("Tell what happened before.", "Calm and slow."), restored.prompts)
-        assertEquals(listOf("First paragraph.", "Second paragraph."), restored.paragraph)
+        assertTrue(restored.included)
     }
 
     /**
-     * Use case: a project file holds a prolog with its title only, so it is read back as an outlined
-     * prolog instead of failing.
+     * Use case: a project file holds a prolog with no properties at all, so it is read back as an
+     * outlined prolog that does not belong to the book yet instead of failing.
      */
     @Test
-    fun readsDocumentWithTitleOnly() {
-        val prolog: Prolog = mapper.readValue("""{"title":"Before It All"}""")
+    fun readsEmptyDocumentWithDefaults() {
+        val prolog: Prolog = mapper.readValue("""{}""")
 
-        assertEquals(Prolog("Before It All"), prolog)
+        assertEquals(Prolog(), prolog)
     }
 
     /**
@@ -118,8 +123,22 @@ class PrologTest {
      */
     @Test
     fun ignoresUnknownProperties() {
-        val prolog: Prolog = mapper.readValue("""{"title":"Before It All","summary":"short"}""")
+        val prolog: Prolog = mapper.readValue("""{"summary":"short"}""")
 
-        assertEquals(Prolog("Before It All"), prolog)
+        assertEquals(Prolog(), prolog)
+    }
+
+    /**
+     * Use case: an old project written before IP-36 still carries `title`, `titleAppendix` and
+     * `paragraph` in its JSON, so opening it drops those fields instead of failing to parse - the
+     * hard requirement IP-36 leaves for IP-37's migration to build on.
+     */
+    @Test
+    fun ignoresFieldsRemovedByThePreviousModelVersion() {
+        val prolog: Prolog = mapper.readValue(
+            """{"title":"Before It All","titleAppendix":["A word up front"],"paragraph":["Long before."]}"""
+        )
+
+        assertEquals(Prolog(), prolog)
     }
 }

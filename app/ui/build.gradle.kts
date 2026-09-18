@@ -32,6 +32,9 @@ javafx {
     modules = listOf("javafx.controls", "javafx.fxml")
 }
 
+// Pinned once in the root build; the coordinate itself is documented there.
+val simplayVersion: String by rootProject.extra
+
 val testFxVersion = "4.0.18"
 val log4jVersion = "2.26.1"
 
@@ -39,12 +42,25 @@ dependencies {
     implementation(project(":lib:ai-ghost-model"))
     implementation(project(":lib:ai-ghost-fx-model"))
     implementation(project(":lib:ai-ghost-ai"))
+    // The block builders that turn a book part, the title page and the copyright page into layout
+    // input.
+    implementation(project(":lib:ai-ghost-layouting-model"))
+    // simPlay's JavaFX renderer: the font probe (IP-34) checks family availability and takes the
+    // measurement fingerprint.
+    implementation("org.pcsoft.framework:simplay-fx:$simplayVersion")
+    // FontAvailability, the outcome enum FxFontProbe.checkAvailability answers with. simplay-fx's own
+    // published metadata only carries this on its runtime variant, not its compile (api) variant, so
+    // it has to be named here explicitly to compile against it.
+    implementation("org.pcsoft.framework:simplay-common:$simplayVersion")
 
     implementation("io.arrow-kt:arrow-core:2.1.2")
     implementation("org.apache.commons:commons-lang3:3.20.0")
 
     implementation("org.controlsfx:controlsfx:11.2.5")
     implementation("de.saxsys:mvvmfx:1.8.0")
+
+    // The startup area finds its steps by scanning the package they live in, instead of a hand kept list.
+    implementation("io.github.classgraph:classgraph:4.8.194")
 
     // The application logs against the SLF4J API only; Log4j 2 is the implementation behind it and
     // is bound through the SLF4J provider, so no code ever touches a Log4j type.
@@ -63,11 +79,6 @@ dependencies {
 }
 
 tasks.withType<Test> {
-    // Monocle reaches into internals of javafx.graphics, which the module path does not allow, and
-    // ResourceBundle.Control is unsupported inside a named module - so the tests run on the classpath.
-    extensions.getByType(org.javamodularity.moduleplugin.extensions.TestModuleOptions::class.java)
-        .runOnClasspath = true
-
     // The UI tests must not open a window.
     systemProperty("testfx.robot", "glass")
     systemProperty("testfx.headless", "true")
@@ -75,6 +86,33 @@ tasks.withType<Test> {
     systemProperty("monocle.platform", "Headless")
     systemProperty("prism.order", "sw")
     systemProperty("java.awt.headless", "true")
+}
+
+// The module plugin only ever puts its own "test" task on the module path in the first place, so
+// only that task carries the TestModuleOptions extension; a Test task registered by hand, like
+// integrationTest below, already runs on the classpath and needs no override here.
+tasks.named<Test>("test") {
+    // Monocle reaches into internals of javafx.graphics, which the module path does not allow, and
+    // ResourceBundle.Control is unsupported inside a named module - so the tests run on the classpath.
+    extensions.getByType(org.javamodularity.moduleplugin.extensions.TestModuleOptions::class.java)
+        .runOnClasspath = true
+
+    // Integration tests ("...IT") cover a complete feature or aim at performance, per the `testing`
+    // skill; they run apart from the plain developer tests so they can be re-run on their own, but
+    // `check` - and with it `build` - always exercises them as well.
+    filter { excludeTestsMatching("*IT") }
+}
+
+val integrationTest = tasks.register<Test>("integrationTest") {
+    group = "verification"
+    description = "Runs the integration tests (\"...IT\") of app/ui"
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter { includeTestsMatching("*IT") }
+}
+
+tasks.named("check") {
+    dependsOn(integrationTest)
 }
 
 // The dialogs are looked at by a human being, not by an assertion: their icons have to keep their
@@ -144,6 +182,13 @@ tasks.register("generateFont") {
 }
 
 jlink {
+    // mvvmfx, arrow and typetools carry no module descriptor, so they are welded into one merged
+    // module whose descriptor is generated and then compiled on its own. That compilation only sees
+    // the two staging directories of the plugin, and neither JavaFX nor the Kotlin standard library
+    // is staged there - the merged descriptor requires both and javac reports them as not found.
+    // Naming them here copies their JARs into the staging directory, so the descriptor resolves.
+    addExtraDependencies("javafx", "kotlin")
+
     imageZip.set(layout.buildDirectory.file("/distributions/ghost-ui-image-${javafx.platform.classifier}.zip"))
     options.set(listOf("--strip-debug", "--compress", "zip-6", "--no-header-files", "--no-man-pages"))
     launcher {
