@@ -18,6 +18,7 @@ import javafx.scene.control.ComboBox
 import javafx.scene.control.Label
 import javafx.scene.control.Spinner
 import javafx.scene.control.ToggleButton
+import javafx.scene.text.Font
 import javafx.stage.Stage
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
@@ -50,13 +51,19 @@ class StyleDataEditorTest : ApplicationTest() {
 
     private lateinit var component: StyleDataEditor
 
-    private val style: StyleDataProperty =
+    // Naming a family outright (Georgia, Arial, ...) ties the fixture to Microsoft's core fonts: they
+    // are there on Windows and macOS and missing on a bare Linux runner, where the warning would
+    // already be up before a test touched anything. The warning is about what this machine really
+    // carries, so the family is taken from the toolkit rather than assumed.
+    private val installedFamily: String by lazy { Font.getFamilies().first() }
+
+    private val style: StyleDataProperty by lazy {
         ProjectProperty(
             Project(
                 design = Design(
                     titlePage = TitlePageDesign(
                         titleStyle = StyleData(
-                            font = FontData(name = "Georgia", size = 14, bold = false, italic = false),
+                            font = FontData(name = installedFamily, size = 14, bold = false, italic = false),
                             textLineSpacing = 1.2,
                             alignment = Alignment.LEFT
                         )
@@ -64,6 +71,7 @@ class StyleDataEditorTest : ApplicationTest() {
                 )
             )
         ).designProperty.titlePageProperty.titleStyleProperty
+    }
 
     @Suppress("UNCHECKED_CAST")
     private val family: ComboBox<String> get() = component.lookup("#cmbFamily") as ComboBox<String>
@@ -97,7 +105,7 @@ class StyleDataEditorTest : ApplicationTest() {
      */
     @Test
     fun boundStyleReachesTheFields() {
-        assertEquals("Georgia", family.editor.text)
+        assertEquals(installedFamily, family.editor.text)
         assertEquals(14, size.value)
         assertFalse(bold.isSelected)
         assertFalse(italic.isSelected)
@@ -160,7 +168,7 @@ class StyleDataEditorTest : ApplicationTest() {
         interact { family.editor.text = "A Family That Definitely Does Not Exist On This Machine" }
         assertTrue(familyWarning.isVisible, "a missing family must show the warning")
 
-        interact { family.editor.text = "Georgia" }
+        interact { family.editor.text = installedFamily }
         assertFalse(familyWarning.isVisible, "an installed family must hide the warning again")
     }
 
@@ -186,6 +194,6 @@ class StyleDataEditorTest : ApplicationTest() {
 
         interact { family.editor.text = "Calibri" }
         assertEquals("Calibri", second.get()!!.font.name)
-        assertEquals("Georgia", style.get()!!.font.name)
+        assertEquals(installedFamily, style.get()!!.font.name)
     }
 }

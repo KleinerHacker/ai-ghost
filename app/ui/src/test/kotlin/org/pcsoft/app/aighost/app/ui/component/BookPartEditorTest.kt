@@ -28,6 +28,8 @@ import org.pcsoft.app.aighost.app.Messages
 import org.pcsoft.app.aighost.app.controller.IoController
 import org.pcsoft.app.aighost.app.undo.UndoStack
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
+import org.pcsoft.app.aighost.layouting.model.common.toPageLayout
+import org.pcsoft.app.aighost.layouting.model.common.toTextStyle
 import org.pcsoft.app.aighost.model.pref.WritingMode
 import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.FontData
@@ -46,6 +48,9 @@ import org.pcsoft.app.aighost.model.project.design.EpilogPageDesign
 import org.pcsoft.app.aighost.model.project.design.PrologPageDesign
 import org.pcsoft.app.aighost.model.project.design.TitlePageDesign
 import org.pcsoft.app.aighost.model.project.meta.Meta
+import org.pcsoft.framework.simplay.engine.model.Document
+import org.pcsoft.framework.simplay.engine.model.FlowPage
+import org.pcsoft.framework.simplay.engine.model.TextBlock
 import org.pcsoft.framework.simplay.fx.PaperSheetMode
 import org.pcsoft.framework.simplay.fx.PaperSheetView
 import org.pcsoft.framework.simplay.uicommon.PageMode
@@ -109,6 +114,11 @@ class BookPartEditorTest : ApplicationTest() {
         projectModel = ProjectProperty(project())
         selection = SimpleObjectProperty(null)
         undoStack = UndoStack()
+        // undoEntries is a capped view for the history dropdown, not the history itself. The tests
+        // here count entries through it, and a fixture that types its text fills those ten default
+        // places on its own on a slow runner - every keystroke past the merge pause becomes an entry
+        // of its own - so the cap silently swallows the very entry an assertion is about.
+        undoStack.visibleEntryCount.value = 100
 
         editor = BookPartEditor()
         editor.bindProject(projectModel)
@@ -476,64 +486,61 @@ class BookPartEditorTest : ApplicationTest() {
 
     /**
      * Use case: the user moves a block of a paragraph on the sheet, so the change is one single undo
-     * step and undo/redo replays the block count exactly (IP-32/IP-33).
+     * step and undo/redo replays the block order exactly (IP-32/IP-33).
      *
      * `BookPartEditorController.moveTextBlock` never moves the block at index `0`, since it carries the
-     * page's `TextAnchor` - the fixture therefore needs a third block: the anchor block plus two further
-     * ones, built from two splits that are never followed by typing into the block a split just created.
-     * Typing into such a fresh, still-empty block turned out to be an upstream simPlay quirk of its own -
-     * PaperSheetView silently merges it back into its predecessor and drops the typed text, undoing the
-     * split in the process - so both trailing blocks are left empty here instead, and the exact block
-     * ordering `moveTextBlock` produces from that (up vs. down, which index swaps with which) is already
-     * proven, with no such UI quirk in the way, by `BookPartEditorControllerTest.movesATextBlockUpAndDownButNeverBlockZero`.
-     * This test proves only what that one cannot: that the view model really pushes the move as a single
-     * `DocumentStructureUndoEntry` and that undoing and redoing it does not lose or duplicate a block.
+     * page's `TextAnchor`, so this needs three blocks - and every one of them has to carry text, because
+     * `CaretModel` cannot put the caret into an empty block at all: it slides on to the next block that
+     * has some, across a page boundary if need be. Splitting on the sheet cannot produce three such
+     * blocks (a split at a block's end leaves the new one empty), so they are seeded straight into the
+     * book's `Document` instead, the way `BookPartEditorControllerTest` seeds a chapter that already
+     * carries text. Seeding also makes the move readable in the block list itself - three blocks that
+     * differ show the swap, where two empty ones read the same whether it ran or not.
      */
     @Test
     fun movePushesOneUndoStepAndRestoresBlockCountOnUndoRedo() {
-        select(ProjectListItem.ChapterItem(chapter))
         val anchorId = chapter.id.toString()
+        val seeded = listOf("\${$anchorId}Alpha", "Beta", "Gamma")
         interact {
-            sheet.requestFocus()
-            sheet.caretModel.moveToEndOfBlock(globalBlockIndex(anchorId, 0))
+            val design = projectModel.value.design
+            projectModel.bookProperty.document = Document(
+                pages = listOf(
+                    FlowPage(
+                        design.pageFormat.toPageLayout(),
+                        seeded.map { TextBlock.of(it, design.chapterPage.textStyle.toTextStyle()) },
+                        id = anchorId
+                    )
+                )
+            )
+            projectModel.designProperty.refresh()
         }
         WaitForAsyncUtils.waitForFxEvents()
-        typeSlowly("HelloWorld")
-        fireSplit()
-        assertEquals(2, storedBlocks(anchorId).size, "the fixture for this test must start out split in two")
+        select(ProjectListItem.ChapterItem(chapter))
+        assertEquals(seeded, storedBlocks(anchorId), "the fixture must start from three blocks that all carry text")
 
-        // Jumping back onto block 0 - not itself freshly split, and followed only by a menu action, the
-        // same pattern mergePushesOneUndoStepAndRestoresStructureOnUndoRedo already relies on - splits it
-        // again at its own end, giving a third block without ever typing into either empty one.
-        interact { sheet.caretModel.moveToEndOfBlock(globalBlockIndex(anchorId, 0)) }
-        WaitForAsyncUtils.waitForFxEvents()
-        fireSplit()
-        assertEquals(3, storedBlocks(anchorId).size, "the fixture for this test must end up split into three")
-
-        // The second split leaves the caret on the block it just created, at index 1 - a fresh block a
-        // split just created is not reliably resolvable by CaretModel for a following action right away
-        // (the same reason typing into one is avoided above), so it is explicitly navigated onto again,
-        // the same way every other structural test here always re-navigates before its next action
-        // instead of trusting a split's own caret restore for anything beyond showing the result.
-        interact { sheet.caretModel.moveIntoBlock(globalBlockIndex(anchorId, 1), 0) }
+        interact {
+            sheet.requestFocus()
+            sheet.caretModel.moveIntoBlock(globalBlockIndex(anchorId, 1), 0)
+        }
         WaitForAsyncUtils.waitForFxEvents()
         val countBeforeMove = undoStack.undoEntries.size
 
         // Moving that block up would land on the immovable anchor block at index 0, so it is moved down.
         fireMoveDown()
 
-        assertEquals(3, storedBlocks(anchorId).size, "moving a block must not lose or duplicate one")
+        val movedOrder = listOf(seeded[0], seeded[2], seeded[1])
+        assertEquals(movedOrder, storedBlocks(anchorId), "the move must swap the block with the one after it")
         assertEquals(countBeforeMove + 1, undoStack.undoEntries.size, "the move must push exactly one undo entry")
 
         interact { undoStack.undo() }
         WaitForAsyncUtils.waitForFxEvents()
 
-        assertEquals(3, storedBlocks(anchorId).size, "undo must restore the original block count")
+        assertEquals(seeded, storedBlocks(anchorId), "undo must put the block back where it was")
 
         interact { undoStack.redo() }
         WaitForAsyncUtils.waitForFxEvents()
 
-        assertEquals(3, storedBlocks(anchorId).size, "redo must move the block again without losing one")
+        assertEquals(movedOrder, storedBlocks(anchorId), "redo must move the block again")
     }
 
     /**
