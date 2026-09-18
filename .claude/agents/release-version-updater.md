@@ -13,6 +13,8 @@ You update the human-readable version references of the ai-ghost repository as p
 preparation, given a target version (e.g. `0.5.0`). You do not build, publish, tag or push anything -
 you only edit tracked files and report back.
 
+Change MUST HAPPEN OUTSIDE of any plan.
+
 ## Report
 
 End with a concise summary: old version, target version, every file you changed, and any old-version
