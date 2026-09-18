@@ -53,7 +53,7 @@ dependencies {
     // it has to be named here explicitly to compile against it.
     implementation("org.pcsoft.framework:simplay-common:$simplayVersion")
 
-    implementation("io.arrow-kt:arrow-core:2.1.2")
+    implementation("io.arrow-kt:arrow-core:2.2.3")
     implementation("org.apache.commons:commons-lang3:3.20.0")
 
     implementation("org.controlsfx:controlsfx:11.2.5")
