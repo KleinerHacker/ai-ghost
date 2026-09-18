@@ -518,17 +518,10 @@ class BookPartEditorTest : ApplicationTest() {
         interact { sheet.caretModel.moveIntoBlock(globalBlockIndex(anchorId, 1), 0) }
         WaitForAsyncUtils.waitForFxEvents()
         val countBeforeMove = undoStack.undoEntries.size
-        System.err.println(
-            "[DIAG test] countBeforeMove=$countBeforeMove storedBlocks=${storedBlocks(anchorId)} " +
-                "caretPosition=${sheet.caretModel.position} " +
-                "currentPage=${sheet.caretModel.currentPage?.id} " +
-                "currentTextBlockText=${sheet.caretModel.currentTextBlock}"
-        )
 
         // Moving that block up would land on the immovable anchor block at index 0, so it is moved down.
         fireMoveDown()
 
-        System.err.println("[DIAG test] afterMove storedBlocks=${storedBlocks(anchorId)} undoEntries=${undoStack.undoEntries.size}")
         assertEquals(3, storedBlocks(anchorId).size, "moving a block must not lose or duplicate one")
         assertEquals(countBeforeMove + 1, undoStack.undoEntries.size, "the move must push exactly one undo entry")
 

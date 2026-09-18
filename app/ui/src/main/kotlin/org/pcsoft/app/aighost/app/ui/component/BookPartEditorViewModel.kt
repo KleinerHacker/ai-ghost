@@ -326,20 +326,10 @@ class BookPartEditorViewModel : ViewModel {
     // The anchor id and page-local block index of the block the caret currently sits in, resolved
     // against the sheet's own document (never a cached one), or null while nothing usable is picked.
     private fun currentBlock(): Triple<Document, String, Int>? {
-        val document = paperSheetView.document
-        val block = paperSheetView.caretModel.currentTextBlock
-        val page = paperSheetView.caretModel.currentPage
-        System.err.println(
-            "[DIAG currentBlock] document=${document != null} block=${block != null} " +
-                "page=${page?.id} pageBlockCount=${page?.blocks?.size} " +
-                "blockText=${block?.toString()?.let { "\"$it\"" }}"
-        )
-        if (document == null) return null
-        if (block == null) return null
-        if (page == null) return null
+        val document = paperSheetView.document ?: return null
+        val block = paperSheetView.caretModel.currentTextBlock ?: return null
+        val page = paperSheetView.caretModel.currentPage ?: return null
         val blockIndex = page.blocks.indexOfFirst { it === block }
-        val blockIndexByEquals = page.blocks.indexOfFirst { it == block }
-        System.err.println("[DIAG currentBlock] blockIndex(===)=$blockIndex blockIndex(==)=$blockIndexByEquals")
         if (blockIndex < 0) return null
         return Triple(document, page.id, blockIndex)
     }
@@ -431,18 +421,11 @@ class BookPartEditorViewModel : ViewModel {
      * usable is picked
      */
     internal fun performMove(up: Boolean): Boolean {
-        val currentBlockResult = currentBlock()
-        System.err.println("[DIAG performMove] up=$up currentBlock=$currentBlockResult")
-        val (document, anchorId, blockIndex) = currentBlockResult ?: return false
-
-        val pageBlockCountBefore = document.pages.firstOrNull { it.id == anchorId }?.blocks?.size
-        System.err.println("[DIAG performMove] anchorId=$anchorId blockIndex=$blockIndex pageBlockCount=$pageBlockCountBefore")
+        val (document, anchorId, blockIndex) = currentBlock() ?: return false
 
         val after = BookPartEditorController.applyParagraphOperation(document, anchorId) {
             BookPartEditorController.moveTextBlock(it, blockIndex, up)
-        }
-        System.err.println("[DIAG performMove] after==null: ${after == null}")
-        after ?: return false
+        } ?: return false
 
         val landingIndex = if (up) blockIndex - 1 else blockIndex + 1
         applyStructuralChange(
