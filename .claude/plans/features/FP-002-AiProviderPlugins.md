@@ -40,12 +40,14 @@ Nachweis und eine MkDocs-Anleitung zur Entwicklung eigener AI-Provider-Plugins.
 * `lib/plugin/api` (`ai-ghost-plugin-api`) – trägt nur `ProjectPart` und `ProjectPartInfo`. Keine
   Plugin-Schnittstelle, kein Loader, keine Registrierung, kein Lebenszyklus. Abhängigkeit
   ausschließlich `kotlin.stdlib`; das Artefakt ist als öffentliche Plugin-Autoren-API gedacht.
-* `lib/ai` (`ai-ghost-ai`) – trägt den Aktions-Port aus FP-001/IP-17: `AiAction`, `AiActionRequest`,
-  `AiActionCallback`, `AiActionHandle`, `AiActionError`, `AiActionLimits`, `ParagraphSplitter`,
-  `TokenUtils`. **Keine Implementierung** von `AiAction`. Dieses Feature **ändert `lib/ai` nicht** –
-  die Implementierung ist Sache des Orchestrierungs-Features.
+* `lib/ai` (`ai-ghost-ai`) – trägt den Aktions-Port aus dem abgeschlossenen Feature Paper Writing
+  Surface (ehem. IP-17): `AiAction`, `AiActionRequest`, `AiActionCallback`, `AiActionHandle`,
+  `AiActionError`, `AiActionLimits`, `ParagraphSplitter`, `TokenUtils`. **Keine Implementierung** von
+  `AiAction`. Dieses Feature **ändert `lib/ai` nicht** – die Implementierung ist Sache des
+  Orchestrierungs-Features.
 * `app/ui` – die KI-Schaltflächen rufen leere `*View`-Methoden mit `TODO("AI action: …")`. Umgesetzt
-  ist nur `InspectorView.generatePart()` (FP-001/IP-19). Dieses Feature lässt sie unberührt.
+  ist nur `InspectorView.generatePart()` (abgeschlossenes Feature Paper Writing Surface, ehem. IP-19).
+  Dieses Feature lässt sie unberührt.
 * Startbereich – `Startup.discoverSteps()` scannt `org.pcsoft.app.aighost.app.startup.step` mit
   ClassGraph. Der `startup`-Skill nennt „Plugins laden“ als künftigen Schritt. Heute nur
   `PreferencesStartupStep`.
