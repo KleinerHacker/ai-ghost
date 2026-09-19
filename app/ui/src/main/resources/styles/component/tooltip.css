@@ -13,10 +13,10 @@
 /* Tooltip: a small popup surface, one step below the regular text size. */
 
 .tooltip {
-    -fx-background-color: -ghost-surface-input;
-    -fx-background-radius: 8px;
+    -fx-background-color: linear-gradient(to bottom, -ghost-gloss, -ghost-gloss-soft 40%, transparent), -ghost-surface-input;
+    -fx-background-radius: 4px, 4px;
     -fx-border-color: -ghost-tint-line;
-    -fx-border-radius: 8px;
+    -fx-border-radius: 4px;
     -fx-text-fill: -ghost-ink;
     -fx-padding: 5px 10px 5px 10px;
     -fx-font-size: 14px;

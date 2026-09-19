@@ -13,16 +13,16 @@
 /* Context menu and its items, a popup surface lifted off the window by a drop shadow. */
 
 .context-menu {
-    -fx-background-color: -ghost-surface-input;
-    -fx-background-radius: 10px;
+    -fx-background-color: linear-gradient(to bottom, -ghost-gloss, -ghost-gloss-soft 40%, transparent), -ghost-surface-input;
+    -fx-background-radius: 5px, 5px;
     -fx-border-color: -ghost-tint-line;
-    -fx-border-radius: 10px;
+    -fx-border-radius: 5px;
     -fx-padding: 6px 4px 6px 4px;
     -fx-effect: dropshadow(gaussian, -ghost-shadow, 14, 0.0, 0, 4);
 }
 
 .menu-item {
-    -fx-background-radius: 8px;
+    -fx-background-radius: 4px;
     -fx-padding: 5px 12px 5px 10px;
 }
 

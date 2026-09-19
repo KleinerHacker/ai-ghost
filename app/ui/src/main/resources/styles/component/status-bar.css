@@ -69,13 +69,13 @@
 .status-bar > .progress-bar > .track {
     -fx-background-color: -ghost-tint-line;
     -fx-background-insets: 0;
-    -fx-background-radius: 8px;
+    -fx-background-radius: 4px;
 }
 
 .status-bar > .progress-bar > .bar {
     -fx-background-color: -ghost-primary;
     -fx-background-insets: 0;
-    -fx-background-radius: 8px;
+    -fx-background-radius: 4px;
     -fx-padding: 0;
 }
 

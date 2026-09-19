@@ -14,11 +14,12 @@
 
 /*
  * A button is a raised control and has to be recognised as one before it is pointed at: it carries
- * the brightest paper tone of the scheme, a line around it and a soft shadow, so it stands off the
- * surface it sits on instead of melting into it.
+ * the brightest paper tone of the scheme, a hairline around it and a soft shadow, so it stands off
+ * the surface it sits on instead of melting into it. A glass sheen is laid over the fill as its own
+ * gradient layer, fading out toward the bottom edge, for the glass/plastic look of the theme.
  *
  * The fill of a state is laid over that tone as a second background layer, so hovering and pressing
- * only shade the button, they never take its fill away. Both layers therefore need their own radius.
+ * only shade the button, they never take its fill away. Every layer therefore needs its own radius.
  *
  * The buttons of the tool bar are the exception: that strip is a raised surface itself, so its
  * buttons stay flat and are styled with it in styles/component/tool-bar.css.
@@ -27,12 +28,12 @@
 .toggle-button,
 .menu-button,
 .split-menu-button {
-    -fx-background-color: -ghost-surface-input, transparent;
-    -fx-background-radius: 8px, 8px;
+    -fx-background-color: linear-gradient(to bottom, -ghost-gloss, -ghost-gloss-soft 40%, transparent), -ghost-surface-input, transparent;
+    -fx-background-radius: 4px, 4px, 4px;
     /* The border is always present, focusing only recolours it, so the control never moves. */
     -fx-border-color: -ghost-tint-line;
-    -fx-border-width: 2px;
-    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
     -fx-text-fill: -ghost-ink;
     -fx-padding: 3px 8px 3px 8px;
     -fx-effect: dropshadow(gaussian, -ghost-shadow-soft, 6, 0.0, 0, 2);
@@ -42,15 +43,19 @@
 .toggle-button:hover,
 .menu-button:hover,
 .split-menu-button:hover {
-    -fx-background-color: -ghost-surface-input, -ghost-tint-hover;
+    -fx-background-color: linear-gradient(to bottom, -ghost-gloss, -ghost-gloss-soft 40%, transparent), -ghost-surface-input, -ghost-tint-hover;
 }
 
-/* Pressed the button lies on the surface: the tint deepens and the shadow lifting it goes away. */
+/*
+ * Pressed the button lies on the surface: the gloss goes away with the shadow, so it reads as
+ * pushed in rather than lifted, and the tint deepens.
+ */
 .button:armed,
 .toggle-button:selected,
 .menu-button:showing,
 .split-menu-button:showing {
     -fx-background-color: -ghost-surface-input, -ghost-tint-pressed;
+    -fx-background-radius: 4px, 4px;
     -fx-effect: null;
 }
 
@@ -75,17 +80,19 @@
  * of the paper tone and darkens through its own shades on hover and press.
  */
 .button:default {
-    -fx-background-color: -ghost-primary, transparent;
+    -fx-background-color: linear-gradient(to bottom, -ghost-gloss, -ghost-gloss-soft 40%, transparent), -ghost-primary, transparent;
+    -fx-background-radius: 4px, 4px, 4px;
     -fx-border-color: -ghost-primary-dark;
     -fx-text-fill: -ghost-on-primary;
 }
 
 .button:default:hover {
-    -fx-background-color: -ghost-primary-light, transparent;
+    -fx-background-color: linear-gradient(to bottom, -ghost-gloss, -ghost-gloss-soft 40%, transparent), -ghost-primary-light, transparent;
 }
 
 .button:default:armed {
     -fx-background-color: -ghost-primary-dark, transparent;
+    -fx-background-radius: 4px, 4px;
     -fx-effect: null;
 }
 

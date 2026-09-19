@@ -15,12 +15,12 @@
  * and is separated from the content only by its rounded outline.
  */
 .tree-view {
-    -fx-background-color: -ghost-surface-input;
-    -fx-background-radius: 8px;
+    -fx-background-color: linear-gradient(to bottom, -ghost-gloss, -ghost-gloss-soft 40%, transparent), -ghost-surface-input;
+    -fx-background-radius: 4px, 4px;
     /* Same border width in every state - focusing only recolours it, the layout stays put. */
     -fx-border-color: -ghost-tint-line;
-    -fx-border-width: 2px;
-    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
     -fx-padding: 4px;
 }
 
@@ -35,7 +35,7 @@
  */
 .tree-view > .virtual-flow > .clipped-container > .sheet > .tree-cell {
     -fx-background-color: transparent;
-    -fx-background-radius: 8px;
+    -fx-background-radius: 4px;
     -fx-text-fill: -ghost-ink;
     -fx-padding: 3px 8px 3px 4px;
 }
@@ -79,11 +79,11 @@
 }
 
 .tree-view .tree-cell-part > .check-box > .box {
-    -fx-background-color: -ghost-surface-input;
-    -fx-background-radius: 8px;
+    -fx-background-color: linear-gradient(to bottom, -ghost-gloss, -ghost-gloss-soft 40%, transparent), -ghost-surface-input;
+    -fx-background-radius: 4px, 4px;
     -fx-border-color: -ghost-tint-line;
-    -fx-border-width: 2px;
-    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
     -fx-padding: 2px;
 }
 

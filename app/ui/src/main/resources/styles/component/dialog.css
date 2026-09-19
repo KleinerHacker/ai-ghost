@@ -14,13 +14,13 @@
 
 .dialog-pane {
     -fx-background-color: -ghost-surface;
-    -fx-background-radius: 10px;
+    -fx-background-radius: 5px;
     -fx-padding: 0;
 }
 
 .dialog-pane > .header-panel {
-    -fx-background-color: -ghost-surface-raised;
-    -fx-background-radius: 10px 10px 0 0;
+    -fx-background-color: linear-gradient(to bottom, -ghost-gloss, -ghost-gloss-soft 40%, transparent), -ghost-surface-raised;
+    -fx-background-radius: 5px 5px 0 0, 5px 5px 0 0;
     -fx-padding: 16px;
 }
 
@@ -59,10 +59,10 @@
 /* The toggle carries the visual weight of a link, so it does not compete with the answer buttons. */
 .detail-dialog-toggle {
     -fx-background-color: transparent;
-    -fx-background-radius: 8px;
+    -fx-background-radius: 4px;
     -fx-border-color: transparent;
-    -fx-border-width: 2px;
-    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
     -fx-text-fill: -ghost-primary;
     -fx-padding: 3px 8px 3px 8px;
     /* A link lies in the dialog, so the toggle drops the shadow every other button is lifted by. */
@@ -86,11 +86,11 @@
 }
 
 .detail-dialog-details {
-    -fx-background-color: -ghost-surface-input;
-    -fx-background-radius: 8px;
+    -fx-background-color: linear-gradient(to bottom, -ghost-gloss, -ghost-gloss-soft 40%, transparent), -ghost-surface-input;
+    -fx-background-radius: 4px, 4px;
     -fx-border-color: -ghost-tint-line;
-    -fx-border-width: 2px;
-    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
 }
 
 .detail-dialog-details:focused {
@@ -99,7 +99,7 @@
 
 .detail-dialog-details .content {
     -fx-background-color: -ghost-surface-input;
-    -fx-background-radius: 8px;
+    -fx-background-radius: 4px;
 }
 
 .detail-dialog-details:disabled {

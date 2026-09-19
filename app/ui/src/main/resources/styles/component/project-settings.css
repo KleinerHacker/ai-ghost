@@ -24,10 +24,10 @@
 /* -------------------------------------------------------------- header ---- */
 
 .project-settings-header {
-    -fx-background-color: -ghost-surface-raised;
-    -fx-background-radius: 10px 10px 0 0;
+    -fx-background-color: linear-gradient(to bottom, -ghost-gloss, -ghost-gloss-soft 40%, transparent), -ghost-surface-raised;
+    -fx-background-radius: 5px 5px 0 0, 5px 5px 0 0;
     -fx-border-color: -ghost-tint-line;
-    -fx-border-width: 0 0 2px 0;
+    -fx-border-width: 0 0 1px 0;
 }
 
 .project-settings-caption {
@@ -40,13 +40,13 @@
 .project-settings-tree {
     -fx-background-color: -ghost-surface;
     -fx-border-color: -ghost-tint-line;
-    -fx-border-width: 0 2px 0 0;
+    -fx-border-width: 0 1px 0 0;
 }
 
 .project-settings-tree .tree-view {
     -fx-background-color: transparent;
     -fx-border-color: transparent;
-    -fx-border-width: 2px;
+    -fx-border-width: 1px;
 }
 
 /* ---------------------------------------------------------------- form ---- */
@@ -75,11 +75,11 @@
 /* ----------------------------------------------------------- combo box ---- */
 
 .project-settings-content .combo-box {
-    -fx-background-color: -ghost-surface-input;
-    -fx-background-radius: 8px;
+    -fx-background-color: linear-gradient(to bottom, -ghost-gloss, -ghost-gloss-soft 40%, transparent), -ghost-surface-input;
+    -fx-background-radius: 4px, 4px;
     -fx-border-color: -ghost-tint-line;
-    -fx-border-width: 2px;
-    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
     -fx-padding: 0;
 }
 
@@ -99,7 +99,7 @@
 
 .project-settings-content .combo-box > .arrow-button {
     -fx-background-color: transparent;
-    -fx-background-radius: 8px;
+    -fx-background-radius: 4px;
     -fx-padding: 3px 8px 3px 8px;
 }
 
@@ -108,11 +108,11 @@
 }
 
 .combo-box-popup > .list-view {
-    -fx-background-color: -ghost-surface-raised;
-    -fx-background-radius: 10px;
+    -fx-background-color: linear-gradient(to bottom, -ghost-gloss, -ghost-gloss-soft 40%, transparent), -ghost-surface-raised;
+    -fx-background-radius: 5px, 5px;
     -fx-border-color: -ghost-tint-line;
-    -fx-border-width: 2px;
-    -fx-border-radius: 10px;
+    -fx-border-width: 1px;
+    -fx-border-radius: 5px;
 }
 
 .combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell {
@@ -132,11 +132,11 @@
 /* ------------------------------------------------------------- spinner ---- */
 
 .project-settings-content .spinner {
-    -fx-background-color: -ghost-surface-input;
-    -fx-background-radius: 8px;
+    -fx-background-color: linear-gradient(to bottom, -ghost-gloss, -ghost-gloss-soft 40%, transparent), -ghost-surface-input;
+    -fx-background-radius: 4px, 4px;
     -fx-border-color: -ghost-tint-line;
-    -fx-border-width: 2px;
-    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
     -fx-padding: 0;
 }
 
@@ -153,7 +153,7 @@
     -fx-background-color: transparent;
     -fx-background-radius: 0;
     -fx-border-color: transparent;
-    -fx-border-width: 2px;
+    -fx-border-width: 1px;
     -fx-text-fill: -ghost-ink;
     -fx-highlight-fill: -ghost-tint-pressed;
     -fx-padding: 3px 6px 3px 6px;
@@ -162,7 +162,7 @@
 .project-settings-content .spinner .increment-arrow-button,
 .project-settings-content .spinner .decrement-arrow-button {
     -fx-background-color: transparent;
-    -fx-background-radius: 8px;
+    -fx-background-radius: 4px;
     -fx-padding: 3px 8px 3px 8px;
 }
 
@@ -194,11 +194,11 @@
 }
 
 .project-settings-content .check-box > .box {
-    -fx-background-color: -ghost-surface-input;
-    -fx-background-radius: 8px;
+    -fx-background-color: linear-gradient(to bottom, -ghost-gloss, -ghost-gloss-soft 40%, transparent), -ghost-surface-input;
+    -fx-background-radius: 4px, 4px;
     -fx-border-color: -ghost-tint-line;
-    -fx-border-width: 2px;
-    -fx-border-radius: 8px;
+    -fx-border-width: 1px;
+    -fx-border-radius: 4px;
     -fx-padding: 3px;
 }
 

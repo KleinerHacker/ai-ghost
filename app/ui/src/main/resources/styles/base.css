@@ -14,10 +14,11 @@
  * Base of the AI Ghost theme: type face, window surface and plain text.
  *
  * Everything that is independent of the colour scheme lives here, the colours themselves come from
- * the scheme loaded before this file (styles/color-scheme/*.css). The shapes follow the logo - soft,
- * rounded, no hard edges: 8px radius for controls, 10px for popups. JavaFX resolves looked-up
- * variables to plain numbers, which the size based properties cannot consume, so the radii are
- * written literally in the component stylesheets.
+ * the scheme loaded before this file (styles/color-scheme/*.css). The shapes follow a glass/plastic
+ * language: hairline 1px borders instead of a thick comic outline, a subtle gloss gradient over raised
+ * controls, and softly rounded corners - 4px radius for controls, 5px for popups. JavaFX resolves
+ * looked-up variables to plain numbers, which the size based properties cannot consume, so the radii
+ * are written literally in the component stylesheets.
  */
 
 .root {

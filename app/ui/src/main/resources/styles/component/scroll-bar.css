@@ -18,7 +18,7 @@
 
 .scroll-bar > .thumb {
     -fx-background-color: -ghost-accent;
-    -fx-background-radius: 8px;
+    -fx-background-radius: 4px;
 }
 
 .scroll-bar > .thumb:hover {

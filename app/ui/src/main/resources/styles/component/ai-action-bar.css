@@ -16,11 +16,11 @@
  * and idle is animated in AiActionBarView, not here - JavaFX CSS has no transition support to drive it.
  */
 .ai-action-bar {
-    -fx-background-color: -ghost-surface-raised;
-    -fx-background-radius: 8px;
+    -fx-background-color: linear-gradient(to bottom, -ghost-gloss, -ghost-gloss-soft 40%, transparent), -ghost-surface-raised;
+    -fx-background-radius: 4px, 4px;
     -fx-border-color: -ghost-tint-line;
     -fx-border-width: 1px;
-    -fx-border-radius: 8px;
+    -fx-border-radius: 4px;
     -fx-padding: 4px;
     -fx-effect: dropshadow(gaussian, -ghost-shadow-soft, 6, 0.0, 0, 2);
 }

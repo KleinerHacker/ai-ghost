@@ -28,21 +28,21 @@
 /* One collapsible section of the inspector, built on a TitledPane. */
 .inspector-section {
     -fx-background-color: -ghost-surface;
-    -fx-background-radius: 8px;
+    -fx-background-radius: 4px;
 }
 
 .inspector-section > .title {
     -fx-background-color: -ghost-surface-raised;
-    -fx-background-radius: 8px 8px 0 0;
+    -fx-background-radius: 4px 4px 0 0;
     -fx-padding: 6px 10px 6px 10px;
 }
 
 .inspector-section:expanded > .title {
-    -fx-background-radius: 8px 8px 0 0;
+    -fx-background-radius: 4px 4px 0 0;
 }
 
 .inspector-section:collapsed > .title {
-    -fx-background-radius: 8px;
+    -fx-background-radius: 4px;
 }
 
 .inspector-section > .title > .text {
@@ -60,7 +60,7 @@
 
 .inspector-section > .content {
     -fx-background-color: -ghost-surface;
-    -fx-background-radius: 0 0 8px 8px;
+    -fx-background-radius: 0 0 4px 4px;
     -fx-padding: 10px;
 }
 

@@ -51,11 +51,15 @@
     /* Derived tints used for hover and pressed states, lightening the dark surfaces */
     -ghost-tint-hover: rgba(159, 168, 218, 0.16);
     -ghost-tint-pressed: rgba(159, 168, 218, 0.28);
-    -ghost-tint-line: rgba(229, 234, 246, 0.18);
+    -ghost-tint-line: rgba(229, 234, 246, 0.14);
 
     /* Drop shadow colours: on dark surfaces only a near black shadow stays visible */
     -ghost-shadow: rgba(0, 0, 0, 0.55);
-    -ghost-shadow-soft: rgba(0, 0, 0, 0.35);
+    -ghost-shadow-soft: rgba(0, 0, 0, 0.22);
+
+    /* Glass sheen laid over raised controls: a bright highlight fading into the fill below it */
+    -ghost-gloss: rgba(255, 255, 255, 0.08);
+    -ghost-gloss-soft: rgba(255, 255, 255, 0.04);
 
     /* Modena base variables, so unstyled controls already follow the palette */
     -fx-base: -ghost-surface;
