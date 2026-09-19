@@ -293,7 +293,7 @@ Nutzen voraus – der ist über den Stub bereits erbracht.
 
 | ID    | Implementierungsplan                              | Anwendungsfall, der danach vollständig läuft                                                     | Abhängigkeiten |
 |-------|--------------------------------------------------|-----------------------------------------------------------------------------------------------|----------------|
-| IP-01 | Plugin API And Plugin Manager                     | Die Anwendung entdeckt und lädt Provider-Plugins beim Start; ein defektes Plugin wird übersprungen (nachgewiesen über ein Fixture-Plugin) | -              |
+| IP-01 | Plugin API And Plugin Manager (**COMPLETED**)     | Die Anwendung entdeckt und lädt Provider-Plugins beim Start; ein defektes Plugin wird übersprungen (nachgewiesen über ein Fixture-Plugin) | -              |
 | IP-02 | Provider Modules And Stub Provider                | Beim Start steht der ausgelieferte Stub-Provider in der Registrierung; `generate()` streamt seinen konfigurierten Text | IP-01          |
 | IP-03 | Provider Selection, Configuration And Persistence | Ein Nutzer wählt den Stub, ändert dessen Antworttext, testet ihn, speichert – die Wahl übersteht einen Neustart | IP-02          |
 | IP-04 | Plugin Packaging And CI                           | `./gradlew build` paketiert und prüft die Plugin-JARs; die CI führt den Schritt aus          | IP-03          |
@@ -305,7 +305,7 @@ Nutzen voraus – der ist über den Stub bereits erbracht.
 
 ## 7. Implementierungspläne
 
-### IP-01: Plugin API And Plugin Manager
+### IP-01: Plugin API And Plugin Manager (COMPLETED)
 
 **Ziel**
 
@@ -731,11 +731,11 @@ mit dem Nutzer abzustimmen (`dependencies.md`). Der Provider führt keine Orches
 ## 8. Abhängigkeitsgraph
 
 ```text
-IP-01 ── IP-02 ── IP-03 ─┬─ IP-04 ── IP-05  (Packaging/CI, dann Documentation)
-                          ├─ IP-06  (LM Studio)
-                          ├─ IP-07  (OpenAI)
-                          ├─ IP-08  (Anthropic)
-                          └─ IP-09  (llama.cpp)
+IP-01 (COMPLETED) ── IP-02 ── IP-03 ─┬─ IP-04 ── IP-05  (Packaging/CI, dann Documentation)
+                                      ├─ IP-06  (LM Studio)
+                                      ├─ IP-07  (OpenAI)
+                                      ├─ IP-08  (Anthropic)
+                                      └─ IP-09  (llama.cpp)
 ```
 
 * Der Kern (IP-01 bis IP-05) ist ohne echte LLM-Verbindung vollständig; der Nachweis läuft über den

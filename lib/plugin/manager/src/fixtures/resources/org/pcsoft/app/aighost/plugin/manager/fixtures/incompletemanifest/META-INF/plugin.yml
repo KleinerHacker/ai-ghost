@@ -1,0 +1,8 @@
+id: incomplete-manifest-fixture
+version: "1.0"
+providers:
+  ai:
+    - id: incomplete-manifest
+      implementation: org.pcsoft.app.aighost.plugin.manager.fixtures.incompletemanifest.IncompleteManifestProvider
+      name: text.incompleteManifest.name
+      contractVersion: 1

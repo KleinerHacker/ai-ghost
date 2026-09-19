@@ -1,0 +1,9 @@
+id: duplicate-id-fixture
+name: Duplicate Id Fixture Plugin
+version: "1.0"
+providers:
+  ai:
+    - id: good
+      implementation: org.pcsoft.app.aighost.plugin.manager.fixtures.duplicateid.DuplicateIdProvider
+      name: text.duplicateId.name
+      contractVersion: 1

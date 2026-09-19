@@ -15,8 +15,7 @@
 
 | ID | Plan | Datei | Voraussetzung |
 |----|------|-------|---------------|
-| IP-01 | Plugin-API und Plugin-Manager | `FP-002-IP-01-PluginApiUndManager.md` | - |
-| IP-02 | Provider-Module und Stub-Provider | `FP-002-IP-02-ProviderModuleUndStub.md` | IP-01 |
+| IP-02 | Provider-Module und Stub-Provider | `FP-002-IP-02-ProviderModuleUndStub.md` | IP-01 (COMPLETED) |
 | IP-03 | Provider-Auswahl, Konfiguration und Persistenz | `FP-002-IP-03-ProviderAuswahlKonfigurationPersistenz.md` | IP-02 |
 | IP-04 | Plugin-Paketierung und CI | `FP-002-IP-04-PluginPaketierungUndCi.md` | IP-03 |
 | IP-05 | Dokumentation | `FP-002-IP-05-Dokumentation.md` | IP-04 |
@@ -27,4 +26,4 @@
 
 ## Ohne Voraussetzung startbar
 
-* IP-01 - Plugin-API und Plugin-Manager
+* IP-02 - Provider-Module und Stub-Provider (Voraussetzung IP-01 ist `COMPLETED`)

@@ -15,6 +15,8 @@ module org.pcsoft.app.aighost.ui {
     requires org.pcsoft.app.aighost.fx.model;
     // The prompt area estimates the token cost of what the user wrote.
     requires org.pcsoft.app.aighost.ai;
+    // PluginLoadStartupStep discovers and registers AI provider plugins before the first window.
+    requires org.pcsoft.app.aighost.plugin.manager;
     // The block builders turn a book part, the title page and the copyright page into layout input;
     // its `requires transitive` on simPlay's engine module makes simPlay's raw model types (Font,
     // FontFingerprint, ...) visible here as well.

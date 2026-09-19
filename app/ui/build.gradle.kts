@@ -42,6 +42,8 @@ dependencies {
     implementation(project(":lib:ai-ghost-model"))
     implementation(project(":lib:ai-ghost-fx-model"))
     implementation(project(":lib:ai-ghost-ai"))
+    // Discovers, isolates and registers AI provider plugins while the splash screen is shown.
+    implementation(project(":lib:plugin:ai-ghost-plugin-manager"))
     // The block builders that turn a book part, the title page and the copyright page into layout
     // input.
     implementation(project(":lib:ai-ghost-layouting-model"))

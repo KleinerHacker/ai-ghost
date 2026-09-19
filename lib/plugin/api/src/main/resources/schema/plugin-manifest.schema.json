@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://kleinerhacker.github.io/ai-ghost/schema/plugin-manifest.schema.json",
+  "title": "AI Ghost plugin manifest",
+  "description": "META-INF/plugin.yml (or plugin.yaml) of an AI Ghost plugin JAR.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "name", "version", "providers"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Stable, unique identifier of the plugin."
+    },
+    "name": {
+      "type": "string",
+      "description": "Display name of the plugin."
+    },
+    "description": {
+      "type": "string",
+      "description": "Short description of what the plugin does."
+    },
+    "icon": {
+      "type": "string",
+      "description": "Base64-encoded plugin icon (SVG, PNG or JPG; the format is recognized from the decoded bytes)."
+    },
+    "author": {
+      "type": "string",
+      "description": "Author of the plugin."
+    },
+    "version": {
+      "type": "string",
+      "description": "Version of the plugin itself."
+    },
+    "copyright": {
+      "type": "string",
+      "description": "Copyright notice of the plugin."
+    },
+    "providers": {
+      "type": "object",
+      "description": "The plugin's contributions, grouped by kind. Today only 'ai' exists.",
+      "additionalProperties": false,
+      "required": ["ai"],
+      "properties": {
+        "ai": {
+          "type": "array",
+          "description": "The plugin's AiProvider implementations.",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "implementation", "name", "contractVersion"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Stable, unique identifier of the provider, e.g. \"openai\"."
+              },
+              "implementation": {
+                "type": "string",
+                "description": "Fully qualified class name of the AiProvider implementation."
+              },
+              "name": {
+                "type": "string",
+                "description": "Resource bundle key of the provider's display name."
+              },
+              "contractVersion": {
+                "type": "integer",
+                "description": "Version of the AiProvider contract this implementation was built against."
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -12,5 +12,8 @@ name: Architecture
 * A module under 'lib' MAY carry Java FX only in this one case; every other one stays free of it
   * a property model library on 'javafx.base' alone - currently 'lib/fx-model'
     (`ai-ghost-fx-model`); no toolkit module beyond `javafx.base`
+* 'lib/plugin' carries the plugin mechanism, free of Java FX: 'api' (`ai-ghost-plugin-api`, the
+  plugin-authoring API) and 'manager' (`ai-ghost-plugin-manager`, discovery, isolated loading and
+  registration); a later 'provider' branch holds one module per shipped provider
 * The full Java FX toolkit lives ONLY in 'app/ui', and there only transitively through `simplay-fx`
   (the layout renderer, previously the in-house module `lib/layouting-fx`, removed in IP-29)

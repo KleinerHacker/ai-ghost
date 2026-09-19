@@ -46,7 +46,8 @@ opened once the user accepts it. Both documents are written with Jackson.
 | Context handling (outline, characters, tone)      | Planned     |
 | Book project with outline and chapters            | Planned     |
 | Export of the finished manuscript                 | Planned     |
-| Plugin API (`lib/plugin/ai-ghost-plugin-api`)     | Planned     |
+| Plugin API (`lib/plugin/ai-ghost-plugin-api`)     | Implemented |
+| Plugin manager: discovery, isolated loading and registration of AI provider plugins (`lib/plugin/ai-ghost-plugin-manager`) | Implemented |
 | JavaFX desktop shell (`app/ai-ghost-ui`)          | Implemented |
 | JSON data model (`lib/ai-ghost-model`)            | Implemented |
 | AI support library (`lib/ai-ghost-ai`)            | Implemented |
