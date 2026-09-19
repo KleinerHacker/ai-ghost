@@ -32,7 +32,7 @@ import org.pcsoft.framework.simplay.engine.model.PageNumbering
  */
 class BookTest {
 
-    private val mapper: ObjectMapper = ObjectMapper().registerKotlinModule()
+    private val mapper: ObjectMapper = ObjectMapper().registerKotlinModule().registerModule(documentJacksonModule)
 
     /**
      * Use case: the user creates a book before writing anything, so it starts without chapters
@@ -95,7 +95,7 @@ class BookTest {
                 """"prompts":{"contentPrompt":"","stylePrompt":""}}],""" +
                 """"epilog":{"prompts":{"contentPrompt":"","stylePrompt":""},"included":false},""" +
                 """"blurb":{"prompt":"","paragraph":[],"included":false},""" +
-                """"document":${mapper.writeValueAsString(DocumentCodec.encode(Document()))}}""",
+                """"document":${DocumentCodec.encode(Document())}}""",
             json
         )
     }
@@ -112,27 +112,24 @@ class BookTest {
 
     /**
      * Use case: the writing surface replaces the manuscript's document after an edit, so the change is
-     * readable back through [Book.document] and is what Jackson actually persists in
-     * [Book.documentPayload].
+     * readable back through [Book.document].
      */
     @Test
-    fun writingDocumentIsReadableAgainAndPersistedAsPayload() {
+    fun writingDocumentIsReadableAgain() {
         val document = Document(numbering = PageNumbering.OFF.copy(startNumber = 3))
         val book = Book()
 
         book.document = document
 
         assertEquals(document, book.document)
-        assertEquals(DocumentCodec.encode(document), book.documentPayload)
     }
 
     /**
      * Use case: two books are compared - for instance while testing a round trip - so a difference in
-     * the manuscript's document is not silently ignored just because [Book.document] is a computed
-     * property outside the generated `equals`.
+     * the manuscript's document is not silently ignored.
      */
     @Test
-    fun documentDifferenceIsVisibleThroughDocumentPayload() {
+    fun documentDifferenceIsVisibleOnTheBook() {
         val withDocument = Book().apply { document = Document(numbering = PageNumbering.OFF.copy(startNumber = 3)) }
 
         assertNotEquals(Book(), withDocument)
@@ -145,7 +142,7 @@ class BookTest {
      */
     @Test
     fun failsToReadACorruptDocumentPayload() {
-        val json = """{"document":"not a document"}"""
+        val json = """{"document":{"foo":"bar"}}"""
 
         assertThrows(JacksonException::class.java) { mapper.readValue<Book>(json) }
     }

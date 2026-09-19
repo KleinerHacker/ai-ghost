@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.json.JsonMapper
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper
 import com.fasterxml.jackson.module.kotlin.kotlinModule
 import org.pcsoft.app.aighost.model.project.Project
+import org.pcsoft.app.aighost.model.project.book.documentJacksonModule
 import org.pcsoft.app.aighost.model.project.meta.Meta
 import org.pcsoft.app.aighost.model.util.logger
 import org.pcsoft.app.aighost.plugin.api.model.project.ProjectPart
@@ -58,6 +59,7 @@ internal object StorageIo {
     /** The mapper the parts of a project archive are written with and read from again. */
     val jsonMapper: JsonMapper = JsonMapper.builder()
         .addModule(kotlinModule())
+        .addModule(documentJacksonModule)
         .enable(SerializationFeature.INDENT_OUTPUT)
         // A project is a zip archive of several entries written through one and the same stream, so
         // the mapper must not close it after a single entry - the next one would find it closed.

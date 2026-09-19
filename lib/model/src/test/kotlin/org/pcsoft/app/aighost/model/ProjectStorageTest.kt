@@ -21,7 +21,6 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.pcsoft.app.aighost.model.project.Project
 import org.pcsoft.app.aighost.model.project.book.Book
-import org.pcsoft.app.aighost.model.project.book.DocumentCodec
 import org.pcsoft.app.aighost.model.project.design.Design
 import org.pcsoft.app.aighost.model.project.meta.Meta
 import org.pcsoft.framework.simplay.engine.model.Document
@@ -59,7 +58,7 @@ class ProjectStorageTest {
     fun documentSurvivesARoundTrip() {
         val project = TestData.project().apply {
             book = book.copy(
-                documentPayload = DocumentCodec.encode(Document(numbering = PageNumbering.OFF.copy(startNumber = 3)))
+                document = Document(numbering = PageNumbering.OFF.copy(startNumber = 3))
             )
         }
 

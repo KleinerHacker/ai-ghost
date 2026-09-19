@@ -17,14 +17,12 @@ import kotlinx.serialization.json.Json
 import org.pcsoft.framework.simplay.engine.model.Document
 
 /**
- * Turns a simPlay [Document] into the single JSON string [Book.documentPayload] hands to Jackson, and
- * back.
+ * Turns a simPlay [Document] into a JSON string and back.
  *
- * simPlay's raw model is `kotlinx.serialization`-only and carries no Jackson bridge of its own, so
- * this object is the one place that builds the bridge: Jackson never sees a [Document], only the
- * string this object produces from it. [decode] throws [SerializationException] for a payload that is
- * not a valid document, which [Book] lets pass so it surfaces to a caller reading the book through
- * Jackson.
+ * simPlay's raw model is `kotlinx.serialization`-only, so this object does the actual encoding for
+ * [DocumentSerializer] and [DocumentDeserializer], the classes that bridge [Document] into and out of
+ * Jackson's own [Book] serialization. [decode] throws [SerializationException] for a payload that is
+ * not a valid document, which [DocumentDeserializer] turns into a `JacksonException`.
  */
 internal object DocumentCodec {
 
