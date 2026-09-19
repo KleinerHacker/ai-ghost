@@ -568,6 +568,38 @@ class BookPartEditorTest : ApplicationTest() {
     }
 
     /**
+     * Use case: the user types, then splits the paragraph, so undoing once reverts only the split - the
+     * typed text stays in place and remains reachable by a further undo - and redoing brings the split
+     * back. Text and structural changes share one undo stack without reordering against each other
+     * (IP-32/IP-33); how many separate entries the typed burst itself falls into is [UndoStack]'s own
+     * concern, already proven at that level by
+     * [org.pcsoft.app.aighost.app.undo.UndoStackTest.consecutiveChangesOfTheSameSourceMergeIntoOneEntry].
+     */
+    @Test
+    fun undoAfterASplitRevertsTheStructureBeforeTheTypedText() {
+        select(ProjectListItem.ChapterItem(chapter))
+        val anchorId = chapter.id.toString()
+        interact {
+            sheet.requestFocus()
+            sheet.caretModel.moveToEndOfBlock(globalBlockIndex(anchorId, 0))
+        }
+        WaitForAsyncUtils.waitForFxEvents()
+        typeSlowly("HelloWorld")
+
+        fireSplit()
+        assertEquals(2, storedBlocks(anchorId).size, "the fixture must be split before undo is exercised")
+
+        interact { undoStack.undo() }
+        WaitForAsyncUtils.waitForFxEvents()
+        assertEquals(listOf("\${$anchorId}HelloWorld"), storedBlocks(anchorId), "the undo must revert the split, not the typed text")
+        assertTrue(undoStack.canUndoProperty.get(), "the typed text must still sit on the undo stack after the split is reverted")
+
+        interact { undoStack.redo() }
+        WaitForAsyncUtils.waitForFxEvents()
+        assertEquals(2, storedBlocks(anchorId).size, "the redo must split the block again")
+    }
+
+    /**
      * Use case: the user switches the sheet to the preview, so the real `PaperSheetView` mode changes
      * from writable to selectable and the choice is saved to the preferences.
      */

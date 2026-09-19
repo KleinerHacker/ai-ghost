@@ -25,7 +25,7 @@ Status: IN_PROGRESS
 | IP-38 | Buch-Dokument Als Alleinige Basis               | COMPLETED   |
 | IP-39 | PaperSheetView Dauerhaft Im Zentrum             | COMPLETED   |
 | IP-32 | Paragraph Structure Operations On Document     | COMPLETED   |
-| IP-33 | Undo On Immutable Document Swap                | NOT_STARTED |
+| IP-33 | Undo On Immutable Document Swap                | COMPLETED   |
 | IP-18 | AI Actions On Paragraph And Heading            | COMPLETED   |
 | IP-23 | Optional Book Parts In The Tree                | COMPLETED   |
 
@@ -62,7 +62,7 @@ nur seine reinen Funktionen und sein Sync-Muster gehen in IP-39 über.
 
 ## Gesamtfortschritt
 
-91 % (20 von 22 zählenden Plänen abgeschlossen; IP-31 zählt als abgeschlossen, aber sein Ergebnis ist
+95 % (21 von 22 zählenden Plänen abgeschlossen; IP-31 zählt als abgeschlossen, aber sein Ergebnis ist
 abgelöst und wurde von IP-39 neu erbracht)
 
 ## Anmerkungen
@@ -251,4 +251,22 @@ Operation). Kontextmenü auf `PaperSheetView` mit sechs Einträgen (Teilen, zwei
 zweimal Verschieben), Texte über den `translator`-Agenten übersetzt. Build und Tests grün
 (`:app:ai-ghost-ui:build`).
 
-Nächster Schritt: IP-33.
+IP-33 abgeschlossen: keine Änderung an der Undo-Infrastruktur aus IP-09; die bestehenden Mechanismen
+(`undoStack.record(...)` mit Merge-Schlüssel `page.id to target` für Text, `DocumentStructureUndoEntry`
+für Struktur) wurden bestätigt statt neu gebaut. Neue Tests in `BookPartEditorTest`
+(`undoAfterASplitRevertsTheStructureBeforeTheTypedText`) und neue Testklasse
+`MainWindowViewModelTest` (`newProjectClearsUndoAndRedoHistory`, `openProjectClearsUndoAndRedoHistory`)
+schließen die verbliebene Lücke: bislang war nur `UndoStack.clear()` selbst getestet
+(`BookPartEditorTest.clearingTheUndoStackDiscardsUndoAndRedoHistory`), nicht die Verdrahtung in
+`MainWindowViewModel.newProject`/`openProject` selbst.
+**Abweichung vom Plan:** Die ursprünglich vorgesehenen Tests für Mehrfach-Tastenanschlag-Merge und
+Merge-Timeout wurden NICHT ergänzt, da `UndoStackTest.kt` (`consecutiveChangesOfTheSameSourceMergeIntoOneEntry`,
+`mergeEndsOnItsOwnAfterTheTimeoutElapsed`) dieses Verhalten bereits vollständig auf Unit-Ebene abdeckt -
+die ursprüngliche Bestandsaufnahme hatte diese Datei übersehen. Ein Test über die volle
+`BookPartEditorTest`-Pipeline für exakte Undo-Entry-Zahlen beim Tippen erwies sich als unzuverlässig:
+simPlays interne Neuvermessung erzeugt bei jedem Tastenanschlag zusätzliche, mit dem eigentlichen Ziel
+nicht zusammenhängende Undo-Einträge auf anderen Seiten desselben Dokuments, wodurch ein vollständiges
+Zurückspulen bis zum Ausgangstext über den geteilten Undo-Stack in einem Test nicht deterministisch
+nachweisbar war. Der ergänzte Test prüft daher nur die Reihenfolge (Struktur vor Text), nicht die exakte
+Zahl der Text-Undo-Schritte. Diese Beobachtung ist als offenes TODO für eine künftige, gezieltere
+Untersuchung festgehalten, ändert aber nichts an der bestehenden, korrekten Undo-Infrastruktur aus IP-09.

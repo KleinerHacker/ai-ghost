@@ -309,7 +309,7 @@ bleiben in Kraft (ihre Bausteine werden von IP-36 bis IP-39 weiterverwendet, nic
 abgeschlossen, aber sein Ergebnis - das `Document` je Baumauswahl auszutauschen - ist mit der zweiten
 Abweichung abgelöst; seine reinen Funktionen (`splitParagraph` und Geschwister) bleiben nutzbar. IP-15
 und IP-16 sind vollständig abgelöst und in IP-39 aufgegangen (siehe „Abgelöste Pläne (TextAnchor)“).
-IP-32 ist abgeschlossen. IP-33 bleibt offen, mit angepassten Abhängigkeiten. IP-18 ist abgeschlossen. IP-23 ist
+IP-32 ist abgeschlossen. IP-33 ist abgeschlossen, mit angepassten Abhängigkeiten. IP-18 ist abgeschlossen. IP-23 ist
 abgeschlossen. IP-36 bis IP-39 sind neu.
 Die Pläne IP-03, IP-04, IP-05, IP-06, IP-07, IP-08, IP-10, IP-11, IP-22, IP-25 und IP-26 sind aus der
 ersten Abweichung abgelöst (siehe „Abgelöste Pläne (simPlay)“).
@@ -335,7 +335,7 @@ ersten Abweichung abgelöst (siehe „Abgelöste Pläne (simPlay)“).
 | IP-38 | Buch-Dokument Als Alleinige Basis ✅            | `BookDocumentBuilder` einzige Bauquelle; Anker statt Index; Stil-Auffrischung | IP-37, IP-30, IP-34   |
 | IP-39 | PaperSheetView Dauerhaft Im Zentrum ✅          | Ein `Document`, immer sichtbar; Baumauswahl navigiert über `TextAnchor`      | IP-38, IP-09          |
 | IP-32 | Paragraph Structure Operations On Document ✅  | Absätze teilen, verbinden, löschen, umsortieren, ankerfest                  | IP-39                 |
-| IP-33 | Undo On Immutable Document Swap                | Undo-Einträge auf den `Document`-Tausch umstellen                          | IP-39                 |
+| IP-33✅ | Undo On Immutable Document Swap                | Undo-Einträge auf den `Document`-Tausch umstellen                          | IP-39                 |
 | IP-18 | AI Actions On Paragraph And Heading ✅          | Schwebende KI-Leiste über `FloatingOverlay`; Schaltflächen mit `TODO(...)`   | IP-39                 |
 | IP-23 | Optional Book Parts In The Tree ✅              | Kontrollkästchen schaltet Prolog, Epilog und Klappentext ins Buch, `PaperSheetView.pageModes` sofort | IP-39, IP-24, IP-35 |
 
@@ -719,9 +719,9 @@ bleibt eine Operation des Projektbaums (IP-38/IP-39), keine Absatz-Operation.
   Verschieben/Entfernen wie ursprünglich in `docs/docs/editor.md` beschrieben), da alle sechs
   Operationen über dieselben `perform*`-Methoden des ViewModels laufen.
 
-### IP-33: Undo On Immutable Document Swap
+### IP-33: Undo On Immutable Document Swap ✅
 
-Plan: `FP-001-IP-33-UndoAufDokumentTausch.md`
+Plan: `FP-001-IP-33-UndoAufDokumentTausch.md` (abgeschlossen, entfernt)
 
 Der Tausch der `Document`-Instanz ist die natürliche Undo-Einheit. Ein Textänderungs-Eintrag und ein
 struktureller Eintrag (früher `ParagraphListUndoEntry`) merken sich Vorher- und Nachher-`Document`
@@ -729,6 +729,14 @@ plus das Caret-Ziel und spielen den Tausch in beide Richtungen ab. Merge-Schlüs
 IP-09/IP-10 bleiben. Das "Modell", das nach einem Undo/Redo neu abgeleitet wird, ist jetzt nur noch
 `Book.chapters`s Reihenfolge/Bestand aus den Ankern des wiederhergestellten `Document`, nicht mehr
 `List<String>`-Absätze je Teil.
+
+**Abweichung:** Text- und Struktur-Undo aus IP-09/IP-32 wurden unverändert bestätigt, nicht neu gebaut.
+Ergänzt wurden nur die zwei tatsächlich fehlenden Tests: die Reihenfolge von Struktur- vor Text-Undo
+nach einem Split (`BookPartEditorTest.undoAfterASplitRevertsTheStructureBeforeTheTypedText`) und die
+Verdrahtung von `UndoStack.clear()` in `MainWindowViewModel.newProject`/`openProject`
+(neue Testklasse `MainWindowViewModelTest`). Geplante Tests für Mehrfach-Tastenanschlag-Merge und
+Merge-Timeout entfielen, da `UndoStackTest.kt` dieses Verhalten bereits auf Unit-Ebene vollständig
+abdeckt.
 
 ### IP-18: AI Actions On Paragraph And Heading ✅
 
@@ -830,7 +838,7 @@ gleichzeitig zeigt.
 ```text
 IP-24✅ ─┬─> IP-36✅ (mit IP-02✅) ──> IP-37✅ (mit IP-29✅) ──> IP-38✅ (mit IP-30✅, IP-34✅) ──> IP-39✅ (mit IP-09✅)
         │                                                                                   ├─> IP-32✅
-IP-29✅ ─┴─> IP-30✅ (mit IP-02✅, IP-24✅) ─┬─> IP-35✅                                       ├─> IP-33
+IP-29✅ ─┴─> IP-30✅ (mit IP-02✅, IP-24✅) ─┬─> IP-35✅                                       ├─> IP-33✅
         └─> IP-34✅                        │                                                 ├─> IP-18✅
                                            └───────────────────────────────────────────────> IP-23✅ (mit IP-24✅, IP-35✅)
 IP-02✅ ──> IP-13✅, IP-14✅
