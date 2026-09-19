@@ -29,7 +29,6 @@ import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
 import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.FontData
 import org.pcsoft.app.aighost.model.common.StyleData
-import org.pcsoft.app.aighost.model.pref.WritingMode
 import org.pcsoft.app.aighost.model.project.Project
 import org.pcsoft.app.aighost.model.project.book.Blurb
 import org.pcsoft.app.aighost.model.project.book.Book
@@ -64,18 +63,15 @@ class BookPartEditorAiActionBarTest : ApplicationTest() {
     private lateinit var sheet: PaperSheetView
     private lateinit var projectModel: ProjectProperty
 
-    private var originalWritingMode: WritingMode = WritingMode.WRITING
     private var originalLastAnchorId: String? = null
 
     @BeforeEach
     fun rememberPreferences() {
-        originalWritingMode = IoController.preferences.editorProperty.writingMode
         originalLastAnchorId = IoController.preferences.editorProperty.lastAnchorId
     }
 
     @AfterEach
     fun restorePreferences() {
-        IoController.preferences.editorProperty.writingMode = originalWritingMode
         IoController.preferences.editorProperty.lastAnchorId = originalLastAnchorId
     }
 

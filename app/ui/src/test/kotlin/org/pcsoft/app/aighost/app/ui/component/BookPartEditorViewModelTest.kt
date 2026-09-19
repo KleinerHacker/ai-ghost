@@ -29,7 +29,6 @@ import org.pcsoft.app.aighost.model.project.book.Book
 import org.pcsoft.app.aighost.model.project.book.Chapter
 import org.pcsoft.app.aighost.model.project.book.Epilog
 import org.pcsoft.app.aighost.model.project.book.Prolog
-import org.pcsoft.app.aighost.model.pref.WritingMode
 
 /**
  * Developer tests for [BookPartEditorViewModel] - the routing of a picked tree node onto the mode of
@@ -47,12 +46,10 @@ class BookPartEditorViewModelTest {
     private lateinit var selection: SimpleObjectProperty<ProjectListItem?>
 
     private var originalPause: Long = 0
-    private var originalWritingMode: WritingMode = WritingMode.WRITING
 
     @BeforeEach
     fun setUp() {
         originalPause = IoController.preferences.editorProperty.paragraphMergePauseMillis
-        originalWritingMode = IoController.preferences.editorProperty.writingMode
         viewModel = BookPartEditorViewModel()
         project = ProjectProperty(
             Project(
@@ -70,7 +67,6 @@ class BookPartEditorViewModelTest {
     @AfterEach
     fun tearDown() {
         IoController.preferences.editorProperty.paragraphMergePauseMillis = originalPause
-        IoController.preferences.editorProperty.writingMode = originalWritingMode
     }
 
     /**
@@ -217,23 +213,4 @@ class BookPartEditorViewModelTest {
         assertEquals(450, stack.mergeTimeoutMillis)
     }
 
-    /**
-     * Use case: nothing was ever switched yet, so the sheet starts out in the writing mode.
-     */
-    @Test
-    fun startsInTheWritingMode() {
-        assertEquals(WritingMode.WRITING, viewModel.writingMode.value)
-    }
-
-    /**
-     * Use case: the user switches the sheet to the preview, so the new mode is reported by the
-     * property and saved to the preferences, ready to be restored the next time the project is opened.
-     */
-    @Test
-    fun switchesToPreviewAndSavesItToThePreferences() {
-        viewModel.setWritingMode(WritingMode.PREVIEW)
-
-        assertEquals(WritingMode.PREVIEW, viewModel.writingMode.value)
-        assertEquals(WritingMode.PREVIEW, IoController.preferences.editorProperty.writingMode)
-    }
 }

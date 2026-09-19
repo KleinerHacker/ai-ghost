@@ -30,7 +30,6 @@ import org.pcsoft.app.aighost.app.undo.UndoStack
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
 import org.pcsoft.app.aighost.layouting.model.common.toPageLayout
 import org.pcsoft.app.aighost.layouting.model.common.toTextStyle
-import org.pcsoft.app.aighost.model.pref.WritingMode
 import org.pcsoft.app.aighost.model.common.Alignment
 import org.pcsoft.app.aighost.model.common.FontData
 import org.pcsoft.app.aighost.model.common.StyleData
@@ -87,18 +86,15 @@ class BookPartEditorTest : ApplicationTest() {
     private lateinit var undoStack: UndoStack
     private lateinit var stage: Stage
 
-    private var originalWritingMode: WritingMode = WritingMode.WRITING
     private var originalLastAnchorId: String? = null
 
     @BeforeEach
     fun rememberPreferences() {
-        originalWritingMode = IoController.preferences.editorProperty.writingMode
         originalLastAnchorId = IoController.preferences.editorProperty.lastAnchorId
     }
 
     @AfterEach
     fun restorePreferences() {
-        IoController.preferences.editorProperty.writingMode = originalWritingMode
         IoController.preferences.editorProperty.lastAnchorId = originalLastAnchorId
     }
 
@@ -597,19 +593,6 @@ class BookPartEditorTest : ApplicationTest() {
         interact { undoStack.redo() }
         WaitForAsyncUtils.waitForFxEvents()
         assertEquals(2, storedBlocks(anchorId).size, "the redo must split the block again")
-    }
-
-    /**
-     * Use case: the user switches the sheet to the preview, so the real `PaperSheetView` mode changes
-     * from writable to selectable and the choice is saved to the preferences.
-     */
-    @Test
-    fun switchesTheRealSheetToPreview() {
-        interact { editor.setWritingMode(WritingMode.PREVIEW) }
-        WaitForAsyncUtils.waitForFxEvents()
-
-        assertEquals(PaperSheetMode.SELECTABLE, sheet.mode)
-        assertEquals(WritingMode.PREVIEW, IoController.preferences.editorProperty.writingMode)
     }
 
     /**

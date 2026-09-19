@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+* Removed the read-only "Preview" toggle from the writing surface's tool bar; the sheet stays
+  editable at all times
+
 ## [0.0.1]
 
 * Editor centre is a writing surface showing the whole book as one continuous, typeset sheet;

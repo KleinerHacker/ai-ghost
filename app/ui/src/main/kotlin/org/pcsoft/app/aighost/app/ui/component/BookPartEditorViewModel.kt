@@ -36,7 +36,6 @@ import org.pcsoft.app.aighost.app.undo.UndoStack
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
 import org.pcsoft.app.aighost.fx.model.project.book.BookProperty
 import org.pcsoft.app.aighost.layouting.model.project.DocumentStyleRefresher
-import org.pcsoft.app.aighost.model.pref.WritingMode
 import org.pcsoft.framework.simplay.engine.model.Document
 import org.pcsoft.framework.simplay.fx.PageDecoration
 import org.pcsoft.framework.simplay.fx.PaperSheetMode
@@ -114,9 +113,6 @@ class BookPartEditorViewModel : ViewModel {
     /** Whether the picked part may be written; `false` only while nothing is picked yet. */
     val editable: BooleanBinding = Bindings.createBooleanBinding({ mode.value != PartMode.NONE }, mode)
 
-    /** Whether the sheet is switched to writing or to preview, restored from and saved to the preferences. */
-    val writingMode: SimpleObjectProperty<WritingMode> = SimpleObjectProperty(this, "writingMode", WritingMode.WRITING)
-
     /** Whether the whole book is measured for the first time after opening a project right now. */
     val loading: SimpleBooleanProperty = SimpleBooleanProperty(this, "loading", false)
 
@@ -165,7 +161,7 @@ class BookPartEditorViewModel : ViewModel {
     private val documentListener =
         ChangeListener<Document?> { _, _, newValue -> handleDocumentChanged(newValue) }
 
-    // IP-32: Enter (split) and Ctrl+Shift+Up/Down (move) have no native equivalent in EDITABLE mode and
+    // IP-32: Enter (split) and Ctrl+Shift+Up/Down (move) have no native equivalent on the sheet and
     // are intercepted here, as an event filter so they are consumed before PaperSheetView's own
     // handling ever sees them; every other key - Backspace, Delete, the arrows - is left untouched.
     private val keyPressedFilter = EventHandler<KeyEvent> { onKeyPressed(it) }
@@ -177,29 +173,9 @@ class BookPartEditorViewModel : ViewModel {
      */
     internal fun attach(paperSheetView: PaperSheetView) {
         this.paperSheetView = paperSheetView
-        writingMode.value = IoController.preferences.editorProperty.writingMode
-        paperSheetView.mode = writingMode.value.toPaperSheetMode()
+        paperSheetView.mode = PaperSheetMode.EDITABLE
         paperSheetView.documentProperty.addListener(documentListener)
         paperSheetView.addEventFilter(KeyEvent.KEY_PRESSED, keyPressedFilter)
-    }
-
-    /**
-     * Switches the sheet between writing and preview, applies it to [PaperSheetView.mode] and saves it
-     * to the preferences of the user.
-     *
-     * @param mode the mode to switch to
-     */
-    internal fun setWritingMode(mode: WritingMode) {
-        writingMode.value = mode
-        IoController.preferences.editorProperty.writingMode = mode
-        if (::paperSheetView.isInitialized) {
-            paperSheetView.mode = mode.toPaperSheetMode()
-        }
-    }
-
-    private fun WritingMode.toPaperSheetMode(): PaperSheetMode = when (this) {
-        WritingMode.WRITING -> PaperSheetMode.EDITABLE
-        WritingMode.PREVIEW -> PaperSheetMode.SELECTABLE
     }
 
     /**
@@ -317,7 +293,7 @@ class BookPartEditorViewModel : ViewModel {
     // which already covers character insertion, deletion, cross-block merging and linear line
     // navigation on its own.
     private fun onKeyPressed(event: KeyEvent) {
-        if (!::paperSheetView.isInitialized || paperSheetView.mode != PaperSheetMode.EDITABLE) return
+        if (!::paperSheetView.isInitialized) return
 
         when {
             event.code == KeyCode.ENTER && !event.isShiftDown -> {

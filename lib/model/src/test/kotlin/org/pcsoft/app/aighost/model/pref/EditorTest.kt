@@ -96,48 +96,45 @@ class EditorTest {
         val json = mapper.writeValueAsString(Editor(paragraphMergePauseMillis = 700))
 
         assertEquals(
-            """{"paragraphMergePauseMillis":700,"writingMode":"WRITING","inspectorCollapsed":false,"lastAnchorId":null}""",
+            """{"paragraphMergePauseMillis":700,"inspectorCollapsed":false,"lastAnchorId":null}""",
             json
         )
     }
 
     /**
-     * Use case: a user who never switched the sheet gets the writing mode, an expanded Inspector and
-     * no remembered position, so the editor opens in its default arrangement.
+     * Use case: a user who never touched the settings gets an expanded Inspector and no remembered
+     * position, so the editor opens in its default arrangement.
      */
     @Test
-    fun defaultsToWritingWithAnExpandedInspectorAndNoRememberedPosition() {
+    fun defaultsToAnExpandedInspectorAndNoRememberedPosition() {
         val editor = Editor()
 
-        assertEquals(WritingMode.WRITING, editor.writingMode)
         assertEquals(false, editor.inspectorCollapsed)
         assertEquals(null, editor.lastAnchorId)
     }
 
     /**
-     * Use case: the user switches to the preview, collapses the Inspector and navigates to a chapter,
-     * so all three settings change in place without a copy of the object having to be handed around.
+     * Use case: the user collapses the Inspector and navigates to a chapter, so both settings change
+     * in place without a copy of the object having to be handed around.
      */
     @Test
     fun changesTheViewStateInPlace() {
         val editor = Editor()
 
-        editor.writingMode = WritingMode.PREVIEW
         editor.inspectorCollapsed = true
         editor.lastAnchorId = "prolog"
 
-        assertEquals(WritingMode.PREVIEW, editor.writingMode)
         assertEquals(true, editor.inspectorCollapsed)
         assertEquals("prolog", editor.lastAnchorId)
     }
 
     /**
-     * Use case: a stored preferences file is read at start up, so the writing mode, the collapse state
-     * and the last anchor position are restored exactly as they were written.
+     * Use case: a stored preferences file is read at start up, so the collapse state and the last
+     * anchor position are restored exactly as they were written.
      */
     @Test
     fun roundTripsTheViewState() {
-        val editor = Editor(writingMode = WritingMode.PREVIEW, inspectorCollapsed = true, lastAnchorId = "epilog")
+        val editor = Editor(inspectorCollapsed = true, lastAnchorId = "epilog")
 
         val restored: Editor = mapper.readValue(mapper.writeValueAsString(editor))
 

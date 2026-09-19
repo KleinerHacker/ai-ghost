@@ -24,8 +24,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
  * @property paragraphMergePauseMillis Length of the typing pause, in milliseconds, after which
  *   consecutive edits of the same paragraph or heading stop being folded into a single undo entry.
  *   Defaults to [DEFAULT_PARAGRAPH_MERGE_PAUSE_MILLIS].
- * @property writingMode Whether the writing surface's single sheet is switched to writing or to
- *   preview. Defaults to [WritingMode.WRITING].
  * @property inspectorCollapsed Whether the Inspector column of the editor is collapsed. Defaults to
  *   `false`.
  * @property lastAnchorId Anchor id of the part last navigated to on the writing surface - `"title"`,
@@ -35,7 +33,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Editor(
     var paragraphMergePauseMillis: Long = DEFAULT_PARAGRAPH_MERGE_PAUSE_MILLIS,
-    var writingMode: WritingMode = WritingMode.WRITING,
     var inspectorCollapsed: Boolean = false,
     var lastAnchorId: String? = null
 ) {

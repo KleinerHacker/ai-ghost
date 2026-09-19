@@ -13,12 +13,10 @@
 package org.pcsoft.app.aighost.app.ui.component
 
 import de.saxsys.mvvmfx.FluentViewLoader
-import javafx.beans.property.ReadOnlyObjectProperty
 import javafx.beans.value.ObservableValue
 import javafx.scene.layout.BorderPane
 import org.pcsoft.app.aighost.app.undo.UndoStack
 import org.pcsoft.app.aighost.fx.model.project.ProjectProperty
-import org.pcsoft.app.aighost.model.pref.WritingMode
 
 /**
  * The sheet in the centre of the editor, where a book part is written in the typography and the page
@@ -65,14 +63,4 @@ class BookPartEditor : BorderPane() {
 
     /** Releases every binding of the component, used while it leaves the screen for good. */
     fun release() = viewModel.release()
-
-    /** Whether the sheet is switched to writing or to preview. */
-    val writingModeProperty: ReadOnlyObjectProperty<WritingMode> get() = viewModel.writingMode
-
-    /**
-     * Switches the sheet between writing and preview.
-     *
-     * @param mode the mode to switch to
-     */
-    fun setWritingMode(mode: WritingMode) = viewModel.setWritingMode(mode)
 }
