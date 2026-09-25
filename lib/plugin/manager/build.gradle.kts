@@ -17,7 +17,7 @@ plugins {
 }
 
 // Same Jackson line lib/model already uses for preferences.yml.
-val jacksonVersion = "2.22.2"
+val jacksonVersion = "2.22.3"
 
 dependencies {
     api(project(":lib:plugin:ai-ghost-plugin-api"))
