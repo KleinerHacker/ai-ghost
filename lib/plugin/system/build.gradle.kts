@@ -18,7 +18,7 @@ plugins {
     // app/ui (there for mvvmfx/arrow/typetools): it forces such dependencies onto the module path
     // under the JDK's own filename-derived automatic module name, the same name `java --module-path`
     // would compute - matching the `requires pluggiat;` in this module's module-info.java.
-    id("org.javamodularity.moduleplugin") version "2.0.1"
+    id("org.javamodularity.moduleplugin") version "2.1.0"
 }
 
 dependencies {
