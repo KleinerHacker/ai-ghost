@@ -21,7 +21,7 @@ plugins {
 val jacksonVersion = "2.22.2"
 
 // Arrow's Either appears in the signatures of the storage, so it is part of the API as well.
-val arrowVersion = "2.1.2"
+val arrowVersion = "2.2.3"
 
 // Pinned once in the root build; the coordinate itself is documented there.
 val simplayVersion: String by rootProject.extra
