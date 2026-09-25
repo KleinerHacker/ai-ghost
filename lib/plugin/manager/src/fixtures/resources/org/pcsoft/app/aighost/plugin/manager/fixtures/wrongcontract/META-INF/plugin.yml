@@ -1,9 +1,0 @@
-id: wrong-contract-fixture
-name: Wrong Contract Version Fixture Plugin
-version: "1.0"
-providers:
-  ai:
-    - id: wrong-contract
-      implementation: org.pcsoft.app.aighost.plugin.manager.fixtures.wrongcontract.WrongContractVersionProvider
-      name: text.wrongContract.name
-      contractVersion: 999

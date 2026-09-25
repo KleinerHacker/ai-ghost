@@ -1,9 +1,0 @@
-id: unsupported-field-fixture
-name: Unsupported Field Fixture Plugin
-version: "1.0"
-providers:
-  ai:
-    - id: unsupported-field
-      implementation: org.pcsoft.app.aighost.plugin.manager.fixtures.unsupportedfield.UnsupportedFieldProvider
-      name: text.unsupportedField.name
-      contractVersion: 1

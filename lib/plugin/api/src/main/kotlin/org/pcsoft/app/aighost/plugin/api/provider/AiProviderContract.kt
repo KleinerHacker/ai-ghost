@@ -18,9 +18,9 @@ package org.pcsoft.app.aighost.plugin.api.provider
  * [VERSION] is separate from the artefact version of `ai-ghost-plugin-api`, which is not versioned
  * on its own - it only rises when [AiProvider], [AiProviderCallback] or [AiProviderHandle] change in
  * a way that breaks a plugin built against the previous shape. A plugin declares the version its
- * provider was built against through
- * [org.pcsoft.app.aighost.plugin.api.manifest.AiProviderDeclaration.contractVersion]; the plugin
- * manager rejects a provider whose declared version does not match [VERSION].
+ * provider was built against as `contractVersion` on its `extensions.ai[]` manifest entry (see
+ * `AiProviderExtensionConfig` in `ai-ghost-plugin-system`); the host rejects a provider whose
+ * declared version does not match [VERSION].
  */
 object AiProviderContract {
     /** Current version of the [AiProvider] contract. */

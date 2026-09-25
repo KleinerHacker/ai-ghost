@@ -47,7 +47,7 @@ opened once the user accepts it. Both documents are written with Jackson.
 | Book project with outline and chapters            | Planned     |
 | Export of the finished manuscript                 | Planned     |
 | Plugin API (`lib/plugin/ai-ghost-plugin-api`)     | Implemented |
-| Plugin manager: discovery, isolated loading and registration of AI provider plugins (`lib/plugin/ai-ghost-plugin-manager`) | Implemented |
+| Plugin extension point declaration for AI providers (`lib/plugin/ai-ghost-plugin-system`), discovered, isolated and registered by `app/ui` on top of pluggiat | Implemented |
 | JavaFX desktop shell (`app/ai-ghost-ui`)          | Implemented |
 | JSON data model (`lib/ai-ghost-model`)            | Implemented |
 | AI support library (`lib/ai-ghost-ai`)            | Implemented |
@@ -100,13 +100,14 @@ cd ai-ghost
 ./gradlew build
 ```
 
-The layout engine [simPlay](https://github.com/KleinerHacker/simPlay) is resolved from GitHub
-Packages, which requires authentication even for a read. Provide a GitHub token with the
+The layout engine [simPlay](https://github.com/KleinerHacker/simPlay) and the plugin mechanism
+[pluggiat](https://github.com/KleinerHacker/pluggiat) (`lib/plugin/system`, `app/ui`) are both resolved from
+GitHub Packages, which requires authentication even for a read. Provide a GitHub token with the
 `read:packages` scope through `gpr.user` / `gpr.key` in `~/.gradle/gradle.properties`, or through the
-`GITHUB_ACTOR` / `GITHUB_TOKEN` environment variables. Without a token or network access the build
-cannot resolve simPlay. As a tokenless alternative for local development, run
-`./gradlew publishToMavenLocal` in a simPlay checkout - the local Maven repository is on the build's
-repository list.
+`GITHUB_ACTOR` / `GITHUB_TOKEN` environment variables - the same credentials serve both feeds. Without
+a token or network access the build cannot resolve either dependency. As a tokenless alternative for
+local development, run `./gradlew publishToMavenLocal` in a simPlay checkout - the local Maven
+repository is on the build's repository list; pluggiat has no such local-build workflow documented.
 
 ## Run
 

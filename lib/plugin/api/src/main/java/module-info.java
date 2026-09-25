@@ -3,5 +3,4 @@ module org.pcsoft.app.aighost.plugin.api {
 
     exports org.pcsoft.app.aighost.plugin.api.model.project;
     exports org.pcsoft.app.aighost.plugin.api.provider;
-    exports org.pcsoft.app.aighost.plugin.api.manifest;
 }

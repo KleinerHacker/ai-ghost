@@ -7,7 +7,7 @@
   `FP-002-AiProviderPlugins-status.md`.
 * Kern: IP-01 bis IP-05. IP-06 bis IP-09 sind die konkreten Anbindungen, je atomar, einzeln und
   später umsetzbar.
-* Neue Bausteine: Modul `lib/plugin/manager` (`ai-ghost-plugin-manager`), Container
+* Neue Bausteine: Modul `lib/plugin/system` (`ai-ghost-plugin-system`), Container
   `lib/plugin/provider` mit je einem Modul pro mitgeliefertem Provider.
 * `lib/ai` und die `TODO("AI action: …")`-Rümpfe bleiben unberührt.
 
@@ -15,7 +15,7 @@
 
 | ID | Plan | Datei | Voraussetzung |
 |----|------|-------|---------------|
-| IP-02 | Provider-Module und Stub-Provider | `FP-002-IP-02-ProviderModuleUndStub.md` | IP-01 (COMPLETED) |
+| IP-02 | Provider-Module und Stub-Provider | `FP-002-IP-02-ProviderModuleUndStub.md` | IP-10 (COMPLETED) |
 | IP-03 | Provider-Auswahl, Konfiguration und Persistenz | `FP-002-IP-03-ProviderAuswahlKonfigurationPersistenz.md` | IP-02 |
 | IP-04 | Plugin-Paketierung und CI | `FP-002-IP-04-PluginPaketierungUndCi.md` | IP-03 |
 | IP-05 | Dokumentation | `FP-002-IP-05-Dokumentation.md` | IP-04 |
@@ -26,4 +26,4 @@
 
 ## Ohne Voraussetzung startbar
 
-* IP-02 - Provider-Module und Stub-Provider (Voraussetzung IP-01 ist `COMPLETED`)
+* IP-02 - Provider-Module und Stub-Provider (Voraussetzung IP-10 ist `COMPLETED`)

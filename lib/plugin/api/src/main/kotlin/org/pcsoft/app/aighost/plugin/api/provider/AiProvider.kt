@@ -21,10 +21,11 @@ import kotlin.reflect.KClass
  * more. It builds no prompt, knows no paragraph or chapter, checks no character limit and splits no
  * answer into parts; that orchestration lives on the application side of a later feature. An
  * implementing class carries no annotation of its own - its id, display name and contract version
- * come from the plugin's [org.pcsoft.app.aighost.plugin.api.manifest.AiProviderDeclaration], so the
- * plugin manager can identify it and check its contract version before ever calling into it.
+ * come from the plugin's `extensions.ai[]` manifest entry (see `AiProviderExtensionConfig` in
+ * `ai-ghost-plugin-system`), so the host can identify it and check its contract version before ever
+ * calling into it.
  *
- * A configuration model is named through [configType]; the plugin manager reflects on its
+ * A configuration model is named through [configType]; the host reflects on its
  * [AiProviderConfigField]-annotated properties to build the form the application shows for this
  * provider, unless [configSchema] is overridden to build the field list by hand.
  */
@@ -36,7 +37,7 @@ interface AiProvider {
     /**
      * Builds the configuration field list for this provider by hand.
      *
-     * The default of `null` tells the plugin manager to derive the list from the
+     * The default of `null` tells the host to derive the list from the
      * [AiProviderConfigField]-annotated properties of [configType] instead. A provider overrides
      * this only when the annotated properties alone cannot express its configuration - a computed
      * default or a field that only makes sense under a condition, for instance.

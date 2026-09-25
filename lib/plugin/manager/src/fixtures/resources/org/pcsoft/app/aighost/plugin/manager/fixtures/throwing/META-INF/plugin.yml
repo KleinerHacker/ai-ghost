@@ -1,9 +1,0 @@
-id: throwing-fixture
-name: Throwing Fixture Plugin
-version: "1.0"
-providers:
-  ai:
-    - id: throwing
-      implementation: org.pcsoft.app.aighost.plugin.manager.fixtures.throwing.ThrowingProvider
-      name: text.throwing.name
-      contractVersion: 1

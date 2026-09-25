@@ -29,11 +29,10 @@ import org.testfx.framework.junit5.ApplicationTest
 /**
  * Developer tests for [PluginLoadStartupStep].
  *
- * [org.pcsoft.app.aighost.plugin.manager.PluginManager.load] is exercised on its own by
- * `ai-ghost-plugin-manager`'s tests against real fixture plugins; what belongs here is the wiring
- * this step is responsible for - it is found by the scan, is built with a no-argument constructor,
- * runs after [PreferencesStartupStep], and hands the loaded registry to
- * [org.pcsoft.app.aighost.app.controller.PluginController] through the FX thread.
+ * pluggiat's own discovery, isolated loading and error isolation are pluggiat's own tested
+ * responsibility; what belongs here is the wiring this step is responsible for - it is found by the
+ * scan, is built with a no-argument constructor, runs after [PreferencesStartupStep], and hands the
+ * loaded registry to [org.pcsoft.app.aighost.app.controller.PluginController] through the FX thread.
  */
 class PluginLoadStartupStepTest : ApplicationTest() {
 

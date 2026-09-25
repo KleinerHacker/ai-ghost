@@ -20,3 +20,10 @@ name: external-docs
   * Contains MKDocs documentation
 * GitHub Repository: `https://github.com/KleinerHacker/simpLay`
   * Contains code access
+
+## pluggiat
+
+* Documentation for simpLay: `https://kleinerhacker.github.io/pluggiat/latest/`
+  * Contains MKDocs documentation
+* GitHub Repository: `https://github.com/KleinerHacker/pluggiat`
+  * Contains code access

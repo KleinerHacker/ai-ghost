@@ -12,7 +12,7 @@
 
 package org.pcsoft.app.aighost.app.controller
 
-import org.pcsoft.app.aighost.plugin.manager.AiProviderRegistry
+import org.pcsoft.app.aighost.app.plugin.AiProviderRegistry
 
 /**
  * Holds the [AiProviderRegistry] the plugin mechanism builds while the splash screen is shown.

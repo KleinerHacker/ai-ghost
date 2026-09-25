@@ -6,7 +6,8 @@ Status: IN_PROGRESS
 
 | ID    | Implementierungsplan                              | Status      |
 |-------|--------------------------------------------------|-------------|
-| IP-01 | Plugin API And Plugin Manager                     | COMPLETED   |
+| IP-01 | Plugin API And Plugin Manager (ersetzt durch IP-10) | COMPLETED |
+| IP-10 | Pluggiat-Migration                                | COMPLETED   |
 | IP-02 | Provider Modules And Stub Provider                | NOT_STARTED |
 | IP-03 | Provider Selection, Configuration And Persistence | NOT_STARTED |
 | IP-04 | Plugin Packaging And CI                           | NOT_STARTED |
@@ -18,7 +19,7 @@ Status: IN_PROGRESS
 
 ## Gesamtfortschritt
 
-11% (1/9)
+20% (2/10)
 
 ## Anmerkungen
 
@@ -30,18 +31,37 @@ hängen nur an IP-03 und sind einzeln und später umsetzbar.
 Getroffene Entscheidungen:
 
 * Plugin-seitige API im bestehenden `ai-ghost-plugin-api`; kein weiteres plugin-seitiges Modul.
-* Manager im neuen Modul `lib/plugin/manager` (`ai-ghost-plugin-manager`); Isolation über **einen
-  `URLClassLoader` je Plugin**, keine JPMS-Modulschicht; Reflection der Provider-Konfiguration mit
-  **`kotlin-reflect`**. Der Manager bekommt die Verzeichnisse übergeben. Kette: `app/ui` →
-  `ai-ghost-plugin-manager` → `ai-ghost-plugin-api`.
-* **Provider-Entdeckung läuft ausschließlich über das Manifest, keine Annotation, kein
-  `ClassGraph`/`ServiceLoader`-Scan.** `PluginManifest.aiProviders` (aus `providers.ai` der YAML)
-  nennt je Provider `id`, `implementation` (vollqualifizierter Klassenname), `name` und
-  `contractVersion` direkt; der Manager lädt nur die genannte Klasse über
-  `Class.forName(name, false, classLoader)` und prüft sie über den wiederverwendbaren
-  `PluginClassRequirements.load(className, classLoader, requiredType, requiredAnnotations)` (MUSS
-  ein Interface implementieren, MUSS optionale Pflicht-Annotationen tragen). `AiProviderInfo` als
-  Annotation entfällt ersatzlos. `ai-ghost-plugin-manager` hat dadurch keine `ClassGraph`-Abhängigkeit.
+* **Loader, Discovery und Isolation kommen aus `pluggiat` (extern), nicht aus Eigenbau** – IP-10 ist
+  **COMPLETED**. `lib/plugin/system` (`ai-ghost-plugin-system`) ist jetzt eine dünne Integration
+  auf pluggiats `PluginManager`: der eigene `URLClassLoader`-Aufbau, das eigene Manifest-Schema
+  (`PluginManifest`/`PluginManifestReader`) und `PluginClassRequirements` sind vollständig entfallen
+  zugunsten von pluggiats eigenem `META-INF/plugin.yml` (`extensions.ai`-Schlüssel, von pluggiat
+  selbst geparst und validiert) und dessen Sicherheitsstrategie (`InsecureSecurityStrategy` je Ort,
+  `SingleJarScanStrategy` als Scan-Strategie). Reflection der Provider-Konfiguration bleibt bei
+  **`kotlin-reflect`** (`ConfigModelReader`, app-eigen, unverändert). Der Manager bekommt die
+  Verzeichnisse übergeben. Kette: `app/ui` → `ai-ghost-plugin-system` → `pluggiat` +
+  `ai-ghost-plugin-api`. `lib/plugin/system` benötigt zusätzlich das Gradle-Plugin
+  `org.javamodularity.moduleplugin` (bereits über `app/ui` im Repo etabliert), da pluggiats JAR
+  keinen `Automatic-Module-Name` trägt und sonst nicht auf den JPMS-Modulpfad gelangt.
+* **Provider-Entdeckung läuft ausschließlich über das Manifest** (pluggiats `extensions.ai`), keine
+  Annotation, kein `ClassGraph`/`ServiceLoader`-Scan. `AiProviderInfo` als Annotation entfällt
+  ersatzlos; `contractVersion` bleibt je Provider-Eintrag im Manifest, transportiert über ein eigenes
+  Feld auf `AiProviderExtensionConfig`. Das Manifest braucht zusätzlich ein von pluggiat intern
+  verlangtes, in der öffentlichen Doku nicht gelistetes Pflichtfeld `$version` (Migrationszweck) –
+  Provider-Autoren müssen das in der Anleitung (IP-05) erfahren.
+* **Tests decken nur unseren eigenen Code ab, nicht pluggiat**: Ein ursprünglich für IP-10 gebauter
+  Satz aus Fixture-Plugin-JARs, der pluggiats Scan/Load/Classloader-Isolation end-to-end nachtestete,
+  wurde wieder entfernt – das ist pluggiats eigene, bereits getestete Verantwortung. `lib/plugin/system`
+  testet nur noch `AiProviderRegistry` (Id-Kollision, `contractVersion`-Prüfung) und
+  `ConfigModelReader` direkt, ohne über pluggiat zu laden.
+* **Weitere Vereinfachung von IP-10:** `lib/plugin/system` enthält jetzt nur noch
+  `AiProviderExtensionConfig` (die pluggiat-Extension-Point-Konfiguration für `"ai"`). Der eigene
+  `PluginManager`-Wrapper und `PluginLoadException` sind ersatzlos entfallen; `AiProviderRegistry` und
+  `ConfigModelReader` sind nach `app/ui` (Paket `org.pcsoft.app.aighost.app.plugin`) umgezogen.
+  `app/ui`s `PluginLoadStartupStep` baut pluggiats `PluginManagerConfiguration`/`PluginManager` jetzt
+  selbst auf und ruft direkt `AiProviderRegistry.buildFrom(pluginManager)` auf – kein Umweg mehr über
+  `lib/plugin/system`. Kette: `app/ui` → `pluggiat` + `ai-ghost-plugin-api`, mit
+  `ai-ghost-plugin-system` nur noch als Träger der Extension-Point-Deklaration.
 * Zwei Plugin-Orte: eingebautes `plugins`-Verzeichnis im Installationsverzeichnis (fix, aufgelöst aus
   `java.home` des laufenden jlink-Images) und ein Nutzer-Verzeichnis (Vorgabe `~/.ai-ghost/plugins`),
   über `Preferences`/UI änderbar (IP-03), Wirkung beim nächsten Start. **Id-Kollision: „zuerst
@@ -62,8 +82,8 @@ Getroffene Entscheidungen:
 * **Geheimnis-Speicher:** `SecretStore` nach dem Muster von IntelliJ PasswordSafe – OS-Schlüsselbund
   primär, verschlüsselte Datei als Fallback, schmale Schnittstelle, zunächst klein.
 * **Versionierung:** alle Artefakte tragen die Repo-Version; `ai-ghost-plugin-api` nicht
-  eigenständig versioniert. Kompatibilität über eine **Vertragsversion je `providers.ai`-Eintrag im
-  Manifest** (`AiProviderDeclaration.contractVersion`), vom Manager gegen
+  eigenständig versioniert. Kompatibilität über eine **Vertragsversion je `extensions.ai`-Eintrag im
+  Manifest** (`AiProviderExtensionConfig.contractVersion`), von `AiProviderRegistry` gegen
   `AiProviderContract.VERSION` geprüft, steigt nur bei einem Bruch des Provider-Vertrags.
 * IP-05 (Documentation): MkDocs-Menüpunkt „Plugins“ mit Übersichtsseite und Bereich „AI Provider“
   (API, Entwicklung, Beispiel Stub).

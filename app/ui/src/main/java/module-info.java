@@ -2,6 +2,9 @@ module org.pcsoft.app.aighost.ui {
     requires javafx.controls;
     requires javafx.fxml;
     requires kotlin.stdlib;
+    // AiProviderRegistry/ConfigModelReader (org.pcsoft.app.aighost.app.plugin) reflect on a
+    // provider's configuration class.
+    requires kotlin.reflect;
     requires org.slf4j;
     requires org.apache.commons.lang3;
 
@@ -15,8 +18,12 @@ module org.pcsoft.app.aighost.ui {
     requires org.pcsoft.app.aighost.fx.model;
     // The prompt area estimates the token cost of what the user wrote.
     requires org.pcsoft.app.aighost.ai;
-    // PluginLoadStartupStep discovers and registers AI provider plugins before the first window.
-    requires org.pcsoft.app.aighost.plugin.manager;
+    // AiProviderExtensionConfig, the "ai" extension point pluggiat resolves a plugin's manifest
+    // entries against - and transitively AiProvider/AiProviderConfig/etc. from the plugin API.
+    requires org.pcsoft.app.aighost.plugin.system;
+    // PluginLoadStartupStep builds and runs pluggiat's own PluginManager directly to discover and
+    // register AI provider plugins before the first window.
+    requires pluggiat;
     // The block builders turn a book part, the title page and the copyright page into layout input;
     // its `requires transitive` on simPlay's engine module makes simPlay's raw model types (Font,
     // FontFingerprint, ...) visible here as well.

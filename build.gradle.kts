@@ -74,6 +74,17 @@ allprojects {
                 password = (findProperty("gpr.key") as String?) ?: System.getenv("GITHUB_TOKEN")
             }
         }
+
+        // pluggiat (lib/plugin/system, IP-10) is published the same way, on its own GitHub Packages
+        // feed - same credential lookup as simPlay above.
+        maven {
+            name = "pluggiatGitHubPackages"
+            url = uri("https://maven.pkg.github.com/KleinerHacker/pluggiat")
+            credentials {
+                username = (findProperty("gpr.user") as String?) ?: System.getenv("GITHUB_ACTOR")
+                password = (findProperty("gpr.key") as String?) ?: System.getenv("GITHUB_TOKEN")
+            }
+        }
     }
 }
 
@@ -136,6 +147,19 @@ subprojects {
         // SLF4J names MIT only by the URL of the licence text in its POM, without an SPDX id.
         allowUrl("https://opensource.org/license/mit") {
             because("MIT")
+        }
+
+        // Bouncy Castle (transitive dependency of pluggiat, IP-10) names its MIT licence only by this
+        // URL in its POM, without an SPDX id.
+        allowUrl("https://www.bouncycastle.org/licence.html") {
+            because("MIT")
+        }
+
+        // pluggiat's published artifact carries no licence metadata at all. Other KleinerHacker
+        // artifacts consumed here (ai-ghost itself, simPlay) are Apache-2.0; pluggiat is assumed to be
+        // the same until its POM/artifact carries a proper <licenses> block.
+        allowDependency("org.pcsoft.framework", "pluggiat", "0.1.0") {
+            because("Apache-2.0 (assumed - artifact declares no licence metadata)")
         }
     }
 

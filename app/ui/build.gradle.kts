@@ -42,8 +42,15 @@ dependencies {
     implementation(project(":lib:ai-ghost-model"))
     implementation(project(":lib:ai-ghost-fx-model"))
     implementation(project(":lib:ai-ghost-ai"))
-    // Discovers, isolates and registers AI provider plugins while the splash screen is shown.
-    implementation(project(":lib:plugin:ai-ghost-plugin-manager"))
+    // Carries AiProviderExtensionConfig, the "ai" extension point pluggiat resolves a provider
+    // plugin's manifest entries against.
+    implementation(project(":lib:plugin:ai-ghost-plugin-system"))
+    // PluginLoadStartupStep builds and runs pluggiat's own PluginManager directly, discovering and
+    // isolating AI provider plugins while the splash screen is shown.
+    implementation("org.pcsoft.framework:pluggiat:0.1.0")
+    // AiProviderRegistry/ConfigModelReader (org.pcsoft.app.aighost.app.plugin) reflect on a
+    // provider's configuration class - our own UI form model, independent of pluggiat.
+    implementation(kotlin("reflect"))
     // The block builders that turn a book part, the title page and the copyright page into layout
     // input.
     implementation(project(":lib:ai-ghost-layouting-model"))
